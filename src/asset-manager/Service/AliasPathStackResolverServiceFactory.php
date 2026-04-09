@@ -1,0 +1,27 @@
+<?php
+
+namespace Jield\AssetManager\Service;
+
+use Jield\AssetManager\Resolver\AliasPathStackResolver;
+use Laminas\ServiceManager\Factory\FactoryInterface;
+use Override;
+use Psr\Container\ContainerInterface;
+
+class AliasPathStackResolverServiceFactory implements FactoryInterface
+{
+    /**
+     * @inheritDoc
+     */
+    #[Override]
+    public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): AliasPathStackResolver
+    {
+        $config  = $container->get('config');
+        $aliases = [];
+
+        if (isset($config['asset_manager']['resolver_configs']['aliases'])) {
+            $aliases = $config['asset_manager']['resolver_configs']['aliases'];
+        }
+
+        return new AliasPathStackResolver(aliases: $aliases);
+    }
+}

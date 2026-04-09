@@ -1,0 +1,114 @@
+<?php
+
+namespace Jield\Mvc\Controller\Plugin;
+
+use ArrayAccess;
+use Jield\Http\Header\HeaderInterface;
+use Jield\Mvc\Exception\RuntimeException;
+use Jield\Mvc\InjectApplicationEventInterface;
+
+class Params extends AbstractPlugin
+{
+    /**
+     * Grabs a param from route match by default.
+     *
+     * @param string|null $param
+     * @return mixed
+     */
+    public function __invoke(?string $param = null, mixed $default = null): mixed
+    {
+        if ($param === null) {
+            return $this;
+        }
+        return $this->fromRoute(param: $param, default: $default);
+    }
+
+    /**
+     * Return all files or a single file.
+     *
+     * @param string|null $name File name to retrieve, or null to get all.
+     * @param  mixed $default Default value to use when the file is missing.
+     * @return array|ArrayAccess|null
+     */
+    public function fromFiles(?string $name = null, mixed $default = null): ArrayAccess|array|null
+    {
+        if ($name === null) {
+            return $this->getController()->getRequest()->getFiles($name, $default)->toArray();
+        }
+
+        return $this->getController()->getRequest()->getFiles($name, $default);
+    }
+
+    /**
+     * Return all header parameters or a single header parameter.
+     *
+     * @param string|null $header Header name to retrieve, or null to get all.
+     * @param  mixed $default Default value to use when the requested header is missing.
+     * @return null|HeaderInterface
+     */
+    public function fromHeader(?string $header = null, mixed $default = null): ?HeaderInterface
+    {
+        if ($header === null) {
+            return $this->getController()->getRequest()->getHeaders($header, $default)->toArray();
+        }
+
+        return $this->getController()->getRequest()->getHeaders($header, $default);
+    }
+
+    /**
+     * Return all post parameters or a single post parameter.
+     *
+     * @param string|null $param Parameter name to retrieve, or null to get all.
+     * @param mixed $default Default value to use when the parameter is missing.
+     * @return mixed
+     */
+    public function fromPost(?string $param = null, mixed $default = null): mixed
+    {
+        if ($param === null) {
+            return $this->getController()->getRequest()->getPost($param, $default)->toArray();
+        }
+
+        return $this->getController()->getRequest()->getPost($param, $default);
+    }
+
+    /**
+     * Return all query parameters or a single query parameter.
+     *
+     * @param string|null $param Parameter name to retrieve, or null to get all.
+     * @param mixed $default Default value to use when the parameter is missing.
+     * @return mixed
+     */
+    public function fromQuery(?string $param = null, mixed $default = null): mixed
+    {
+        if ($param === null) {
+            return $this->getController()->getRequest()->getQuery($param, $default)->toArray();
+        }
+
+        return $this->getController()->getRequest()->getQuery($param, $default);
+    }
+
+    /**
+     * Return all route parameters or a single route parameter.
+     *
+     * @param string|null $param Parameter name to retrieve, or null to get all.
+     * @param mixed $default Default value to use when the parameter is missing.
+     * @return mixed
+     * @throws \RuntimeException
+     */
+    public function fromRoute(?string $param = null, mixed $default = null): mixed
+    {
+        $controller = $this->getController();
+
+        if (! $controller instanceof InjectApplicationEventInterface) {
+            throw new RuntimeException(
+                message: 'Controllers must implement Jield\Mvc\InjectApplicationEventInterface to use this plugin.'
+            );
+        }
+
+        if ($param === null) {
+            return $controller->getEvent()->getRouteMatch()->getParams();
+        }
+
+        return $controller->getEvent()->getRouteMatch()->getParam($param, $default);
+    }
+}

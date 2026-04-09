@@ -1,0 +1,28 @@
+<?php
+
+declare(strict_types=1);
+
+namespace DoctrineModule\Validator\Service;
+
+use DoctrineModule\Validator\UniqueObject;
+use Psr\Container\ContainerInterface;
+
+final class UniqueObjectFactory extends AbstractValidatorFactory
+{
+    protected string $validatorClass = UniqueObject::class;
+
+    /**
+     * {@inheritDoc}
+     */
+    public function __invoke(ContainerInterface $container, $requestedName, array|null $options = null): UniqueObject
+    {
+        $useContext = isset($options['use_context']) ? (bool) $options['use_context'] : false;
+
+        return new UniqueObject(options: $this->merge(previousOptions: $options, newOptions: [
+            'object_manager'    => $this->getObjectManager(container: $container, options: $options),
+            'use_context'       => $useContext,
+            'object_repository' => $this->getRepository(container: $container, options: $options),
+            'fields'            => $this->getFields(options: $options),
+        ]));
+    }
+}

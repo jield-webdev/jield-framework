@@ -1,0 +1,27 @@
+<?php
+
+namespace Jield\AssetManager\Service;
+
+use Jield\AssetManager\Resolver\CollectionResolver;
+use Laminas\ServiceManager\Factory\FactoryInterface;
+use Override;
+use Psr\Container\ContainerInterface;
+
+class CollectionResolverServiceFactory implements FactoryInterface
+{
+    /**
+     * @inheritDoc
+     */
+    #[Override]
+    public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): CollectionResolver
+    {
+        $config      = $container->get('config');
+        $collections = [];
+
+        if (isset($config['asset_manager']['resolver_configs']['collections'])) {
+            $collections = $config['asset_manager']['resolver_configs']['collections'];
+        }
+
+        return new CollectionResolver(collections: $collections);
+    }
+}

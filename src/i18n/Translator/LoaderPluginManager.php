@@ -1,0 +1,80 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Jield\I18n\Translator;
+
+use Jield\I18n\Translator\Loader\FileLoaderInterface;
+use Jield\I18n\Translator\Loader\RemoteLoaderInterface;
+use Laminas\ServiceManager\AbstractPluginManager;
+use Laminas\ServiceManager\Exception\InvalidServiceException;
+use Laminas\ServiceManager\ServiceManager;
+use Psr\Container\ContainerInterface;
+
+use function array_replace_recursive;
+use function get_debug_type;
+use function sprintf;
+
+/**
+ * Plugin manager implementation for translation loaders.
+ *
+ * Enforces that loaders retrieved are either instances of
+ * Loader\FileLoaderInterface or Loader\RemoteLoaderInterface. Additionally,
+ * it registers a number of default loaders.
+ *
+ * @psalm-import-type ServiceManagerConfiguration from ServiceManager
+ * @psalm-import-type InstanceType from MessageLoaderPluginManagerInterface
+ * @extends AbstractPluginManager<InstanceType>
+ */
+final class LoaderPluginManager extends AbstractPluginManager implements MessageLoaderPluginManagerInterface
+{
+    private const array CONFIGURATION = [
+        'factories' => [
+            Loader\Gettext::class  => Loader\Factory\GettextFactory::class,
+            Loader\Ini::class      => Loader\Factory\IniFactory::class,
+            Loader\PhpArray::class => Loader\Factory\PhpArrayFactory::class,
+        ],
+        'aliases'   => [
+            'gettext'  => Loader\Gettext::class,
+            'getText'  => Loader\Gettext::class,
+            'GetText'  => Loader\Gettext::class,
+            'ini'      => Loader\Ini::class,
+            'phparray' => Loader\PhpArray::class,
+            'phpArray' => Loader\PhpArray::class,
+            'PhpArray' => Loader\PhpArray::class,
+        ],
+    ];
+
+    /** @inheritDoc */
+    public function __construct(
+        ContainerInterface $creationContext,
+        array $config = [],
+    ) {
+        /** @var ServiceManagerConfiguration $config */
+        $config = array_replace_recursive(self::CONFIGURATION, $config);
+        parent::__construct($creationContext, $config);
+    }
+
+    /**
+     * Validate the plugin
+     *
+     * Checks that the loader instance is one of Loader\FileLoaderInterface or Loader\RemoteLoaderInterface
+     *
+     * @throws InvalidServiceException
+     * @psalm-assert InstanceType $plugin
+     */
+    public function validate(mixed $instance): void
+    {
+        if ($instance instanceof FileLoaderInterface || $instance instanceof RemoteLoaderInterface) {
+            // we're okay
+            return;
+        }
+
+        throw new InvalidServiceException(sprintf(
+            'Plugin of type %s is invalid; must implement %s or %s',
+            get_debug_type(value: $instance),
+            FileLoaderInterface::class,
+            RemoteLoaderInterface::class,
+        ));
+    }
+}

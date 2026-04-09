@@ -1,0 +1,122 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Jield\Serializer\Adapter;
+
+use Jield\Serializer\Exception;
+use Jield\Stdlib\ErrorHandler;
+
+use function preg_match;
+use function serialize;
+use function unserialize;
+
+use const E_NOTICE;
+use const E_WARNING;
+use const PHP_VERSION_ID;
+
+final class PhpSerialize extends AbstractAdapter
+{
+    /**
+     * Serialized boolean false value
+     */
+    private static null|string $serializedFalse = null;
+
+    /** @var PhpSerializeOptions|null */
+    protected AdapterOptions|null $options = null;
+
+    /**
+     * @param iterable<string,mixed>|PhpSerializeOptions|null $options
+     */
+    public function __construct(iterable|PhpSerializeOptions|null $options = null)
+    {
+        // needed to check if a returned false is based on a serialize false
+        // or based on failure (igbinary can overwrite [un]serialize functions)
+        if (self::$serializedFalse === null) {
+            self::$serializedFalse = serialize(value: false);
+        }
+
+        parent::__construct(options: $options);
+    }
+
+    /**
+     * Set options
+     *
+     * @param iterable<string,mixed>|PhpSerializeOptions $options
+     */
+    public function setOptions(iterable|AdapterOptions $options): void
+    {
+        if (! $options instanceof PhpSerializeOptions) {
+            $options = new PhpSerializeOptions(options: $options);
+        }
+
+        $this->options = $options;
+    }
+
+    /**
+     * Get options
+     */
+    public function getOptions(): PhpSerializeOptions
+    {
+        if ($this->options === null) {
+            $this->options = new PhpSerializeOptions();
+        }
+
+        return $this->options;
+    }
+
+    /**
+     * Serialize using serialize()
+     *
+     * @throws Exception\RuntimeException On serialize error.
+     */
+    public function serialize(mixed $value): string
+    {
+        ErrorHandler::start();
+        $ret = serialize(value: $value);
+        $err = ErrorHandler::stop();
+        if ($err) {
+            throw new Exception\RuntimeException(message: 'Serialization failed', code: 0, previous: $err);
+        }
+
+        return $ret;
+    }
+
+    /**
+     * Unserialize
+     *
+     * @todo   Allow integration with unserialize_callback_func
+     * @throws Exception\RuntimeException On unserialize error.
+     */
+    public function unserialize(string $serialized): mixed
+    {
+        if (! preg_match(pattern: '/^((s|i|d|b|a|O|C):|N;)/', subject: $serialized)) {
+            throw new Exception\RuntimeException(
+                message: 'Serialized data must be a string containing serialized PHP code; received a string with incompatible'
+                . ' value.',
+            );
+        }
+
+        // If we have a serialized boolean false value, just return false;
+        // prevents the unserialize handler from creating an error.
+        if ($serialized === self::$serializedFalse) {
+            return false;
+        }
+
+        $errorLevel = E_NOTICE;
+        if (PHP_VERSION_ID >= 80300) {
+            $errorLevel = E_WARNING;
+        }
+
+        ErrorHandler::start(errorLevel: $errorLevel);
+        // The second parameter to unserialize() is only available on PHP 7.0 or higher
+        $ret = unserialize(data: $serialized, options: ['allowed_classes' => $this->getOptions()->getUnserializeClassWhitelist()]);
+        $err = ErrorHandler::stop();
+
+        if ($ret === false) {
+            throw new Exception\RuntimeException(message: 'Unserialization failed', code: 0, previous: $err);
+        }
+
+        return $ret;
+    }
+}

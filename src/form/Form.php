@@ -1,0 +1,910 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Jield\Form;
+
+use Jield\Form\Element\CollectionInterface;
+use Laminas\Hydrator\HydratorInterface;
+use Laminas\InputFilter\CollectionInputFilter;
+use Laminas\InputFilter\InputFilter;
+use Laminas\InputFilter\InputFilterAwareInterface;
+use Laminas\InputFilter\InputFilterInterface;
+use Laminas\InputFilter\InputFilterProviderInterface;
+use Laminas\InputFilter\InputProviderInterface;
+use Laminas\InputFilter\ReplaceableInputInterface;
+use Jield\Stdlib\ArrayUtils;
+use Traversable;
+
+use function array_key_exists;
+use function array_keys;
+use function assert;
+use function in_array;
+use function is_array;
+use function is_object;
+use function iterator_to_array;
+use function sprintf;
+
+/**
+ * @template TFilteredValues
+ * @implements FormInterface<TFilteredValues>
+ */
+class Form extends Fieldset implements FormInterface
+{
+    /** @var array<string, scalar|null>  */
+    protected array $attributes = [
+        'method' => 'POST',
+    ];
+
+    /**
+     * How to bind values to the attached object
+     *
+     * @var int
+     */
+    protected int $bindAs = FormInterface::VALUES_NORMALIZED;
+
+    /**
+     * Whether or not to bind values to the bound object on successful validation
+     *
+     * @var int
+     */
+    protected int $bindOnValidate = FormInterface::BIND_ON_VALIDATE;
+
+    /**
+     * Base fieldset to use for hydrating (if none specified, directly hydrate elements)
+     *
+     * @var null|FieldsetInterface
+     */
+    protected ?FieldsetInterface $baseFieldset;
+
+    /**
+     * Data being validated
+     *
+     * @var null|array
+     */
+    protected ?array $data;
+
+    /** @var null|InputFilterInterface */
+    protected ?InputFilterInterface $filter;
+
+    /**
+     * Whether or not to automatically scan for input filter defaults on
+     * attached fieldsets and elements
+     *
+     * @var bool
+     */
+    protected bool $useInputFilterDefaults = true;
+
+    /**
+     * Has the input filter defaults been added already ?
+     *
+     * @var bool
+     */
+    protected bool $hasAddedInputFilterDefaults = false;
+
+    /**
+     * Whether or not validation has occurred
+     *
+     * @var bool
+     */
+    protected bool $hasValidated = false;
+
+    /**
+     * Result of last validation operation
+     *
+     * @var bool
+     */
+    protected bool $isValid = false;
+
+    /**
+     * Is the form prepared ?
+     *
+     * @var bool
+     */
+    protected bool $isPrepared = false;
+
+    /**
+     * Prefer form input filter over input filter defaults
+     *
+     * @var bool
+     */
+    protected bool $preferFormInputFilter = true;
+
+    /**
+     * Has preferFormInputFilter been set with setPreferFormInputFilter?
+     *
+     * @var bool
+     */
+    protected bool $hasSetPreferFormInputFilter = false;
+
+    /**
+     * Are the form elements/fieldsets wrapped by the form name ?
+     *
+     * @var bool
+     */
+    protected bool $wrapElements = false;
+
+    /**
+     * Validation group, if any
+     *
+     * @var null|array
+     */
+    protected ?array $validationGroup;
+
+    /**
+     * Set options for a form. Accepted options are:
+     * - prefer_form_input_filter: is form input filter is preferred?
+     *
+     * @return $this
+     * @throws Exception\InvalidArgumentException
+     */
+    public function setOptions(iterable $options): static
+    {
+        parent::setOptions(options: $options);
+
+        if (isset($this->options['prefer_form_input_filter'])) {
+            $this->setPreferFormInputFilter(preferFormInputFilter: $this->options['prefer_form_input_filter']);
+        }
+
+        if (isset($this->options['use_input_filter_defaults'])) {
+            $this->setUseInputFilterDefaults(useInputFilterDefaults: $this->options['use_input_filter_defaults']);
+        }
+
+        return $this;
+    }
+
+    /** @inheritDoc */
+    public function add(Traversable|ElementInterface|array $elementOrFieldset, array $flags = []): FieldsetInterface|Form|static
+    {
+        // TODO: find a better solution than duplicating the factory code, the problem being that if
+        // $elementOrFieldset is an array, it is passed by value, and we don't get back the concrete ElementInterface
+        if (
+            is_array(value: $elementOrFieldset)
+            || ($elementOrFieldset instanceof Traversable && ! $elementOrFieldset instanceof ElementInterface)
+        ) {
+            $factory           = $this->getFormFactory();
+            $elementOrFieldset = $factory->create(spec: $elementOrFieldset);
+        }
+
+        parent::add(elementOrFieldset: $elementOrFieldset, flags: $flags);
+
+        if ($elementOrFieldset instanceof Fieldset && $elementOrFieldset->useAsBaseFieldset()) {
+            $this->baseFieldset = $elementOrFieldset;
+        }
+
+        return $this;
+    }
+
+    /**
+     * Ensures state is ready for use
+     *
+     * Marshalls the input filter, to ensure validation error messages are
+     * available, and prepares any elements and/or fieldsets that require
+     * preparation.
+     *
+     * @return self
+     */
+    public function prepare(): static
+    {
+        if ($this->isPrepared) {
+            return $this;
+        }
+
+        $this->getInputFilter();
+
+        // If the user wants to, elements names can be wrapped by the form's name
+        if ($this->wrapElements()) {
+            $this->prepareElement(form: $this);
+        } else {
+            foreach ($this->getIterator() as $elementOrFieldset) {
+                if ($elementOrFieldset instanceof Form) {
+                    $elementOrFieldset->prepare();
+                } elseif ($elementOrFieldset instanceof ElementPrepareAwareInterface) {
+                    $elementOrFieldset->prepareElement(form: $this);
+                }
+            }
+        }
+
+        $this->isPrepared = true;
+        return $this;
+    }
+
+    /**
+     * Ensures state is ready for use. Here, we append the name of the fieldsets to every elements in order to avoid
+     * name clashes if the same fieldset is used multiple times
+     */
+    public function prepareElement(FormInterface $form): void
+    {
+        $name = $this->getName();
+
+        foreach ($this->iterator as $elementOrFieldset) {
+            assert(assertion: $elementOrFieldset instanceof ElementInterface);
+            if ($form instanceof Form && $form->wrapElements()) {
+                $elementOrFieldset->setName(name: $name . '[' . (string) $elementOrFieldset->getName() . ']');
+            }
+
+            // Recursively prepare elements
+            if ($elementOrFieldset instanceof ElementPrepareAwareInterface) {
+                $elementOrFieldset->prepareElement(form: $form);
+            }
+        }
+    }
+
+    /**
+     * Set data to validate and/or populate elements
+     *
+     * Typically, also passes data on to the composed input filter.
+     *
+     * @return $this
+     * @throws Exception\InvalidArgumentException
+     */
+    public function setData(iterable $data): static
+    {
+        if ($data instanceof Traversable) {
+            $data = ArrayUtils::iteratorToArray(iterator: $data);
+        }
+
+        $this->hasValidated = false;
+        $this->data         = $data;
+        $this->populateValues(data: $data);
+
+        return $this;
+    }
+
+    /**
+     * Bind an object to the form
+     *
+     * Ensures the object is populated with validated values.
+     *
+     * @return $this
+     * @throws Exception\InvalidArgumentException
+     */
+    public function bind(object $object, int $flags = FormInterface::VALUES_NORMALIZED): static
+    {
+        if (! in_array(needle: $flags, haystack: [FormInterface::VALUES_NORMALIZED, FormInterface::VALUES_RAW])) {
+            throw new Exception\InvalidArgumentException(message: sprintf(
+                '%s expects the $flags argument to be one of "%s" or "%s"; received "%s"',
+                __METHOD__,
+                'Jield\Form\FormInterface::VALUES_NORMALIZED',
+                'Jield\Form\FormInterface::VALUES_RAW',
+                $flags
+            ));
+        }
+
+        if ($this->baseFieldset !== null) {
+            $this->baseFieldset->setObject(object: $object);
+        }
+
+        $this->bindAs = $flags;
+        $this->setObject(object: $object);
+
+        $data = $this->extract();
+
+        $this->populateValues(data: $data, onlyBase: true);
+
+        return $this;
+    }
+
+    /**
+     * Set the hydrator to use when binding an object to the element
+     *
+     * @return $this
+     */
+    public function setHydrator(HydratorInterface $hydrator): static
+    {
+        if ($this->baseFieldset !== null) {
+            $this->baseFieldset->setHydrator(hydrator: $hydrator);
+        }
+
+        return parent::setHydrator(hydrator: $hydrator);
+    }
+
+    /**
+     * Bind values to the bound object
+     */
+    public function bindValues(array $values = [], ?array $validationGroup = null): mixed
+    {
+        if (! is_object(value: $this->object)) {
+            if ($this->baseFieldset === null || $this->baseFieldset->allowValueBinding() === false) {
+                return;
+            }
+        }
+        if (! $this->hasValidated() && ! empty($values)) {
+            $this->setData(data: $values);
+            if (! $this->isValid()) {
+                return;
+            }
+        } elseif (! $this->isValid) {
+            return;
+        }
+
+        $filter = $this->getInputFilter();
+
+        $data = match ($this->bindAs) {
+            FormInterface::VALUES_RAW => $filter->getRawValues(),
+            default => $filter->getValues(),
+        };
+
+        $data            = $this->prepareBindData(values: $data, match: $this->data);
+        $validationGroup = $this->getValidationGroup();
+
+        // If there is a base fieldset, only hydrate beginning from the base fieldset
+        if ($this->baseFieldset !== null) {
+            $data         = $data[$this->baseFieldset->getName()] ?? [];
+            $this->object = $this->baseFieldset->bindValues(
+                $data,
+                $validationGroup[$this->baseFieldset->getName()] ?? []
+            );
+        } else {
+            $this->object = parent::bindValues(values: $data, validationGroup: $validationGroup);
+        }
+    }
+
+    /**
+     * Parse filtered values and return only posted fields for binding
+     */
+    protected function prepareBindData(array $values, array $match): array
+    {
+        $data = [];
+        foreach ($values as $name => $value) {
+            if (! array_key_exists(key: $name, array: $match)) {
+                continue;
+            }
+
+            if (is_array(value: $value) && is_array(value: $match[$name])) {
+                $data[$name] = $this->prepareBindData(values: $value, match: $match[$name]);
+            } else {
+                $data[$name] = $value;
+            }
+        }
+        return $data;
+    }
+
+    /**
+     * Set flag indicating whether or not to bind values on successful validation
+     *
+     * @return $this
+     * @throws Exception\InvalidArgumentException
+     */
+    public function setBindOnValidate(int $bindOnValidateFlag): static
+    {
+        if (! in_array(needle: $bindOnValidateFlag, haystack: [self::BIND_ON_VALIDATE, self::BIND_MANUAL])) {
+            throw new Exception\InvalidArgumentException(message: sprintf(
+                '%s expects the flag to be one of %s::%s or %s::%s',
+                __METHOD__,
+                static::class,
+                'BIND_ON_VALIDATE',
+                static::class,
+                'BIND_MANUAL'
+            ));
+        }
+        $this->bindOnValidate = $bindOnValidateFlag;
+        return $this;
+    }
+
+    /**
+     * Will we bind values to the bound object on successful validation?
+     */
+    public function bindOnValidate(): bool
+    {
+        return static::BIND_ON_VALIDATE === $this->bindOnValidate;
+    }
+
+    /**
+     * Set the base fieldset to use when hydrating
+     *
+     * @return $this
+     * @throws Exception\InvalidArgumentException
+     */
+    public function setBaseFieldset(FieldsetInterface $baseFieldset): static
+    {
+        $this->baseFieldset = $baseFieldset;
+        return $this;
+    }
+
+    /**
+     * Get the base fieldset to use when hydrating
+     */
+    public function getBaseFieldset(): ?FieldsetInterface
+    {
+        return $this->baseFieldset;
+    }
+
+    /**
+     * Check if the form has been validated
+     */
+    public function hasValidated(): bool
+    {
+        return $this->hasValidated;
+    }
+
+    /**
+     * Validate the form
+     *
+     * Typically, will proxy to the composed input filter.
+     *
+     * @throws Exception\DomainException
+     */
+    public function isValid(): bool
+    {
+        if ($this->hasValidated) {
+            return $this->isValid;
+        }
+
+        $this->isValid = false;
+
+        if (! is_array(value: $this->data) && ! is_object(value: $this->object)) {
+            throw new Exception\DomainException(message: sprintf(
+                '%s is unable to validate as there is no data currently set',
+                __METHOD__
+            ));
+        }
+
+        if (! is_array(value: $this->data)) {
+            $data = $this->extract();
+            $this->populateValues(data: $data, onlyBase: true);
+            $this->data = $data;
+        }
+
+        $filter = $this->getInputFilter();
+        $filter->setData(data: $this->data);
+        $filter->setValidationGroup(name: InputFilterInterface::VALIDATE_ALL);
+
+        $validationGroup = $this->getValidationGroup();
+        if ($validationGroup !== null) {
+            $this->prepareValidationGroup(formOrFieldset: $this, data: $this->data, validationGroup: $validationGroup);
+            $filter->setValidationGroup(name: $validationGroup);
+        }
+
+        $this->isValid      = $result = $filter->isValid();
+        $this->hasValidated = true;
+
+        if ($result && $this->bindOnValidate()) {
+            $this->bindValues();
+        }
+
+        if (! $result) {
+            $this->setMessages(messages: $filter->getMessages());
+        }
+
+        return $result;
+    }
+
+    /**
+     * Retrieve the validated data
+     *
+     * By default, retrieves normalized values; pass one of the
+     * FormInterface::VALUES_* constants to shape the behavior.
+     *
+     * @inheritDoc
+     * @throws Exception\DomainException
+     */
+    public function getData(int $flag = FormInterface::VALUES_NORMALIZED): array|object
+    {
+        if (! $this->hasValidated) {
+            throw new Exception\DomainException(message: sprintf(
+                '%s cannot return data as validation has not yet occurred',
+                __METHOD__
+            ));
+        }
+
+        if (($flag !== FormInterface::VALUES_AS_ARRAY) && is_object(value: $this->object)) {
+            return $this->object;
+        }
+
+        $filter = $this->getInputFilter();
+
+        if ($flag === FormInterface::VALUES_RAW) {
+            return $filter->getRawValues();
+        }
+
+        return $filter->getValues();
+    }
+
+    /**
+     * Set the validation group (set of values to validate)
+     *
+     * Typically, proxies to the composed input filter
+     *
+     * @return $this
+     */
+    public function setValidationGroup(array $group): static
+    {
+        $this->hasValidated    = false;
+        $this->validationGroup = $group;
+        return $this;
+    }
+
+    public function setValidateAll(): void
+    {
+        $this->hasValidated    = false;
+        $this->validationGroup = null;
+    }
+
+    /**
+     * Retrieve the current validation group, if any
+     *
+     * @return null|array
+     */
+    public function getValidationGroup(): ?array
+    {
+        return $this->validationGroup;
+    }
+
+    /**
+     * Prepare the validation group in case Collection elements were used (this function also handle
+     * the case where elements could have been dynamically added or removed from a collection using JavaScript)
+     */
+    protected function prepareValidationGroup(Fieldset $formOrFieldset, array $data, array &$validationGroup): void
+    {
+        $this->prepareFieldsetValidationGroup(formOrFieldset: $formOrFieldset, data: $data, validationGroup: $validationGroup);
+    }
+
+    /**
+     * @fixme This is here to preserve BC on `prepareValidationGroup` and can be removed on next major if that method's
+     *        signature is changed to accept a `FieldsetInterface`
+     */
+    private function prepareFieldsetValidationGroup(
+        FieldsetInterface $formOrFieldset,
+        array $data,
+        array &$validationGroup
+    ): void {
+        $elements = iterator_to_array(iterator: $formOrFieldset->getIterator());
+        foreach ($validationGroup as $key => &$value) {
+            if (! isset($elements[$key])) {
+                continue;
+            }
+            $fieldset = $elements[$key];
+
+            if ($fieldset instanceof CollectionInterface) {
+                if (! isset($data[$key]) && $fieldset->getCount() === 0) {
+                    unset($validationGroup[$key]);
+                    continue;
+                }
+
+                $values = [];
+
+                if (isset($data[$key])) {
+                    foreach (array_keys(array: $data[$key]) as $cKey) {
+                        $values[$cKey] = $value;
+                    }
+                }
+
+                $value = $values;
+            }
+
+            if (! isset($data[$key])) {
+                $data[$key] = [];
+            }
+            $this->prepareFieldsetValidationGroup(formOrFieldset: $fieldset, data: $data[$key], validationGroup: $validationGroup[$key]);
+        }
+    }
+
+    /**
+     * Set the input filter used by this form
+     *
+     * @param InputFilterInterface<TFilteredValues> $inputFilter
+     * @return $this
+     */
+    public function setInputFilter(InputFilterInterface $inputFilter): static
+    {
+        $this->hasValidated                = false;
+        $this->hasAddedInputFilterDefaults = false;
+        $this->filter                      = $inputFilter;
+
+        if (false === $this->hasSetPreferFormInputFilter) {
+            $this->preferFormInputFilter = false;
+        }
+
+        return $this;
+    }
+
+    /**
+     * Retrieve input filter used by this form
+     *
+     * @return InputFilterInterface<TFilteredValues>
+     */
+    public function getInputFilter(): InputFilterInterface
+    {
+        if ($this->object instanceof InputFilterAwareInterface) {
+            if (null === $this->baseFieldset) {
+                $this->filter = $this->object->getInputFilter();
+            } else {
+                $name = (string) $this->baseFieldset->getName();
+                if (! $this->filter instanceof InputFilterInterface || ! $this->filter->has(name: $name)) {
+                    $filter = new InputFilter();
+                    $filter->setFactory($this->getFormFactory()->getInputFilterFactory());
+                    $filter->add(input: $this->object->getInputFilter(), name: $name);
+                    $this->filter = $filter;
+                }
+            }
+        }
+
+        if (! isset($this->filter)) {
+            $this->filter = new InputFilter();
+            $this->filter->setFactory($this->getFormFactory()->getInputFilterFactory());
+        }
+
+        if (
+            ! $this->hasAddedInputFilterDefaults
+            && $this->filter instanceof InputFilterInterface
+            && $this->useInputFilterDefaults()
+        ) {
+            $this->attachInputFilterDefaults(inputFilter: $this->filter, fieldset: $this);
+            $this->hasAddedInputFilterDefaults = true;
+        }
+
+        return $this->filter;
+    }
+
+    /**
+     * Set flag indicating whether or not to scan elements and fieldsets for defaults
+     *
+     * @return self
+     */
+    public function setUseInputFilterDefaults(bool $useInputFilterDefaults): static
+    {
+        $this->useInputFilterDefaults = $useInputFilterDefaults;
+        return $this;
+    }
+
+    /**
+     * Should we use input filter defaults from elements and fieldsets?
+     */
+    public function useInputFilterDefaults(): bool
+    {
+        return $this->useInputFilterDefaults;
+    }
+
+    /**
+     * Set flag indicating whether or not to prefer the form input filter over element and fieldset defaults
+     *
+     * @return self
+     */
+    public function setPreferFormInputFilter(bool $preferFormInputFilter): static
+    {
+        $this->preferFormInputFilter       = $preferFormInputFilter;
+        $this->hasSetPreferFormInputFilter = true;
+        return $this;
+    }
+
+    /**
+     * Should we use form input filter over element input filter defaults from elements and fieldsets?
+     */
+    public function getPreferFormInputFilter(): bool
+    {
+        return $this->preferFormInputFilter;
+    }
+
+    /**
+     * Attach defaults provided by the elements to the input filter
+     *
+     * @param  FieldsetInterface $fieldset Fieldset to traverse when looking for default inputs
+     */
+    public function attachInputFilterDefaults(InputFilterInterface $inputFilter, FieldsetInterface $fieldset): void
+    {
+        $formFactory  = $this->getFormFactory();
+        $inputFactory = $formFactory->getInputFilterFactory();
+
+        if (
+            $fieldset instanceof CollectionInterface
+            && ($targetElement = $fieldset->getTargetElement()) instanceof FieldsetInterface
+        ) {
+            $elements = $targetElement->getElements();
+        } else {
+            $elements = $fieldset->getElements();
+        }
+
+        if (
+            ! $fieldset instanceof CollectionInterface
+            || ! $fieldset->getTargetElement() instanceof FieldsetInterface
+            || $inputFilter instanceof CollectionInputFilter
+        ) {
+            foreach ($elements as $name => $element) {
+                $name = (string) $name;
+                if ($this->preferFormInputFilter && $inputFilter->has(name: $name)) {
+                    continue;
+                }
+
+                if (! $element instanceof InputProviderInterface) {
+                    if ($inputFilter->has(name: $name)) {
+                        continue;
+                    }
+                    // Create a new empty default input for this element
+                    $spec  = ['name' => $name, 'required' => false];
+                    $input = $inputFactory->createInput(inputSpecification: $spec);
+                } else {
+                    // Create an input based on the specification returned from the element
+                    $spec  = $element->getInputSpecification();
+                    $input = $inputFactory->createInput(inputSpecification: $spec);
+
+                    if ($inputFilter->has(name: $name) && $inputFilter instanceof ReplaceableInputInterface) {
+                        $input->merge(input: $inputFilter->get(name: $name));
+                        $inputFilter->replace(input: $input, name: $name);
+                        continue;
+                    }
+
+                    // If we are dealing with a collection input filter, check
+                    // the input filter it composes for an element of the same
+                    // name as was done above.
+                    if (
+                        $inputFilter instanceof CollectionInputFilter
+                        && $inputFilter->getInputFilter()->has(name: $name)
+                        && $inputFilter->getInputFilter() instanceof ReplaceableInputInterface
+                    ) {
+                        $collectionInputFilter = $inputFilter->getInputFilter();
+                        $input->merge(input: $collectionInputFilter->get(name: $name));
+                        $collectionInputFilter->replace(input: $input, name: $name);
+                        continue;
+                    }
+                }
+
+                // Add element input filter to CollectionInputFilter
+                if ($inputFilter instanceof CollectionInputFilter && ! $inputFilter->getInputFilter()->has(name: $name)) {
+                    $inputFilter->getInputFilter()->add(input: $input, name: $name);
+                } else {
+                    $inputFilter->add(input: $input, name: $name);
+                }
+            }
+
+            if ($fieldset === $this && $fieldset instanceof InputFilterProviderInterface) {
+                foreach ($fieldset->getInputFilterSpecification() as $name => $spec) {
+                    $input = $inputFactory->createInput(inputSpecification: $spec);
+                    $inputFilter->add(input: $input, name: $name);
+                }
+            }
+        }
+
+        foreach ($fieldset->getFieldsets() as $name => $childFieldset) {
+            if (! $childFieldset instanceof InputFilterProviderInterface) {
+                if (! $inputFilter->has(name: $name)) {
+                    // Add a new empty input filter if it does not exist (or the fieldset's object input filter),
+                    // so that elements of nested fieldsets can be recursively added
+                    if ($childFieldset->getObject() instanceof InputFilterAwareInterface) {
+                        $inputFilter->add(input: $childFieldset->getObject()->getInputFilter(), name: $name);
+                    } else if (
+                        $childFieldset instanceof CollectionInterface
+                        && null !== ($targetElement = $childFieldset->getTargetElement())
+                        && $targetElement instanceof InputFilterProviderInterface
+                        && [] !== $targetElement->getInputFilterSpecification()
+                    ) {
+                        // Add input filter for collections via getInputFilterSpecification()
+                        $collectionContainerFilter = new CollectionInputFilter();
+
+                        $spec   = $targetElement->getInputFilterSpecification();
+                        $filter = $inputFactory->createInputFilter(inputFilterSpecification: $spec);
+
+                        $collectionContainerFilter->setInputFilter(inputFilter: $filter);
+
+                        $inputFilter->add(input: $collectionContainerFilter, name: $name);
+
+                        // We need to copy the inputs to the collection input filter
+                        if ($inputFilter instanceof CollectionInputFilter) {
+                            $inputFilter = $this->addInputsToCollectionInputFilter(inputFilter: $inputFilter);
+                        }
+
+                        // Add child elements from target element
+                        $childFieldset = $targetElement;
+                    } else {
+                        $inputFilter->add(input: new InputFilter(), name: $name);
+                    }
+                }
+
+                $fieldsetFilter = $inputFilter->get(name: $name);
+
+                if (! $fieldsetFilter instanceof InputFilterInterface) {
+                    // Input attached for fieldset, not input filter; nothing more to do.
+                    continue;
+                }
+
+                // Traverse the elements of the fieldset, and attach any
+                // defaults to the fieldset's input filter
+                $this->attachInputFilterDefaults(inputFilter: $fieldsetFilter, fieldset: $childFieldset);
+                continue;
+            }
+
+            if ($inputFilter->has(name: $name)) {
+                // if we already have an input/filter by this name, use it
+                continue;
+            }
+
+            // Create an input filter based on the specification returned from the fieldset
+            $spec   = $childFieldset->getInputFilterSpecification();
+            $filter = $inputFactory->createInputFilter(inputFilterSpecification: $spec);
+            $inputFilter->add(input: $filter, name: $name);
+
+            // Recursively attach sub filters
+            $this->attachInputFilterDefaults(inputFilter: $filter, fieldset: $childFieldset);
+
+            // We need to copy the inputs to the collection input filter to ensure that all sub filters are added
+            if ($inputFilter instanceof CollectionInputFilter) {
+                $inputFilter = $this->addInputsToCollectionInputFilter(inputFilter: $inputFilter);
+            }
+        }
+    }
+
+    /**
+     * Add inputs to CollectionInputFilter
+     */
+    private function addInputsToCollectionInputFilter(CollectionInputFilter $inputFilter): CollectionInputFilter
+    {
+        foreach ($inputFilter->getInputs() as $name => $input) {
+            if (! $inputFilter->getInputFilter()->has(name: $name)) {
+                $inputFilter->getInputFilter()->add(input: $input, name: $name);
+            }
+        }
+
+        return $inputFilter;
+    }
+
+    /**
+     * Are the form elements/fieldsets names wrapped by the form name ?
+     *
+     * @return $this
+     */
+    public function setWrapElements(bool $wrapElements): static
+    {
+        $this->wrapElements = $wrapElements;
+        return $this;
+    }
+
+    /**
+     * If true, form elements/fieldsets name's are wrapped around the form name itself
+     */
+    public function wrapElements(): bool
+    {
+        return $this->wrapElements;
+    }
+
+    /**
+     * @inheritDoc
+     * @param bool $onlyBase
+     */
+    public function populateValues(iterable $data, bool $onlyBase = false): void
+    {
+        if ($data instanceof Traversable) {
+            $data = ArrayUtils::iteratorToArray(iterator: $data);
+        }
+
+        if ($onlyBase && $this->baseFieldset !== null) {
+            $name = (string) $this->baseFieldset->getName();
+            if (array_key_exists(key: $name, array: $data)) {
+                $this->baseFieldset->populateValues(data: $data[$name]);
+            }
+        } else {
+            parent::populateValues(data: $data);
+        }
+    }
+
+    /**
+     * Recursively extract values for elements and sub-fieldsets
+     */
+    protected function extract(): array
+    {
+        if ($this->baseFieldset !== null) {
+            assert(assertion: $this->baseFieldset instanceof Fieldset);
+            $name   = (string) $this->baseFieldset->getName();
+            $values = [$name => $this->baseFieldset->extract()];
+        } else {
+            $values = parent::extract();
+        }
+
+        return $values;
+    }
+
+    /**
+     * Set the input filter by name to use when binding an object to the element.
+     *
+     * The input filter manager {@see InputFilterPluginManager} is used via the
+     * form factory {@see Factory} and the input filter factory
+     * {@see \Laminas\InputFilter\Factory} to fetch the input filter.
+     */
+    public function setInputFilterByName(string $inputFilterName): void
+    {
+        $inputFilter = $this->getFormFactory()
+            ->getInputFilterFactory()
+            ->getInputFilterManager()
+            ->get($inputFilterName);
+        $this->setInputFilter(inputFilter: $inputFilter);
+    }
+}

@@ -1,0 +1,42 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Jield\ApiTools\MvcAuth\Factory;
+
+use Jield\ApiTools\MvcAuth\Authorization\AuthorizationInterface;
+use Jield\ApiTools\MvcAuth\Authorization\DefaultAuthorizationListener;
+use Laminas\ServiceManager\Exception\ServiceNotCreatedException;
+use Laminas\ServiceManager\Factory\FactoryInterface;
+use Override;
+use Psr\Container\ContainerInterface;
+use function sprintf;
+
+/**
+ * Factory for creating the DefaultAuthorizationListener from configuration.
+ */
+class DefaultAuthorizationListenerFactory implements FactoryInterface
+{
+    /**
+     * Create and return the default authorization listener.
+     *
+     * @param string $requestedName
+     * @throws ServiceNotCreatedException If the AuthorizationInterface service is missing.
+     */
+    #[Override]
+    public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): DefaultAuthorizationListener
+    {
+        if (!$container->has(id: AuthorizationInterface::class)) {
+            throw new ServiceNotCreatedException(message: sprintf(
+                'Cannot create %s service; no %s service available!',
+                DefaultAuthorizationListener::class,
+                AuthorizationInterface::class
+            ));
+        }
+
+        $authorization = $container->get(AuthorizationInterface::class);
+
+        return new DefaultAuthorizationListener(authorization: $authorization);
+    }
+
+}

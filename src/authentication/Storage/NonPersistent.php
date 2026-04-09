@@ -1,0 +1,70 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Jield\Authentication\Storage;
+
+use Override;
+
+/**
+ * Non-Persistent Authentication Storage
+ *
+ * Since HTTP Authentication happens again on each request, this will always be
+ * re-populated. So there's no need to use sessions, this simple value class
+ * will hold the data for rest of the current request.
+ */
+class NonPersistent implements StorageInterface
+{
+    /**
+     * Holds the actual auth data
+     *
+     * @var mixed
+     */
+    protected mixed $data;
+
+    /**
+     * Returns true if and only if storage is empty
+     *
+     * @return bool
+     */
+    #[Override]
+    public function isEmpty(): bool
+    {
+        return empty($this->data);
+    }
+
+    /**
+     * Returns the contents of storage
+     * Behavior is undefined when storage is empty.
+     *
+     * @return mixed
+     */
+    #[Override]
+    public function read(): mixed
+    {
+        return $this->data;
+    }
+
+    /**
+     * Writes $contents to storage
+     *
+     * @param mixed $contents
+     * @return void
+     */
+    #[Override]
+    public function write(mixed $contents): void
+    {
+        $this->data = $contents;
+    }
+
+    /**
+     * Clears contents from storage
+     *
+     * @return void
+     */
+    #[Override]
+    public function clear(): void
+    {
+        $this->data = null;
+    }
+}

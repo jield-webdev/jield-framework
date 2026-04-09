@@ -1,0 +1,55 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Jield\Search\Solr\Expression;
+
+use Jield\Search\Solr\ExpressionInterface;
+use Jield\Search\Solr\Util;
+use Stringable;
+
+use function sprintf;
+
+/**
+ * Range expression class
+ *
+ * Let you specify range queries in the like of field:[<start> TO <end>] or field:{<start> TO <end>}
+ */
+class RangeExpression extends Expression implements Stringable
+{
+    /**
+     * Create new range query object
+     *
+     * @param string|int|Expression $start
+     * @param int|string|Expression|null $end
+     */
+    public function __construct(
+        protected                            $start = null,
+        protected Expression|int|string|null $end = null,
+        /**
+         * Inclusive or exclusive the range start/end?
+         */
+        protected bool                       $inclusive = true
+    )
+    {
+    }
+
+    public function __toString(): string
+    {
+        return sprintf(
+            '%s%s TO %s%s',
+            $this->inclusive ? '[' : '{',
+            $this->cast(value: $this->start),
+            $this->cast(value: $this->end),
+            $this->inclusive ? ']' : '}'
+        );
+    }
+
+    /**
+     * @param string|ExpressionInterface|null $value
+     */
+    private function cast(ExpressionInterface|string|null $value): ExpressionInterface|string
+    {
+        return $value === null ? '*' : Util::sanitize(value: $value);
+    }
+}

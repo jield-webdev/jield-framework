@@ -1,0 +1,76 @@
+<?php
+
+declare(strict_types=1);
+
+namespace DoctrineORMModule\Paginator\Adapter;
+
+use ArrayIterator;
+use Doctrine\ORM\Tools\Pagination\Paginator;
+use JsonSerializable;
+use Laminas\Paginator\Adapter\AdapterInterface;
+
+/**
+ * Paginator adapter for the Laminas\Paginator component
+ *
+ * @phpstan-template T of object
+ * @phpstan-template TKey of int
+ * @phpstan-template TValue
+ * @template-implements AdapterInterface<TKey, TValue>
+ */
+class DoctrinePaginator implements AdapterInterface, JsonSerializable
+{
+    /**
+     * Constructor
+     *
+     * @param Paginator<T> $paginator
+     */
+    public function __construct(protected Paginator $paginator)
+    {
+    }
+
+    /** @param Paginator<T> $paginator */
+    public function setPaginator(Paginator $paginator): self
+    {
+        $this->paginator = $paginator;
+
+        return $this;
+    }
+
+    /** @return Paginator<T> */
+    public function getPaginator(): Paginator
+    {
+        return $this->paginator;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @param int|null $offset
+     * @param int|null $itemCountPerPage
+     *
+     * @return ArrayIterator<TKey, TValue>
+     */
+    public function getItems($offset, $itemCountPerPage): ArrayIterator
+    {
+        $this->paginator
+             ->getQuery()
+             ->setFirstResult(firstResult: $offset)
+             ->setMaxResults(maxResults: $itemCountPerPage);
+
+        return $this->paginator->getIterator();
+    }
+
+    public function count(): int
+    {
+        return $this->paginator->count();
+    }
+
+    /** @return array{select: list<string>|string, count_select: int} */
+    public function jsonSerialize(): array
+    {
+        return [
+            'select' => $this->paginator->getQuery()->getSQL(),
+            'count_select' => $this->paginator->count(),
+        ];
+    }
+}

@@ -1,0 +1,126 @@
+{
+  "name": "jield/framework",
+  "description": "Laminas Module that provides helper functions for Bootstrap 5",
+  "version": "0.1",
+  "type": "library",
+  "keywords": [
+    "bootstrap",
+    "module"
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/jield-webdev/jield-framework",
+  "authors": [
+    {
+      "name": "Johan van der Heide",
+      "email": "info@jield.nl",
+      "homepage": "https://jield.nl"
+    }
+  ],
+  "minimum-stability": "dev",
+  "require": {
+    "php": "~8.4.0 || ~8.5.0",
+    "psr/container": "^2",
+    "doctrine/orm": "^3.6",
+    "doctrine/dbal": "^4.4",
+    "doctrine/common": "^3.5",
+    "laminas/laminas-cache": "^4.3.0",
+    "laminas/laminas-cache-storage-adapter-filesystem": "^3.3.0",
+    "laminas/laminas-cache-storage-adapter-memory": "^3.3.0",
+    "laminas/laminas-view": "^3.0.1",
+    "laminas/laminas-filter": "^3.4.0",
+    "laminas/laminas-inputfilter": "^3",
+    "laminas/laminas-validator": "^3",
+    "laminas/laminas-paginator": "^3",
+    "laminas/laminas-servicemanager": "^4",
+    "laminas/laminas-eventmanager": "^3.15",
+    "laminas/laminas-router": "^4",
+    "laminas/laminas-hydrator": "^4",
+    "laminas/laminas-uri": "^2.15",
+    "laminas/laminas-session": "^3.0",
+    "laminas/laminas-navigation": "^2.24",
+    "laminas/laminas-permissions-acl": "^3.0",
+    "solarium/solarium": "^6.3.7",
+    "bshaffer/oauth2-server-php": "^1.14.1",
+    "assetic/framework": "^3.1.3",
+    "netglue/laminas-messenger": "^2.5.0",
+    "symfony/doctrine-messenger": "^8.0",
+    "symfony/mailer": "^8.0",
+    "monolog/monolog": "^3.10",
+    "jetbrains/phpstorm-attributes": "^1",
+    "zircote/swagger-php": "^5",
+    "swagger-api/swagger-ui": "^5.20",
+    "twbs/bootstrap": "^5.3.8",
+    "gsteel/dot": "^1.9.0",
+    "ext-igbinary": "*",
+    "ext-fileinfo": "*",
+    "ext-curl": "*",
+    "ext-zlib": "*",
+    "ext-intl": "*"
+  },
+  "require-dev": {
+    "phpstan/phpstan": "2.*",
+    "rector/rector": "^2.4.0",
+    "roave/security-advisories": "dev-latest",
+    "webmozart/assert": "^2"
+  },
+  "autoload": {
+    "psr-4": {
+      "Jield\\Authentication\\": "src\\authentication",
+      "Jield\\EventManager\\": "src\\event-manager",
+      "Jield\\Form\\": "src\\form",
+      "Jield\\I18n\\": "src\\i18n",
+      "Jield\\ServiceManager\\": "src\\service-manager",
+      "Jield\\ModuleManager\\": "src\\module-manager",
+      "Jield\\Mvc\\": "src\\mvc",
+      "Jield\\Authorize\\": "src\\authorize",
+      "Jield\\Bootstrap5\\": "src\\bootstrap5",
+      "Jield\\Stdlib\\": "src\\stdlib",
+      "Jield\\Http\\": "src\\http",
+      "Jield\\Serializer\\": "src\\serializer",
+      "Jield\\Search\\": "src\\search",
+      "Jield\\ApiTools\\": "src\\api-tools",
+      "Jield\\AssetManager\\": "src\\asset-manager",
+      "Jield\\Validator\\": "src\\validator",
+      "BjyAuthorize\\": "src\\authorize",
+      "DoctrineModule\\": "src\\doctrine-module",
+      "DoctrineORMModule\\": "src\\doctrine-orm-module"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Jield\\": "test"
+    }
+  },
+  "config": {
+    "vendor-dir": "vendor",
+    "optimize-autoloader": true,
+    "allow-plugins": {
+      "dealerdirect/phpcodesniffer-composer-installer": true,
+      "composer/package-versions-deprecated": true
+    }
+  },
+  "extra": {
+    "branch-alias": {
+      "dev-master": "0.1.0-dev",
+      "dev-develop": "0.1.0-dev"
+    }
+  },
+  "scripts": {
+    "check": [
+      "@php-lint",
+      "@phpstan",
+      "@cs",
+      "@test"
+    ],
+    "fix": [
+      "@cbf",
+      "@cs-fix"
+    ],
+    "php-lint": "./vendor/bin/parallel-lint src",
+    "phpstan": "./vendor/bin/phpstan analyse src/ --level=1 --memory-limit=2G",
+    "cs": "./vendor/bin/phpcs -n -p --standard=PSR2 --extensions=php,twig src",
+    "cbf": "./vendor/bin/phpcbf src --standard=PSR2",
+    "cs-fix": "./vendor/bin/php-cs-fixer fix -v src",
+    "test": "./vendor/bin/phpunit"
+  }
+}
