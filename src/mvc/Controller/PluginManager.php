@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\Mvc\Controller;
 
 use Jield\Mvc\Controller\Plugin\AcceptableViewModelSelector;
@@ -16,7 +18,6 @@ use Laminas\ServiceManager\AbstractPluginManager;
 use Laminas\ServiceManager\Exception\InvalidServiceException;
 use Laminas\ServiceManager\Factory\InvokableFactory;
 use function get_debug_type;
-use function is_object;
 use function method_exists;
 use function sprintf;
 
@@ -69,7 +70,7 @@ class PluginManager extends AbstractPluginManager
         ];
 
     /** @var DispatchableInterface */
-    protected DispatchableInterface $controller;
+    protected ?DispatchableInterface $controller = null;
 
     /**
      * Retrieve a registered instance
@@ -82,12 +83,24 @@ class PluginManager extends AbstractPluginManager
      * plugin is lost.
      *
      * @param string $id
-     * @param null|array $options Options to use when creating the instance.
      * @return DispatchableInterface
      */
-    public function get(string $id, ?array $options = null): mixed
+    #[\Override]
+    public function get(string $id): mixed
     {
-        $plugin = parent::get($id, $options);
+        $plugin = parent::get($id);
+        $this->injectController(plugin: $plugin);
+
+        return $plugin;
+    }
+
+    /**
+     * Create and return a plugin instance with options.
+     */
+    #[\Override]
+    public function build(string $name, ?array $options = null): mixed
+    {
+        $plugin = parent::build($name, $options);
         $this->injectController(plugin: $plugin);
 
         return $plugin;
@@ -123,9 +136,6 @@ class PluginManager extends AbstractPluginManager
      */
     public function injectController(object $plugin): void
     {
-        if (!is_object(value: $plugin)) {
-            return;
-        }
         if (!method_exists(object_or_class: $plugin, method: 'setController')) {
             return;
         }
@@ -143,6 +153,7 @@ class PluginManager extends AbstractPluginManager
      *
      * {@inheritDoc}
      */
+    #[\Override]
     public function validate($instance): void
     {
         if (!$instance instanceof $this->instanceOf) {

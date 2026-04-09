@@ -1,15 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\Bootstrap5\View\Helper;
 
 use function sprintf;
 use function trim;
 
-/**
- * Class Alert
- * @package Jield\Bootstrap5\View\Helper
- */
-class Alert
+final class Alert
 {
     private string $format = '<div class="alert alert-%s %s" role="alert">%s%s</div>';
 
@@ -20,13 +18,10 @@ class Alert
 
     public function render(string $alert, string $class = '', bool $isDismissible = false): string
     {
-        $closeButton      = '';
+        $closeButton = '';
         $dismissibleClass = '';
         if ($isDismissible) {
-            $closeButton
-                              = '<button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                   </button>';
+            $closeButton = '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>';
             $dismissibleClass = 'alert-dismissible fade show';
         }
         $class = trim(string: $class);

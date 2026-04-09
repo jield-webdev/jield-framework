@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\Bootstrap5\Form\View\Helper;
 
 use Jield\Form\ElementInterface;

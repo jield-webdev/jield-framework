@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\Mvc\Controller;
 
 use Laminas\EventManager\EventInterface as Event;
@@ -54,22 +56,22 @@ abstract class AbstractController implements
     InjectApplicationEventInterface
 {
     /** @var PluginManager */
-    protected PluginManager $plugins;
+    protected ?PluginManager $plugins = null;
 
     /** @var Request */
-    protected Request $request;
+    protected ?Request $request = null;
 
     /** @var Response */
-    protected Response $response;
+    protected ?Response $response = null;
 
     /** @var Event */
-    protected Event $event;
+    protected ?Event $event = null;
 
     /** @var EventManagerInterface */
-    protected EventManagerInterface $events;
+    protected ?EventManagerInterface $events = null;
 
     /** @var null|string|string[] */
-    protected string|array|null $eventIdentifier;
+    protected string|array|null $eventIdentifier = null;
 
     /**
      * Execute the request
@@ -114,7 +116,7 @@ abstract class AbstractController implements
      */
     public function getRequest(): HttpRequest|Request
     {
-        if (!$this->request) {
+        if ($this->request === null) {
             $this->request = new HttpRequest();
         }
 
@@ -128,7 +130,7 @@ abstract class AbstractController implements
      */
     public function getResponse(): HttpResponse|Response
     {
-        if (!$this->response) {
+        if ($this->response === null) {
             $this->response = new HttpResponse();
         }
 
@@ -163,8 +165,6 @@ abstract class AbstractController implements
 
         $this->events = $eventManager;
         $this->attachDefaultListeners();
-
-        return $this;
     }
 
     /**
@@ -176,7 +176,7 @@ abstract class AbstractController implements
      */
     public function getEventManager(): EventManagerInterface
     {
-        if (!$this->events) {
+        if ($this->events === null) {
             $this->setEventManager(eventManager: new EventManager());
         }
 
@@ -208,9 +208,9 @@ abstract class AbstractController implements
      *
      * @return MvcEvent
      */
-    public function getEvent(): Event|MvcEvent
+    public function getEvent(): Event
     {
-        if (!$this->event) {
+        if ($this->event === null) {
             $this->setEvent(event: new MvcEvent());
         }
 
@@ -224,7 +224,7 @@ abstract class AbstractController implements
      */
     public function getPluginManager(): PluginManager
     {
-        if (!$this->plugins) {
+        if ($this->plugins === null) {
             $this->setPluginManager(plugins: new PluginManager(creationContext: new ServiceManager()));
         }
 
@@ -254,7 +254,11 @@ abstract class AbstractController implements
      */
     public function plugin(string $name, ?array $options = null): mixed
     {
-        return $this->getPluginManager()->get(id: $name, options: $options);
+        if ($options !== null) {
+            return $this->getPluginManager()->build(name: $name, options: $options);
+        }
+
+        return $this->getPluginManager()->get(id: $name);
     }
 
     /**

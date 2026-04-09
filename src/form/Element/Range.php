@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Jield\Form\Element;
 
 use Jield\Form\Element\Number as NumberElement;
-use Jield\Validator\IsFloat as NumberValidator;
+use Laminas\Validator\IsFloat as NumberValidator;
 use Laminas\Validator\NumberComparison;
 use Laminas\Validator\Step as StepValidator;
 use Laminas\Validator\ValidatorInterface;

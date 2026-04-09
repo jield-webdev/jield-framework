@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Jield\Authorize\Service;
+namespace Jield\Authorize\Factory;
 
 use Jield\Authorize\Guard\Controller;
-use Psr\Container\ContainerInterface;
 use Laminas\ServiceManager\Factory\FactoryInterface;
+use Psr\Container\ContainerInterface;
 
 /**
  * Factory responsible of instantiating {@see \Jield\Authorize\Guard\Controller}

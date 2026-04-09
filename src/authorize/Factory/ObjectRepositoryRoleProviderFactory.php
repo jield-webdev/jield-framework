@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Jield\Authorize\Service;
+namespace Jield\Authorize\Factory;
 
+use Doctrine\Persistence\ObjectManager;
 use Jield\Authorize\Exception\InvalidArgumentException;
 use Jield\Authorize\Provider\Role\ObjectRepositoryProvider;
-use Doctrine\Persistence\ObjectManager;
-use Psr\Container\ContainerInterface;
 use Laminas\ServiceManager\Factory\FactoryInterface;
+use Psr\Container\ContainerInterface;
 
 /**
  * Factory responsible of instantiating {@see \Jield\Authorize\Provider\Role\ObjectRepositoryProvider}

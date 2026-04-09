@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Jield\Authorize\Service;
+namespace Jield\Authorize\Factory;
 
 /**
  * Factory responsible of a set of {@see \Jield\Authorize\Provider\Rule\ProviderInterface}

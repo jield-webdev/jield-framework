@@ -45,7 +45,7 @@ class InjectTemplateListener extends AbstractListenerAggregate
     /**
      * {@inheritDoc}
      */
-    public function attach(Events $events, int $priority = 1): void
+    public function attach(Events $events, $priority = 1): void
     {
         $this->listeners[] = $events->attach(eventName: MvcEvent::EVENT_DISPATCH, listener: [$this, 'injectTemplate'], priority: -90);
     }

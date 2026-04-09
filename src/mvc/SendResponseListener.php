@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\Mvc;
 
 use Laminas\EventManager\AbstractListenerAggregate;
@@ -16,10 +18,10 @@ class SendResponseListener extends AbstractListenerAggregate implements
     EventManagerAwareInterface
 {
     /** @var SendResponseEvent */
-    protected SendResponseEvent $event;
+    protected ?SendResponseEvent $event = null;
 
     /** @var EventManagerInterface */
-    protected EventManagerInterface $eventManager;
+    protected ?EventManagerInterface $eventManager = null;
 
     /**
      * Inject an EventManager instance
@@ -34,7 +36,6 @@ class SendResponseListener extends AbstractListenerAggregate implements
         ]);
         $this->eventManager = $eventManager;
         $this->attachDefaultListeners();
-        return $this;
     }
 
     /**
@@ -58,7 +59,7 @@ class SendResponseListener extends AbstractListenerAggregate implements
      * @param int $priority
      * @return void
      */
-    public function attach(EventManagerInterface $events, int $priority = 1): void
+    public function attach(EventManagerInterface $events, $priority = 1): void
     {
         $this->listeners[] = $events->attach(eventName: MvcEvent::EVENT_FINISH, listener: [$this, 'sendResponse'], priority: -10000);
     }
@@ -96,9 +97,9 @@ class SendResponseListener extends AbstractListenerAggregate implements
     /**
      * Set the send response event
      *
-     * @return SendResponseEvent
+     * @return static
      */
-    public function setEvent(SendResponseEvent $e): SendResponseEvent
+    public function setEvent(SendResponseEvent $e): static
     {
         $this->event = $e;
         return $this;

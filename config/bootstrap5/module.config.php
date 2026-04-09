@@ -20,6 +20,7 @@ return [
             'initHighlightJs'  => 'lbs5initHighlightJs',
 
             'lbs5navigation'          => Helper\Navigation::class,
+            'lbs5initHighlightJs'     => Helper\InitHighlightJs::class,
             'lbs5filterbarelement'    => View\Helper\FilterBarElement::class,
             'lbs5filtercolumnelement' => View\Helper\FilterColumnElement::class,
             'lbs5formelement'         => View\Helper\FormElement::class,
@@ -32,6 +33,7 @@ return [
             View\Helper\FormCheckbox::class        => ConfigAbstractFactory::class,
             View\Helper\FilterBarElement::class    => ConfigAbstractFactory::class,
             View\Helper\FilterColumnElement::class => ConfigAbstractFactory::class,
+            Helper\InitHighlightJs::class          => ConfigAbstractFactory::class,
         ],
         'invokables' => [
             'lbs5formdescription'   => View\Helper\FormDescription::class,
@@ -44,7 +46,6 @@ return [
             'lbs5formselect'        => View\Helper\FormSelect::class,
             'lbs5formmulticheckbox' => View\Helper\FormMultiCheckbox::class,
             'lbs5alert'             => Helper\Alert::class,
-            'initHighlightJs'       => Helper\InitHighlightJs::class,
         ],
     ],
     ConfigAbstractFactory::class => [
@@ -63,6 +64,11 @@ return [
         View\Helper\FilterColumnElement::class                 => [
             'ViewHelperManager',
             \Laminas\I18n\Translator\TranslatorInterface::class
+        ],
+        Helper\InitHighlightJs::class                          => [
+            \Laminas\View\Helper\HeadScript::class,
+            \Laminas\View\Helper\HeadLink::class,
+            \Laminas\View\Helper\InlineScript::class,
         ],
         \LaminasBootstrap5\Event\InjectJavascriptAndCss::class => [
             'Config',

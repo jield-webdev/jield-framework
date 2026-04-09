@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Jield\Authorize\Service;
+namespace Jield\Authorize\Factory;
 
 use Jield\Authorize\Provider\Role\Config;
 use Laminas\ServiceManager\Factory\FactoryInterface;

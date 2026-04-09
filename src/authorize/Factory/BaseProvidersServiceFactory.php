@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Jield\Authorize\Service;
+namespace Jield\Authorize\Factory;
 
-use Psr\Container\ContainerInterface;
 use Laminas\ServiceManager\Factory\FactoryInterface;
+use Psr\Container\ContainerInterface;
 
 /**
  * Base factory responsible of instantiating providers

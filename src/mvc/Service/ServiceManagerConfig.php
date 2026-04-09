@@ -1,8 +1,9 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\Mvc\Service;
 
-// phpcs:ignore
 use Psr\Container\ContainerInterface;
 use Laminas\EventManager\EventManager;
 use Laminas\EventManager\EventManagerAwareInterface;
@@ -11,20 +12,11 @@ use Laminas\EventManager\SharedEventManager;
 use Laminas\EventManager\SharedEventManagerInterface;
 use Jield\ModuleManager\Listener\ServiceListener;
 use Jield\ModuleManager\ModuleManager;
-use Laminas\ServiceManager\Config;
 use Laminas\ServiceManager\ServiceManager;
 use Jield\Stdlib\ArrayUtils;
 
-class ServiceManagerConfig extends Config
+final class ServiceManagerConfig
 {
-    /**
-     * Default service configuration.
-     *
-     * In addition to these, the constructor registers several factories and
-     * initializers; see that method for details.
-     *
-     * @var array
-     */
     protected array $config = [
         'abstract_factories' => [],
         'aliases'            => [
@@ -52,8 +44,6 @@ class ServiceManagerConfig extends Config
     ];
 
     /**
-     * Constructor
-     *
      * Merges internal arrays with those passed via configuration, and also
      * defines:
      *
@@ -62,19 +52,17 @@ class ServiceManagerConfig extends Config
      */
     public function __construct(array $config = [])
     {
-        $this->config['factories']['ServiceManager'] = static fn($container) => $container;
+        $this->config['factories']['ServiceManager'] = static fn(
+            ContainerInterface $container
+        ): ServiceManager => $container;
 
         $this->config['factories']['SharedEventManager'] = static fn(): SharedEventManager => new SharedEventManager();
 
         $this->config['initializers'] = ArrayUtils::merge(a: $this->config['initializers'], b: [
-            'EventManagerAwareInitializer' => static function ($first, $second): void {
-                if ($first instanceof ContainerInterface) {
-                    $container = $first;
-                    $instance  = $second;
-                } else {
-                    $container = $second;
-                    $instance  = $first;
-                }
+            'EventManagerAwareInitializer' => static function (
+                ContainerInterface $container,
+                object $instance
+            ): void {
                 if (! $instance instanceof EventManagerAwareInterface) {
                     return;
                 }
@@ -90,7 +78,7 @@ class ServiceManagerConfig extends Config
             },
         ]);
 
-        parent::__construct($config);
+        $this->config = ArrayUtils::merge(a: $this->config, b: $config);
     }
 
     /**
@@ -111,17 +99,12 @@ class ServiceManagerConfig extends Config
         // This is invoked as part of the bootstrapping process, and requires
         // the ability to override services.
         $services->setAllowOverride(flag: true);
-        parent::configureServiceManager($services);
+        $services->configure($this->config);
         $services->setAllowOverride(flag: false);
 
         return $services;
     }
 
-    /**
-     * Return all service configuration
-     *
-     * @return array
-     */
     public function toArray(): array
     {
         return $this->config;

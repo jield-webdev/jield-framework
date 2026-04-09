@@ -1,14 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\Mvc;
 
-use Laminas\EventManager\EventManagerAwareInterface;
-use Laminas\EventManager\EventManagerInterface;
 use Jield\Mvc\Service\ServiceManagerConfig;
-use Laminas\ServiceManager\ServiceManager;
 use Jield\Stdlib\RequestInterface;
 use Jield\Stdlib\ResponseInterface;
-
+use Laminas\EventManager\EventManagerAwareInterface;
+use Laminas\EventManager\EventManagerInterface;
+use Laminas\ServiceManager\ServiceManager;
 use function array_merge;
 use function array_unique;
 
@@ -47,51 +48,52 @@ class Application implements
     EventManagerAwareInterface
 {
     public const string ERROR_CONTROLLER_CANNOT_DISPATCH = 'error-controller-cannot-dispatch';
-    public const string ERROR_CONTROLLER_NOT_FOUND       = 'error-controller-not-found';
-    public const string ERROR_CONTROLLER_INVALID         = 'error-controller-invalid';
-    public const string ERROR_EXCEPTION                  = 'error-exception';
-    public const string ERROR_ROUTER_NO_MATCH            = 'error-router-no-match';
-    public const string ERROR_MIDDLEWARE_CANNOT_DISPATCH = 'error-middleware-cannot-dispatch';
+    public const string ERROR_CONTROLLER_NOT_FOUND = 'error-controller-not-found';
+    public const string ERROR_CONTROLLER_INVALID = 'error-controller-invalid';
+    public const string ERROR_EXCEPTION = 'error-exception';
+    public const string ERROR_ROUTER_NO_MATCH = 'error-router-no-match';
 
     /**
      * Default application event listeners
      *
      * @var array
      */
-    protected array $defaultListeners = [
-        'RouteListener',
-        'MiddlewareListener',
-        'DispatchListener',
-        'HttpMethodListener',
-        'ViewManager',
-        'SendResponseListener',
-    ];
+    protected array $defaultListeners
+        = [
+            'RouteListener',
+            'MiddlewareListener',
+            'DispatchListener',
+            'HttpMethodListener',
+            'ViewManager',
+            'SendResponseListener',
+        ];
 
     /**
      * MVC event token
      *
      * @var MvcEvent
      */
-    protected MvcEvent $event;
+    protected ?MvcEvent $event = null;
 
     /** @var EventManagerInterface */
     protected EventManagerInterface $events;
 
     /** @var RequestInterface */
-    protected mixed $request;
+    protected RequestInterface $request;
 
     /** @var ResponseInterface */
-    protected mixed $response;
+    protected ResponseInterface $response;
 
     /**
      * Constructor
      */
     public function __construct(
         protected ServiceManager $serviceManager,
-        ?EventManagerInterface $events = null,
-        ?RequestInterface $request = null,
-        ?ResponseInterface $response = null
-    ) {
+        ?EventManagerInterface   $events = null,
+        ?RequestInterface        $request = null,
+        ?ResponseInterface       $response = null
+    )
+    {
         $this->setEventManager(eventManager: $events ?: $serviceManager->get(id: 'EventManager'));
         $this->request  = $request ?: $serviceManager->get(id: 'Request');
         $this->response = $response ?: $serviceManager->get(id: 'Response');
@@ -130,7 +132,7 @@ class Application implements
         }
 
         // Setup MVC Event
-        $this->event = $event  = new MvcEvent();
+        $this->event = $event = new MvcEvent();
         $event->setName(name: MvcEvent::EVENT_BOOTSTRAP);
         $event->setTarget(target: $this);
         $event->setApplication(application: $this);
@@ -181,6 +183,11 @@ class Application implements
      */
     public function getMvcEvent(): MvcEvent
     {
+        if ($this->event === null) {
+            $this->event = new MvcEvent();
+            $this->event->setApplication(application: $this);
+        }
+
         return $this->event;
     }
 
@@ -196,7 +203,6 @@ class Application implements
             static::class,
         ]);
         $this->events = $eventManager;
-        return $this;
     }
 
     /**

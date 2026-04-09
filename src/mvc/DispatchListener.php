@@ -48,7 +48,7 @@ class DispatchListener extends AbstractListenerAggregate
      * @param int $priority
      * @return void
      */
-    public function attach(EventManagerInterface $events, int $priority = 1): void
+    public function attach(EventManagerInterface $events, $priority = 1): void
     {
         $this->listeners[] = $events->attach(eventName: MvcEvent::EVENT_DISPATCH, listener: [$this, 'onDispatch']);
     }
@@ -84,7 +84,7 @@ class DispatchListener extends AbstractListenerAggregate
 
         try {
             $controller = $controllerManager->get(id: $controllerName);
-        } catch (InvalidControllerException|InvalidServiceException $exception) {
+        } catch (InvalidServiceException $exception) {
             $return = $this->marshalControllerNotFoundEvent(
                 type: $application::ERROR_CONTROLLER_INVALID,
                 controllerName: $controllerName,

@@ -1,6 +1,6 @@
 {
   "name": "jield/framework",
-  "description": "Laminas Module that provides helper functions for Bootstrap 5",
+  "description": "A modular PHP framework built on top of Laminas, Doctrine, and other powerful libraries, designed to provide a flexible and scalable foundation for web applications.",
   "version": "0.1",
   "type": "library",
   "keywords": [
@@ -26,15 +26,15 @@
     "laminas/laminas-cache": "^4.3.0",
     "laminas/laminas-cache-storage-adapter-filesystem": "^3.3.0",
     "laminas/laminas-cache-storage-adapter-memory": "^3.3.0",
-    "laminas/laminas-view": "^3.0.1",
+    "laminas/laminas-view": "^3.1.0",
     "laminas/laminas-filter": "^3.4.0",
     "laminas/laminas-inputfilter": "^3",
-    "laminas/laminas-validator": "^3",
-    "laminas/laminas-paginator": "^3",
+    "laminas/laminas-validator": "^3.16",
+    "laminas/laminas-paginator": "^3.1",
     "laminas/laminas-servicemanager": "^4",
     "laminas/laminas-eventmanager": "^3.15",
     "laminas/laminas-router": "^4",
-    "laminas/laminas-hydrator": "^4",
+    "laminas/laminas-hydrator": "^4.19",
     "laminas/laminas-uri": "^2.15",
     "laminas/laminas-session": "^3.0",
     "laminas/laminas-navigation": "^2.24",
@@ -81,7 +81,6 @@
       "Jield\\ApiTools\\": "src\\api-tools",
       "Jield\\AssetManager\\": "src\\asset-manager",
       "Jield\\Validator\\": "src\\validator",
-      "BjyAuthorize\\": "src\\authorize",
       "DoctrineModule\\": "src\\doctrine-module",
       "DoctrineORMModule\\": "src\\doctrine-orm-module"
     }

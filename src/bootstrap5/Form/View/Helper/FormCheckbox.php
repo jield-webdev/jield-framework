@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\Bootstrap5\Form\View\Helper;
 
 use Jield\Form\ElementInterface;
@@ -33,13 +35,14 @@ final class FormCheckbox extends Helper\FormCheckbox
             $element->setAttribute(key: 'class', value: 'form-check-input is-invalid');
         }
 
-        $element->setAttribute(key: 'id', value: md5(string: $element->getName()));
+        $id = md5(string: $element->getName());
+        $element->setAttribute(key: 'id', value: $id);
 
         $renderedElement = parent::render(element: $element);
 
         $template = '<div class="form-check form-switch">%s<label class="form-check-label" for="%s">%s</label></div>';
 
-        return sprintf($template, $renderedElement, md5(string: $element->getName()), $this->findLabel(element: $element));
+        return sprintf($template, $renderedElement, $id, $this->findLabel(element: $element));
     }
 
     private function findLabel(ElementInterface $element): ?string

@@ -9,6 +9,7 @@ use Laminas\ServiceManager\AbstractSingleInstancePluginManager;
 use Laminas\ServiceManager\Factory\InvokableFactory;
 use Laminas\ServiceManager\ServiceManager;
 use Laminas\Validator\ValidatorInterface;
+use Laminas\Validator\ValidatorPluginManagerAwareInterface;
 use Psr\Container\ContainerInterface;
 use function array_replace_recursive;
 

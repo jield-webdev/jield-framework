@@ -1,12 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\Mvc\Controller;
 
-// phpcs:ignore
 use Laminas\EventManager\EventManagerAwareInterface;
 use Laminas\EventManager\SharedEventManagerInterface;
 use Laminas\ServiceManager\AbstractPluginManager;
-use Laminas\ServiceManager\ConfigInterface;
 use Laminas\ServiceManager\Exception\InvalidServiceException;
 use Jield\Stdlib\DispatchableInterface;
 use Psr\Container\ContainerInterface;
@@ -41,13 +41,12 @@ class ControllerManager extends AbstractPluginManager
      * Injects an initializer for injecting controllers with an
      * event manager and plugin manager.
      *
-     * @param ConfigInterface|ContainerInterface $configOrContainerInstance
      */
-    public function __construct($configOrContainerInstance, array $config = [])
+    public function __construct(ContainerInterface $creationContext, array $config = [])
     {
         $this->addInitializer(initializer: [$this, 'injectEventManager']);
         $this->addInitializer(initializer: [$this, 'injectPluginManager']);
-        parent::__construct(creationContext: $configOrContainerInstance, config: $config);
+        parent::__construct(creationContext: $creationContext, config: $config);
     }
 
     /**
@@ -55,6 +54,7 @@ class ControllerManager extends AbstractPluginManager
      *
      * {@inheritDoc}
      */
+    #[\Override]
     public function validate($instance): void
     {
         if (!$instance instanceof $this->instanceOf) {

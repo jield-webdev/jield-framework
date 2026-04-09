@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Jield\Authorize\Service;
+namespace Jield\Authorize\Factory;
 
 use Laminas\Cache\Service\StorageAdapterFactoryInterface;
 use Laminas\ServiceManager\Factory\FactoryInterface;

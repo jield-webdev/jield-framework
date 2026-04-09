@@ -40,7 +40,7 @@ class ConfigProvider
                 AssertionService::class               => AssertionServiceFactory::class,
                 AuthenticationIdentityProvider::class => AuthenticationIdentityProviderFactory::class,
                 RulesWithAssertion::class             => RuleWithAssertionFactory::class,
-                Route::class                          => Service\RouteGuardServiceFactory::class,
+                Route::class                          => Factory\RouteGuardServiceFactory::class,
             ],
         ];
     }

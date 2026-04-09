@@ -6,12 +6,12 @@ namespace Jield\Search\Message;
 use Jield\Search\Service\SearchServiceInterface;
 use Webmozart\Assert\Assert;
 
-final class UpdateSearchEntityMessage
+final readonly class UpdateSearchEntityMessage
 {
     public function __construct(
-        private readonly string $entityClassName,
-        private readonly int    $entityId,
-        private readonly array  $searchServices,
+        private string $entityClassName,
+        private int    $entityId,
+        private array  $searchServices,
     )
     {
         Assert::allImplementsInterface(value: $searchServices, interface: SearchServiceInterface::class);

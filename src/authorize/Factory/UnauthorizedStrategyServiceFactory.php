@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Jield\Authorize\Service;
+namespace Jield\Authorize\Factory;
 
 use Jield\Authorize\View\UnauthorizedStrategy;
 use Laminas\ServiceManager\Factory\FactoryInterface;

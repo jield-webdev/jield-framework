@@ -61,7 +61,7 @@ class Module implements
             'service_manager'            => $configProvider->getDependencyConfig(),
         ];
 
-        return include __DIR__ . '/../config/module.config.php';
+        return include __DIR__ . '/module.config.php';
     }
 
     public function getModuleDependencies(): array

@@ -63,14 +63,17 @@ class SearchUpdateService
             $entities = $entities->toArray();
         }
 
-        //The array cannot be emtpy
+        //The array cannot be empty
         if (empty($entities)) {
             return;
         }
 
         //When doing this, the entities _must_ be of the same class
         //Use the entity class name of the first entity (use reset to get the last element)
+        /** @var object $firstEntity */
         $firstEntity = reset(array: $entities);
+
+        Assert::object(value: $firstEntity, message: 'The first entity must be an object');
 
         $entityClassName = $firstEntity::class;
 

@@ -45,7 +45,7 @@ class HttpMethodListener extends AbstractListenerAggregate
     /**
      * {@inheritdoc}
      */
-    public function attach(EventManagerInterface $events, int $priority = 1): void
+    public function attach(EventManagerInterface $events, $priority = 1): void
     {
         if (! $this->isEnabled()) {
             return;

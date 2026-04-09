@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\Bootstrap5\Form\View\Helper;
 
 use Jield\Form\ElementInterface;
@@ -74,13 +76,15 @@ class FormElement extends Helper\FormElement
 
     public function __invoke(
         ?ElementInterface $element = null,
-        string            $type = self::TYPE_HORIZONTAL,
+        string|bool       $type = self::TYPE_HORIZONTAL,
         bool              $formElementOnly = false
     ): FormElement|string|Helper\FormElement|static
     {
         //We previously has the type a boolean with $inline
         if ($type === true) {
             $type = self::TYPE_DEFAULT;
+        } elseif ($type === false) {
+            $type = self::TYPE_HORIZONTAL;
         }
 
         if ($formElementOnly) {
