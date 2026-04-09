@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Jield\Authorize\Factory;
 
+use Jield\Authorize\Config;
 use Jield\Authorize\Guard\Controller;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Psr\Container\ContainerInterface;
@@ -18,10 +19,10 @@ class ControllerGuardServiceFactory implements FactoryInterface
      *
      * @see \Laminas\ServiceManager\Factory\FactoryInterface::__invoke()
      */
-    public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): object|Controller
+    public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): Controller
     {
         return new Controller(
-            rules: $container->get('Jield\Authorize\Config')['guards'][Controller::class],
+            rules: $container->get(Config::class)['guards'][Controller::class],
             container: $container
         );
     }

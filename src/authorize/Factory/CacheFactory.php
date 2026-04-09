@@ -7,6 +7,7 @@ namespace Jield\Authorize\Factory;
 use Laminas\Cache\Service\StorageAdapterFactoryInterface;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Psr\Container\ContainerInterface;
+use Jield\Authorize\Config;
 use function is_array;
 
 /**
@@ -24,7 +25,7 @@ class CacheFactory implements FactoryInterface
         /** @var StorageAdapterFactoryInterface $storageFactory */
         $storageFactory = $container->get(StorageAdapterFactoryInterface::class);
 
-        $cacheOptions = $container->get('Jield\Authorize\Config')['cache_options'];
+        $cacheOptions = $container->get(Config::class)['cache_options'];
 
         $plugins = [];
         foreach ($cacheOptions['plugins'] as $plugin) {

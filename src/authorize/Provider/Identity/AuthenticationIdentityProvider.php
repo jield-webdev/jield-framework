@@ -33,8 +33,6 @@ class AuthenticationIdentityProvider implements ProviderInterface
         array                              $authorizeConfig
     )
     {
-        parent::__construct(authService: $authService);
-
         $this->defaultRole       = $authorizeConfig['default_role'] ?? self::ACCESS_PUBLIC;
         $this->authenticatedRole = $authorizeConfig['authenticated_role'] ?? self::ACCESS_AUTHENTICATED;
     }

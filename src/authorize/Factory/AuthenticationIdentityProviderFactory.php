@@ -8,6 +8,7 @@ use Jield\Authentication\AuthenticationService;
 use Jield\Authorize\Provider\Identity\AuthenticationIdentityProvider;
 use Jield\Authorize\Service\AccessRolesByUserInterface;
 use Jield\Authorize\Service\HasPermitInterface;
+use Jield\Authorize\Config;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Psr\Container\ContainerInterface;
 use Webmozart\Assert\Assert;
@@ -48,7 +49,7 @@ final class AuthenticationIdentityProviderFactory implements FactoryInterface
             $container->get(AuthenticationService::class),
             $container->get($config['access_service']),
             $container->get($config['permit_service']),
-            $container->get('Jield\AuthorizeConfig')
+            $container->get(Config::class),
         ];
 
         return new AuthenticationIdentityProvider(... $dependencies);

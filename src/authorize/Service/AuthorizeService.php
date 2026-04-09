@@ -13,6 +13,12 @@ use Jield\Authorize\Provider\Role\ProviderInterface as RoleProvider;
 use Jield\Authorize\Provider\Rule\ProviderInterface as RuleProvider;
 use Jield\Authorize\Role\Role;
 use Jield\Authorize\Role\UserAsRole;
+use Jield\Authorize\Config;
+use Jield\Authorize\Cache;
+use Jield\Authorize\Guards;
+use Jield\Authorize\RoleProviders;
+use Jield\Authorize\ResourceProviders;
+use Jield\Authorize\RuleProviders;
 use Laminas\Cache\Storage\Adapter\AbstractAdapter;
 use Laminas\Permissions\Acl\Acl;
 use Laminas\Permissions\Acl\Exception\InvalidArgumentException;
@@ -75,12 +81,12 @@ class AuthorizeService
     public function __construct(private readonly ContainerInterface $container)
     {
         $this->authenticationIdentityProvider = $container->get(AuthenticationIdentityProvider::class);
-        parent::__construct(config: $container->get('Jield\Authorize\Config'), serviceLocator: $container);
+        $this->config = $container->get(Config::class);
 
         $cacheEnabled = $this->config['cache_enabled'] ?? false;
         if ($cacheEnabled) {
             /** @var AbstractAdapter $cache */
-            $cache       = $container->get('Jield\Authorize\Cache');
+            $cache       = $container->get(Cache::class);
             $this->cache = $cache;
         }
     }
@@ -281,10 +287,9 @@ class AuthorizeService
     }
 
     /**
-     * This function is very important and overrides the deefault "bjyauhorize-dentity
-     * @return string
+     * This function is very important and overrides the default "bjyauthorize-identity".
      */
-    public function getIdentity(): string
+    public function getIdentity(): UserAsRole
     {
         return $this->authenticationIdentityProvider->getIdentityAsRole();
     }
@@ -299,7 +304,7 @@ class AuthorizeService
         $this->acl = new Acl();
 
         //Set the role provider first
-        foreach ($this->container->get('Jield\Authorize\RoleProviders') as $provider) {
+        foreach ($this->container->get(RoleProviders::class) as $provider) {
             $this->addRoleProvider(provider: $provider);
         }
 
@@ -307,8 +312,16 @@ class AuthorizeService
             $this->addRoles(roles: $provider->getRoles());
         }
 
-        foreach ($this->container->get('Jield\Authorize\Guards') as $guard) {
+        foreach ($this->container->get(Guards::class) as $guard) {
             $this->addGuard(guard: $guard);
+        }
+
+        foreach ($this->container->get(ResourceProviders::class) as $provider) {
+            $this->addResourceProvider(provider: $provider);
+        }
+
+        foreach ($this->container->get(RuleProviders::class) as $provider) {
+            $this->addRuleProvider(provider: $provider);
         }
 
         foreach ($this->resourceProviders as $provider) {

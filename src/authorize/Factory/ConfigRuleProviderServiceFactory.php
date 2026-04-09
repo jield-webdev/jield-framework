@@ -7,6 +7,7 @@ namespace Jield\Authorize\Factory;
 use Jield\Authorize\Provider\Rule\Config;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Psr\Container\ContainerInterface;
+use Jield\Authorize\Config as AuthorizeConfig;
 
 /**
  * Factory responsible of instantiating {@see \Jield\Authorize\Provider\Rule\Config}
@@ -21,7 +22,7 @@ class ConfigRuleProviderServiceFactory implements FactoryInterface
     public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): Config
     {
         return new Config(
-            config: $container->get('Jield\Authorize\Config')['rule_providers'][Config::class]
+            config: $container->get(AuthorizeConfig::class)['rule_providers'][Config::class]
         );
     }
 }

@@ -6,6 +6,7 @@ namespace Jield\Authorize\Factory;
 
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Psr\Container\ContainerInterface;
+use Jield\Authorize\Config;
 
 /**
  * Base factory responsible of instantiating providers
@@ -22,7 +23,7 @@ abstract class BaseProvidersServiceFactory implements FactoryInterface
      */
     public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): object|array
     {
-        $config    = $container->get('Jield\Authorize\Config');
+        $config    = $container->get(Config::class);
         $providers = [];
 
         foreach ($config[static::PROVIDER_SETTING] as $providerName => $providerConfig) {

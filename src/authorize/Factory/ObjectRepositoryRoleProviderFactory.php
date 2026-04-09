@@ -9,6 +9,7 @@ use Jield\Authorize\Exception\InvalidArgumentException;
 use Jield\Authorize\Provider\Role\ObjectRepositoryProvider;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Psr\Container\ContainerInterface;
+use Jield\Authorize\Config;
 
 /**
  * Factory responsible of instantiating {@see \Jield\Authorize\Provider\Role\ObjectRepositoryProvider}
@@ -17,7 +18,7 @@ class ObjectRepositoryRoleProviderFactory implements FactoryInterface
 {
     public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): ObjectRepositoryProvider
     {
-        $config = $container->get('Jield\Authorize\Config');
+        $config = $container->get(Config::class);
 
         if (!isset($config['role_providers'][ObjectRepositoryProvider::class])) {
             throw new InvalidArgumentException(
