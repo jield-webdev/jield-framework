@@ -9,7 +9,7 @@ use Doctrine\Persistence\ObjectManager;
 use Doctrine\Persistence\ObjectRepository;
 use DoctrineModule\Validator\Service\Exception\ServiceCreationException;
 use Laminas\ServiceManager\Factory\FactoryInterface;
-use Jield\Stdlib\ArrayUtils;
+use Laminas\Stdlib\ArrayUtils;
 use Psr\Container\ContainerInterface;
 
 use function class_exists;

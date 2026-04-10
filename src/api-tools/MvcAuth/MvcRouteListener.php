@@ -8,9 +8,9 @@ use Jield\Authentication\AuthenticationService;
 use Jield\Authentication\Result;
 use Laminas\EventManager\AbstractListenerAggregate;
 use Laminas\EventManager\EventManagerInterface;
-use Jield\Http\Request as HttpRequest;
+use Laminas\Http\Request as HttpRequest;
 use Jield\Mvc\MvcEvent;
-use Jield\Stdlib\ResponseInterface as Response;
+use Laminas\Stdlib\ResponseInterface as Response;
 
 use Override;
 use function is_bool;
@@ -45,7 +45,7 @@ class MvcRouteListener extends AbstractListenerAggregate
      * @param int $priority
      */
     #[Override]
-    public function attach(EventManagerInterface $events, int $priority = 1): void
+    public function attach(EventManagerInterface $events, $priority = 1): void
     {
         $this->listeners[] = $events->attach(eventName: MvcEvent::EVENT_ROUTE, listener: $this->authentication(...), priority: -50);
         $this->listeners[] = $events->attach(eventName: MvcEvent::EVENT_ROUTE, listener: $this->authenticationPost(...), priority: -51);

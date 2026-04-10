@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Jield\Form;
 
 use Laminas\InputFilter\InputFilterProviderInterface;
-use Jield\Stdlib\ArrayUtils;
+use Laminas\Stdlib\ArrayUtils;
 use Traversable;
 
 final class InputFilterProviderFieldset extends Fieldset implements InputFilterProviderInterface

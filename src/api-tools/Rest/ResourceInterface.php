@@ -7,7 +7,7 @@ namespace Jield\ApiTools\Rest;
 use Laminas\EventManager\EventManagerAwareInterface;
 use Laminas\InputFilter\InputFilterInterface;
 use Laminas\Router\RouteMatch;
-use Jield\Stdlib\Parameters;
+use Laminas\Stdlib\Parameters;
 use Jield\ApiTools\MvcAuth\Identity\IdentityInterface;
 
 /**

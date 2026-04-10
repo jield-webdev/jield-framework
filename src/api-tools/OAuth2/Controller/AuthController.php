@@ -10,12 +10,12 @@ use Jield\ApiTools\ApiProblem\Exception\ProblemExceptionInterface;
 use Jield\ApiTools\ContentNegotiation\ControllerPlugin\BodyParams;
 use Jield\ApiTools\ContentNegotiation\ViewModel;
 use Jield\ApiTools\OAuth2\Provider\UserId\UserIdProviderInterface;
-use Jield\Http\PhpEnvironment\Request as PhpEnvironmentRequest;
-use Jield\Http\Request as HttpRequest;
-use Jield\Http\Response;
-use Jield\Http\Header\HeaderInterface;
+use Laminas\Http\PhpEnvironment\Request as PhpEnvironmentRequest;
+use Laminas\Http\Request as HttpRequest;
+use Laminas\Http\Response;
+use Laminas\Http\Header\HeaderInterface;
 use Jield\Mvc\Controller\AbstractActionController;
-use Jield\Stdlib\ResponseInterface;
+use Laminas\Stdlib\ResponseInterface;
 use OAuth2\Request as OAuth2Request;
 use OAuth2\Response as OAuth2Response;
 use OAuth2\Server as OAuth2Server;
@@ -318,7 +318,7 @@ class AuthController extends AbstractActionController
     }
 
     /**
-     * Convert the OAuth2 response to a \Jield\Http\Response
+     * Convert the OAuth2 response to a \Laminas\Http\Response
      */
     private function setHttpResponse(OAuth2Response $response): Response
     {

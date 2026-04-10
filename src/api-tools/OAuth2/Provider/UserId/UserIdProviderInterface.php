@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Jield\ApiTools\OAuth2\Provider\UserId;
 
-use Jield\Stdlib\RequestInterface;
+use Laminas\Stdlib\RequestInterface;
 
 interface UserIdProviderInterface
 {

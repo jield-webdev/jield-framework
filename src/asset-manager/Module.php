@@ -5,7 +5,7 @@ namespace Jield\AssetManager;
 use Jield\AssetManager\Service\AssetManager;
 use Laminas\EventManager\EventInterface;
 use Laminas\EventManager\EventManagerInterface;
-use Jield\Http\Response;
+use Laminas\Http\Response;
 use Jield\ModuleManager\Feature\BootstrapListenerInterface;
 use Jield\ModuleManager\Feature\ConfigProviderInterface;
 use Jield\Mvc\MvcEvent;

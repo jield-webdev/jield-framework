@@ -9,7 +9,7 @@ use Laminas\EventManager\ListenerAggregateInterface;
 use Laminas\EventManager\ListenerAggregateTrait;
 use Jield\ModuleManager\Listener\ConfigListener;
 use Jield\ModuleManager\ModuleEvent;
-use Jield\Stdlib\ArrayUtils;
+use Laminas\Stdlib\ArrayUtils;
 
 use Override;
 use function array_shift;
@@ -51,7 +51,7 @@ class PrototypeRouteListener implements ListenerAggregateInterface
      * @param int $priority
      */
     #[Override]
-    public function attach(EventManagerInterface $events, int $priority = 1): void
+    public function attach(EventManagerInterface $events, $priority = 1): void
     {
         $this->listeners[] = $events->attach(eventName: ModuleEvent::EVENT_MERGE_CONFIG, listener: $this->onMergeConfig(...));
     }

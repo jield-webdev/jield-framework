@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Jield\ApiTools\Hal\View;
 
 use Jield\ApiTools\ApiProblem\View\ApiProblemModel;
-use Jield\Http\Response;
+use Laminas\Http\Response;
 use Laminas\View\Model\ModelInterface;
 use Laminas\View\Strategy\JsonStrategy;
 use Laminas\View\ViewEvent;

@@ -3,7 +3,7 @@
 namespace Jield\Mvc\Service;
 
 // phpcs:ignore
-use Psr\Container\ContainerInterface;
+use Interop\Container\ContainerInterface;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Traversable;
 
@@ -22,7 +22,7 @@ class ConfigFactory implements FactoryInterface
      * @param null|array $options
      * @return array|Traversable
      */
-    public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): mixed
+    public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): Traversable|array
     {
         $moduleManager = $container->get('ModuleManager');
         $moduleManager->loadModules();

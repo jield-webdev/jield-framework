@@ -7,7 +7,7 @@ namespace DoctrineORMModule\Options;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Driver;
 use Doctrine\DBAL\Driver\PDO\MySQL\Driver as PDOMySQLDriver;
-use Jield\Stdlib\AbstractOptions;
+use Laminas\Stdlib\AbstractOptions;
 use PDO;
 
 /**

@@ -6,8 +6,8 @@ namespace Jield\ApiTools\MvcAuth\Authentication;
 
 use Jield\ApiTools\MvcAuth\Identity\IdentityInterface;
 use Jield\ApiTools\MvcAuth\MvcAuthEvent;
-use Jield\Http\Request;
-use Jield\Http\Response;
+use Laminas\Http\Request;
+use Laminas\Http\Response;
 
 interface AdapterInterface
 {
@@ -46,7 +46,7 @@ interface AdapterInterface
     /**
      * Attempt to authenticate the current request.
      *
-     * @return IdentityInterface|\Jield\Http\PhpEnvironment\Response
+     * @return IdentityInterface|\Laminas\Http\PhpEnvironment\Response
      */
-    public function authenticate(Request $request, Response $response, MvcAuthEvent $mvcAuthEvent): IdentityInterface|\Jield\Http\PhpEnvironment\Response;
+    public function authenticate(Request $request, Response $response, MvcAuthEvent $mvcAuthEvent): IdentityInterface|\Laminas\Http\PhpEnvironment\Response;
 }

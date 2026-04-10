@@ -4,7 +4,7 @@ namespace Jield\Mvc\Service;
 
 use ArrayAccess;
 // phpcs:ignore
-use Psr\Container\ContainerInterface;
+use Interop\Container\ContainerInterface;
 
 use function is_array;
 
@@ -17,11 +17,11 @@ trait HttpViewManagerConfigTrait
      */
     private function getConfig(ContainerInterface $container): ArrayAccess|array
     {
-        $config = $container->has(id: 'config') ? $container->get('config') : [];
+        $config = $container->has('config') ? $container->get('config') : [];
 
         if (
             isset($config['view_manager'])
-            && (is_array(value: $config['view_manager'])
+            && (is_array($config['view_manager'])
                 || $config['view_manager'] instanceof ArrayAccess
             )
         ) {

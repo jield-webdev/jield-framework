@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Jield\ModuleManager\Listener;
 
-use Jield\Stdlib\AbstractOptions;
+use Laminas\Stdlib\AbstractOptions;
 use Traversable;
 
 use function func_get_args;

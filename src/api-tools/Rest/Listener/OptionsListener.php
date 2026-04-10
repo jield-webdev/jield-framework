@@ -7,8 +7,8 @@ namespace Jield\ApiTools\Rest\Listener;
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\EventManager\ListenerAggregateInterface;
 use Laminas\EventManager\ListenerAggregateTrait;
-use Jield\Http\Request;
-use Jield\Http\Response;
+use Laminas\Http\Request;
+use Laminas\Http\Response;
 use Jield\Mvc\MvcEvent;
 use Laminas\Router\RouteMatch;
 use Override;
@@ -39,7 +39,7 @@ class OptionsListener implements ListenerAggregateInterface
      * @param int $priority
      */
     #[Override]
-    public function attach(EventManagerInterface $events, int $priority = 1): void
+    public function attach(EventManagerInterface $events, $priority = 1): void
     {
         $this->listeners[] = $events->attach(eventName: MvcEvent::EVENT_ROUTE, listener: $this->onRoute(...), priority: -100);
     }

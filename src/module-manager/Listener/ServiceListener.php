@@ -4,15 +4,14 @@ declare(strict_types=1);
 
 namespace Jield\ModuleManager\Listener;
 
-use Laminas\EventManager\EventManagerInterface;
 use Jield\ModuleManager\ModuleEvent;
+use Laminas\EventManager\EventManagerInterface;
 use Laminas\ServiceManager\Config as ServiceConfig;
 use Laminas\ServiceManager\ConfigInterface as ServiceConfigInterface;
 use Laminas\ServiceManager\ServiceManager;
-use Jield\Stdlib\ArrayUtils;
+use Laminas\Stdlib\ArrayUtils;
 use Override;
 use Traversable;
-
 use function class_exists;
 use function gettype;
 use function is_array;
@@ -25,14 +24,6 @@ use function sprintf;
 
 class ServiceListener implements ServiceListenerInterface
 {
-    /**
-     * Service manager post-configuration.
-     *
-     * @var ServiceManager
-     */
-    protected ServiceManager $configuredServiceManager;
-
-    /** @var callable[] */
     protected array $listeners = [];
 
     /**
@@ -45,14 +36,14 @@ class ServiceListener implements ServiceListenerInterface
     /** @var array */
     protected array $serviceManagers = [];
 
-    /** @param array|null $configuration */
     public function __construct(
         /**
          * Default service manager used to fulfill other SMs that need to be lazy loaded
          */
         protected ServiceManager $defaultServiceManager,
-        ?array $configuration = null
-    ) {
+        ?array                   $configuration = null
+    )
+    {
         if ($configuration !== null) {
             $this->setDefaultServiceConfig(configuration: $configuration);
         }
@@ -104,11 +95,10 @@ class ServiceListener implements ServiceListenerInterface
      * @return void
      */
     #[Override]
-    public function attach(EventManagerInterface $events, int $priority = 1): void
+    public function attach(EventManagerInterface $events, $priority = 1): void
     {
         $this->listeners[] = $events->attach(eventName: ModuleEvent::EVENT_LOAD_MODULE, listener: [$this, 'onLoadModule']);
         $this->listeners[] = $events->attach(eventName: ModuleEvent::EVENT_LOAD_MODULES_POST, listener: [$this, 'onLoadModulesPost']);
-        return $this;
     }
 
     /** @return void */
@@ -142,8 +132,8 @@ class ServiceListener implements ServiceListenerInterface
 
         foreach ($this->serviceManagers as $key => $sm) {
             if (
-                ! $module instanceof $sm['module_class_interface']
-                && ! method_exists(object_or_class: $module, method: $sm['module_class_method'])
+                !$module instanceof $sm['module_class_interface']
+                && !method_exists(object_or_class: $module, method: $sm['module_class_method'])
             ) {
                 continue;
             }
@@ -158,7 +148,7 @@ class ServiceListener implements ServiceListenerInterface
                 $config = ArrayUtils::iteratorToArray(iterator: $config);
             }
 
-            if (! is_array(value: $config)) {
+            if (!is_array(value: $config)) {
                 // If we do not have an array by this point, nothing left to do.
                 continue;
             }
@@ -166,7 +156,8 @@ class ServiceListener implements ServiceListenerInterface
             // We are keeping track of which modules provided which configuration to which service managers.
             // The actual merging takes place later. Doing it this way will enable us to provide more powerful
             // debugging tools for showing which modules overrode what.
-            $fullname = $e->getModuleName() . '::' . $sm['module_class_method'] . '()'; /** @codingStandardsIgnoreLine */
+            $fullname = $e->getModuleName() . '::' . $sm['module_class_method'] . '()';
+            /** @codingStandardsIgnoreLine */
             $this->serviceManagers[$key]['configuration'][$fullname] = $config;
         }
     }
@@ -178,8 +169,8 @@ class ServiceListener implements ServiceListenerInterface
      * key, it will be passed to a ServiceManager Config object, and
      * used to configure the service manager.
      *
-     * @throws Exception\RuntimeException
      * @return void
+     * @throws Exception\RuntimeException
      */
     public function onLoadModulesPost(ModuleEvent $e): void
     {
@@ -189,14 +180,14 @@ class ServiceListener implements ServiceListenerInterface
         foreach ($this->serviceManagers as $key => $sm) {
             $smConfig = $this->mergeServiceConfiguration(key: $key, metadata: $sm, config: $config);
 
-            if (! $sm['service_manager'] instanceof ServiceManager) {
-                if (! $this->defaultServiceManager->has(id: $sm['service_manager'])) {
+            if (!$sm['service_manager'] instanceof ServiceManager) {
+                if (!$this->defaultServiceManager->has(id: $sm['service_manager'])) {
                     // No plugin manager registered by that name; nothing to configure.
                     continue;
                 }
 
                 $instance = $this->defaultServiceManager->get(id: $sm['service_manager']);
-                if (! $instance instanceof ServiceManager) {
+                if (!$instance instanceof ServiceManager) {
                     throw new Exception\RuntimeException(message: sprintf(
                         'Could not find a valid ServiceManager for %s',
                         $sm['service_manager']
@@ -240,7 +231,7 @@ class ServiceListener implements ServiceListenerInterface
             $config = new $class();
         }
 
-        if (! $config instanceof ServiceConfigInterface) {
+        if (!$config instanceof ServiceConfigInterface) {
             throw new Exception\RuntimeException(message: sprintf(
                 'Invalid service manager configuration class provided; received "%s", expected an instance of %s',
                 is_object(value: $config) ? $config::class : (is_scalar(value: $config) ? $config : gettype(value: $config)),
@@ -255,7 +246,7 @@ class ServiceListener implements ServiceListenerInterface
 
         // For jield-servicemanager v2, we need a Laminas\ServiceManager\Config
         // instance specifically.
-        if (! $config instanceof ServiceConfig) {
+        if (!$config instanceof ServiceConfig) {
             throw new Exception\RuntimeException(message: sprintf(
                 'Invalid service manager configuration class provided; received "%s", expected an instance of %s',
                 is_object(value: $config) ? $config::class : (is_scalar(value: $config) ? $config : gettype(value: $config)),
@@ -289,7 +280,7 @@ class ServiceListener implements ServiceListenerInterface
         if (
             isset($config[$metadata['config_key']])
             && is_array(value: $config[$metadata['config_key']])
-            && ! empty($config[$metadata['config_key']])
+            && !empty($config[$metadata['config_key']])
         ) {
             $this->serviceManagers[$key]['configuration']['merged_config'] = $config[$metadata['config_key']];
         }

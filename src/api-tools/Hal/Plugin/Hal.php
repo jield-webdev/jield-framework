@@ -31,7 +31,7 @@ use Laminas\Hydrator\ExtractionInterface;
 use Laminas\Hydrator\HydratorPluginManager;
 use Jield\Mvc\Controller\Plugin\PluginInterface as ControllerPluginInterface;
 use Laminas\Paginator\Paginator;
-use Jield\Stdlib\DispatchableInterface;
+use Laminas\Stdlib\DispatchableInterface;
 use Laminas\View\Helper\AbstractHelper;
 use Override;
 use function array_key_exists;

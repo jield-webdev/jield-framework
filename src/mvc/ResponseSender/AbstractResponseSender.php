@@ -2,7 +2,8 @@
 
 namespace Jield\Mvc\ResponseSender;
 
-use Jield\Http\Header\MultipleHeaderInterface;
+use Laminas\Http\Header\MultipleHeaderInterface;
+
 use function header;
 use function headers_sent;
 use function is_iterable;
@@ -14,7 +15,7 @@ abstract class AbstractResponseSender implements ResponseSenderInterface
      *
      * @return self
      */
-    public function sendHeaders(SendResponseEvent $event): self
+    public function sendHeaders(SendResponseEvent $event): static
     {
         if (headers_sent() || $event->headersSent()) {
             return $this;
@@ -24,18 +25,18 @@ abstract class AbstractResponseSender implements ResponseSenderInterface
 
         $headers = $response->getHeaders();
 
-        if (is_iterable(value: $headers)) {
+        if (is_iterable($headers)) {
             foreach ($response->getHeaders() as $header) {
                 if ($header instanceof MultipleHeaderInterface) {
-                    header(header: $header->toString(), replace: false);
+                    header($header->toString(), false);
                     continue;
                 }
-                header(header: $header->toString());
+                header($header->toString());
             }
         }
 
         $status = $response->renderStatusLine();
-        header(header: (string)$status);
+        header((string) $status);
 
         $event->setHeadersSent();
         return $this;

@@ -1,15 +1,13 @@
 <?php
 
-declare(strict_types=1);
-
 namespace Jield\Mvc;
 
 use Jield\Mvc\Service\ServiceManagerConfig;
-use Jield\Stdlib\RequestInterface;
-use Jield\Stdlib\ResponseInterface;
 use Laminas\EventManager\EventManagerAwareInterface;
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\ServiceManager\ServiceManager;
+use Laminas\Stdlib\RequestInterface;
+use Laminas\Stdlib\ResponseInterface;
 use function array_merge;
 use function array_unique;
 
@@ -73,16 +71,16 @@ class Application implements
      *
      * @var MvcEvent
      */
-    protected ?MvcEvent $event = null;
+    protected MvcEvent $event;
 
     /** @var EventManagerInterface */
     protected EventManagerInterface $events;
 
     /** @var RequestInterface */
-    protected RequestInterface $request;
+    protected mixed $request;
 
     /** @var ResponseInterface */
-    protected ResponseInterface $response;
+    protected mixed $response;
 
     /**
      * Constructor
@@ -183,26 +181,22 @@ class Application implements
      */
     public function getMvcEvent(): MvcEvent
     {
-        if ($this->event === null) {
-            $this->event = new MvcEvent();
-            $this->event->setApplication(application: $this);
-        }
-
         return $this->event;
     }
 
     /**
      * Set the event manager instance
      *
-     * @return void
+     * @return Application
      */
-    public function setEventManager(EventManagerInterface $eventManager): void
+    public function setEventManager(EventManagerInterface $eventManager): static
     {
         $eventManager->setIdentifiers(identifiers: [
             self::class,
             static::class,
         ]);
         $this->events = $eventManager;
+        return $this;
     }
 
     /**
@@ -236,7 +230,7 @@ class Application implements
      * @param array $configuration
      * @return Application
      */
-    public static function init(array $configuration = []): Application
+    public static function init($configuration = []): Application
     {
         // Prepare the service manager
         $smConfig = $configuration['service_manager'] ?? [];

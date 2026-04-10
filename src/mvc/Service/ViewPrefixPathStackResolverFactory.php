@@ -3,9 +3,9 @@
 namespace Jield\Mvc\Service;
 
 // phpcs:ignore
+use Interop\Container\ContainerInterface;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Laminas\View\Resolver\PrefixPathStackResolver;
-use Psr\Container\ContainerInterface;
 
 class ViewPrefixPathStackResolverFactory implements FactoryInterface
 {
@@ -14,12 +14,20 @@ class ViewPrefixPathStackResolverFactory implements FactoryInterface
      *
      * Creates a Laminas\View\Resolver\PrefixPathStackResolver and populates it with the
      * ['view_manager']['prefix_template_path_stack']
+     *
+     * @param  string $requestedName
+     * @param  null|array $options
+     * @return PrefixPathStackResolver
      */
-    public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): PrefixPathStackResolver
+    public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): PrefixPathStackResolver
     {
         $config   = $container->get('config');
-        $prefixes = $config['view_manager']['prefix_template_path_stack'] ?? [];
+        $prefixes = [];
 
-        return new PrefixPathStackResolver(prefixes: $prefixes);
+        if (isset($config['view_manager']['prefix_template_path_stack'])) {
+            $prefixes = $config['view_manager']['prefix_template_path_stack'];
+        }
+
+        return new PrefixPathStackResolver($prefixes);
     }
 }

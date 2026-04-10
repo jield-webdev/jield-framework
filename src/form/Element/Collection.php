@@ -11,8 +11,8 @@ use Jield\Form\Fieldset;
 use Jield\Form\FieldsetInterface;
 use Jield\Form\FormInterface;
 use Jield\Form\InputFilterProviderFieldset;
-use Jield\Stdlib\ArrayUtils;
-use Jield\Stdlib\Exception\InvalidArgumentException;
+use Laminas\Stdlib\ArrayUtils;
+use Laminas\Stdlib\Exception\InvalidArgumentException;
 use Traversable;
 
 use function assert;

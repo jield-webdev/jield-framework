@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace DoctrineORMModule\Options;
 
 use InvalidArgumentException;
-use Jield\Stdlib\AbstractOptions;
+use Laminas\Stdlib\AbstractOptions;
 
 use function class_exists;
 use function sprintf;

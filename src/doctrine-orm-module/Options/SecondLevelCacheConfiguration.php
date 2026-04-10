@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace DoctrineORMModule\Options;
 
-use Jield\Stdlib\AbstractOptions;
+use Laminas\Stdlib\AbstractOptions;
 
 /**
  * Configuration options for Second Level Cache

@@ -2,7 +2,7 @@
 
 namespace Jield\Mvc\ResponseSender;
 
-use Jield\Http\Response;
+use Laminas\Http\Response;
 
 class HttpResponseSender extends AbstractResponseSender
 {
@@ -25,9 +25,9 @@ class HttpResponseSender extends AbstractResponseSender
     /**
      * Send HTTP response
      *
-     * @return void
+     * @return HttpResponseSender
      */
-    public function __invoke(SendResponseEvent $event): void
+    public function __invoke(SendResponseEvent $event): static
     {
         $response = $event->getResponse();
         if (! $response instanceof Response) {
@@ -35,8 +35,8 @@ class HttpResponseSender extends AbstractResponseSender
         }
 
         $this->sendHeaders($event)
-             ->sendContent(event: $event);
-        $event->stopPropagation(flag: true);
+             ->sendContent($event);
+        $event->stopPropagation(true);
         return $this;
     }
 }

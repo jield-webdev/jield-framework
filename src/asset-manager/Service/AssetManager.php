@@ -5,9 +5,9 @@ namespace Jield\AssetManager\Service;
 use Assetic\Contracts\Asset\AssetInterface;
 use Jield\AssetManager\Exception;
 use Jield\AssetManager\Resolver\ResolverInterface;
-use Jield\Http\PhpEnvironment\Request;
-use Jield\Http\Response;
-use Jield\Stdlib\RequestInterface;
+use Laminas\Http\PhpEnvironment\Request;
+use Laminas\Http\Response;
+use Laminas\Stdlib\RequestInterface;
 use Laminas\Uri\UriInterface;
 use Override;
 

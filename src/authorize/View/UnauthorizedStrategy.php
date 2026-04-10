@@ -9,10 +9,10 @@ use Jield\Authentication\AuthenticationService;
 use Jield\Authorize\Guard\Controller;
 use Jield\Authorize\Guard\Route;
 use Jield\Authorize\Exception\UnAuthorizedException;
-use Jield\Http\Response as HttpResponse;
+use Laminas\Http\Response as HttpResponse;
 use Jield\Mvc\Application;
 use Jield\Mvc\MvcEvent;
-use Jield\Stdlib\ResponseInterface as Response;
+use Laminas\Stdlib\ResponseInterface as Response;
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\EventManager\ListenerAggregateInterface;
 use Laminas\Router\Http\TreeRouteStack;
@@ -41,7 +41,7 @@ class UnauthorizedStrategy implements ListenerAggregateInterface
     /**
      * {@inheritDoc}
      */
-    public function attach(EventManagerInterface $events, int $priority = 1): void
+    public function attach(EventManagerInterface $events, $priority = 1): void
     {
         $this->listeners[] = $events->attach(eventName: MvcEvent::EVENT_DISPATCH_ERROR, listener: $this->onDispatchError(...), priority: -5000);
     }
@@ -75,12 +75,12 @@ class UnauthorizedStrategy implements ListenerAggregateInterface
     }
 
 
-    public function onDispatchError(MvcEvent $event): \Jield\Http\PhpEnvironment\Response
+    public function onDispatchError(MvcEvent $event): \Laminas\Http\PhpEnvironment\Response
     {
         // Do nothing if the result is a response object
         $result = $event->getResult();
 
-        /** @var \Jield\Http\PhpEnvironment\Response $response */
+        /** @var \Laminas\Http\PhpEnvironment\Response $response */
         $response = $event->getResponse();
         if ($result instanceof Response || ($response && !$response instanceof HttpResponse)) {
             return $response;

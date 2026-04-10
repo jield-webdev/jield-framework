@@ -1,10 +1,9 @@
 <?php
 
-declare(strict_types=1);
-
 namespace Jield\Mvc\Service;
 
-use Psr\Container\ContainerInterface;
+// phpcs:ignore
+use Interop\Container\ContainerInterface;
 use Jield\Mvc\Controller\ControllerManager;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 
@@ -24,11 +23,11 @@ class ControllerManagerFactory implements FactoryInterface
      * @param  null|array $options
      * @return ControllerManager
      */
-    public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): mixed
+    public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): ControllerManager
     {
         if ($options) {
-            return new ControllerManager(creationContext: $container, config: $options);
+            return new ControllerManager($container, $options);
         }
-        return new ControllerManager(creationContext: $container);
+        return new ControllerManager($container);
     }
 }

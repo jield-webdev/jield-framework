@@ -11,8 +11,8 @@ use Laminas\EventManager\ListenerAggregateInterface;
 use Laminas\EventManager\ListenerAggregateTrait;
 use Jield\ModuleManager\Feature\ConfigProviderInterface;
 use Jield\ModuleManager\ModuleEvent;
-use Jield\Stdlib\ArrayUtils;
-use Jield\Stdlib\Glob;
+use Laminas\Stdlib\ArrayUtils;
+use Laminas\Stdlib\Glob;
 use Override;
 use Traversable;
 use function file_exists;
@@ -60,7 +60,7 @@ class ConfigListener extends AbstractListener implements
 
     /** {@inheritDoc} */
     #[Override]
-    public function attach(EventManagerInterface $events, int $priority = 1): void
+    public function attach(EventManagerInterface $events, $priority = 1): void
     {
         $this->listeners[] = $events->attach(eventName: ModuleEvent::EVENT_LOAD_MODULES, listener: [$this, 'onloadModulesPre'], priority: 1000);
 

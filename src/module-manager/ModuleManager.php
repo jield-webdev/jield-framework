@@ -8,7 +8,6 @@ use Laminas\EventManager\EventManager;
 use Laminas\EventManager\EventManagerInterface;
 use Override;
 use Traversable;
-
 use function current;
 use function is_array;
 use function is_object;
@@ -18,22 +17,16 @@ use function sprintf;
 
 class ModuleManager implements ModuleManagerInterface
 {
-    /** Reference to Jield\Mvc\MvcEvent::EVENT_BOOTSTRAP */
     public const string EVENT_BOOTSTRAP = 'bootstrap';
 
-    /** @var array An array of Module classes of loaded modules */
     protected array $loadedModules = [];
 
-    /** @var EventManagerInterface */
     protected EventManagerInterface $events;
 
-    /** @var ModuleEvent */
     protected ModuleEvent $event;
 
-    /** @var int */
     protected int $loadFinished;
 
-    /** @var array|Traversable */
     protected array|Traversable $modules = [];
 
     /**
@@ -43,7 +36,6 @@ class ModuleManager implements ModuleManagerInterface
      */
     protected bool $modulesAreLoaded = false;
 
-    /** @param Traversable|array $modules */
     public function __construct(Traversable|array $modules, ?EventManagerInterface $eventManager = null)
     {
         $this->setModules(modules: $modules);
@@ -65,7 +57,7 @@ class ModuleManager implements ModuleManagerInterface
 
         foreach ($this->getModules() as $moduleName => $module) {
             if (is_object(value: $module)) {
-                if (! is_string(value: $moduleName)) {
+                if (!is_string(value: $moduleName)) {
                     throw new Exception\RuntimeException(message: sprintf(
                         'Module (%s) must have a key identifier.',
                         $module::class
@@ -117,7 +109,7 @@ class ModuleManager implements ModuleManagerInterface
      *
      * @param string $moduleName
      * @return mixed Module's Module class
-     *@throws Exception\RuntimeException
+     * @throws Exception\RuntimeException
      * @triggers loadModule.resolve
      * @triggers loadModule
      */
@@ -144,7 +136,7 @@ class ModuleManager implements ModuleManagerInterface
          * To load a module, we clone the event if we are inside a nested
          * loadModule() call, and use the original event otherwise.
          */
-        if (! isset($this->loadFinished)) {
+        if (!isset($this->loadFinished)) {
             $this->loadFinished = 0;
         }
 
@@ -153,7 +145,7 @@ class ModuleManager implements ModuleManagerInterface
 
         $this->loadFinished++;
 
-        if (! is_object(value: $moduleName)) {
+        if (!is_object(value: $moduleName)) {
             $moduleName = $this->loadModuleByName(event: $event);
         }
         $event->setModule(module: $moduleName);
@@ -179,7 +171,7 @@ class ModuleManager implements ModuleManagerInterface
         $result = $this->getEventManager()->triggerEventUntil(callback: static fn($r): bool => is_object(value: $r), event: $event);
 
         $module = $result->last();
-        if (! is_object(value: $module)) {
+        if (!is_object(value: $module)) {
             throw new Exception\RuntimeException(message: sprintf(
                 'Module (%s) could not be initialized.',
                 $event->getModuleName()
@@ -213,10 +205,7 @@ class ModuleManager implements ModuleManagerInterface
      */
     public function getModule(string $moduleName): mixed
     {
-        if (! isset($this->loadedModules[$moduleName])) {
-            return;
-        }
-        return $this->loadedModules[$moduleName];
+        return $this->loadedModules[$moduleName] ?? null;
     }
 
     /**
@@ -235,7 +224,7 @@ class ModuleManager implements ModuleManagerInterface
      *
      * @param mixed $modules array or Traversable of module names
      * @return ModuleManager
-     *@throws Exception\InvalidArgumentException
+     * @throws Exception\InvalidArgumentException
      */
     #[Override]
     public function setModules(mixed $modules): static
@@ -261,7 +250,7 @@ class ModuleManager implements ModuleManagerInterface
      */
     public function getEvent(): ModuleEvent
     {
-        if (! $this->event instanceof ModuleEvent) {
+        if (!$this->event instanceof ModuleEvent) {
             $this->setEvent(event: new ModuleEvent());
         }
         return $this->event;
@@ -294,7 +283,6 @@ class ModuleManager implements ModuleManagerInterface
         ]);
         $this->events = $eventManager;
         $this->attachDefaultListeners(events: $eventManager);
-        return $this;
     }
 
     /**
@@ -307,7 +295,7 @@ class ModuleManager implements ModuleManagerInterface
     #[Override]
     public function getEventManager(): EventManagerInterface
     {
-        if (! $this->events instanceof EventManagerInterface) {
+        if (!$this->events instanceof EventManagerInterface) {
             $this->setEventManager(eventManager: new EventManager());
         }
         return $this->events;

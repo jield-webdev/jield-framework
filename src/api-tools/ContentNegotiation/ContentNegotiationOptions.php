@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Jield\ApiTools\ContentNegotiation;
 
-use Jield\Stdlib\AbstractOptions;
-use Jield\Stdlib\Exception\BadMethodCallException;
+use Laminas\Stdlib\AbstractOptions;
+use Laminas\Stdlib\Exception\BadMethodCallException;
 
 use Override;
 use function array_merge_recursive;
@@ -117,7 +117,7 @@ class ContentNegotiationOptions extends AbstractOptions
      * @param mixed $value
      * @return void
      * @throws BadMethodCallException
-     * @see \Jield\Stdlib\ParameterObject::__set()
+     * @see \Laminas\Stdlib\ParameterObject::__set()
      *
      */
     #[Override]
@@ -136,7 +136,7 @@ class ContentNegotiationOptions extends AbstractOptions
      * @param string $key
      * @return mixed
      *@throws BadMethodCallException
-     * @see \Jield\Stdlib\ParameterObject::__get()
+     * @see \Laminas\Stdlib\ParameterObject::__get()
      *
      */
     #[Override]

@@ -9,7 +9,7 @@ use Laminas\EventManager\ListenerAggregateInterface;
 use Jield\Mvc\MvcEvent;
 use Jield\Mvc\View\Http\InjectTemplateListener;
 use Laminas\ServiceManager\ServiceManager;
-use Jield\Stdlib\DispatchableInterface;
+use Laminas\Stdlib\DispatchableInterface;
 use Laminas\View\Model\ModelInterface;
 use Laminas\View\View;
 use Traversable;
@@ -75,7 +75,7 @@ class ViewManager extends AbstractListenerAggregate
      */
     public function attach(EventManagerInterface $events, $priority = 1): void
     {
-        $this->listeners[] = $events->attach(eventName: MvcEvent::EVENT_BOOTSTRAP, listener: [$this, 'onBootstrap'], priority: 10000);
+        $this->listeners[] = $events->attach(MvcEvent::EVENT_BOOTSTRAP, [$this, 'onBootstrap'], 10000);
     }
 
     /**
@@ -84,7 +84,7 @@ class ViewManager extends AbstractListenerAggregate
      * @param MvcEvent $event
      * @return void
      */
-    public function onBootstrap(MvcEvent $event): void
+    public function onBootstrap($event): void
     {
         $application  = $event->getApplication();
         $services     = $application->getServiceManager();
@@ -93,7 +93,7 @@ class ViewManager extends AbstractListenerAggregate
         $sharedEvents = $events->getSharedManager();
 
         $this->config   = isset($config['view_manager'])
-            && (is_array(value: $config['view_manager'])
+            && (is_array($config['view_manager'])
             || $config['view_manager'] instanceof ArrayAccess)
                 ? $config['view_manager']
                 : [];
@@ -110,44 +110,44 @@ class ViewManager extends AbstractListenerAggregate
         $createViewModelListener = new CreateViewModelListener();
         $injectViewModelListener = new InjectViewModelListener();
 
-        $this->registerMvcRenderingStrategies(events: $events);
+        $this->registerMvcRenderingStrategies($events);
         $this->registerViewStrategies();
 
         $routeNotFoundStrategy->attach($events);
         $exceptionStrategy->attach($events);
-        $events->attach(eventName: MvcEvent::EVENT_DISPATCH_ERROR, listener: [$injectViewModelListener, 'injectViewModel'], priority: -100);
-        $events->attach(eventName: MvcEvent::EVENT_RENDER_ERROR, listener: [$injectViewModelListener, 'injectViewModel'], priority: -100);
+        $events->attach(MvcEvent::EVENT_DISPATCH_ERROR, [$injectViewModelListener, 'injectViewModel'], -100);
+        $events->attach(MvcEvent::EVENT_RENDER_ERROR, [$injectViewModelListener, 'injectViewModel'], -100);
         $mvcRenderingStrategy->attach($events);
 
         $sharedEvents->attach(
             DispatchableInterface::class,
             MvcEvent::EVENT_DISPATCH,
-            listener: [$createViewModelListener, 'createViewModelFromArray'],
-            priority: -80
+            [$createViewModelListener, 'createViewModelFromArray'],
+            -80
         );
         $sharedEvents->attach(
             DispatchableInterface::class,
             MvcEvent::EVENT_DISPATCH,
-            listener: [$routeNotFoundStrategy, 'prepareNotFoundViewModel'],
-            priority: -90
+            [$routeNotFoundStrategy, 'prepareNotFoundViewModel'],
+            -90
         );
         $sharedEvents->attach(
             DispatchableInterface::class,
             MvcEvent::EVENT_DISPATCH,
-            listener: [$createViewModelListener, 'createViewModelFromNull'],
-            priority: -80
+            [$createViewModelListener, 'createViewModelFromNull'],
+            -80
         );
         $sharedEvents->attach(
             DispatchableInterface::class,
             MvcEvent::EVENT_DISPATCH,
-            listener: [$injectTemplateListener, 'injectTemplate'],
-            priority: -90
+            [$injectTemplateListener, 'injectTemplate'],
+            -90
         );
         $sharedEvents->attach(
             DispatchableInterface::class,
             MvcEvent::EVENT_DISPATCH,
-            listener: [$injectViewModelListener, 'injectViewModel'],
-            priority: -100
+            [$injectViewModelListener, 'injectViewModel'],
+            -100
         );
     }
 
@@ -162,7 +162,7 @@ class ViewManager extends AbstractListenerAggregate
             return $this->view;
         }
 
-        $this->view = $this->services->get(id: View::class);
+        $this->view = $this->services->get(View::class);
         return $this->view;
     }
 
@@ -178,8 +178,8 @@ class ViewManager extends AbstractListenerAggregate
         }
 
         $this->viewModel = $model = $this->event->getViewModel();
-        $layoutTemplate  = $this->services->get(id: 'HttpDefaultRenderingStrategy')->getLayoutTemplate();
-        $model->setTemplate(template: $layoutTemplate);
+        $layoutTemplate  = $this->services->get('HttpDefaultRenderingStrategy')->getLayoutTemplate();
+        $model->setTemplate($layoutTemplate);
 
         return $this->viewModel;
     }
@@ -201,21 +201,21 @@ class ViewManager extends AbstractListenerAggregate
             return;
         }
         $mvcStrategies = $this->config['mvc_strategies'];
-        if (is_string(value: $mvcStrategies)) {
+        if (is_string($mvcStrategies)) {
             $mvcStrategies = [$mvcStrategies];
         }
-        if (! is_array(value: $mvcStrategies) && ! $mvcStrategies instanceof Traversable) {
+        if (! is_array($mvcStrategies) && ! $mvcStrategies instanceof Traversable) {
             return;
         }
 
         foreach ($mvcStrategies as $mvcStrategy) {
-            if (! is_string(value: $mvcStrategy)) {
+            if (! is_string($mvcStrategy)) {
                 continue;
             }
 
-            $listener = $this->services->get(id: $mvcStrategy);
+            $listener = $this->services->get($mvcStrategy);
             if ($listener instanceof ListenerAggregateInterface) {
-                $listener->attach(events: $events, priority: 100);
+                $listener->attach($events, 100);
             }
         }
     }
@@ -237,10 +237,10 @@ class ViewManager extends AbstractListenerAggregate
             return;
         }
         $strategies = $this->config['strategies'];
-        if (is_string(value: $strategies)) {
+        if (is_string($strategies)) {
             $strategies = [$strategies];
         }
-        if (! is_array(value: $strategies) && ! $strategies instanceof Traversable) {
+        if (! is_array($strategies) && ! $strategies instanceof Traversable) {
             return;
         }
 
@@ -248,13 +248,13 @@ class ViewManager extends AbstractListenerAggregate
         $events = $view->getEventManager();
 
         foreach ($strategies as $strategy) {
-            if (! is_string(value: $strategy)) {
+            if (! is_string($strategy)) {
                 continue;
             }
 
-            $listener = $this->services->get(id: $strategy);
+            $listener = $this->services->get($strategy);
             if ($listener instanceof ListenerAggregateInterface) {
-                $listener->attach(events: $events, priority: 100);
+                $listener->attach($events, 100);
             }
         }
     }
@@ -265,7 +265,7 @@ class ViewManager extends AbstractListenerAggregate
     private function injectViewModelIntoPlugin(): void
     {
         $model   = $this->getViewModel();
-        $plugins = $this->services->get(id: 'ViewHelperManager');
+        $plugins = $this->services->get('ViewHelperManager');
         $plugin  = $plugins->get('viewmodel');
         $plugin->setRoot($model);
     }

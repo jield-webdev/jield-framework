@@ -6,8 +6,8 @@ namespace Jield\ApiTools\ContentNegotiation\Filter;
 
 use Laminas\Filter\Exception\RuntimeException as FilterRuntimeException;
 use Laminas\Filter\File\RenameUpload as BaseFilter;
-use Jield\Stdlib\ErrorHandler;
-use Jield\Stdlib\RequestInterface;
+use Laminas\Stdlib\ErrorHandler;
+use Laminas\Stdlib\RequestInterface;
 
 use Override;
 use function method_exists;

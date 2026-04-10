@@ -3,7 +3,7 @@
 namespace Jield\Mvc\Service;
 
 // phpcs:ignore
-use Psr\Container\ContainerInterface;
+use Interop\Container\ContainerInterface;
 use Laminas\EventManager\EventManager;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 
@@ -19,10 +19,10 @@ class EventManagerFactory implements FactoryInterface
      * @param  null|array $options
      * @return EventManager
      */
-    public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): mixed
+    public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): EventManager
     {
-        $shared = $container->has(id: 'SharedEventManager') ? $container->get('SharedEventManager') : null;
+        $shared = $container->has('SharedEventManager') ? $container->get('SharedEventManager') : null;
 
-        return new EventManager(sharedEventManager: $shared);
+        return new EventManager($shared);
     }
 }

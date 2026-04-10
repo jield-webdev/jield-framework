@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace DoctrineModule\Form\Element;
 
 use Jield\Form\Element\MultiCheckbox;
-use Jield\Stdlib\ArrayUtils;
+use Laminas\Stdlib\ArrayUtils;
 use Traversable;
 
 use function array_map;

@@ -2,7 +2,7 @@
 
 namespace Jield\AssetManager\Resolver;
 
-use Jield\Stdlib\PriorityQueue;
+use Laminas\Stdlib\PriorityQueue;
 use Override;
 
 /**
@@ -33,7 +33,7 @@ class AggregateResolver implements ResolverInterface
      * @param int $priority
      * @return self
      */
-    public function attach(ResolverInterface $resolver, int $priority = 1): AggregateResolver
+    public function attach(ResolverInterface $resolver, $priority = 1): AggregateResolver
     {
         $this->queue->insert(data: $resolver, priority: $priority);
 

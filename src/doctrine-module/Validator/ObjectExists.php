@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace DoctrineModule\Validator;
 
 use Doctrine\Persistence\ObjectRepository;
-use Jield\Stdlib\ArrayUtils;
+use Laminas\Stdlib\ArrayUtils;
 use Laminas\Validator\AbstractValidator;
 use Laminas\Validator\Exception;
 use ValueError;

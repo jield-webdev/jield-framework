@@ -3,7 +3,7 @@
 namespace Jield\Mvc\Service;
 
 // phpcs:ignore
-use Psr\Container\ContainerInterface;
+use Interop\Container\ContainerInterface;
 use Jield\Mvc\Application;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 
@@ -19,13 +19,13 @@ class ApplicationFactory implements FactoryInterface
      * @param  null|array $options
      * @return Application
      */
-    public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): mixed
+    public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): Application
     {
         return new Application(
-            serviceManager: $container,
-            events: $container->get('EventManager'),
-            request: $container->get('Request'),
-            response: $container->get('Response')
+            $container,
+            $container->get('EventManager'),
+            $container->get('Request'),
+            $container->get('Response')
         );
     }
 }

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Jield\ApiTools\MvcAuth\Authentication;
 
-use Jield\Http\Request;
+use Laminas\Http\Request;
 use Override;
 use function in_array;
 use function preg_split;

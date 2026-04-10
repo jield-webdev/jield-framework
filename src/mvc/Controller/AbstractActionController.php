@@ -26,7 +26,7 @@ abstract class AbstractActionController extends AbstractController
      */
     public function indexAction(): ViewModel
     {
-        return new ViewModel(variables: [
+        return new ViewModel([
             'content' => 'Placeholder page',
         ]);
     }
@@ -40,9 +40,9 @@ abstract class AbstractActionController extends AbstractController
     {
         $event      = $this->getEvent();
         $routeMatch = $event->getRouteMatch();
-        $routeMatch->setParam(name: 'action', value: 'not-found');
+        $routeMatch->setParam('action', 'not-found');
 
-        $helper = $this->plugin(name: 'createHttpNotFoundModel');
+        $helper = $this->plugin('createHttpNotFoundModel');
         return $helper($event->getResponse());
     }
 
@@ -60,19 +60,19 @@ abstract class AbstractActionController extends AbstractController
              * @todo Determine requirements for when route match is missing.
              *       Potentially allow pulling directly from request metadata?
              */
-            throw new DomainException(message: 'Missing route matches; unsure how to retrieve action');
+            throw new DomainException('Missing route matches; unsure how to retrieve action');
         }
 
-        $action = $routeMatch->getParam(name: 'action', default: 'not-found');
-        $method = static::getMethodFromAction(action: $action);
+        $action = $routeMatch->getParam('action', 'not-found');
+        $method = static::getMethodFromAction($action);
 
-        if (! method_exists(object_or_class: $this, method: $method)) {
+        if (! method_exists($this, $method)) {
             $method = 'notFoundAction';
         }
 
         $actionResponse = $this->$method();
 
-        $e->setResult(result: $actionResponse);
+        $e->setResult($actionResponse);
 
         return $actionResponse;
     }

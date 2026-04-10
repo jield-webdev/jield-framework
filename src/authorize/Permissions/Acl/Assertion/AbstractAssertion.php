@@ -8,9 +8,9 @@ use Jield\Authorize\Role\UserAsRole;
 use Jield\Authorize\Role\UserAsRoleInterface;
 use Doctrine\Common\Collections\Collection;
 use Jield\Authorize\Provider\Identity\AuthenticationIdentityProvider;
-use Jield\Http\Request;
+use Laminas\Http\Request;
 use Laminas\Permissions\Acl\Assertion\AssertionInterface;
-use Jield\Stdlib\RequestInterface;
+use Laminas\Stdlib\RequestInterface;
 use Laminas\Router\RouteMatch;
 use Psr\Container\ContainerInterface;
 

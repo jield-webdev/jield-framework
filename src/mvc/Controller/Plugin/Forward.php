@@ -10,8 +10,8 @@ use Jield\Mvc\InjectApplicationEventInterface;
 use Jield\Mvc\MvcEvent;
 use Jield\Mvc\View\Http\InjectViewModelListener;
 use Laminas\Router\RouteMatch;
-use Jield\Stdlib\CallbackHandler;
-use Jield\Stdlib\DispatchableInterface;
+use Laminas\Stdlib\CallbackHandler;
+use Laminas\Stdlib\DispatchableInterface;
 use Traversable;
 
 use function array_shift;
@@ -41,12 +41,12 @@ class Forward extends AbstractPlugin
     /**
      * Set maximum number of nested forwards allowed
      *
-     * @param int $maxNestedForwards
+     * @param  int $maxNestedForwards
      * @return self
      */
-    public function setMaxNestedForwards(int $maxNestedForwards): static
+    public function setMaxNestedForwards($maxNestedForwards): static
     {
-        $this->maxNestedForwards = $maxNestedForwards;
+        $this->maxNestedForwards = (int) $maxNestedForwards;
 
         return $this;
     }
@@ -83,10 +83,10 @@ class Forward extends AbstractPlugin
     /**
      * Set information on listeners that need to be detached before dispatching.
      *
-     * @param array $listeners Listener information; see getListenersToDetach() for details on format.
+     * @param  array $listeners Listener information; see getListenersToDetach() for details on format.
      * @return self
      */
-    public function setListenersToDetach(array $listeners): static
+    public function setListenersToDetach($listeners): static
     {
         $this->listenersToDetach = $listeners;
 
@@ -96,43 +96,43 @@ class Forward extends AbstractPlugin
     /**
      * Dispatch another controller
      *
-     * @param string $name Controller name; either a class name or an alias used in the controller manager
+     * @param  string $name Controller name; either a class name or an alias used in the controller manager
      * @param  null|array $params Parameters with which to seed a custom RouteMatch object for the new controller
      * @return mixed
      * @throws Exception\DomainException If composed controller does not define InjectApplicationEventInterface
      *         or Locator aware; or if the discovered controller is not dispatchable.
      */
-    public function dispatch(string $name, ?array $params = null): mixed
+    public function dispatch($name, ?array $params = null): mixed
     {
         $event = clone $this->getEvent();
 
-        $controller = $this->controllers->get(id: $name);
+        $controller = $this->controllers->get($name);
         if ($controller instanceof InjectApplicationEventInterface) {
-            $controller->setEvent(event: $event);
+            $controller->setEvent($event);
         }
 
         // Allow passing parameters to seed the RouteMatch with & copy matched route name
         if ($params !== null) {
-            $routeMatch = new RouteMatch(params: $params);
-            $routeMatch->setMatchedRouteName(name: $event->getRouteMatch()->getMatchedRouteName());
-            $event->setRouteMatch(matches: $routeMatch);
+            $routeMatch = new RouteMatch($params);
+            $routeMatch->setMatchedRouteName($event->getRouteMatch()->getMatchedRouteName());
+            $event->setRouteMatch($routeMatch);
         }
 
         if ($this->numNestedForwards > $this->maxNestedForwards) {
             throw new DomainException(
-                message: "Circular forwarding detected: greater than $this->maxNestedForwards nested forwards"
+                "Circular forwarding detected: greater than $this->maxNestedForwards nested forwards"
             );
         }
         $this->numNestedForwards++;
 
         // Detach listeners that may cause problems during dispatch:
         $sharedEvents = $event->getApplication()->getEventManager()->getSharedManager();
-        $listeners    = $this->detachProblemListeners(sharedEvents: $sharedEvents);
+        $listeners    = $this->detachProblemListeners($sharedEvents);
 
-        $return = $controller->dispatch(request: $event->getRequest(), response: $event->getResponse());
+        $return = $controller->dispatch($event->getRequest(), $event->getResponse());
 
         // If we detached any listeners, reattach them now:
-        $this->reattachProblemListeners(sharedEvents: $sharedEvents, listeners: $listeners);
+        $this->reattachProblemListeners($sharedEvents, $listeners);
 
         $this->numNestedForwards--;
 
@@ -167,24 +167,24 @@ class Forward extends AbstractPlugin
             $results[$id] = [];
             foreach ($eventArray as $eventName => $classArray) {
                 $results[$id][$eventName] = [];
-                $events                   = $this->getSharedListenersById(id: $id, event: $eventName, sharedEvents: $sharedEvents);
+                $events                   = $this->getSharedListenersById($id, $eventName, $sharedEvents);
                 foreach ($events as $priority => $currentPriorityEvents) {
                     foreach ($currentPriorityEvents as $currentEvent) {
                         $currentCallback = $currentEvent;
 
                         // If we have an array, grab the object
-                        if (is_array(value: $currentCallback)) {
-                            $currentCallback = array_shift(array: $currentCallback);
+                        if (is_array($currentCallback)) {
+                            $currentCallback = array_shift($currentCallback);
                         }
 
                         // This routine is only valid for object callbacks
-                        if (! is_object(value: $currentCallback)) {
+                        if (! is_object($currentCallback)) {
                             continue;
                         }
 
                         foreach ($classArray as $class) {
                             if ($currentCallback instanceof $class) {
-                                $this->detachSharedListener(id: $id, listener: $currentEvent, sharedEvents: $sharedEvents);
+                                $this->detachSharedListener($id, $currentEvent, $sharedEvents);
                                 $results[$id][$eventName][$priority] = $currentEvent;
                             }
                         }
@@ -210,7 +210,7 @@ class Forward extends AbstractPlugin
                 foreach ($callbacks as $priority => $current) {
                     $callback = $current;
 
-                    $sharedEvents->attach($id, $eventName, listener: $callback, priority: $priority);
+                    $sharedEvents->attach($id, $eventName, $callback, $priority);
                 }
             }
         }
@@ -230,9 +230,9 @@ class Forward extends AbstractPlugin
 
         $controller = $this->getController();
         if (! $controller instanceof InjectApplicationEventInterface) {
-            throw new DomainException(message: sprintf(
+            throw new DomainException(sprintf(
                 'Forward plugin requires a controller that implements InjectApplicationEventInterface; received %s',
-                get_debug_type(value: $controller)
+                get_debug_type($controller)
             ));
         }
 
@@ -243,7 +243,7 @@ class Forward extends AbstractPlugin
                 $params = $event->getParams();
             }
             $event = new MvcEvent();
-            $event->setParams(params: $params);
+            $event->setParams($params);
         }
         $this->event = $event;
 
@@ -253,28 +253,28 @@ class Forward extends AbstractPlugin
     /**
      * Retrieve shared listeners for an event by identifier.
      *
-     * Varies retrieval based on jield-eventmanager version.
+     * Varies retrieval based on laminas-eventmanager version.
      *
-     * @param int|string $id
+     * @param string|int $id
      * @param string $event
      * @return array|Traversable
      */
-    private function getSharedListenersById(int|string $id, string $event, SharedEvents $sharedEvents): Traversable|array
+    private function getSharedListenersById($id, $event, SharedEvents $sharedEvents): Traversable|array
     {
-        return $sharedEvents->getListeners(identifiers: [$id], eventName: $event);
+        return $sharedEvents->getListeners([$id], $event);
     }
 
     /**
      * Detach a shared listener by identifier.
      *
-     * Varies detachment based on jield-eventmanager version.
+     * Varies detachment based on laminas-eventmanager version.
      *
-     * @param int|string $id
+     * @param string|int $id
      * @param callable|CallbackHandler $listener
      * @return void
      */
-    private function detachSharedListener(int|string $id, callable|CallbackHandler $listener, SharedEvents $sharedEvents): void
+    private function detachSharedListener($id, $listener, SharedEvents $sharedEvents): void
     {
-        $sharedEvents->detach(listener: $listener, identifier: $id);
+        $sharedEvents->detach($listener, $id);
     }
 }

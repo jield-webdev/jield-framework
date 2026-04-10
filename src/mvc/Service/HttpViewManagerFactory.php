@@ -3,7 +3,7 @@
 namespace Jield\Mvc\Service;
 
 // phpcs:ignore
-use Psr\Container\ContainerInterface;
+use Interop\Container\ContainerInterface;
 use Jield\Mvc\View\Http\ViewManager as HttpViewManager;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 
@@ -16,7 +16,7 @@ class HttpViewManagerFactory implements FactoryInterface
      * @param  null|array $options
      * @return HttpViewManager
      */
-    public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): mixed
+    public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): HttpViewManager
     {
         return new HttpViewManager();
     }

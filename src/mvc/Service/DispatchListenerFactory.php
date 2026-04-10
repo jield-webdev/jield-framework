@@ -3,7 +3,7 @@
 namespace Jield\Mvc\Service;
 
 // phpcs:ignore
-use Psr\Container\ContainerInterface;
+use Interop\Container\ContainerInterface;
 use Jield\Mvc\DispatchListener;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 
@@ -16,8 +16,8 @@ class DispatchListenerFactory implements FactoryInterface
      * @param  null|array $options
      * @return DispatchListener
      */
-    public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): mixed
+    public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): DispatchListener
     {
-        return new DispatchListener(controllerManager: $container->get('ControllerManager'));
+        return new DispatchListener($container->get('ControllerManager'));
     }
 }

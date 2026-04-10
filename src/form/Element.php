@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Jield\Form;
 
-use Jield\Stdlib\ArrayUtils;
-use Jield\Stdlib\InitializableInterface;
+use Laminas\Stdlib\ArrayUtils;
+use Laminas\Stdlib\InitializableInterface;
 use Traversable;
 
 use function array_key_exists;

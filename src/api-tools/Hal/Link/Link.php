@@ -6,7 +6,7 @@ namespace Jield\ApiTools\Hal\Link;
 
 use Jield\ApiTools\ApiProblem\Exception\DomainException;
 use Jield\ApiTools\Hal\Exception;
-use Jield\Stdlib\ArrayUtils;
+use Laminas\Stdlib\ArrayUtils;
 use Laminas\Uri\Exception as UriException;
 use Laminas\Uri\UriFactory;
 use Override;

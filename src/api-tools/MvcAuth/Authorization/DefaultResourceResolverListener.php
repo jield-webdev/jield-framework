@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Jield\ApiTools\MvcAuth\Authorization;
 
 use Jield\ApiTools\MvcAuth\MvcAuthEvent;
-use Jield\Http\Request;
+use Laminas\Http\Request;
 use Laminas\Router\RouteMatch;
-use Jield\Stdlib\RequestInterface;
+use Laminas\Stdlib\RequestInterface;
 use function array_key_exists;
 use function sprintf;
 

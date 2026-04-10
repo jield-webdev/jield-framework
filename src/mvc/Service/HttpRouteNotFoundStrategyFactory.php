@@ -3,7 +3,7 @@
 namespace Jield\Mvc\Service;
 
 // phpcs:ignore
-use Psr\Container\ContainerInterface;
+use Interop\Container\ContainerInterface;
 use Jield\Mvc\View\Http\RouteNotFoundStrategy;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 
@@ -16,14 +16,14 @@ class HttpRouteNotFoundStrategyFactory implements FactoryInterface
      * @param  null|array $options
      * @return RouteNotFoundStrategy
      */
-    public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): mixed
+    public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): RouteNotFoundStrategy
     {
         $strategy = new RouteNotFoundStrategy();
-        $config   = $this->getConfig(container: $container);
+        $config   = $this->getConfig($container);
 
-        $this->injectDisplayExceptions(strategy: $strategy, config: $config);
-        $this->injectDisplayNotFoundReason(strategy: $strategy, config: $config);
-        $this->injectNotFoundTemplate(strategy: $strategy, config: $config);
+        $this->injectDisplayExceptions($strategy, $config);
+        $this->injectDisplayNotFoundReason($strategy, $config);
+        $this->injectNotFoundTemplate($strategy, $config);
 
         return $strategy;
     }
@@ -34,7 +34,7 @@ class HttpRouteNotFoundStrategyFactory implements FactoryInterface
     private function injectDisplayExceptions(RouteNotFoundStrategy $strategy, array $config): void
     {
         $flag = $config['display_exceptions'] ?? false;
-        $strategy->setDisplayExceptions(displayExceptions: $flag);
+        $strategy->setDisplayExceptions($flag);
     }
 
     /**
@@ -43,7 +43,7 @@ class HttpRouteNotFoundStrategyFactory implements FactoryInterface
     private function injectDisplayNotFoundReason(RouteNotFoundStrategy $strategy, array $config): void
     {
         $flag = $config['display_not_found_reason'] ?? false;
-        $strategy->setDisplayNotFoundReason(displayNotFoundReason: $flag);
+        $strategy->setDisplayNotFoundReason($flag);
     }
 
     /**
@@ -52,6 +52,6 @@ class HttpRouteNotFoundStrategyFactory implements FactoryInterface
     private function injectNotFoundTemplate(RouteNotFoundStrategy $strategy, array $config): void
     {
         $template = $config['not_found_template'] ?? '404';
-        $strategy->setNotFoundTemplate(notFoundTemplate: $template);
+        $strategy->setNotFoundTemplate($template);
     }
 }

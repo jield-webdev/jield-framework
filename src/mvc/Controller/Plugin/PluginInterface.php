@@ -2,7 +2,7 @@
 
 namespace Jield\Mvc\Controller\Plugin;
 
-use Jield\Stdlib\DispatchableInterface as Dispatchable;
+use Laminas\Stdlib\DispatchableInterface as Dispatchable;
 
 interface PluginInterface
 {

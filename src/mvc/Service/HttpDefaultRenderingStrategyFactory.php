@@ -3,7 +3,7 @@
 namespace Jield\Mvc\Service;
 
 // phpcs:ignore
-use Psr\Container\ContainerInterface;
+use Interop\Container\ContainerInterface;
 use Jield\Mvc\View\Http\DefaultRenderingStrategy;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Laminas\View\View;
@@ -17,12 +17,12 @@ class HttpDefaultRenderingStrategyFactory implements FactoryInterface
      * @param  null|array $options
      * @return DefaultRenderingStrategy
      */
-    public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): mixed
+    public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): DefaultRenderingStrategy
     {
-        $strategy = new DefaultRenderingStrategy(view: $container->get(View::class));
-        $config   = $this->getConfig(container: $container);
+        $strategy = new DefaultRenderingStrategy($container->get(View::class));
+        $config   = $this->getConfig($container);
 
-        $this->injectLayoutTemplate(strategy: $strategy, config: $config);
+        $this->injectLayoutTemplate($strategy, $config);
 
         return $strategy;
     }
@@ -35,6 +35,6 @@ class HttpDefaultRenderingStrategyFactory implements FactoryInterface
     private function injectLayoutTemplate(DefaultRenderingStrategy $strategy, array $config): void
     {
         $layout = $config['layout'] ?? 'layout/layout';
-        $strategy->setLayoutTemplate(layoutTemplate: $layout);
+        $strategy->setLayoutTemplate($layout);
     }
 }

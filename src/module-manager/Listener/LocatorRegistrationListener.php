@@ -104,7 +104,7 @@ class LocatorRegistrationListener extends AbstractListener implements
 
     /** {@inheritDoc} */
     #[Override]
-    public function attach(EventManagerInterface $events, int $priority = 1): void
+    public function attach(EventManagerInterface $events, $priority = 1): void
     {
         $this->listeners[] = $events->attach(eventName: ModuleEvent::EVENT_LOAD_MODULE, listener: [$this, 'onLoadModule']);
         $this->listeners[] = $events->attach(eventName: ModuleEvent::EVENT_LOAD_MODULES, listener: [$this, 'onLoadModules'], priority: -1000);

@@ -6,8 +6,8 @@ namespace Jield\ApiTools\ContentNegotiation;
 
 use Jield\ApiTools\ApiProblem\ApiProblem;
 use Jield\ApiTools\ApiProblem\ApiProblemResponse;
-use Jield\Http\Header\ContentType;
-use Jield\Http\PhpEnvironment\Request;
+use Laminas\Http\Header\ContentType;
+use Laminas\Http\PhpEnvironment\Request;
 use Jield\Mvc\MvcEvent;
 use function array_key_exists;
 use function basename;

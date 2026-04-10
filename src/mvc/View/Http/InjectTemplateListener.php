@@ -5,7 +5,7 @@ namespace Jield\Mvc\View\Http;
 use Laminas\EventManager\AbstractListenerAggregate;
 use Laminas\EventManager\EventManagerInterface as Events;
 use Jield\Mvc\MvcEvent;
-use Jield\Stdlib\StringUtils;
+use Laminas\Stdlib\StringUtils;
 use Laminas\View\Model\ModelInterface as ViewModel;
 
 use function array_diff;
@@ -47,7 +47,7 @@ class InjectTemplateListener extends AbstractListenerAggregate
      */
     public function attach(Events $events, $priority = 1): void
     {
-        $this->listeners[] = $events->attach(eventName: MvcEvent::EVENT_DISPATCH, listener: [$this, 'injectTemplate'], priority: -90);
+        $this->listeners[] = $events->attach(MvcEvent::EVENT_DISPATCH, [$this, 'injectTemplate'], -90);
     }
 
     /**
@@ -71,27 +71,27 @@ class InjectTemplateListener extends AbstractListenerAggregate
         }
 
         $routeMatch = $e->getRouteMatch();
-        if ($preferRouteMatchController = $routeMatch->getParam(name: 'prefer_route_match_controller', default: false)) {
-            $this->setPreferRouteMatchController(preferRouteMatchController: $preferRouteMatchController);
+        if ($preferRouteMatchController = $routeMatch->getParam('prefer_route_match_controller', false)) {
+            $this->setPreferRouteMatchController($preferRouteMatchController);
         }
 
         $controller = $e->getTarget();
-        if (is_object(value: $controller)) {
+        if (is_object($controller)) {
             $controller = $controller::class;
         }
 
-        $routeMatchController = $routeMatch->getParam(name: 'controller', default: '');
+        $routeMatchController = $routeMatch->getParam('controller', '');
         if (! $controller || ($this->preferRouteMatchController && $routeMatchController)) {
             $controller = $routeMatchController;
         }
 
-        $template = $this->mapController(controller: $controller);
+        $template = $this->mapController($controller);
 
-        $action = $routeMatch->getParam(name: 'action');
+        $action = $routeMatch->getParam('action');
         if (null !== $action) {
-            $template .= '/' . $this->inflectName(name: $action);
+            $template .= '/' . $this->inflectName($action);
         }
-        $model->setTemplate(template: $template);
+        $model->setTemplate($template);
     }
 
     /**
@@ -101,7 +101,7 @@ class InjectTemplateListener extends AbstractListenerAggregate
      */
     public function setControllerMap(array $map): static
     {
-        krsort(array: $map);
+        krsort($map);
         $this->controllerMap = $map;
         return $this;
     }
@@ -112,7 +112,7 @@ class InjectTemplateListener extends AbstractListenerAggregate
      * @param string $controller controller FQCN
      * @return string|false template name or false if controller was not matched
      */
-    public function mapController(string $controller): false|string
+    public function mapController($controller): false|string
     {
         $mapped = '';
         foreach ($this->controllerMap as $namespace => $replacement) {
@@ -121,42 +121,42 @@ class InjectTemplateListener extends AbstractListenerAggregate
                 // merging have no feature to remove entries
                 $replacement === false
                 // Match full class or full namespace
-                || ! ($controller === $namespace || str_starts_with(haystack: $controller, needle: $namespace . '\\'))
+                || ! ($controller === $namespace || str_starts_with($controller, $namespace . '\\'))
             ) {
                 continue;
             }
 
             // Map namespace to $replacement if its value is string
-            if (is_string(value: $replacement)) {
-                $mapped     = rtrim(string: $replacement, characters: '/') . '/';
-                $controller = substr(string: $controller, offset: strlen(string: $namespace) + 1) ?: '';
+            if (is_string($replacement)) {
+                $mapped     = rtrim($replacement, '/') . '/';
+                $controller = substr($controller, strlen($namespace) + 1) ?: '';
                 break;
             }
         }
 
         //strip Controller namespace(s) (but not classname)
-        $parts = explode(separator: '\\', string: $controller);
-        array_pop(array: $parts);
+        $parts = explode('\\', $controller);
+        array_pop($parts);
         $parts = array_diff($parts, ['Controller']);
         //strip trailing Controller in class name
-        $parts[]    = $this->deriveControllerClass(controller: $controller);
-        $controller = implode(separator: '/', array: $parts);
+        $parts[]    = $this->deriveControllerClass($controller);
+        $controller = implode('/', $parts);
 
-        $template = trim(string: $mapped . $controller, characters: '/');
+        $template = trim($mapped . $controller, '/');
 
         // inflect CamelCase to dash
-        return $this->inflectName(name: $template);
+        return $this->inflectName($template);
     }
 
     /**
      * Inflect a name to a normalized value
      *
-     * Inlines the logic from jield-filter's Word\CamelCaseToDash filter.
+     * Inlines the logic from laminas-filter's Word\CamelCaseToDash filter.
      *
-     * @param string $name
+     * @param  string $name
      * @return string
      */
-    protected function inflectName(string $name): string
+    protected function inflectName($name): string
     {
         if (StringUtils::hasPcreUnicodeSupport()) {
             $pattern     = ['#(?<=(?:\p{Lu}))(\p{Lu}\p{Ll})#', '#(?<=(?:\p{Ll}|\p{Nd}))(\p{Lu})#'];
@@ -166,8 +166,8 @@ class InjectTemplateListener extends AbstractListenerAggregate
             $replacement = ['\1-\2', '-\1'];
         }
 
-        $name = preg_replace(pattern: $pattern, replacement: $replacement, subject: $name);
-        return strtolower(string: $name);
+        $name = preg_replace($pattern, $replacement, $name);
+        return strtolower($name);
     }
 
     /**
@@ -175,20 +175,20 @@ class InjectTemplateListener extends AbstractListenerAggregate
      *
      * Strip the namespace, and the suffix "Controller" if present.
      *
-     * @param string $controller
+     * @param  string $controller
      * @return string
      */
-    protected function deriveControllerClass(string $controller): string
+    protected function deriveControllerClass($controller): string
     {
-        if (str_contains(haystack: $controller, needle: '\\')) {
-            $controller = substr(string: $controller, offset: strrpos(haystack: $controller, needle: '\\') + 1);
+        if (str_contains($controller, '\\')) {
+            $controller = substr($controller, strrpos($controller, '\\') + 1);
         }
 
         if (
-            (10 < strlen(string: $controller))
-            && (str_ends_with(haystack: $controller, needle: 'Controller'))
+            (10 < strlen($controller))
+            && (str_ends_with($controller, 'Controller'))
         ) {
-            $controller = substr(string: $controller, offset: 0, length: -10);
+            $controller = substr($controller, 0, -10);
         }
 
         return $controller;
@@ -200,9 +200,9 @@ class InjectTemplateListener extends AbstractListenerAggregate
      *
      * @param boolean $preferRouteMatchController
      */
-    public function setPreferRouteMatchController(bool $preferRouteMatchController): void
+    public function setPreferRouteMatchController($preferRouteMatchController): void
     {
-        $this->preferRouteMatchController = $preferRouteMatchController;
+        $this->preferRouteMatchController = (bool) $preferRouteMatchController;
     }
 
     /**

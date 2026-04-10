@@ -8,7 +8,7 @@ use Exception;
 use Jield\ApiTools\ApiProblem\ApiProblem;
 use Laminas\EventManager\AbstractListenerAggregate;
 use Laminas\EventManager\EventManagerInterface;
-use Jield\Http\Response as HttpResponse;
+use Laminas\Http\Response as HttpResponse;
 use Jield\Mvc\MvcEvent;
 use Laminas\View\Exception\ExceptionInterface as ViewExceptionInterface;
 use Override;
@@ -29,7 +29,7 @@ class RenderErrorListener extends AbstractListenerAggregate
      * {@inheritDoc}
      */
     #[Override]
-    public function attach(EventManagerInterface $events, int $priority = 1): void
+    public function attach(EventManagerInterface $events, $priority = 1): void
     {
         $this->listeners[] = $events->attach(eventName: MvcEvent::EVENT_RENDER_ERROR, listener: $this->onRenderError(...), priority: 100);
     }

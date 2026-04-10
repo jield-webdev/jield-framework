@@ -8,7 +8,7 @@ use Jield\ApiTools\Hal\Collection as HalCollection;
 use Jield\ApiTools\Hal\Entity as HalEntity;
 use JsonSerializable;
 use Jield\Json\Json;
-use Jield\Stdlib\JsonSerializable as StdlibJsonSerializable;
+use Laminas\Stdlib\JsonSerializable as StdlibJsonSerializable;
 use Laminas\View\Model\JsonModel as BaseJsonModel;
 use Override;
 use function json_last_error;

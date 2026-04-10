@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace DoctrineModule\Options;
 
-use Jield\Stdlib\AbstractOptions;
+use Laminas\Stdlib\AbstractOptions;
 
 /**
  * MappingDriver options

@@ -3,7 +3,7 @@
 namespace Jield\Mvc\Service;
 
 // phpcs:ignore
-use Psr\Container\ContainerInterface;
+use Interop\Container\ContainerInterface;
 use Jield\Mvc\View\Http\ExceptionStrategy;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 
@@ -16,13 +16,13 @@ class HttpExceptionStrategyFactory implements FactoryInterface
      * @param  null|array $options
      * @return ExceptionStrategy
      */
-    public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): mixed
+    public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): ExceptionStrategy
     {
         $strategy = new ExceptionStrategy();
-        $config   = $this->getConfig(container: $container);
+        $config   = $this->getConfig($container);
 
-        $this->injectDisplayExceptions(strategy: $strategy, config: $config);
-        $this->injectExceptionTemplate(strategy: $strategy, config: $config);
+        $this->injectDisplayExceptions($strategy, $config);
+        $this->injectExceptionTemplate($strategy, $config);
 
         return $strategy;
     }
@@ -33,7 +33,7 @@ class HttpExceptionStrategyFactory implements FactoryInterface
     private function injectDisplayExceptions(ExceptionStrategy $strategy, array $config): void
     {
         $flag = $config['display_exceptions'] ?? false;
-        $strategy->setDisplayExceptions(displayExceptions: $flag);
+        $strategy->setDisplayExceptions($flag);
     }
 
     /**
@@ -42,6 +42,6 @@ class HttpExceptionStrategyFactory implements FactoryInterface
     private function injectExceptionTemplate(ExceptionStrategy $strategy, array $config): void
     {
         $template = $config['exception_template'] ?? 'error';
-        $strategy->setExceptionTemplate(exceptionTemplate: $template);
+        $strategy->setExceptionTemplate($template);
     }
 }

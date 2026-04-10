@@ -7,7 +7,7 @@ use Jield\AssetManager\Asset\FileAsset;
 use Jield\AssetManager\Asset\HttpAsset;
 use Jield\AssetManager\Exception;
 use Jield\AssetManager\Service\MimeResolver;
-use Jield\Stdlib\ArrayUtils;
+use Laminas\Stdlib\ArrayUtils;
 use Override;
 use Traversable;
 

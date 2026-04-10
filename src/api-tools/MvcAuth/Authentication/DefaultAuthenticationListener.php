@@ -7,9 +7,9 @@ namespace Jield\ApiTools\MvcAuth\Authentication;
 use Jield\ApiTools\MvcAuth\Identity;
 use Jield\ApiTools\MvcAuth\Identity\AuthenticatedIdentity;
 use Jield\ApiTools\MvcAuth\MvcAuthEvent;
-use Jield\Http\Request as HttpRequest;
-use Jield\Http\Response;
-use Jield\Http\Response as HttpResponse;
+use Laminas\Http\Request as HttpRequest;
+use Laminas\Http\Response;
+use Laminas\Http\Response as HttpResponse;
 use Laminas\Router\RouteMatch;
 use function array_merge;
 use function array_unique;
@@ -188,7 +188,7 @@ class DefaultAuthenticationListener
     /**
      * Invoke the adapter matching the given $type in order to peform authentication
      */
-    private function authenticate(string $type, HttpRequest $request, HttpResponse $response, MvcAuthEvent $mvcAuthEvent): false|\Jield\Http\PhpEnvironment\Response|Identity\IdentityInterface
+    private function authenticate(string $type, HttpRequest $request, HttpResponse $response, MvcAuthEvent $mvcAuthEvent): false|\Laminas\Http\PhpEnvironment\Response|Identity\IdentityInterface
     {
         foreach ($this->adapters as $adapter) {
             if (!$adapter->matches(type: $type)) {

@@ -3,8 +3,8 @@
 namespace Jield\Mvc\Service;
 
 // phpcs:ignore
-use Psr\Container\ContainerInterface;
-use Jield\Http\PhpEnvironment\Response as HttpResponse;
+use Interop\Container\ContainerInterface;
+use Laminas\Http\PhpEnvironment\Response as HttpResponse;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 
 class ResponseFactory implements FactoryInterface
@@ -16,7 +16,7 @@ class ResponseFactory implements FactoryInterface
      * @param  null|array $options
      * @return HttpResponse
      */
-    public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): mixed
+    public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): HttpResponse
     {
         return new HttpResponse();
     }

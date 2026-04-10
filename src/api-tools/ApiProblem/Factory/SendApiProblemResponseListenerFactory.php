@@ -6,7 +6,7 @@ namespace Jield\ApiTools\ApiProblem\Factory;
 
 use Psr\Container\ContainerInterface;
 use Jield\ApiTools\ApiProblem\Listener\SendApiProblemResponseListener;
-use Jield\Http\Response as HttpResponse;
+use Laminas\Http\Response as HttpResponse;
 
 class SendApiProblemResponseListenerFactory
 {

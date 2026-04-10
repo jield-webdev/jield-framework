@@ -1,16 +1,14 @@
 <?php
 
-declare(strict_types=1);
-
 namespace Jield\Mvc\Controller;
 
 use Laminas\EventManager\EventInterface as Event;
 use Laminas\EventManager\EventManager;
 use Laminas\EventManager\EventManagerAwareInterface;
 use Laminas\EventManager\EventManagerInterface;
-use Jield\Http\Header\Accept\FieldValuePart\AbstractFieldValuePart;
-use Jield\Http\PhpEnvironment\Response as HttpResponse;
-use Jield\Http\Request as HttpRequest;
+use Laminas\Http\Header\Accept\FieldValuePart\AbstractFieldValuePart;
+use Laminas\Http\PhpEnvironment\Response as HttpResponse;
+use Laminas\Http\Request as HttpRequest;
 use Jield\Mvc\Controller\Plugin\Forward;
 use Jield\Mvc\Controller\Plugin\Layout;
 use Jield\Mvc\Controller\Plugin\Params;
@@ -19,11 +17,12 @@ use Jield\Mvc\Controller\Plugin\Url;
 use Jield\Mvc\InjectApplicationEventInterface;
 use Jield\Mvc\MvcEvent;
 use Laminas\ServiceManager\ServiceManager;
-use Jield\Stdlib\DispatchableInterface as Dispatchable;
-use Jield\Stdlib\RequestInterface as Request;
-use Jield\Stdlib\ResponseInterface as Response;
+use Laminas\Stdlib\DispatchableInterface as Dispatchable;
+use Laminas\Stdlib\RequestInterface as Request;
+use Laminas\Stdlib\ResponseInterface as Response;
 use Laminas\View\Model\ModelInterface;
 use Laminas\View\Model\ViewModel;
+
 use function array_merge;
 use function array_values;
 use function call_user_func_array;
@@ -56,22 +55,22 @@ abstract class AbstractController implements
     InjectApplicationEventInterface
 {
     /** @var PluginManager */
-    protected ?PluginManager $plugins = null;
+    protected PluginManager $plugins;
 
     /** @var Request */
-    protected ?Request $request = null;
+    protected Request $request;
 
     /** @var Response */
-    protected ?Response $response = null;
+    protected Response $response;
 
     /** @var Event */
-    protected ?Event $event = null;
+    protected Event $event;
 
     /** @var EventManagerInterface */
-    protected ?EventManagerInterface $events = null;
+    protected EventManagerInterface $events;
 
     /** @var null|string|string[] */
-    protected string|array|null $eventIdentifier = null;
+    protected string|array|null $eventIdentifier;
 
     /**
      * Execute the request
@@ -89,18 +88,18 @@ abstract class AbstractController implements
     public function dispatch(Request $request, ?Response $response = null): mixed
     {
         $this->request = $request;
-        if (!$response) {
+        if (! $response) {
             $response = new HttpResponse();
         }
         $this->response = $response;
 
         $e = $this->getEvent();
-        $e->setName(name: MvcEvent::EVENT_DISPATCH);
-        $e->setRequest(request: $request);
-        $e->setResponse(response: $response);
-        $e->setTarget(target: $this);
+        $e->setName(MvcEvent::EVENT_DISPATCH);
+        $e->setRequest($request);
+        $e->setResponse($response);
+        $e->setTarget($this);
 
-        $result = $this->getEventManager()->triggerEventUntil(callback: static fn($test): bool => $test instanceof Response, event: $e);
+        $result = $this->getEventManager()->triggerEventUntil(static fn($test): bool => $test instanceof Response, $e);
 
         if ($result->stopped()) {
             return $result->last();
@@ -116,7 +115,7 @@ abstract class AbstractController implements
      */
     public function getRequest(): HttpRequest|Request
     {
-        if ($this->request === null) {
+        if (! $this->request) {
             $this->request = new HttpRequest();
         }
 
@@ -130,7 +129,7 @@ abstract class AbstractController implements
      */
     public function getResponse(): HttpResponse|Response
     {
-        if ($this->response === null) {
+        if (! $this->response) {
             $this->response = new HttpResponse();
         }
 
@@ -140,9 +139,9 @@ abstract class AbstractController implements
     /**
      * Set the event manager instance used by this context
      *
-     * @return void
+     * @return AbstractController
      */
-    public function setEventManager(EventManagerInterface $eventManager): void
+    public function setEventManager(EventManagerInterface $events): static
     {
         $className = static::class;
 
@@ -151,20 +150,22 @@ abstract class AbstractController implements
             $className,
         ];
 
-        $rightmostNsPos = strrpos(haystack: $className, needle: '\\');
+        $rightmostNsPos = strrpos($className, '\\');
         if ($rightmostNsPos) {
-            $identifiers[] = strstr(haystack: $className, needle: '\\', before_needle: true); // top namespace
-            $identifiers[] = substr(string: $className, offset: 0, length: $rightmostNsPos); // full namespace
+            $identifiers[] = strstr($className, '\\', true); // top namespace
+            $identifiers[] = substr($className, 0, $rightmostNsPos); // full namespace
         }
 
-        $eventManager->setIdentifiers(identifiers: array_merge(
+        $events->setIdentifiers(array_merge(
             $identifiers,
-            array_values(array: class_implements(object_or_class: $className)),
-            (array)$this->eventIdentifier
+            array_values(class_implements($className)),
+            (array) $this->eventIdentifier
         ));
 
-        $this->events = $eventManager;
+        $this->events = $events;
         $this->attachDefaultListeners();
+
+        return $this;
     }
 
     /**
@@ -176,8 +177,8 @@ abstract class AbstractController implements
      */
     public function getEventManager(): EventManagerInterface
     {
-        if ($this->events === null) {
-            $this->setEventManager(eventManager: new EventManager());
+        if (! $this->events) {
+            $this->setEventManager(new EventManager());
         }
 
         return $this->events;
@@ -190,15 +191,15 @@ abstract class AbstractController implements
      *
      * @return void
      */
-    public function setEvent(Event $event): void
+    public function setEvent(Event $e): void
     {
-        if (!$event instanceof MvcEvent) {
-            $eventParams = $event->getParams();
-            $event       = new MvcEvent();
-            $event->setParams(params: $eventParams);
+        if (! $e instanceof MvcEvent) {
+            $eventParams = $e->getParams();
+            $e           = new MvcEvent();
+            $e->setParams($eventParams);
             unset($eventParams);
         }
-        $this->event = $event;
+        $this->event = $e;
     }
 
     /**
@@ -208,10 +209,10 @@ abstract class AbstractController implements
      *
      * @return MvcEvent
      */
-    public function getEvent(): Event
+    public function getEvent(): Event|MvcEvent
     {
-        if ($this->event === null) {
-            $this->setEvent(event: new MvcEvent());
+        if (! $this->event) {
+            $this->setEvent(new MvcEvent());
         }
 
         return $this->event;
@@ -224,11 +225,11 @@ abstract class AbstractController implements
      */
     public function getPluginManager(): PluginManager
     {
-        if ($this->plugins === null) {
-            $this->setPluginManager(plugins: new PluginManager(creationContext: new ServiceManager()));
+        if (! $this->plugins) {
+            $this->setPluginManager(new PluginManager(new ServiceManager()));
         }
 
-        $this->plugins->setController(controller: $this);
+        $this->plugins->setController($this);
         return $this->plugins;
     }
 
@@ -240,7 +241,7 @@ abstract class AbstractController implements
     public function setPluginManager(PluginManager $plugins): static
     {
         $this->plugins = $plugins;
-        $this->plugins->setController(controller: $this);
+        $this->plugins->setController($this);
 
         return $this;
     }
@@ -248,17 +249,13 @@ abstract class AbstractController implements
     /**
      * Get plugin instance
      *
-     * @param string $name Name of plugin to return
-     * @param null|array $options Options to pass to plugin constructor (if not already instantiated)
+     * @param  string     $name    Name of plugin to return
+     * @param  null|array $options Options to pass to plugin constructor (if not already instantiated)
      * @return mixed
      */
-    public function plugin(string $name, ?array $options = null): mixed
+    public function plugin($name, ?array $options = null): mixed
     {
-        if ($options !== null) {
-            return $this->getPluginManager()->build(name: $name, options: $options);
-        }
-
-        return $this->getPluginManager()->get(id: $name);
+        return $this->getPluginManager()->get($name, $options);
     }
 
     /**
@@ -267,15 +264,15 @@ abstract class AbstractController implements
      * If the plugin is a functor, call it, passing the parameters provided.
      * Otherwise, return the plugin instance.
      *
-     * @param string $method
-     * @param array $params
+     * @param  string $method
+     * @param  array  $params
      * @return mixed
      */
-    public function __call(string $method, array $params)
+    public function __call($method, $params)
     {
-        $plugin = $this->plugin(name: $method);
-        if (is_callable(value: $plugin)) {
-            return call_user_func_array(callback: $plugin, args: $params);
+        $plugin = $this->plugin($method);
+        if (is_callable($plugin)) {
+            return call_user_func_array($plugin, $params);
         }
 
         return $plugin;
@@ -289,21 +286,21 @@ abstract class AbstractController implements
     protected function attachDefaultListeners(): void
     {
         $events = $this->getEventManager();
-        $events->attach(eventName: MvcEvent::EVENT_DISPATCH, listener: [$this, 'onDispatch']);
+        $events->attach(MvcEvent::EVENT_DISPATCH, [$this, 'onDispatch']);
     }
 
     /**
      * Transform an "action" token into a method name
      *
-     * @param string $action
+     * @param  string $action
      * @return string
      */
-    public static function getMethodFromAction(string $action): string
+    public static function getMethodFromAction($action): string
     {
-        $method = str_replace(search: ['.', '-', '_'], replace: ' ', subject: $action);
-        $method = ucwords(string: $method);
-        $method = str_replace(search: ' ', replace: '', subject: $method);
-        $method = lcfirst(string: $method);
+        $method = str_replace(['.', '-', '_'], ' ', $action);
+        $method = ucwords($method);
+        $method = str_replace(' ', '', $method);
+        $method = lcfirst($method);
         return $method . 'Action';
     }
 }

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Jield\ApiTools\Hal;
 
-use Jield\Stdlib\AbstractOptions;
+use Laminas\Stdlib\AbstractOptions;
 
 class RendererOptions extends AbstractOptions
 {

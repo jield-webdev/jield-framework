@@ -9,7 +9,7 @@ use Laminas\Hydrator;
 use Laminas\InputFilter\Factory as InputFilterFactory;
 use Laminas\InputFilter\InputFilterInterface;
 use Laminas\ServiceManager\ServiceManager;
-use Jield\Stdlib\ArrayUtils;
+use Laminas\Stdlib\ArrayUtils;
 use Traversable;
 
 use function assert;

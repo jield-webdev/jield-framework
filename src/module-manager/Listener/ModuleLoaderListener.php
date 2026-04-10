@@ -42,7 +42,7 @@ class ModuleLoaderListener extends AbstractListener implements ListenerAggregate
 
     /** {@inheritDoc} */
     #[Override]
-    public function attach(EventManagerInterface $events, int $priority = 1): void
+    public function attach(EventManagerInterface $events, $priority = 1): void
     {
         $this->callbacks[] = $events->attach(
             eventName: ModuleEvent::EVENT_LOAD_MODULES,

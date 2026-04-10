@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Jield\Authorize\Guard;
 
 use Jield\Authorize\Exception\UnAuthorizedException;
-use Jield\Http\Response;
+use Laminas\Http\Response;
 use Jield\Mvc\Application;
 use Jield\Mvc\MvcEvent;
 use Jield\Authorize\Service\AuthorizeService;
@@ -33,7 +33,7 @@ class Route extends AbstractGuard
     /**
      * {@inheritDoc}
      */
-    public function attach(EventManagerInterface $events, int $priority = 1): void
+    public function attach(EventManagerInterface $events, $priority = 1): void
     {
         $this->listeners[] = $events->attach(eventName: MvcEvent::EVENT_ROUTE, listener: $this->onRoute(...), priority: -1000);
     }

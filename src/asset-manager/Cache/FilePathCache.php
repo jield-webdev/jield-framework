@@ -4,7 +4,7 @@ namespace Jield\AssetManager\Cache;
 
 use Assetic\Contracts\Cache\CacheInterface;
 use Jield\AssetManager\Exception\RuntimeException;
-use Jield\Stdlib\ErrorHandler;
+use Laminas\Stdlib\ErrorHandler;
 use Override;
 use const E_WARNING;
 

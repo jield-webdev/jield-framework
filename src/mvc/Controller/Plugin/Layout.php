@@ -16,13 +16,13 @@ class Layout extends AbstractPlugin
     /**
      * Set the layout template
      *
-     * @param string $template
+     * @param  string $template
      * @return Layout
      */
-    public function setTemplate(string $template): static
+    public function setTemplate($template): static
     {
         $viewModel = $this->getViewModel();
-        $viewModel->setTemplate(template: $template);
+        $viewModel->setTemplate((string) $template);
         return $this;
     }
 
@@ -32,15 +32,15 @@ class Layout extends AbstractPlugin
      * If no arguments are given, grabs the "root" or "layout" view model.
      * Otherwise, attempts to set the template for that view model.
      *
-     * @param string|null $template
+     * @param  null|string $template
      * @return Model|Layout
      */
-    public function __invoke(?string $template = null): Layout|Model|static
+    public function __invoke($template = null): Layout|Model|static
     {
         if (null === $template) {
             return $this->getViewModel();
         }
-        return $this->setTemplate(template: $template);
+        return $this->setTemplate($template);
     }
 
     /**
@@ -58,7 +58,7 @@ class Layout extends AbstractPlugin
         $controller = $this->getController();
         if (! $controller instanceof InjectApplicationEventInterface) {
             throw new DomainException(
-                message: 'Layout plugin requires a controller that implements InjectApplicationEventInterface'
+                'Layout plugin requires a controller that implements InjectApplicationEventInterface'
             );
         }
 
@@ -66,7 +66,7 @@ class Layout extends AbstractPlugin
         if (! $event instanceof MvcEvent) {
             $params = $event->getParams();
             $event  = new MvcEvent();
-            $event->setParams(params: $params);
+            $event->setParams($params);
         }
         $this->event = $event;
 
@@ -84,7 +84,7 @@ class Layout extends AbstractPlugin
         $event     = $this->getEvent();
         $viewModel = $event->getViewModel();
         if (! $viewModel instanceof Model) {
-            throw new DomainException(message: 'Layout plugin requires that event view model is populated');
+            throw new DomainException('Layout plugin requires that event view model is populated');
         }
         return $viewModel;
     }

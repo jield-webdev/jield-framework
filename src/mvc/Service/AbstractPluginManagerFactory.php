@@ -3,7 +3,7 @@
 namespace Jield\Mvc\Service;
 
 // phpcs:ignore
-use Psr\Container\ContainerInterface;
+use Interop\Container\ContainerInterface;
 use Laminas\ServiceManager\AbstractPluginManager;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 
@@ -21,7 +21,7 @@ abstract class AbstractPluginManagerFactory implements FactoryInterface
      * @param  null|array $options
      * @return AbstractPluginManager
      */
-    public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): mixed
+    public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): AbstractPluginManager
     {
         $options            = $options ?: [];
         $pluginManagerClass = static::PLUGIN_MANAGER_CLASS;

@@ -2,9 +2,9 @@
 
 namespace Jield\Mvc\Controller\Plugin;
 
-use Jield\Http\Header\Accept;
-use Jield\Http\Header\Accept\FieldValuePart\AbstractFieldValuePart;
-use Jield\Http\Request;
+use Laminas\Http\Header\Accept;
+use Laminas\Http\Header\Accept\FieldValuePart\AbstractFieldValuePart;
+use Laminas\Http\Request;
 use Jield\Mvc\Exception\DomainException;
 use Jield\Mvc\Exception\InvalidArgumentException;
 use Jield\Mvc\InjectApplicationEventInterface;
@@ -50,16 +50,16 @@ class AcceptableViewModelSelector extends AbstractPlugin
      * @param array $matchAgainst (optional) The Array to match against
      * @param bool $returnDefault (optional) If no match is available. Return default instead
      * @param AbstractFieldValuePart|null $resultReference (optional) The object that was matched
+     * @throws InvalidArgumentException If the supplied and matched View Model could not be found.
      * @return ModelInterface|null
-     *@throws InvalidArgumentException If the supplied and matched View Model could not be found.
      */
     public function __invoke(
-        ?array                  $matchAgainst = null,
-        bool                    $returnDefault = true,
-        ?AbstractFieldValuePart &$resultReference = null
+        ?array $matchAgainst = null,
+        $returnDefault = true,
+        &$resultReference = null
     ): ViewModel|ModelInterface|null
     {
-        return $this->getViewModel(matchAgainst: $matchAgainst, returnDefault: $returnDefault, resultReference: $resultReference);
+        return $this->getViewModel($matchAgainst, $returnDefault, $resultReference);
     }
 
     /**
@@ -68,23 +68,23 @@ class AcceptableViewModelSelector extends AbstractPlugin
      * @param array $matchAgainst (optional) The Array to match against
      * @param bool $returnDefault (optional) If no match is available. Return default instead
      * @param AbstractFieldValuePart|null $resultReference (optional) The object that was matched
+     * @throws InvalidArgumentException If the supplied and matched View Model could not be found.
      * @return ModelInterface|null
-     *@throws InvalidArgumentException If the supplied and matched View Model could not be found.
      */
     public function getViewModel(
-        ?array                  $matchAgainst = null,
-        bool                    $returnDefault = true,
-        ?AbstractFieldValuePart &$resultReference = null
+        ?array $matchAgainst = null,
+        $returnDefault = true,
+        &$resultReference = null
     ): ViewModel|ModelInterface|null
     {
-        $name = $this->getViewModelName(matchAgainst: $matchAgainst, returnDefault: $returnDefault, resultReference: $resultReference);
+        $name = $this->getViewModelName($matchAgainst, $returnDefault, $resultReference);
 
         if (! $name) {
             return;
         }
 
-        if (! class_exists(class: $name)) {
-            throw new InvalidArgumentException(message: 'The supplied View Model could not be found');
+        if (! class_exists($name)) {
+            throw new InvalidArgumentException('The supplied View Model could not be found');
         }
 
         return new $name();
@@ -99,15 +99,15 @@ class AcceptableViewModelSelector extends AbstractPlugin
      * @return ModelInterface|null Returns null if $returnDefault = false and no match could be made
      */
     public function getViewModelName(
-        ?array                  $matchAgainst = null,
-        bool                    $returnDefault = true,
-        ?AbstractFieldValuePart &$resultReference = null
+        ?array $matchAgainst = null,
+        $returnDefault = true,
+        &$resultReference = null
     ): string|ModelInterface|null
     {
-        $res = $this->match(matchAgainst: $matchAgainst);
+        $res = $this->match($matchAgainst);
         if ($res) {
             $resultReference = $res;
-            return $this->extractViewModelName(res: $res);
+            return $this->extractViewModelName($res);
         }
 
         if ($returnDefault) {
@@ -126,7 +126,7 @@ class AcceptableViewModelSelector extends AbstractPlugin
         $request = $this->getRequest();
         $headers = $request->getHeaders();
 
-        if ((! $matchAgainst && ! $this->defaultMatchAgainst) || ! $headers->has(name: 'accept')) {
+        if ((! $matchAgainst && ! $this->defaultMatchAgainst) || ! $headers->has('accept')) {
             return;
         }
 
@@ -137,13 +137,13 @@ class AcceptableViewModelSelector extends AbstractPlugin
         $matchAgainstString = '';
         foreach ($matchAgainst as $modelName => $modelStrings) {
             foreach ((array) $modelStrings as $modelString) {
-                $matchAgainstString .= $this->injectViewModelName(modelAcceptString: $modelString, modelName: $modelName);
+                $matchAgainstString .= $this->injectViewModelName($modelString, $modelName);
             }
         }
 
         /** @var Accept $accept */
-        $accept = $headers->get(name: 'Accept');
-        if (($res = $accept->match(matchAgainst: $matchAgainstString)) === false) {
+        $accept = $headers->get('Accept');
+        if (($res = $accept->match($matchAgainstString)) === false) {
             return;
         }
 
@@ -156,9 +156,9 @@ class AcceptableViewModelSelector extends AbstractPlugin
      * @param string $defaultViewModelName The default View Model name
      * @return AcceptableViewModelSelector provides fluent interface
      */
-    public function setDefaultViewModelName(string $defaultViewModelName): static
+    public function setDefaultViewModelName($defaultViewModelName): static
     {
-        $this->defaultViewModelName = $defaultViewModelName;
+        $this->defaultViewModelName = (string) $defaultViewModelName;
         return $this;
     }
 
@@ -201,11 +201,11 @@ class AcceptableViewModelSelector extends AbstractPlugin
      * @param string $modelName
      * @return string
      */
-    protected function injectViewModelName(string $modelAcceptString, string $modelName): string
+    protected function injectViewModelName($modelAcceptString, $modelName): string
     {
-        $modelName         = str_replace(search: '\\', replace: '|', subject: $modelName);
-        $modelAcceptString = is_array(value: $modelAcceptString)
-            ? $modelAcceptString[key(array: $modelAcceptString)]
+        $modelName         = str_replace('\\', '|', $modelName);
+        $modelAcceptString = is_array($modelAcceptString)
+            ? $modelAcceptString[key($modelAcceptString)]
             : $modelAcceptString;
         return $modelAcceptString . '; ' . self::INJECT_VIEWMODEL_NAME . '="' . $modelName . '", ';
     }
@@ -218,7 +218,7 @@ class AcceptableViewModelSelector extends AbstractPlugin
     protected function extractViewModelName(AbstractFieldValuePart $res): string
     {
         $modelName = $res->getMatchedAgainst()->params[self::INJECT_VIEWMODEL_NAME];
-        return str_replace(search: '|', replace: '\\', subject: $modelName);
+        return str_replace('|', '\\', $modelName);
     }
 
     /**
@@ -237,7 +237,7 @@ class AcceptableViewModelSelector extends AbstractPlugin
         $request = $event->getRequest();
         if (! $request instanceof Request) {
             throw new DomainException(
-                message: 'The event used does not contain a valid Request, but must.'
+                'The event used does not contain a valid Request, but must.'
             );
         }
 
@@ -260,7 +260,7 @@ class AcceptableViewModelSelector extends AbstractPlugin
         $controller = $this->getController();
         if (! $controller instanceof InjectApplicationEventInterface) {
             throw new DomainException(
-                message: 'A controller that implements InjectApplicationEventInterface '
+                'A controller that implements InjectApplicationEventInterface '
                   . 'is required to use ' . self::class
             );
         }
@@ -269,7 +269,7 @@ class AcceptableViewModelSelector extends AbstractPlugin
         if (! $event instanceof MvcEvent) {
             $params = $event->getParams();
             $event  = new MvcEvent();
-            $event->setParams(params: $params);
+            $event->setParams($params);
         }
         $this->event = $event;
 

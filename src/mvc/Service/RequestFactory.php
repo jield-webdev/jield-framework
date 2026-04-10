@@ -3,8 +3,8 @@
 namespace Jield\Mvc\Service;
 
 // phpcs:ignore
-use Psr\Container\ContainerInterface;
-use Jield\Http\PhpEnvironment\Request as HttpRequest;
+use Interop\Container\ContainerInterface;
+use Laminas\Http\PhpEnvironment\Request as HttpRequest;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 
 class RequestFactory implements FactoryInterface
@@ -16,7 +16,7 @@ class RequestFactory implements FactoryInterface
      * @param  null|array $options
      * @return HttpRequest
      */
-    public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): mixed
+    public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): HttpRequest
     {
         return new HttpRequest();
     }

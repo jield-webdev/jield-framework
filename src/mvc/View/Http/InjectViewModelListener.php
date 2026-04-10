@@ -15,9 +15,9 @@ class InjectViewModelListener extends AbstractListenerAggregate
      */
     public function attach(Events $events, $priority = 1): void
     {
-        $this->listeners[] = $events->attach(eventName: MvcEvent::EVENT_DISPATCH, listener: [$this, 'injectViewModel'], priority: -100);
-        $this->listeners[] = $events->attach(eventName: MvcEvent::EVENT_DISPATCH_ERROR, listener: [$this, 'injectViewModel'], priority: -100);
-        $this->listeners[] = $events->attach(eventName: MvcEvent::EVENT_RENDER_ERROR, listener: [$this, 'injectViewModel'], priority: -100);
+        $this->listeners[] = $events->attach(MvcEvent::EVENT_DISPATCH, [$this, 'injectViewModel'], -100);
+        $this->listeners[] = $events->attach(MvcEvent::EVENT_DISPATCH_ERROR, [$this, 'injectViewModel'], -100);
+        $this->listeners[] = $events->attach(MvcEvent::EVENT_RENDER_ERROR, [$this, 'injectViewModel'], -100);
     }
 
     /**
@@ -39,7 +39,7 @@ class InjectViewModelListener extends AbstractListenerAggregate
         $model = $e->getViewModel();
 
         if ($result->terminate()) {
-            $e->setViewModel(viewModel: $result);
+            $e->setViewModel($result);
             return;
         }
 
@@ -47,6 +47,6 @@ class InjectViewModelListener extends AbstractListenerAggregate
             $model->clearChildren();
         }
 
-        $model->addChild(child: $result);
+        $model->addChild($result);
     }
 }

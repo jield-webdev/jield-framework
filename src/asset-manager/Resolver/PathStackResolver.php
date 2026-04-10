@@ -6,7 +6,7 @@ use Assetic\Factory\Resource\DirectoryResource;
 use Jield\AssetManager\Asset\FileAsset;
 use Jield\AssetManager\Exception;
 use Jield\AssetManager\Service\MimeResolver;
-use Jield\Stdlib\SplStack;
+use Laminas\Stdlib\SplStack;
 use Override;
 use SplFileInfo;
 use Traversable;

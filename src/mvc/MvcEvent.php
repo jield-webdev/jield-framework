@@ -5,8 +5,8 @@ namespace Jield\Mvc;
 use Laminas\EventManager\Event;
 use Laminas\Router\RouteMatch;
 use Laminas\Router\RouteStackInterface;
-use Jield\Stdlib\RequestInterface as Request;
-use Jield\Stdlib\ResponseInterface as Response;
+use Laminas\Stdlib\RequestInterface as Request;
+use Laminas\Stdlib\ResponseInterface as Response;
 use Laminas\View\Model\ModelInterface as Model;
 use Laminas\View\Model\ViewModel;
 
@@ -50,7 +50,7 @@ class MvcEvent extends Event
      */
     public function setApplication(ApplicationInterface $application): static
     {
-        $this->setParam(name: 'application', value: $application);
+        $this->setParam('application', $application);
         $this->application = $application;
         return $this;
     }
@@ -82,7 +82,7 @@ class MvcEvent extends Event
      */
     public function setRouter(RouteStackInterface $router): static
     {
-        $this->setParam(name: 'router', value: $router);
+        $this->setParam('router', $router);
         $this->router = $router;
         return $this;
     }
@@ -104,7 +104,7 @@ class MvcEvent extends Event
      */
     public function setRouteMatch(RouteMatch $matches): static
     {
-        $this->setParam(name: 'route-match', value: $matches);
+        $this->setParam('route-match', $matches);
         $this->routeMatch = $matches;
         return $this;
     }
@@ -126,7 +126,7 @@ class MvcEvent extends Event
      */
     public function setRequest(Request $request): static
     {
-        $this->setParam(name: 'request', value: $request);
+        $this->setParam('request', $request);
         $this->request = $request;
         return $this;
     }
@@ -148,7 +148,7 @@ class MvcEvent extends Event
      */
     public function setResponse(Response $response): static
     {
-        $this->setParam(name: 'response', value: $response);
+        $this->setParam('response', $response);
         $this->response = $response;
         return $this;
     }
@@ -172,7 +172,7 @@ class MvcEvent extends Event
     public function getViewModel(): Model
     {
         if (null === $this->viewModel) {
-            $this->setViewModel(viewModel: new ViewModel());
+            $this->setViewModel(new ViewModel());
         }
         return $this->viewModel;
     }
@@ -194,7 +194,7 @@ class MvcEvent extends Event
      */
     public function setResult(mixed $result): static
     {
-        $this->setParam(name: '__RESULT__', value: $result);
+        $this->setParam('__RESULT__', $result);
         $this->result = $result;
         return $this;
     }
@@ -206,18 +206,18 @@ class MvcEvent extends Event
      */
     public function isError(): bool
     {
-        return (bool) $this->getParam(name: 'error', default: false);
+        return (bool) $this->getParam('error', false);
     }
 
     /**
      * Set the error message (indicating error in handling request)
      *
-     * @param string $message
+     * @param  string $message
      * @return MvcEvent
      */
-    public function setError(string $message): static
+    public function setError($message): static
     {
-        $this->setParam(name: 'error', value: $message);
+        $this->setParam('error', $message);
         return $this;
     }
 
@@ -228,7 +228,7 @@ class MvcEvent extends Event
      */
     public function getError(): string
     {
-        return $this->getParam(name: 'error', default: '');
+        return $this->getParam('error', '');
     }
 
     /**
@@ -238,18 +238,18 @@ class MvcEvent extends Event
      */
     public function getController(): string
     {
-        return $this->getParam(name: 'controller');
+        return $this->getParam('controller');
     }
 
     /**
      * Set controller name
      *
-     * @param string $name
+     * @param  string $name
      * @return MvcEvent
      */
-    public function setController(string $name): static
+    public function setController($name): static
     {
-        $this->setParam(name: 'controller', value: $name);
+        $this->setParam('controller', $name);
         return $this;
     }
 
@@ -260,7 +260,7 @@ class MvcEvent extends Event
      */
     public function getControllerClass(): string
     {
-        return $this->getParam(name: 'controller-class');
+        return $this->getParam('controller-class');
     }
 
     /**
@@ -269,9 +269,9 @@ class MvcEvent extends Event
      * @param string $class
      * @return MvcEvent
      */
-    public function setControllerClass(string $class): static
+    public function setControllerClass($class): static
     {
-        $this->setParam(name: 'controller-class', value: $class);
+        $this->setParam('controller-class', $class);
         return $this;
     }
 }

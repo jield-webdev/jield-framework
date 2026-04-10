@@ -9,7 +9,7 @@ use Doctrine\Persistence\ObjectManager;
 use Doctrine\Persistence\ObjectRepository;
 use Jield\Authentication\Adapter\Exception;
 use Jield\Authentication\Storage\StorageInterface;
-use Jield\Stdlib\AbstractOptions;
+use Laminas\Stdlib\AbstractOptions;
 
 use function gettype;
 use function is_callable;

@@ -8,7 +8,7 @@ use Jield\Form\Element\Hidden;
 use Jield\Form\Element\Select as SelectElement;
 use Jield\Form\ElementInterface;
 use Jield\Form\Exception;
-use Jield\Stdlib\ArrayUtils;
+use Laminas\Stdlib\ArrayUtils;
 use Stringable;
 
 use function array_key_exists;

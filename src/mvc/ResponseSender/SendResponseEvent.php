@@ -3,7 +3,7 @@
 namespace Jield\Mvc\ResponseSender;
 
 use Laminas\EventManager\Event;
-use Jield\Stdlib\ResponseInterface;
+use Laminas\Stdlib\ResponseInterface;
 
 use function spl_object_hash;
 
@@ -16,7 +16,7 @@ class SendResponseEvent extends Event
     /**#@-*/
 
     /** @var string Event name */
-    protected ?string $name = 'sendResponse';
+    protected $name = 'sendResponse';
 
     /** @var ResponseInterface */
     protected ResponseInterface $response;
@@ -32,7 +32,7 @@ class SendResponseEvent extends Event
      */
     public function setResponse(ResponseInterface $response): static
     {
-        $this->setParam(name: 'response', value: $response);
+        $this->setParam('response', $response);
         $this->response = $response;
         return $this;
     }
@@ -53,10 +53,10 @@ class SendResponseEvent extends Event
     public function setContentSent(): static
     {
         $response                         = $this->getResponse();
-        $contentSent                      = $this->getParam(name: 'contentSent', default: []);
-        $responseObjectHash               = spl_object_hash(object: $response);
+        $contentSent                      = $this->getParam('contentSent', []);
+        $responseObjectHash               = spl_object_hash($response);
         $contentSent[$responseObjectHash] = true;
-        $this->setParam(name: 'contentSent', value: $contentSent);
+        $this->setParam('contentSent', $contentSent);
         $this->contentSent[$responseObjectHash] = true;
         return $this;
     }
@@ -67,7 +67,7 @@ class SendResponseEvent extends Event
     public function contentSent(): bool
     {
         $response = $this->getResponse();
-        if (isset($this->contentSent[spl_object_hash(object: $response)])) {
+        if (isset($this->contentSent[spl_object_hash($response)])) {
             return true;
         }
         return false;
@@ -81,10 +81,10 @@ class SendResponseEvent extends Event
     public function setHeadersSent(): static
     {
         $response                         = $this->getResponse();
-        $headersSent                      = $this->getParam(name: 'headersSent', default: []);
-        $responseObjectHash               = spl_object_hash(object: $response);
+        $headersSent                      = $this->getParam('headersSent', []);
+        $responseObjectHash               = spl_object_hash($response);
         $headersSent[$responseObjectHash] = true;
-        $this->setParam(name: 'headersSent', value: $headersSent);
+        $this->setParam('headersSent', $headersSent);
         $this->headersSent[$responseObjectHash] = true;
         return $this;
     }
@@ -95,7 +95,7 @@ class SendResponseEvent extends Event
     public function headersSent(): bool
     {
         $response = $this->getResponse();
-        if (isset($this->headersSent[spl_object_hash(object: $response)])) {
+        if (isset($this->headersSent[spl_object_hash($response)])) {
             return true;
         }
         return false;

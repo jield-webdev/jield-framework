@@ -8,7 +8,7 @@ use Countable;
 use Jield\ApiTools\ApiProblem\ApiProblem;
 use Jield\ApiTools\Hal\Collection;
 use Laminas\Paginator\Paginator;
-use Jield\Stdlib\ArrayUtils;
+use Laminas\Stdlib\ArrayUtils;
 use Override;
 use Traversable;
 use function count;

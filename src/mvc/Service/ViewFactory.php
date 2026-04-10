@@ -3,7 +3,7 @@
 namespace Jield\Mvc\Service;
 
 // phpcs:ignore
-use Psr\Container\ContainerInterface;
+use Interop\Container\ContainerInterface;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Laminas\View\Strategy\PhpRendererStrategy;
 use Laminas\View\View;
@@ -15,7 +15,7 @@ class ViewFactory implements FactoryInterface
      * @param  null|array $options
      * @return View
      */
-    public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): mixed
+    public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): View
     {
         $view   = new View();
         $events = $container->get('EventManager');

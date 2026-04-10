@@ -8,8 +8,8 @@ use Jield\Form\Element\CollectionInterface;
 use Laminas\Hydrator;
 use Laminas\Hydrator\HydratorAwareInterface;
 use Laminas\Hydrator\HydratorInterface;
-use Jield\Stdlib\ArrayUtils;
-use Jield\Stdlib\PriorityList;
+use Laminas\Stdlib\ArrayUtils;
+use Laminas\Stdlib\PriorityList;
 use ReflectionClass;
 use Traversable;
 

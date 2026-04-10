@@ -9,11 +9,11 @@ use Jield\ApiTools\ApiProblem\ApiProblemResponse;
 use Jield\ApiTools\ApiProblem\View\ApiProblemModel;
 use Laminas\EventManager\AbstractListenerAggregate;
 use Laminas\EventManager\EventManagerInterface;
-use Jield\Http\Header\Accept as AcceptHeader;
-use Jield\Http\Response as HttpResponse;
-use Jield\Http\Request as HttpRequest;
+use Laminas\Http\Header\Accept as AcceptHeader;
+use Laminas\Http\Response as HttpResponse;
+use Laminas\Http\Request as HttpRequest;
 use Jield\Mvc\MvcEvent;
-use Jield\Stdlib\DispatchableInterface;
+use Laminas\Stdlib\DispatchableInterface;
 use Laminas\View\Model\ModelInterface;
 use Override;
 use Throwable;
@@ -57,7 +57,7 @@ class ApiProblemListener extends AbstractListenerAggregate
      * {@inheritDoc}
      */
     #[Override]
-    public function attach(EventManagerInterface $events, int $priority = 1): void
+    public function attach(EventManagerInterface $events, $priority = 1): void
     {
         $this->listeners[] = $events->attach(eventName: MvcEvent::EVENT_RENDER, listener: $this->onRender(...), priority: 1000);
         $this->listeners[] = $events->attach(eventName: MvcEvent::EVENT_DISPATCH_ERROR, listener: $this->onDispatchError(...), priority: 100);

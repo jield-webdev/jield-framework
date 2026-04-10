@@ -7,7 +7,7 @@ namespace Jield\Authorize\View;
 use Jield\Authorize\Guard\Controller;
 use Jield\Authorize\Guard\Route;
 use Jield\Authorize\Exception\UnAuthorizedException;
-use Jield\Http\Response;
+use Laminas\Http\Response;
 use Jield\Mvc\Application;
 use Jield\Mvc\MvcEvent;
 use Laminas\EventManager\EventManagerInterface;
@@ -31,7 +31,7 @@ class RedirectionStrategy implements ListenerAggregateInterface
     /**
      * {@inheritDoc}
      */
-    public function attach(EventManagerInterface $events, int $priority = 1): void
+    public function attach(EventManagerInterface $events, $priority = 1): void
     {
         $this->listeners[] = $events->attach(eventName: MvcEvent::EVENT_DISPATCH_ERROR, listener: $this->onDispatchError(...), priority: -5000);
     }

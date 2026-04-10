@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace DoctrineORMModule\Options;
 
-use Jield\Stdlib\AbstractOptions;
+use Laminas\Stdlib\AbstractOptions;
 
 /** @template-extends AbstractOptions<mixed> */
 final class EntityManager extends AbstractOptions

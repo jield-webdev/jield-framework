@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Jield\ApiTools\ContentNegotiation\Validator;
 
-use Jield\Stdlib\RequestInterface;
+use Laminas\Stdlib\RequestInterface;
 use Laminas\Validator\File\UploadFile as BaseValidator;
 use Override;
 use function count;

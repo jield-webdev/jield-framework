@@ -2,7 +2,7 @@
 
 namespace Jield\Mvc\Controller\Plugin;
 
-use Jield\Http\Response;
+use Laminas\Http\Response;
 use Jield\Mvc\Exception;
 use Jield\Mvc\Exception\DomainException;
 use Jield\Mvc\InjectApplicationEventInterface;
@@ -21,45 +21,45 @@ class Redirect extends AbstractPlugin
     /**
      * Generate redirect response based on given route
      *
-     * @param string|null $route RouteInterface name
-     * @param array $params Parameters to use in url generation, if any
-     * @param array $options RouteInterface-specific options to use in url generation, if any
-     * @param bool $reuseMatchedParams Whether to reuse matched parameters
+     * @param  string $route RouteInterface name
+     * @param  array $params Parameters to use in url generation, if any
+     * @param  array $options RouteInterface-specific options to use in url generation, if any
+     * @param  bool $reuseMatchedParams Whether to reuse matched parameters
      * @return Response
      * @throws Exception\DomainException If composed controller does not implement InjectApplicationEventInterface, or
      *         router cannot be found in controller event.
      */
-    public function toRoute(?string $route = null, array $params = [], array $options = [], bool $reuseMatchedParams = false): ?Response
+    public function toRoute($route = null, $params = [], $options = [], $reuseMatchedParams = false): ?Response
     {
         $controller = $this->getController();
-        if (! $controller || ! method_exists(object_or_class: $controller, method: 'plugin')) {
+        if (! $controller || ! method_exists($controller, 'plugin')) {
             throw new DomainException(
-                message: 'Redirect plugin requires a controller that defines the plugin() method'
+                'Redirect plugin requires a controller that defines the plugin() method'
             );
         }
 
-        $urlPlugin = $controller->plugin(name: 'url');
+        $urlPlugin = $controller->plugin('url');
 
-        if (is_scalar(value: $options)) {
+        if (is_scalar($options)) {
             $url = $urlPlugin->fromRoute($route, $params, $options);
         } else {
             $url = $urlPlugin->fromRoute($route, $params, $options, $reuseMatchedParams);
         }
 
-        return $this->toUrl(url: $url);
+        return $this->toUrl($url);
     }
 
     /**
      * Generate redirect response based on given URL
      *
-     * @param string $url
+     * @param  string $url
      * @return Response
      */
-    public function toUrl(string $url): ?Response
+    public function toUrl($url): ?Response
     {
         $response = $this->getResponse();
-        $response->getHeaders()->addHeaderLine(headerFieldNameOrLine: 'Location', fieldValue: $url);
-        $response->setStatusCode(code: 302);
+        $response->getHeaders()->addHeaderLine('Location', $url);
+        $response->setStatusCode(302);
         return $response;
     }
 
@@ -70,7 +70,7 @@ class Redirect extends AbstractPlugin
      */
     public function refresh(): ?Response
     {
-        return $this->toRoute(route: null, params: [], options: [], reuseMatchedParams: true);
+        return $this->toRoute(null, [], [], true);
     }
 
     /**
@@ -88,7 +88,7 @@ class Redirect extends AbstractPlugin
         $event    = $this->getEvent();
         $response = $event->getResponse();
         if (! $response instanceof Response) {
-            throw new DomainException(message: 'Redirect plugin requires event compose a response');
+            throw new DomainException('Redirect plugin requires event compose a response');
         }
         $this->response = $response;
         return $this->response;
@@ -109,7 +109,7 @@ class Redirect extends AbstractPlugin
         $controller = $this->getController();
         if (! $controller instanceof InjectApplicationEventInterface) {
             throw new DomainException(
-                message: 'Redirect plugin requires a controller that implements InjectApplicationEventInterface'
+                'Redirect plugin requires a controller that implements InjectApplicationEventInterface'
             );
         }
 
@@ -117,7 +117,7 @@ class Redirect extends AbstractPlugin
         if (! $event instanceof MvcEvent) {
             $params = $event->getParams();
             $event  = new MvcEvent();
-            $event->setParams(params: $params);
+            $event->setParams($params);
         }
         $this->event = $event;
 

@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Jield\ApiTools\ContentNegotiation;
 
-use Jield\Http\Header\ContentType as ContentTypeHeader;
-use Jield\Http\Request as HttpRequest;
-use Jield\Stdlib\Parameters;
+use Laminas\Http\Header\ContentType as ContentTypeHeader;
+use Laminas\Http\Request as HttpRequest;
+use Laminas\Stdlib\Parameters;
 use function fclose;
 use function fgets;
 use function filesize;

@@ -3,7 +3,7 @@
 namespace Jield\Mvc\Service;
 
 // phpcs:ignore
-use Psr\Container\ContainerInterface;
+use Interop\Container\ContainerInterface;
 use Jield\ModuleManager\Feature\ControllerPluginProviderInterface;
 use Jield\ModuleManager\Feature\ControllerProviderInterface;
 use Jield\ModuleManager\Feature\RouteProviderInterface;
@@ -32,11 +32,11 @@ class ModuleManagerFactory implements FactoryInterface
      * @param  null|array $options
      * @return ModuleManager
      */
-    public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): mixed
+    public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): ModuleManager
     {
         $configuration    = $container->get('ApplicationConfig');
-        $listenerOptions  = new ListenerOptions(options: $configuration['module_listener_options']);
-        $defaultListeners = new DefaultListenerAggregate(options: $listenerOptions);
+        $listenerOptions  = new ListenerOptions($configuration['module_listener_options']);
+        $defaultListeners = new DefaultListenerAggregate($listenerOptions);
         $serviceListener  = $container->get('ServiceListener');
 
         $serviceListener->addServiceManager(
@@ -72,14 +72,14 @@ class ModuleManagerFactory implements FactoryInterface
         );
 
         $events = $container->get('EventManager');
-        $defaultListeners->attach(events: $events);
+        $defaultListeners->attach($events);
         $serviceListener->attach($events);
 
         $moduleEvent = new ModuleEvent();
-        $moduleEvent->setParam(name: 'ServiceManager', value: $container);
+        $moduleEvent->setParam('ServiceManager', $container);
 
-        $moduleManager = new ModuleManager(modules: $configuration['modules'], eventManager: $events);
-        $moduleManager->setEvent(event: $moduleEvent);
+        $moduleManager = new ModuleManager($configuration['modules'], $events);
+        $moduleManager->setEvent($moduleEvent);
 
         return $moduleManager;
     }

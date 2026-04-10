@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Jield\ApiTools\MvcAuth\Factory;
 
 use Jield\ApiTools\MvcAuth\Authorization\DefaultResourceResolverListener;
-use Jield\Http\Request;
+use Laminas\Http\Request;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Laminas\ServiceManager\ServiceLocatorInterface;
 use Override;

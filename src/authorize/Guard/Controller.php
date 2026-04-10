@@ -7,7 +7,7 @@ namespace Jield\Authorize\Guard;
 use Jield\Authorize\Exception\UnAuthorizedException;
 use Jield\Authorize\Service\AuthorizeService;
 use Laminas\EventManager\EventManagerInterface;
-use Jield\Http\Request as HttpRequest;
+use Laminas\Http\Request as HttpRequest;
 use Jield\Mvc\ApplicationInterface;
 use Jield\Mvc\MvcEvent;
 use function sprintf;
@@ -35,7 +35,7 @@ class Controller extends AbstractGuard
         return $results;
     }
 
-    public function attach(EventManagerInterface $events, int $priority = 1): void
+    public function attach(EventManagerInterface $events, $priority = 1): void
     {
         $this->listeners[] = $events->attach(eventName: MvcEvent::EVENT_ROUTE, listener: $this->onDispatch(...), priority: -1000);
     }

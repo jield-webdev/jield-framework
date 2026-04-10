@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Jield\ApiTools\MvcAuth\Authorization;
 
 use Jield\ApiTools\MvcAuth\MvcAuthEvent;
-use Jield\Http\Response as HttpResponse;
+use Laminas\Http\Response as HttpResponse;
 
 class DefaultAuthorizationPostListener
 {

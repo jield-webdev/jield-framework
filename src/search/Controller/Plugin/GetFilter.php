@@ -6,12 +6,12 @@ namespace Jield\Search\Controller\Plugin;
 
 use Doctrine\Common\Collections\Order;
 use JetBrains\PhpStorm\Pure;
-use Jield\Http\Request;
+use Laminas\Http\Request;
 use Jield\Mvc\Application;
 use Jield\Mvc\Controller\Plugin\AbstractPlugin;
 use Jield\Search\ValueObject\DateInterval;
 use Jield\Search\ValueObject\SearchFormResult;
-use Jield\Stdlib\RequestInterface;
+use Laminas\Stdlib\RequestInterface;
 use Psr\Container\ContainerInterface;
 use function http_build_query;
 use function urldecode;

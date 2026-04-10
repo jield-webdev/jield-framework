@@ -4,8 +4,8 @@ namespace Jield\Mvc;
 
 use Laminas\EventManager\EventsCapableInterface;
 use Laminas\ServiceManager\ServiceLocatorInterface;
-use Jield\Stdlib\RequestInterface;
-use Jield\Stdlib\ResponseInterface;
+use Laminas\Stdlib\RequestInterface;
+use Laminas\Stdlib\ResponseInterface;
 
 interface ApplicationInterface extends EventsCapableInterface
 {

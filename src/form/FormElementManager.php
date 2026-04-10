@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Jield\Form;
 
-use Jield\Stdlib\InitializableInterface;
+use Laminas\Stdlib\InitializableInterface;
 use Laminas\Hydrator\HydratorInterface;
 use Laminas\Hydrator\HydratorPluginManager;
 use Laminas\InputFilter\InputFilterPluginManager;

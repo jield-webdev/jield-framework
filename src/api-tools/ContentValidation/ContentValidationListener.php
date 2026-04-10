@@ -12,8 +12,8 @@ use Laminas\EventManager\EventManagerAwareInterface;
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\EventManager\ListenerAggregateInterface;
 use Laminas\EventManager\ListenerAggregateTrait;
-use Jield\Http\Request as HttpRequest;
-use Jield\Http\Response;
+use Laminas\Http\Request as HttpRequest;
+use Laminas\Http\Response;
 use Laminas\InputFilter\CollectionInputFilter;
 use Laminas\InputFilter\Exception\InvalidArgumentException as InputFilterInvalidArgumentException;
 use Laminas\InputFilter\InputFilterInterface;
@@ -21,7 +21,7 @@ use Laminas\InputFilter\UnknownInputsCapableInterface;
 use Jield\Mvc\MvcEvent;
 use Laminas\Router\RouteMatch;
 use Laminas\ServiceManager\ServiceLocatorInterface;
-use Jield\Stdlib\ArrayUtils;
+use Laminas\Stdlib\ArrayUtils;
 use Override;
 use function array_filter;
 use function array_key_exists;
@@ -127,7 +127,7 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
      *
      */
     #[Override]
-    public function attach(EventManagerInterface $events, int $priority = 1): void
+    public function attach(EventManagerInterface $events, $priority = 1): void
     {
         // trigger after authentication/authorization and content negotiation
         $this->listeners[] = $events->attach(eventName: MvcEvent::EVENT_ROUTE, listener: $this->onRoute(...), priority: -650);

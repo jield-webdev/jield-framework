@@ -4,8 +4,8 @@ namespace Jield\Mvc;
 
 use Laminas\EventManager\AbstractListenerAggregate;
 use Laminas\EventManager\EventManagerInterface;
-use Jield\Http\Request as HttpRequest;
-use Jield\Http\Response as HttpResponse;
+use Laminas\Http\Request as HttpRequest;
+use Laminas\Http\Response as HttpResponse;
 
 use function in_array;
 use function strtoupper;
@@ -30,15 +30,15 @@ class HttpMethodListener extends AbstractListenerAggregate
     protected bool $enabled = true;
 
     /**
-     * @param bool $enabled
+     * @param bool  $enabled
      * @param array $allowedMethods
      */
-    public function __construct(bool $enabled = true, array $allowedMethods = [])
+    public function __construct($enabled = true, $allowedMethods = [])
     {
-        $this->setEnabled(enabled: $enabled);
+        $this->setEnabled($enabled);
 
         if (! empty($allowedMethods)) {
-            $this->setAllowedMethods(allowedMethods: $allowedMethods);
+            $this->setAllowedMethods($allowedMethods);
         }
     }
 
@@ -52,9 +52,9 @@ class HttpMethodListener extends AbstractListenerAggregate
         }
 
         $this->listeners[] = $events->attach(
-            eventName: MvcEvent::EVENT_ROUTE,
-            listener: [$this, 'onRoute'],
-            priority: 10000
+            MvcEvent::EVENT_ROUTE,
+            [$this, 'onRoute'],
+            10000
         );
     }
 
@@ -72,11 +72,11 @@ class HttpMethodListener extends AbstractListenerAggregate
 
         $method = $request->getMethod();
 
-        if (in_array(needle: $method, haystack: $this->getAllowedMethods())) {
+        if (in_array($method, $this->getAllowedMethods())) {
             return;
         }
 
-        $response->setStatusCode(code: 405);
+        $response->setStatusCode(405);
 
         return $response;
     }
@@ -92,7 +92,7 @@ class HttpMethodListener extends AbstractListenerAggregate
     public function setAllowedMethods(array $allowedMethods): void
     {
         foreach ($allowedMethods as &$value) {
-            $value = strtoupper(string: $value);
+            $value = strtoupper($value);
         }
         $this->allowedMethods = $allowedMethods;
     }
@@ -108,8 +108,8 @@ class HttpMethodListener extends AbstractListenerAggregate
     /**
      * @param bool $enabled
      */
-    public function setEnabled(bool $enabled): void
+    public function setEnabled($enabled): void
     {
-        $this->enabled = $enabled;
+        $this->enabled = (bool) $enabled;
     }
 }

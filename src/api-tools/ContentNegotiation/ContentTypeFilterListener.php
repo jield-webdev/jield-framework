@@ -8,9 +8,9 @@ use Jield\ApiTools\ApiProblem\ApiProblem;
 use Jield\ApiTools\ApiProblem\ApiProblemResponse;
 use Laminas\EventManager\AbstractListenerAggregate;
 use Laminas\EventManager\EventManagerInterface;
-use Jield\Http\Header\ContentType;
+use Laminas\Http\Header\ContentType;
 use Jield\Mvc\MvcEvent;
-use Jield\Stdlib\ArrayUtils;
+use Laminas\Stdlib\ArrayUtils;
 
 use Override;
 use function method_exists;
@@ -28,7 +28,7 @@ class ContentTypeFilterListener extends AbstractListenerAggregate
      * @param int $priority
      */
     #[Override]
-    public function attach(EventManagerInterface $events, int $priority = 1): void
+    public function attach(EventManagerInterface $events, $priority = 1): void
     {
         $this->listeners[] = $events->attach(eventName: MvcEvent::EVENT_ROUTE, listener: $this->onRoute(...), priority: -625);
     }

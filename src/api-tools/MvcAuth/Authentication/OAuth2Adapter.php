@@ -6,9 +6,9 @@ namespace Jield\ApiTools\MvcAuth\Authentication;
 
 use Jield\ApiTools\MvcAuth\Identity;
 use Jield\ApiTools\MvcAuth\MvcAuthEvent;
-use Jield\Http\Request;
-use Jield\Http\Response;
-use Jield\Http\Header\ContentType as ContentTypeHeader;
+use Laminas\Http\Request;
+use Laminas\Http\Response;
+use Laminas\Http\Header\ContentType as ContentTypeHeader;
 use OAuth2\Request as OAuth2Request;
 use OAuth2\Response as OAuth2Response;
 use OAuth2\Server as OAuth2Server;
@@ -123,7 +123,7 @@ class OAuth2Adapter extends AbstractAdapter
      * Attempt to authenticate the current request.
      */
     #[Override]
-    public function authenticate(Request $request, Response $response, MvcAuthEvent $mvcAuthEvent): Identity\IdentityInterface|\Jield\Http\PhpEnvironment\Response
+    public function authenticate(Request $request, Response $response, MvcAuthEvent $mvcAuthEvent): Identity\IdentityInterface|\Laminas\Http\PhpEnvironment\Response
     {
         $oauth2request = new OAuth2Request(
             query: $request->getQuery()->toArray(),
@@ -171,7 +171,7 @@ class OAuth2Adapter extends AbstractAdapter
     }
 
     /**
-     * Merge the OAuth2\Response instance's status and headers into the current Jield\Http\Response.
+     * Merge the OAuth2\Response instance's status and headers into the current Laminas\Http\Response.
      *
      * @param int $status
      */
@@ -182,7 +182,7 @@ class OAuth2Adapter extends AbstractAdapter
     }
 
     /**
-     * Merge the OAuth2\Response headers into the current Jield\Http\Response.
+     * Merge the OAuth2\Response headers into the current Laminas\Http\Response.
      *
      */
     private function mergeOAuth2ResponseHeaders(Response $response, array $oauth2Headers): Response

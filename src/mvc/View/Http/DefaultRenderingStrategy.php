@@ -7,7 +7,7 @@ use Laminas\EventManager\AbstractListenerAggregate;
 use Laminas\EventManager\EventManagerInterface;
 use Jield\Mvc\Application;
 use Jield\Mvc\MvcEvent;
-use Jield\Stdlib\ResponseInterface as Response;
+use Laminas\Stdlib\ResponseInterface as Response;
 use Laminas\View\Model\ModelInterface as ViewModel;
 use Laminas\View\View;
 use Throwable;
@@ -33,19 +33,19 @@ class DefaultRenderingStrategy extends AbstractListenerAggregate
      */
     public function attach(EventManagerInterface $events, $priority = 1): void
     {
-        $this->listeners[] = $events->attach(eventName: MvcEvent::EVENT_RENDER, listener: [$this, 'render'], priority: -10000);
-        $this->listeners[] = $events->attach(eventName: MvcEvent::EVENT_RENDER_ERROR, listener: [$this, 'render'], priority: -10000);
+        $this->listeners[] = $events->attach(MvcEvent::EVENT_RENDER, [$this, 'render'], -10000);
+        $this->listeners[] = $events->attach(MvcEvent::EVENT_RENDER_ERROR, [$this, 'render'], -10000);
     }
 
     /**
      * Set layout template value
      *
-     * @param string $layoutTemplate
+     * @param  string $layoutTemplate
      * @return DefaultRenderingStrategy
      */
-    public function setLayoutTemplate(string $layoutTemplate): static
+    public function setLayoutTemplate($layoutTemplate): static
     {
-        $this->layoutTemplate = $layoutTemplate;
+        $this->layoutTemplate = (string) $layoutTemplate;
         return $this;
     }
 
@@ -87,7 +87,7 @@ class DefaultRenderingStrategy extends AbstractListenerAggregate
         $caughtException = null;
 
         try {
-            $view->render(modelOrTemplate: $viewModel);
+            $view->render($viewModel);
         } catch (Throwable $ex) {
             $caughtException = $ex;
         }
@@ -100,10 +100,10 @@ class DefaultRenderingStrategy extends AbstractListenerAggregate
             $application = $e->getApplication();
             $events      = $application->getEventManager();
 
-            $e->setError(message: Application::ERROR_EXCEPTION);
-            $e->setParam(name: 'exception', value: $caughtException);
-            $e->setName(name: MvcEvent::EVENT_RENDER_ERROR);
-            $events->triggerEvent(event: $e);
+            $e->setError(Application::ERROR_EXCEPTION);
+            $e->setParam('exception', $caughtException);
+            $e->setName(MvcEvent::EVENT_RENDER_ERROR);
+            $events->triggerEvent($e);
         }
 
         return $response;

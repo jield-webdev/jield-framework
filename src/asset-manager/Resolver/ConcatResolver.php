@@ -7,7 +7,7 @@ use Jield\AssetManager\Exception;
 use Jield\AssetManager\Service\AssetFilterManager;
 use Jield\AssetManager\Service\AssetFilterManagerAwareInterface;
 use Jield\AssetManager\Service\MimeResolver;
-use Jield\Stdlib\ArrayUtils;
+use Laminas\Stdlib\ArrayUtils;
 use Override;
 
 /**

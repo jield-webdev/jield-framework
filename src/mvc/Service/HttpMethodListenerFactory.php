@@ -3,7 +3,7 @@
 namespace Jield\Mvc\Service;
 
 // phpcs:ignore
-use Psr\Container\ContainerInterface;
+use Interop\Container\ContainerInterface;
 use Jield\Mvc\HttpMethodListener;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 
@@ -17,7 +17,7 @@ class HttpMethodListenerFactory implements FactoryInterface
      *
      * @return HttpMethodListener
      */
-    public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): mixed
+    public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): HttpMethodListener
     {
         $config = $container->get('config');
 
@@ -26,13 +26,13 @@ class HttpMethodListenerFactory implements FactoryInterface
         }
 
         $listenerConfig = $config['http_methods_listener'];
-        $enabled        = array_key_exists(key: 'enabled', array: $listenerConfig)
+        $enabled        = array_key_exists('enabled', $listenerConfig)
             ? $listenerConfig['enabled']
             : true;
-        $allowedMethods = isset($listenerConfig['allowed_methods']) && is_array(value: $listenerConfig['allowed_methods'])
+        $allowedMethods = isset($listenerConfig['allowed_methods']) && is_array($listenerConfig['allowed_methods'])
             ? $listenerConfig['allowed_methods']
             : null;
 
-        return new HttpMethodListener(enabled: $enabled, allowedMethods: $allowedMethods);
+        return new HttpMethodListener($enabled, $allowedMethods);
     }
 }

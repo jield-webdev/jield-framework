@@ -6,8 +6,8 @@ namespace Jield\ApiTools\MvcAuth\Authorization;
 
 use Jield\ApiTools\MvcAuth\Identity\IdentityInterface;
 use Jield\ApiTools\MvcAuth\MvcAuthEvent;
-use Jield\Http\Request;
-use Jield\Http\Response;
+use Laminas\Http\Request;
+use Laminas\Http\Response;
 use Laminas\Router\RouteMatch;
 
 class DefaultAuthorizationListener

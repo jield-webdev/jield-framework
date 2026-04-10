@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Jield\ApiTools\OAuth2\Provider\UserId;
 
 use Jield\Authentication\AuthenticationServiceInterface;
-use Jield\Stdlib\RequestInterface;
+use Laminas\Stdlib\RequestInterface;
 
 use Override;
 use function is_array;

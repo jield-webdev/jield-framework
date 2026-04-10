@@ -6,7 +6,7 @@ use Jield\AssetManager\Asset\AssetCollection;
 use Jield\AssetManager\Exception;
 use Jield\AssetManager\Service\AssetFilterManager;
 use Jield\AssetManager\Service\AssetFilterManagerAwareInterface;
-use Jield\Stdlib\ArrayUtils;
+use Laminas\Stdlib\ArrayUtils;
 use Override;
 use Traversable;
 

@@ -7,7 +7,7 @@ namespace Jield\ApiTools\Hal;
 use Exception;
 use Jield\ApiTools\Hal\Exception\InvalidArgumentException;
 use Laminas\Paginator\Paginator;
-use Jield\Stdlib\ArrayUtils;
+use Laminas\Stdlib\ArrayUtils;
 use Traversable;
 use function sprintf;
 

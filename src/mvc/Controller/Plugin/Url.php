@@ -23,32 +23,32 @@ class Url extends AbstractPlugin
     /**
      * Generates a URL based on a route
      *
-     * @param string|null $route              RouteInterface name
-     * @param Traversable|array $params             Parameters to use in url generation, if any
-     * @param bool|array $options            RouteInterface-specific options to use in url generation, if any.
+     * @param  string             $route              RouteInterface name
+     * @param  array|Traversable  $params             Parameters to use in url generation, if any
+     * @param  array|bool         $options            RouteInterface-specific options to use in url generation, if any.
      *                                                If boolean, and no fourth argument, used as $reuseMatchedParams.
-     * @param bool $reuseMatchedParams Whether to reuse matched parameters
-     * @return string
-     *@throws InvalidArgumentException
+     * @param  bool               $reuseMatchedParams Whether to reuse matched parameters
+     * @throws RuntimeException
+     * @throws InvalidArgumentException
      * @throws DomainException
-     * @throws \RuntimeException
+     * @return string
      */
-    public function fromRoute(?string $route = null, Traversable|array $params = [], bool|array $options = [], bool $reuseMatchedParams = false): string
+    public function fromRoute($route = null, $params = [], $options = [], $reuseMatchedParams = false): string
     {
         $controller = $this->getController();
         if (! $controller instanceof InjectApplicationEventInterface) {
             throw new DomainException(
-                message: 'Url plugin requires a controller that implements InjectApplicationEventInterface'
+                'Url plugin requires a controller that implements InjectApplicationEventInterface'
             );
         }
 
-        if (! is_array(value: $params)) {
+        if (! is_array($params)) {
             if (! $params instanceof Traversable) {
                 throw new InvalidArgumentException(
-                    message: 'Params is expected to be an array or a Traversable object'
+                    'Params is expected to be an array or a Traversable object'
                 );
             }
-            $params = iterator_to_array(iterator: $params);
+            $params = iterator_to_array($params);
         }
 
         $event   = $controller->getEvent();
@@ -58,29 +58,29 @@ class Url extends AbstractPlugin
             $router  = $event->getRouter();
             $matches = $event->getRouteMatch();
         } elseif ($event instanceof EventInterface) {
-            $router  = $event->getParam(name: 'router', default: false);
-            $matches = $event->getParam(name: 'route-match', default: false);
+            $router  = $event->getParam('router', false);
+            $matches = $event->getParam('route-match', false);
         }
         if (! $router instanceof RouteStackInterface) {
             throw new DomainException(
-                message: 'Url plugin requires that controller event compose a router; none found'
+                'Url plugin requires that controller event compose a router; none found'
             );
         }
 
-        if (3 === func_num_args() && is_bool(value: $options)) {
+        if (3 === func_num_args() && is_bool($options)) {
             $reuseMatchedParams = $options;
             $options            = [];
         }
 
         if ($route === null) {
             if (! $matches) {
-                throw new RuntimeException(message: 'No RouteMatch instance present');
+                throw new RuntimeException('No RouteMatch instance present');
             }
 
             $route = $matches->getMatchedRouteName();
 
             if ($route === null) {
-                throw new RuntimeException(message: 'RouteMatch does not contain a matched route name');
+                throw new RuntimeException('RouteMatch does not contain a matched route name');
             }
         }
 
@@ -100,6 +100,6 @@ class Url extends AbstractPlugin
         }
 
         $options['name'] = $route;
-        return $router->assemble(params: $params, options: $options);
+        return $router->assemble($params, $options);
     }
 }

@@ -11,7 +11,6 @@ use Webimpress\SafeWriter\FileWriter;
 
 abstract class AbstractListener
 {
-    /** @var ListenerOptions */
     protected ListenerOptions $options;
 
     public function __construct(?ListenerOptions $options = null)
@@ -20,7 +19,6 @@ abstract class AbstractListener
         $this->setOptions(options: $options);
     }
 
-    /** @return ListenerOptions */
     public function getOptions(): ListenerOptions
     {
         return $this->options;
@@ -47,9 +45,9 @@ abstract class AbstractListener
     {
         try {
             $content = "<?php\n" . VarExporter::export(
-                var: $array,
+                    var: $array,
                     options: VarExporter::ADD_RETURN | VarExporter::CLOSURE_SNAPSHOT_USES
-            );
+                );
         } catch (ExportException $e) {
             throw ConfigCannotBeCachedException::fromExporterException(exportException: $e);
         }

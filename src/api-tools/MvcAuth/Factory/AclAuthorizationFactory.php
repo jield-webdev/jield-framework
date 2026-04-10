@@ -6,7 +6,7 @@ namespace Jield\ApiTools\MvcAuth\Factory;
 
 use Jield\ApiTools\MvcAuth\Authorization\AclAuthorization;
 use Jield\ApiTools\MvcAuth\Authorization\AclAuthorizationFactory as AclFactory;
-use Jield\Http\Request;
+use Laminas\Http\Request;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Laminas\ServiceManager\ServiceLocatorInterface;
 use Override;

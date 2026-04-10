@@ -4,10 +4,10 @@ namespace Jield\Mvc\View\Http;
 
 use Laminas\EventManager\AbstractListenerAggregate;
 use Laminas\EventManager\EventManagerInterface;
-use Jield\Http\Response as HttpResponse;
+use Laminas\Http\Response as HttpResponse;
 use Jield\Mvc\Application;
 use Jield\Mvc\MvcEvent;
-use Jield\Stdlib\ResponseInterface as Response;
+use Laminas\Stdlib\ResponseInterface as Response;
 use Laminas\View\Model\ViewModel;
 
 class ExceptionStrategy extends AbstractListenerAggregate
@@ -31,19 +31,19 @@ class ExceptionStrategy extends AbstractListenerAggregate
      */
     public function attach(EventManagerInterface $events, $priority = 1): void
     {
-        $this->listeners[] = $events->attach(eventName: MvcEvent::EVENT_DISPATCH_ERROR, listener: [$this, 'prepareExceptionViewModel']);
-        $this->listeners[] = $events->attach(eventName: MvcEvent::EVENT_RENDER_ERROR, listener: [$this, 'prepareExceptionViewModel']);
+        $this->listeners[] = $events->attach(MvcEvent::EVENT_DISPATCH_ERROR, [$this, 'prepareExceptionViewModel']);
+        $this->listeners[] = $events->attach(MvcEvent::EVENT_RENDER_ERROR, [$this, 'prepareExceptionViewModel']);
     }
 
     /**
      * Flag: display exceptions in error pages?
      *
-     * @param bool $displayExceptions
+     * @param  bool $displayExceptions
      * @return ExceptionStrategy
      */
-    public function setDisplayExceptions(bool $displayExceptions): static
+    public function setDisplayExceptions($displayExceptions): static
     {
-        $this->displayExceptions = $displayExceptions;
+        $this->displayExceptions = (bool) $displayExceptions;
         return $this;
     }
 
@@ -60,12 +60,12 @@ class ExceptionStrategy extends AbstractListenerAggregate
     /**
      * Set the exception template
      *
-     * @param string $exceptionTemplate
+     * @param  string $exceptionTemplate
      * @return ExceptionStrategy
      */
-    public function setExceptionTemplate(string $exceptionTemplate): static
+    public function setExceptionTemplate($exceptionTemplate): static
     {
-        $this->exceptionTemplate = $exceptionTemplate;
+        $this->exceptionTemplate = (string) $exceptionTemplate;
         return $this;
     }
 
@@ -112,23 +112,23 @@ class ExceptionStrategy extends AbstractListenerAggregate
 
             case Application::ERROR_EXCEPTION:
             default:
-                $model = new ViewModel(variables: [
+                $model = new ViewModel([
                     'message'            => 'An error occurred during execution; please try again later.',
-                    'exception'          => $e->getParam(name: 'exception'),
+                    'exception'          => $e->getParam('exception'),
                     'display_exceptions' => $this->displayExceptions(),
                 ]);
-                $model->setTemplate(template: $this->getExceptionTemplate());
-                $e->setResult(result: $model);
+                $model->setTemplate($this->getExceptionTemplate());
+                $e->setResult($model);
 
                 $response = $e->getResponse();
                 if (! $response) {
                     $response = new HttpResponse();
-                    $response->setStatusCode(code: 500);
-                    $e->setResponse(response: $response);
+                    $response->setStatusCode(500);
+                    $e->setResponse($response);
                 } else {
                     $statusCode = $response->getStatusCode();
                     if ($statusCode === 200) {
-                        $response->setStatusCode(code: 500);
+                        $response->setStatusCode(500);
                     }
                 }
 

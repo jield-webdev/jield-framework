@@ -2,7 +2,7 @@
 
 namespace Jield\Mvc\Controller\Plugin;
 
-use Jield\Http\Response;
+use Laminas\Http\Response;
 use Laminas\View\Model\ViewModel;
 
 class CreateHttpNotFoundModel extends AbstractPlugin
@@ -14,8 +14,8 @@ class CreateHttpNotFoundModel extends AbstractPlugin
      */
     public function __invoke(Response $response): ViewModel
     {
-        $response->setStatusCode(code: 404);
+        $response->setStatusCode(404);
 
-        return new ViewModel(variables: ['content' => 'Page not found']);
+        return new ViewModel(['content' => 'Page not found']);
     }
 }

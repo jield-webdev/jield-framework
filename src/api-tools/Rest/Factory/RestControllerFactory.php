@@ -13,7 +13,7 @@ use Laminas\InputFilter\InputFilter;
 use Laminas\ServiceManager\Exception\ServiceNotCreatedException;
 use Laminas\ServiceManager\Exception\ServiceNotFoundException;
 use Laminas\ServiceManager\Factory\AbstractFactoryInterface;
-use Jield\Stdlib\Parameters;
+use Laminas\Stdlib\Parameters;
 use Override;
 use Psr\Container\ContainerInterface;
 use Webmozart\Assert\Assert;

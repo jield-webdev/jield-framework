@@ -18,11 +18,11 @@ class ModuleRouteListener extends AbstractListenerAggregate
     /**
      * Attach to an event manager
      *
-     * @param int $priority
+     * @param  int $priority
      */
     public function attach(EventManagerInterface $events, $priority = 1): void
     {
-        $this->listeners[] = $events->attach(eventName: MvcEvent::EVENT_ROUTE, listener: [$this, 'onRoute'], priority: $priority);
+        $this->listeners[] = $events->attach(MvcEvent::EVENT_ROUTE, [$this, 'onRoute'], $priority);
     }
 
     /**
@@ -43,29 +43,29 @@ class ModuleRouteListener extends AbstractListenerAggregate
             return;
         }
 
-        $module = $matches->getParam(name: self::MODULE_NAMESPACE, default: false);
+        $module = $matches->getParam(self::MODULE_NAMESPACE, false);
         if (! $module) {
             // No module namespace found; nothing to do
             return;
         }
 
-        $controller = $matches->getParam(name: 'controller', default: false);
+        $controller = $matches->getParam('controller', false);
         if (! $controller) {
             // no controller matched, nothing to do
             return;
         }
 
         // Ensure the module namespace has not already been applied
-        if (str_starts_with(haystack: $controller, needle: $module)) {
+        if (str_starts_with($controller, $module)) {
             return;
         }
 
         // Keep the originally matched controller name around
-        $matches->setParam(name: self::ORIGINAL_CONTROLLER, value: $controller);
+        $matches->setParam(self::ORIGINAL_CONTROLLER, $controller);
 
         // Prepend the controllername with the module, and replace it in the
         // matches
-        $controller = $module . '\\' . str_replace(search: ' ', replace: '', subject: ucwords(string: str_replace(search: '-', replace: ' ', subject: $controller)));
-        $matches->setParam(name: 'controller', value: $controller);
+        $controller = $module . '\\' . str_replace(' ', '', ucwords(str_replace('-', ' ', $controller)));
+        $matches->setParam('controller', $controller);
     }
 }

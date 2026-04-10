@@ -3,7 +3,7 @@
 namespace Jield\Mvc\Service;
 
 // phpcs:ignore
-use Psr\Container\ContainerInterface;
+use Interop\Container\ContainerInterface;
 use Laminas\Router\RouteMatch;
 use Laminas\ServiceManager\Exception\ServiceNotCreatedException;
 use Laminas\View\Helper as ViewHelper;
@@ -36,14 +36,14 @@ class ViewHelperManagerFactory extends AbstractPluginManagerFactory
      * @return HelperPluginManager
      * @throws ServiceNotCreatedException
      */
-    public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): HelperPluginManager
+    public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): HelperPluginManager
     {
         $options                = $options ?: [];
         $options['factories'] ??= [];
-        $plugins                = parent::__invoke(container: $container, requestedName: $requestedName, options: $options);
+        $plugins                = parent::__invoke($container, $requestedName, $options);
 
         // Override plugin factories
-        $plugins = $this->injectOverrideFactories(plugins: $plugins, services: $container);
+        $plugins = $this->injectOverrideFactories($plugins, $container);
 
         return $plugins;
     }
@@ -56,19 +56,19 @@ class ViewHelperManagerFactory extends AbstractPluginManagerFactory
     private function injectOverrideFactories(HelperPluginManager $plugins, ContainerInterface $services): HelperPluginManager
     {
         // Configure URL view helper
-        $urlFactory = $this->createUrlHelperFactory(services: $services);
-        $plugins->setFactory(name: ViewHelper\Url::class, factory: $urlFactory);
-        $plugins->setFactory(name: 'jieldviewhelperurl', factory: $urlFactory);
+        $urlFactory = $this->createUrlHelperFactory($services);
+        $plugins->setFactory(ViewHelper\Url::class, $urlFactory);
+        $plugins->setFactory('laminasviewhelperurl', $urlFactory);
 
         // Configure base path helper
-        $basePathFactory = $this->createBasePathHelperFactory(services: $services);
-        $plugins->setFactory(name: ViewHelper\BasePath::class, factory: $basePathFactory);
-        $plugins->setFactory(name: 'jieldviewhelperbasepath', factory: $basePathFactory);
+        $basePathFactory = $this->createBasePathHelperFactory($services);
+        $plugins->setFactory(ViewHelper\BasePath::class, $basePathFactory);
+        $plugins->setFactory('laminasviewhelperbasepath', $basePathFactory);
 
         // Configure doctype view helper
-        $doctypeFactory = $this->createDoctypeHelperFactory(services: $services);
-        $plugins->setFactory(name: ViewHelper\Doctype::class, factory: $doctypeFactory);
-        $plugins->setFactory(name: 'jieldviewhelperdoctype', factory: $doctypeFactory);
+        $doctypeFactory = $this->createDoctypeHelperFactory($services);
+        $plugins->setFactory(ViewHelper\Doctype::class, $doctypeFactory);
+        $plugins->setFactory('laminasviewhelperdoctype', $doctypeFactory);
 
         return $plugins;
     }
@@ -107,15 +107,15 @@ class ViewHelperManagerFactory extends AbstractPluginManagerFactory
     private function createBasePathHelperFactory(ContainerInterface $services): callable|\Closure
     {
         return static function () use ($services): BasePath {
-            $config = $services->has(id: 'config') ? $services->get('config') : [];
+            $config = $services->has('config') ? $services->get('config') : [];
             $helper = new ViewHelper\BasePath();
             if (isset($config['view_manager']) && isset($config['view_manager']['base_path'])) {
-                $helper->setBasePath(basePath: $config['view_manager']['base_path']);
+                $helper->setBasePath($config['view_manager']['base_path']);
                 return $helper;
             }
             $request = $services->get('Request');
-            if (is_callable(value: [$request, 'getBasePath'])) {
-                $helper->setBasePath(basePath: $request->getBasePath());
+            if (is_callable([$request, 'getBasePath'])) {
+                $helper->setBasePath($request->getBasePath());
             }
             return $helper;
         };
@@ -132,7 +132,7 @@ class ViewHelperManagerFactory extends AbstractPluginManagerFactory
     private function createDoctypeHelperFactory(ContainerInterface $services): callable|\Closure
     {
         return static function () use ($services): Doctype {
-            $config = $services->has(id: 'config') ? $services->get('config') : [];
+            $config = $services->has('config') ? $services->get('config') : [];
             $config = $config['view_manager'] ?? [];
             $helper = new ViewHelper\Doctype();
             if (isset($config['doctype']) && $config['doctype']) {

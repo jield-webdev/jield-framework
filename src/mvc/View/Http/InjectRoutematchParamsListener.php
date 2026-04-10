@@ -4,7 +4,7 @@ namespace Jield\Mvc\View\Http;
 
 use Laminas\EventManager\AbstractListenerAggregate;
 use Laminas\EventManager\EventManagerInterface;
-use Jield\Http\Request as HttpRequest;
+use Laminas\Http\Request as HttpRequest;
 use Jield\Mvc\MvcEvent;
 
 class InjectRoutematchParamsListener extends AbstractListenerAggregate
@@ -21,7 +21,7 @@ class InjectRoutematchParamsListener extends AbstractListenerAggregate
      */
     public function attach(EventManagerInterface $events, $priority = 1): void
     {
-        $this->listeners[] = $events->attach(eventName: MvcEvent::EVENT_DISPATCH, listener: [$this, 'injectParams'], priority: 90);
+        $this->listeners[] = $events->attach(MvcEvent::EVENT_DISPATCH, [$this, 'injectParams'], 90);
     }
 
     /**
@@ -60,9 +60,9 @@ class InjectRoutematchParamsListener extends AbstractListenerAggregate
     /**
      * Should RouteMatch parameters replace existing Request params?
      *
-     * @param bool $overwrite
+     * @param  bool $overwrite
      */
-    public function setOverwrite(bool $overwrite): void
+    public function setOverwrite($overwrite): void
     {
         $this->overwrite = $overwrite;
     }

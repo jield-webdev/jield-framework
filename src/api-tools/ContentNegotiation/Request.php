@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Jield\ApiTools\ContentNegotiation;
 
-use Jield\Http\PhpEnvironment\Request as BaseRequest;
+use Laminas\Http\PhpEnvironment\Request as BaseRequest;
 use function fopen;
 use function fwrite;
 use function is_resource;

@@ -10,8 +10,8 @@ use Laminas\EventManager\Event;
 use Laminas\EventManager\Exception\InvalidArgumentException as EventManagerInvalidArgumentException;
 use Laminas\InputFilter\InputFilterInterface;
 use Laminas\Router\RouteMatch;
-use Jield\Stdlib\Parameters;
-use Jield\Stdlib\RequestInterface;
+use Laminas\Stdlib\Parameters;
+use Laminas\Stdlib\RequestInterface;
 use Override;
 use function gettype;
 use function is_array;
@@ -97,7 +97,7 @@ class ResourceEvent extends Event
     public function getQueryParam(string $name, mixed $default = null): mixed
     {
         $params = $this->getQueryParams();
-        if (!$params instanceof \Jield\Stdlib\Parameters) {
+        if (!$params instanceof \Laminas\Stdlib\Parameters) {
             return $default;
         }
 

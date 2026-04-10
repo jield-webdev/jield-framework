@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Jield\ApiTools\ApiProblem\Listener;
 
 use Jield\ApiTools\ApiProblem\ApiProblemResponse;
-use Jield\Http\Response as HttpResponse;
+use Laminas\Http\Response as HttpResponse;
 use Jield\Mvc\ResponseSender\HttpResponseSender;
 use Jield\Mvc\ResponseSender\SendResponseEvent;
 use Override;

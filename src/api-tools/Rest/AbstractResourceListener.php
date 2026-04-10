@@ -9,10 +9,10 @@ use Jield\ApiTools\MvcAuth\Identity\IdentityInterface;
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\EventManager\ListenerAggregateInterface;
 use Laminas\EventManager\ListenerAggregateTrait;
-use Jield\Http\Response;
+use Laminas\Http\Response;
 use Laminas\InputFilter\InputFilterInterface;
 use Laminas\Paginator\Paginator;
-use Jield\Stdlib\Parameters;
+use Laminas\Stdlib\Parameters;
 use Override;
 use function sprintf;
 
@@ -116,7 +116,7 @@ abstract class AbstractResourceListener implements ListenerAggregateInterface
      * @param int $priority
      */
     #[Override]
-    public function attach(EventManagerInterface $events, int $priority = 1): void
+    public function attach(EventManagerInterface $events, $priority = 1): void
     {
         $this->listeners[] = $events->attach(eventName: 'create', listener: $this->dispatch(...));
         $this->listeners[] = $events->attach(eventName: 'delete', listener: $this->dispatch(...));

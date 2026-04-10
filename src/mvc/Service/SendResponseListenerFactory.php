@@ -3,7 +3,7 @@
 namespace Jield\Mvc\Service;
 
 // phpcs:ignore
-use Psr\Container\ContainerInterface;
+use Interop\Container\ContainerInterface;
 use Jield\Mvc\SendResponseListener;
 
 class SendResponseListenerFactory
@@ -14,7 +14,7 @@ class SendResponseListenerFactory
     public function __invoke(ContainerInterface $container): SendResponseListener
     {
         $listener = new SendResponseListener();
-        $listener->setEventManager(eventManager: $container->get('EventManager'));
+        $listener->setEventManager($container->get('EventManager'));
         return $listener;
     }
 }

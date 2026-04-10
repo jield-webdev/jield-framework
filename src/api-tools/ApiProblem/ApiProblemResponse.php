@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Jield\ApiTools\ApiProblem;
 
-use Jield\Http\Headers;
-use Jield\Http\Response;
+use Laminas\Http\Headers;
+use Laminas\Http\Response;
 
 use Override;
 use function json_encode;

@@ -6,8 +6,8 @@ namespace Jield\ApiTools\ContentNegotiation;
 
 use Jield\ApiTools\ApiProblem\ApiProblem;
 use Jield\ApiTools\ApiProblem\ApiProblemResponse;
-use Jield\Http\Header\Accept as AcceptHeader;
-use Jield\Http\Headers as HttpHeaders;
+use Laminas\Http\Header\Accept as AcceptHeader;
+use Laminas\Http\Headers as HttpHeaders;
 use Jield\Mvc\MvcEvent;
 
 use Override;

@@ -13,7 +13,7 @@ use Laminas\InputFilter\InputFilterInterface;
 use Laminas\InputFilter\InputFilterProviderInterface;
 use Laminas\InputFilter\InputProviderInterface;
 use Laminas\InputFilter\ReplaceableInputInterface;
-use Jield\Stdlib\ArrayUtils;
+use Laminas\Stdlib\ArrayUtils;
 use Traversable;
 
 use function array_key_exists;
