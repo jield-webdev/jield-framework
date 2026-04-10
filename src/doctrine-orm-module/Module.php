@@ -4,15 +4,12 @@ declare(strict_types=1);
 
 namespace DoctrineORMModule;
 
-use Jield\DeveloperTools\ProfilerEvent;
 use Laminas\EventManager\EventInterface;
 use Jield\ModuleManager\Feature\ConfigProviderInterface;
 use Jield\ModuleManager\Feature\ControllerProviderInterface;
 use Jield\ModuleManager\Feature\DependencyIndicatorInterface;
 use Jield\ModuleManager\Feature\InitProviderInterface;
 use Jield\ModuleManager\ModuleManagerInterface;
-
-use function class_exists;
 
 /**
  * Base module for Doctrine ORM.
@@ -41,21 +38,6 @@ final class Module implements
                 priority: 1,
             );
 
-        // Initialize logger collector in DeveloperTools
-        if (! class_exists(class: ProfilerEvent::class)) {
-            return;
-        }
-
-        $manager
-            ->getEventManager()
-            ->attach(
-                eventName: ProfilerEvent::EVENT_PROFILER_INIT,
-                /** @param EventInterface $event */
-                listener: static function (EventInterface $event): void {
-                    $container = $event->getTarget()->getParam('ServiceManager');
-                    $container->get('doctrine.sql_logger_collector.orm_default');
-                },
-            );
     }
 
     /**
@@ -65,7 +47,7 @@ final class Module implements
      */
     public function getConfig(): array
     {
-        return include __DIR__ . '/../config/module.config.php';
+        return include __DIR__ . '/../../config/docrine-orm-module/module.config.php';
     }
 
     /**
@@ -75,7 +57,7 @@ final class Module implements
      */
     public function getControllerConfig(): array
     {
-        return include __DIR__ . '/../config/controllers.config.php';
+        return include __DIR__ . '/../../config/docrine-orm-module/controllers.config.php';
     }
 
     /**

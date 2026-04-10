@@ -14,10 +14,10 @@ use function key;
 class LocalParamsExpression extends Expression implements Stringable
 {
     /**
-     * @param Expression|string $type
+     * @param string|Expression $type
      * @param mixed[] $params
      */
-    public function __construct(private $type, private readonly array $params = [], private readonly bool $shortForm = true)
+    public function __construct(private Expression|string $type, private readonly array $params = [], private readonly bool $shortForm = true)
     {
     }
 

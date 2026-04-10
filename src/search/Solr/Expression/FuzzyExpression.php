@@ -23,7 +23,7 @@ class FuzzyExpression extends Expression implements Stringable
      *
      * @param string|Expression $expr
      */
-    #[Pure] public function __construct($expr, ?float $similarity = null)
+    #[Pure] public function __construct(Expression|string $expr, ?float $similarity = null)
     {
         parent::__construct(expr: $expr);
 

@@ -6,15 +6,11 @@ namespace Jield\Form\View\Helper;
 
 use Jield\Form\Element;
 use Jield\Form\ElementInterface;
-use Laminas\View\Helper\AbstractHelper as BaseAbstractHelper;
-use Laminas\View\Renderer\PhpRenderer;
-
+use Laminas\View\HelperPluginManagerInterface;
 use function assert;
 use function is_callable;
-use function method_exists;
 
-/** @final */
-class FormElement extends BaseAbstractHelper
+class FormElement extends AbstractHelper
 {
     public const string DEFAULT_HELPER = 'forminput';
 
@@ -23,49 +19,50 @@ class FormElement extends BaseAbstractHelper
      *
      * @var array<class-string<ElementInterface>, string>
      */
-    protected array $classMap = [
-        Element\Button::class              => 'formbutton',
-        Element\Captcha::class             => 'formcaptcha',
-        Element\Csrf::class                => 'formhidden',
-        Element\Collection::class          => 'formcollection',
-        Element\CollectionInterface::class => 'formcollection',
-        Element\DateTimeSelect::class      => 'formdatetimeselect',
-        Element\DateSelect::class          => 'formdateselect',
-        Element\MonthSelect::class         => 'formmonthselect',
-    ];
+    protected array $classMap
+        = [
+            Element\Button::class              => 'formbutton',
+            Element\Csrf::class                => 'formhidden',
+            Element\Collection::class          => 'formcollection',
+            Element\CollectionInterface::class => 'formcollection',
+            Element\DateTimeSelect::class      => 'formdatetimeselect',
+            Element\DateSelect::class          => 'formdateselect',
+            Element\MonthSelect::class         => 'formmonthselect',
+        ];
 
     /**
      * Type map to view helper
      *
      * @var array<string, string>
      */
-    protected array $typeMap = [
-        'checkbox'       => 'formcheckbox',
-        'color'          => 'formcolor',
-        'date'           => 'formdate',
-        'datetime'       => 'formdatetime',
-        'datetime-local' => 'formdatetimelocal',
-        'email'          => 'formemail',
-        'file'           => 'formfile',
-        'hidden'         => 'formhidden',
-        'image'          => 'formimage',
-        'month'          => 'formmonth',
-        'multi_checkbox' => 'formmulticheckbox',
-        'number'         => 'formnumber',
-        'password'       => 'formpassword',
-        'radio'          => 'formradio',
-        'range'          => 'formrange',
-        'reset'          => 'formreset',
-        'search'         => 'formsearch',
-        'select'         => 'formselect',
-        'submit'         => 'formsubmit',
-        'tel'            => 'formtel',
-        'text'           => 'formtext',
-        'textarea'       => 'formtextarea',
-        'time'           => 'formtime',
-        'url'            => 'formurl',
-        'week'           => 'formweek',
-    ];
+    protected array $typeMap
+        = [
+            'checkbox'       => 'formcheckbox',
+            'color'          => 'formcolor',
+            'date'           => 'formdate',
+            'datetime'       => 'formdatetime',
+            'datetime-local' => 'formdatetimelocal',
+            'email'          => 'formemail',
+            'file'           => 'formfile',
+            'hidden'         => 'formhidden',
+            'image'          => 'formimage',
+            'month'          => 'formmonth',
+            'multi_checkbox' => 'formmulticheckbox',
+            'number'         => 'formnumber',
+            'password'       => 'formpassword',
+            'radio'          => 'formradio',
+            'range'          => 'formrange',
+            'reset'          => 'formreset',
+            'search'         => 'formsearch',
+            'select'         => 'formselect',
+            'submit'         => 'formsubmit',
+            'tel'            => 'formtel',
+            'text'           => 'formtext',
+            'textarea'       => 'formtextarea',
+            'time'           => 'formtime',
+            'url'            => 'formurl',
+            'week'           => 'formweek',
+        ];
 
     /**
      * Default helper name
@@ -73,6 +70,10 @@ class FormElement extends BaseAbstractHelper
      * @var string
      */
     protected string $defaultHelper = self::DEFAULT_HELPER;
+
+    public function __construct(private readonly HelperPluginManagerInterface $helpers)
+    {
+    }
 
     /**
      * Invoke helper as function
@@ -86,7 +87,7 @@ class FormElement extends BaseAbstractHelper
      */
     public function __invoke(?ElementInterface $element = null): string|FormElement|static
     {
-        if (! $element) {
+        if (!$element) {
             return $this;
         }
 
@@ -101,12 +102,6 @@ class FormElement extends BaseAbstractHelper
      */
     public function render(ElementInterface $element): string
     {
-        $renderer = $this->getView();
-        if ($renderer === null || ! method_exists(object_or_class: $renderer, method: 'plugin')) {
-            // Bail early if renderer is not pluggable
-            return '';
-        }
-
         $renderedInstance = $this->renderInstance(element: $element);
 
         if ($renderedInstance !== null) {
@@ -164,9 +159,7 @@ class FormElement extends BaseAbstractHelper
      */
     protected function renderHelper(string $name, ElementInterface $element): string
     {
-        $renderer = $this->getView();
-        assert(assertion: $renderer instanceof PhpRenderer);
-        $helper = $renderer->plugin($name);
+        $helper = $this->helpers->get($name);
         assert(assertion: is_callable(value: $helper));
         return $helper($element);
     }
@@ -192,8 +185,8 @@ class FormElement extends BaseAbstractHelper
     {
         $type = $element->getAttribute(key: 'type');
 
-        if (isset($this->typeMap[(string) $type])) {
-            return $this->renderHelper(name: $this->typeMap[(string) $type], element: $element);
+        if (isset($this->typeMap[(string)$type])) {
+            return $this->renderHelper(name: $this->typeMap[(string)$type], element: $element);
         }
 
         return null;

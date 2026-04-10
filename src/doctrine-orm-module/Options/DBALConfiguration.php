@@ -21,11 +21,6 @@ class DBALConfiguration extends AbstractOptions
     protected string $resultCache = 'array';
 
     /**
-     * Set the class name of the SQL Logger, or null, to disable.
-     */
-    protected string|null $sqlLogger = null;
-
-    /**
      * Keys must be the name of the type identifier and value is
      * the class name of the Type
      *
@@ -41,16 +36,6 @@ class DBALConfiguration extends AbstractOptions
     public function getResultCache(): string
     {
         return 'doctrine.cache.' . $this->resultCache;
-    }
-
-    public function setSqlLogger(string $sqlLogger): void
-    {
-        $this->sqlLogger = $sqlLogger;
-    }
-
-    public function getSqlLogger(): string|null
-    {
-        return $this->sqlLogger;
     }
 
     /** @param mixed[] $types */

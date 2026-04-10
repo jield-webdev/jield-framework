@@ -71,10 +71,10 @@ class Fieldset extends Element implements FieldsetInterface
     protected ?\class $allowedObjectBindingClass;
 
     /**
-     * @param  null|int|string  $name    Optional name for the element
+     * @param int|string|null $name    Optional name for the element
      * @param  array            $options Optional options for the element
      */
-    public function __construct($name = null, array $options = [])
+    public function __construct(int|string|null $name = null, array $options = [])
     {
         /** @var PriorityList<string, ElementInterface> $list */
         $list           = new PriorityList();

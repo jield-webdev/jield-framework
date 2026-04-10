@@ -13,7 +13,6 @@ use Laminas\ServiceManager\Factory\FactoryInterface;
 use Psr\Container\ContainerInterface;
 use RuntimeException;
 use UnexpectedValueException;
-use function is_string;
 use function method_exists;
 use function sprintf;
 
@@ -44,14 +43,7 @@ class DBALConfigurationFactory implements FactoryInterface
     public function setupDBALConfiguration(ContainerInterface $container, Configuration $config): void
     {
         $options = $this->getOptions(container: $container);
-        $config->setResultCacheImpl($container->get($options->resultCache));
-
-        $sqlLogger = $options->sqlLogger;
-        if (is_string(value: $sqlLogger) && $container->has(id: $sqlLogger)) {
-            $sqlLogger = $container->get($sqlLogger);
-        }
-
-        $config->setSQLLogger($sqlLogger);
+        $config->setResultCache($container->get($options->getResultCache()));
 
         if (method_exists(object_or_class: $config, method: 'setMiddlewares')) {
             $middlewares = [];

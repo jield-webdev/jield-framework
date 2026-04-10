@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Jield\Form;
 
 use Jield\Form\View\Helper\Factory\FormElementErrorsFactory;
+use Jield\Form\View\Helper\Factory\FormElementFactory;
 use Laminas\ServiceManager\ConfigInterface;
 use Laminas\ServiceManager\Factory\InvokableFactory;
 
@@ -221,7 +222,7 @@ final class ConfigProvider
                 View\Helper\FormDateTimeLocal::class            => InvokableFactory::class,
                 View\Helper\FormDateTimeSelect::class           => InvokableFactory::class,
                 View\Helper\FormDateSelect::class               => InvokableFactory::class,
-                View\Helper\FormElement::class                  => InvokableFactory::class,
+                View\Helper\FormElement::class                  => FormElementFactory::class,
                 View\Helper\FormElementErrors::class            => FormElementErrorsFactory::class,
                 View\Helper\FormEmail::class                    => InvokableFactory::class,
                 View\Helper\FormFile::class                     => InvokableFactory::class,

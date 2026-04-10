@@ -3,7 +3,6 @@
 namespace Jield\Mvc\ResponseSender;
 
 use Jield\Http\Header\MultipleHeaderInterface;
-
 use function header;
 use function headers_sent;
 use function is_iterable;
@@ -15,7 +14,7 @@ abstract class AbstractResponseSender implements ResponseSenderInterface
      *
      * @return self
      */
-    public function sendHeaders(SendResponseEvent $event): static
+    public function sendHeaders(SendResponseEvent $event): self
     {
         if (headers_sent() || $event->headersSent()) {
             return $this;
@@ -36,7 +35,7 @@ abstract class AbstractResponseSender implements ResponseSenderInterface
         }
 
         $status = $response->renderStatusLine();
-        header(header: (string) $status);
+        header(header: (string)$status);
 
         $event->setHeadersSent();
         return $this;

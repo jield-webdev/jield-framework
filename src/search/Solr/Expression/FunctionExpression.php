@@ -11,10 +11,10 @@ use Stringable;
 class FunctionExpression extends Expression implements Stringable
 {
     /**
-     * @param Expression|string $function
+     * @param string|Expression $function
      * @param array|ExpressionInterface|null $parameters
      */
-    public function __construct(private $function, private ExpressionInterface|array|null $parameters = null)
+    public function __construct(private Expression|string $function, private ExpressionInterface|array|null $parameters = null)
     {
     }
 

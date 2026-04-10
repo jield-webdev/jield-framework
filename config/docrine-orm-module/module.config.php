@@ -118,15 +118,9 @@ $result = [
             'orm_default' => [],
         ],
 
-        // SQL logger collector, used when Laminas\DeveloperTools and its toolbar are active
-        'sql_logger_collector' => [
-            // configuration for the `doctrine.sql_logger_collector.orm_default` service
-            'orm_default' => [],
-        ],
-
         // mappings collector, used when Laminas\DeveloperTools and its toolbar are active
         'mapping_collector' => [
-            // configuration for the `doctrine.sql_logger_collector.orm_default` service
+            // configuration for the `doctrine.mapping_collector.orm_default` service
             'orm_default' => [],
         ],
 
@@ -201,15 +195,10 @@ $result = [
             'doctrine.orm_cmd.schema_tool_create' => Command\SchemaTool\CreateCommand::class,
             'doctrine.orm_cmd.schema_tool_update' => Command\SchemaTool\UpdateCommand::class,
             'doctrine.orm_cmd.schema_tool_drop' => Command\SchemaTool\DropCommand::class,
-            'doctrine.orm_cmd.convert_d1_schema' => Command\ConvertDoctrine1SchemaCommand::class,
-            'doctrine.orm_cmd.generate_entities' => Command\GenerateEntitiesCommand::class,
             'doctrine.orm_cmd.generate_proxies' => Command\GenerateProxiesCommand::class,
-            'doctrine.orm_cmd.convert_mapping' => Command\ConvertMappingCommand::class,
             'doctrine.orm_cmd.run_dql' => Command\RunDqlCommand::class,
             'doctrine.orm_cmd.validate_schema' => Command\ValidateSchemaCommand::class,
             'doctrine.orm_cmd.info' => Command\InfoCommand::class,
-            'doctrine.orm_cmd.ensure_production_settings' => Command\EnsureProductionSettingsCommand::class,
-            'doctrine.orm_cmd.generate_repositories' => Command\GenerateRepositoriesCommand::class,
         ],
     ],
 
@@ -220,7 +209,6 @@ $result = [
         'configuration'            => Service\ConfigurationFactory::class,
         'entitymanager'            => Service\EntityManagerFactory::class,
         'entity_resolver'          => Service\EntityResolverFactory::class,
-        'sql_logger_collector'     => Service\SQLLoggerCollectorFactory::class,
         'mapping_collector'        => Service\MappingCollectorFactory::class,
         'migrations_cmd'           => Service\MigrationsCommandFactory::class,
     ],
@@ -268,8 +256,6 @@ $result = [
 
     'view_manager' => [
         'template_map' => [
-            'laminas-developer-tools/toolbar/doctrine-orm-queries'
-                => __DIR__ . '/../view/laminas-developer-tools/toolbar/doctrine-orm-queries.phtml',
             'laminas-developer-tools/toolbar/doctrine-orm-mappings'
                 => __DIR__ . '/../view/laminas-developer-tools/toolbar/doctrine-orm-mappings.phtml',
         ],
@@ -278,13 +264,11 @@ $result = [
     'laminas-developer-tools' => [
         'profiler' => [
             'collectors' => [
-                'doctrine.sql_logger_collector.orm_default' => 'doctrine.sql_logger_collector.orm_default',
                 'doctrine.mapping_collector.orm_default'    => 'doctrine.mapping_collector.orm_default',
             ],
         ],
         'toolbar' => [
             'entries' => [
-                'doctrine.sql_logger_collector.orm_default' => 'laminas-developer-tools/toolbar/doctrine-orm-queries',
                 'doctrine.mapping_collector.orm_default'    => 'laminas-developer-tools/toolbar/doctrine-orm-mappings',
             ],
         ],

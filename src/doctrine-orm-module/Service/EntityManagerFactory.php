@@ -32,7 +32,7 @@ final class EntityManagerFactory extends AbstractFactory
         //       rely on its factory code
         $container->get($options->getEntityResolver());
 
-        return EntityManager::create($connection, $config);
+        return new EntityManager($connection, $config);
     }
 
     public function getOptionsClass(): string

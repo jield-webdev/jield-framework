@@ -15,6 +15,7 @@ use RuntimeException;
 
 use function class_exists;
 use function sprintf;
+use function str_contains;
 
 /**
  * MappingDriver ServiceManager factory
@@ -50,6 +51,12 @@ final class DriverFactory extends AbstractFactory
     protected function createDriver(ContainerInterface $container, Driver $options): MappingDriver
     {
         $class = $options->getClass();
+
+        if (str_contains($class, 'AnnotationDriver')) {
+            throw new InvalidArgumentException(
+                message: 'Annotation drivers are no longer supported. Use attributes, XML, YAML, or PHP drivers instead.'
+            );
+        }
 
         if (! class_exists(class: $class)) {
             throw new InvalidArgumentException(message: sprintf('Driver with type "%s" could not be found', $class));

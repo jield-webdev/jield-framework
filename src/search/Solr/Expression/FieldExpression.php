@@ -21,7 +21,7 @@ class FieldExpression extends Expression implements Stringable
      * @param string|Expression $field
      * @param string|Expression $expr
      */
-    #[Pure] public function __construct(private $field, Expression|string $expr)
+    #[Pure] public function __construct(private Expression|string $field, Expression|string $expr)
     {
         parent::__construct(expr: $expr);
     }
