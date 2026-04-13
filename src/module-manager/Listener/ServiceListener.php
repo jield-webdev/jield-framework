@@ -60,7 +60,7 @@ class ServiceListener implements ServiceListenerInterface
 
     /** {@inheritDoc} */
     #[Override]
-    public function addServiceManager(string $serviceManager, string $key, string $moduleInterface, string $method): ServiceListenerInterface|static
+    public function addServiceManager(ServiceManager|string $serviceManager, string $key, string $moduleInterface, string $method): ServiceListenerInterface|static
     {
         if (is_string(value: $serviceManager)) {
             $smKey = $serviceManager;

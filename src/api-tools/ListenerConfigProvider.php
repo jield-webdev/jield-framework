@@ -21,12 +21,21 @@ final class ListenerConfigProvider
 {
     use GlobTrait;
 
+    public const string CONFIG_KEY = 'api-tools';
+    public const string LISTENER_PATHS_KEY = 'listener_paths';
+    public const string DEFAULT_LISTENER_PATH = __DIR__ . '/../../../../module/api/src/V1/Rest';
+
     private array $listeners = [];
 
-    public function __construct()
+    public function __construct(private readonly array $config = [])
     {
+        $listenerPaths = $this->getListenerPaths();
+        if ($listenerPaths === []) {
+            return;
+        }
+
         $finder = new Finder();
-        $finder->files()->name(patterns: '*Listener.php')->in(dirs: __DIR__ . '/../../../../module/api/src/V1/Rest');
+        $finder->files()->name(patterns: '*Listener.php')->in(dirs: $listenerPaths);
 
         foreach ($finder as $fileInfo) {
             $className       = $this->getClassNameFromFileInfo(fileInfo: $fileInfo);
@@ -153,5 +162,19 @@ final class ListenerConfigProvider
         }
 
         return $configuration;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function getListenerPaths(): array
+    {
+        $paths = $this->config[self::CONFIG_KEY][self::LISTENER_PATHS_KEY] ?? [self::DEFAULT_LISTENER_PATH];
+
+        if (is_string($paths)) {
+            $paths = [$paths];
+        }
+
+        return array_values(array_filter($paths, 'is_dir'));
     }
 }

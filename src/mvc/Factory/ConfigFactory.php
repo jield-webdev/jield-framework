@@ -1,0 +1,32 @@
+<?php
+
+namespace Jield\Mvc\Factory;
+
+// phpcs:ignore
+use Laminas\ServiceManager\Factory\FactoryInterface;
+use Psr\Container\ContainerInterface;
+use Traversable;
+
+class ConfigFactory implements FactoryInterface
+{
+    /**
+     * Create the application configuration service
+     *
+     * Retrieves the Module Manager from the service locator, and executes
+     * {@link Jield\ModuleManager\ModuleManager::loadModules()}.
+     *
+     * It then retrieves the config listener from the module manager, and from
+     * that the merged configuration.
+     *
+     * @param string $requestedName
+     * @param null|array $options
+     * @return array|Traversable
+     */
+    public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): Traversable|array
+    {
+        $moduleManager = $container->get('ModuleManager');
+        $moduleManager->loadModules();
+        $moduleParams = $moduleManager->getEvent()->getParams();
+        return $moduleParams['configListener']->getMergedConfig(false);
+    }
+}

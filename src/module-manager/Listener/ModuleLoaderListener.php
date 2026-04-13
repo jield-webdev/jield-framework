@@ -4,23 +4,19 @@ declare(strict_types=1);
 
 namespace Jield\ModuleManager\Listener;
 
+use Jield\ModuleManager\ModuleEvent;
+use Jield\Mvc\Loader\ModuleAutoloader;
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\EventManager\ListenerAggregateInterface;
-use Jield\Loader\ModuleAutoloader;
-use Jield\ModuleManager\ModuleEvent;
 use Override;
-
 use function file_exists;
 
 class ModuleLoaderListener extends AbstractListener implements ListenerAggregateInterface
 {
-    /** @var ModuleAutoloader */
     protected ModuleAutoloader $moduleLoader;
 
-    /** @var bool */
     protected bool $generateCache;
 
-    /** @var array */
     protected array $callbacks = [];
 
     /**
@@ -72,14 +68,8 @@ class ModuleLoaderListener extends AbstractListener implements ListenerAggregate
     /** @return bool */
     protected function hasCachedClassMap(): bool
     {
-        if (
-            $this->options->getModuleMapCacheEnabled()
-            && file_exists(filename: $this->options->getModuleMapCacheFile())
-        ) {
-            return true;
-        }
-
-        return false;
+        return $this->options->getModuleMapCacheEnabled()
+            && file_exists(filename: $this->options->getModuleMapCacheFile());
     }
 
     /** @return array */

@@ -3,17 +3,15 @@
 namespace Jield\Mvc\View\Http;
 
 use ArrayAccess;
+use Jield\Mvc\MvcEvent;
 use Laminas\EventManager\AbstractListenerAggregate;
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\EventManager\ListenerAggregateInterface;
-use Jield\Mvc\MvcEvent;
-use Jield\Mvc\View\Http\InjectTemplateListener;
-use Laminas\ServiceManager\ServiceManager;
 use Laminas\Stdlib\DispatchableInterface;
 use Laminas\View\Model\ModelInterface;
 use Laminas\View\View;
+use Psr\Container\ContainerInterface;
 use Traversable;
-
 use function is_array;
 use function is_string;
 
@@ -41,33 +39,16 @@ use function is_string;
  */
 class ViewManager extends AbstractListenerAggregate
 {
-    /** @var object application configuration service */
-    protected object $config;
+    /** @var array application configuration service */
+    protected array $config;
 
-    /** @var MvcEvent */
     protected MvcEvent $event;
 
-    /** @var ServiceManager */
-    protected ServiceManager $services;
+    protected ContainerInterface $services;
 
-    /**
-     * Various properties representing strategies and objects instantiated and
-     * configured by the view manager
-     *
-     * @var mixed
-     */
-    protected mixed $helperManager;
-    /** @var mixed */
-    protected mixed $mvcRenderingStrategy;
-    /** @var mixed */
     protected mixed $renderer;
-    /** @var mixed */
-    protected mixed $rendererStrategy;
-    /** @var mixed */
     protected mixed $resolver;
-    /** @var mixed */
     protected mixed $view;
-    /** @var mixed */
     protected mixed $viewModel;
 
     /**
@@ -93,10 +74,10 @@ class ViewManager extends AbstractListenerAggregate
         $sharedEvents = $events->getSharedManager();
 
         $this->config   = isset($config['view_manager'])
-            && (is_array($config['view_manager'])
+        && (is_array($config['view_manager'])
             || $config['view_manager'] instanceof ArrayAccess)
-                ? $config['view_manager']
-                : [];
+            ? $config['view_manager']
+            : [];
         $this->services = $services;
         $this->event    = $event;
 
@@ -197,19 +178,19 @@ class ViewManager extends AbstractListenerAggregate
      */
     protected function registerMvcRenderingStrategies(EventManagerInterface $events): void
     {
-        if (! isset($this->config['mvc_strategies'])) {
+        if (!isset($this->config['mvc_strategies'])) {
             return;
         }
         $mvcStrategies = $this->config['mvc_strategies'];
         if (is_string($mvcStrategies)) {
             $mvcStrategies = [$mvcStrategies];
         }
-        if (! is_array($mvcStrategies) && ! $mvcStrategies instanceof Traversable) {
+        if (!is_array($mvcStrategies) && !$mvcStrategies instanceof Traversable) {
             return;
         }
 
         foreach ($mvcStrategies as $mvcStrategy) {
-            if (! is_string($mvcStrategy)) {
+            if (!is_string($mvcStrategy)) {
                 continue;
             }
 
@@ -233,14 +214,14 @@ class ViewManager extends AbstractListenerAggregate
      */
     protected function registerViewStrategies(): void
     {
-        if (! isset($this->config['strategies'])) {
+        if (!isset($this->config['strategies'])) {
             return;
         }
         $strategies = $this->config['strategies'];
         if (is_string($strategies)) {
             $strategies = [$strategies];
         }
-        if (! is_array($strategies) && ! $strategies instanceof Traversable) {
+        if (!is_array($strategies) && !$strategies instanceof Traversable) {
             return;
         }
 
@@ -248,7 +229,7 @@ class ViewManager extends AbstractListenerAggregate
         $events = $view->getEventManager();
 
         foreach ($strategies as $strategy) {
-            if (! is_string($strategy)) {
+            if (!is_string($strategy)) {
                 continue;
             }
 

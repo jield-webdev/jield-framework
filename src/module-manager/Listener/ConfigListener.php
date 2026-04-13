@@ -139,7 +139,7 @@ class ConfigListener extends AbstractListener implements
      *
      * @return ConfigListener
      */
-    public function onMergeConfig(ModuleEvent $e): static
+    public function onMergeConfig(): static
     {
         // Load the config files
         foreach ($this->paths as $path) {

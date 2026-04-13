@@ -89,16 +89,19 @@ final class ConfigProvider
 {
     public function __invoke(): array
     {
-        return (new ConfigAggregator(providers: [
-            fn (): array => $this->getBaseConfig(),
-            ListenerConfigProvider::class,
+        $baseConfig = $this->getBaseConfig();
+
+        return new ConfigAggregator(providers: [
+            fn(): array => $baseConfig,
+            fn(): array => new ListenerConfigProvider($baseConfig)(),
             SettingsProvider::class,
-        ]))->getMergedConfig();
+        ])->getMergedConfig();
     }
 
     private function getBaseConfig(): array
     {
         return [
+            'api-tools'          => $this->getApiToolsConfig(),
             'service_manager'    => $this->getServiceMangerConfig(),
             'controller_plugins' => $this->getControllerPluginConfig(),
             'controllers'        => $this->getControllerConfig(),
@@ -106,6 +109,15 @@ final class ConfigProvider
             'validators'         => $this->getValidatorsConfig(),
             'input_filters'      => $this->getInputFiltersConfig(),
             'view_helpers'       => $this->getViewHelpersConfig(),
+        ];
+    }
+
+    private function getApiToolsConfig(): array
+    {
+        return [
+            ListenerConfigProvider::LISTENER_PATHS_KEY => [
+                ListenerConfigProvider::DEFAULT_LISTENER_PATH,
+            ],
         ];
     }
 

@@ -8,39 +8,31 @@ use Laminas\Router\RouteStackInterface;
 use Laminas\Stdlib\RequestInterface as Request;
 use Laminas\Stdlib\ResponseInterface as Response;
 use Laminas\View\Model\ModelInterface as Model;
-use Laminas\View\Model\ViewModel;
 
 class MvcEvent extends Event
 {
     /**#@+
-     * Mvc events triggered by eventmanager
+     * Mvc events triggered by the event manager
      */
-    public const string EVENT_BOOTSTRAP      = 'bootstrap';
-    public const string EVENT_DISPATCH       = 'dispatch';
+    public const string EVENT_BOOTSTRAP = 'bootstrap';
+    public const string EVENT_DISPATCH = 'dispatch';
     public const string EVENT_DISPATCH_ERROR = 'dispatch.error';
-    public const string EVENT_FINISH         = 'finish';
-    public const string EVENT_RENDER         = 'render';
-    public const string EVENT_RENDER_ERROR   = 'render.error';
-    public const string EVENT_ROUTE          = 'route';
-    /** @var ApplicationInterface|null */
+    public const string EVENT_FINISH = 'finish';
+    public const string EVENT_RENDER = 'render';
+    public const string EVENT_RENDER_ERROR = 'render.error';
+    public const string EVENT_ROUTE = 'route';
     protected ?ApplicationInterface $application;
 
-    /** @var Request */
     protected Request $request;
 
-    /** @var Response */
     protected Response $response;
 
-    /** @var mixed */
     protected mixed $result;
 
-    /** @var RouteStackInterface */
     protected RouteStackInterface $router;
 
-    /** @var null|RouteMatch */
     protected ?RouteMatch $routeMatch;
 
-    /** @var Model */
     protected Model $viewModel;
 
     /**
@@ -171,16 +163,11 @@ class MvcEvent extends Event
      */
     public function getViewModel(): Model
     {
-        if (null === $this->viewModel) {
-            $this->setViewModel(new ViewModel());
-        }
         return $this->viewModel;
     }
 
     /**
      * Get result
-     *
-     * @return mixed
      */
     public function getResult(): mixed
     {
@@ -206,13 +193,13 @@ class MvcEvent extends Event
      */
     public function isError(): bool
     {
-        return (bool) $this->getParam('error', false);
+        return (bool)$this->getParam('error', false);
     }
 
     /**
      * Set the error message (indicating error in handling request)
      *
-     * @param  string $message
+     * @param string $message
      * @return MvcEvent
      */
     public function setError($message): static
@@ -244,7 +231,7 @@ class MvcEvent extends Event
     /**
      * Set controller name
      *
-     * @param  string $name
+     * @param string $name
      * @return MvcEvent
      */
     public function setController($name): static

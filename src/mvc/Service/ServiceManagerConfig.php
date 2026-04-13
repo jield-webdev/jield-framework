@@ -5,6 +5,9 @@ namespace Jield\Mvc\Service;
 // phpcs:ignore
 use Jield\ModuleManager\Listener\ServiceListener;
 use Jield\ModuleManager\ModuleManager;
+use Jield\Mvc\Factory\EventManagerFactory;
+use Jield\Mvc\Factory\ModuleManagerFactory;
+use Jield\Mvc\Factory\ServiceListenerFactory;
 use Laminas\EventManager\EventManager;
 use Laminas\EventManager\EventManagerAwareInterface;
 use Laminas\EventManager\EventManagerInterface;

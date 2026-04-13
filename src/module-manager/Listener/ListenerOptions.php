@@ -46,7 +46,7 @@ class ListenerOptions extends AbstractOptions
     protected string $moduleMapCacheKey;
 
     /** @var bool */
-    protected bool $useJieldLoader = true;
+    protected bool $useModuleLoader = true;
 
     /**
      * Get an array of paths where modules reside
@@ -363,9 +363,9 @@ class ListenerOptions extends AbstractOptions
      *
      * @return bool
      */
-    public function useJieldLoader(): bool
+    public function useLaminasLoader(): bool
     {
-        return $this->useJieldLoader;
+        return $this->useModuleLoader;
     }
 
     /**
@@ -379,9 +379,9 @@ class ListenerOptions extends AbstractOptions
      * @param bool $flag
      * @return ListenerOptions
      */
-    public function setUseJieldLoader(bool $flag): static
+    public function setuseModuleLoader(bool $flag): static
     {
-        $this->useJieldLoader = $flag;
+        $this->useModuleLoader = $flag;
         return $this;
     }
 
@@ -398,15 +398,15 @@ class ListenerOptions extends AbstractOptions
         return $path;
     }
 
-    /** @deprecated Use self::useJieldLoader instead */
+    /** @deprecated Use self::useModuleLoader instead */
     public function useZendLoader(): bool
     {
-        return $this->useJieldLoader(...func_get_args());
+        return $this->useLaminasLoader(...func_get_args());
     }
 
-    /** @deprecated Use self::setUseJieldLoader instead */
+    /** @deprecated Use self::setuseModuleLoader instead */
     public function setUseZendLoader(bool $flag): ListenerOptions
     {
-        return $this->setUseJieldLoader(...func_get_args());
+        return $this->setuseModuleLoader(...func_get_args());
     }
 }

@@ -3,10 +3,10 @@
 namespace Jield\Mvc\View\Http;
 
 use Exception;
-use Laminas\EventManager\AbstractListenerAggregate;
-use Laminas\EventManager\EventManagerInterface;
 use Jield\Mvc\Application;
 use Jield\Mvc\MvcEvent;
+use Laminas\EventManager\AbstractListenerAggregate;
+use Laminas\EventManager\EventManagerInterface;
 use Laminas\Stdlib\ResponseInterface as Response;
 use Laminas\View\Model\ModelInterface as ViewModel;
 use Laminas\View\View;
@@ -40,12 +40,12 @@ class DefaultRenderingStrategy extends AbstractListenerAggregate
     /**
      * Set layout template value
      *
-     * @param  string $layoutTemplate
+     * @param string $layoutTemplate
      * @return DefaultRenderingStrategy
      */
     public function setLayoutTemplate($layoutTemplate): static
     {
-        $this->layoutTemplate = (string) $layoutTemplate;
+        $this->layoutTemplate = (string)$layoutTemplate;
         return $this;
     }
 
@@ -76,8 +76,8 @@ class DefaultRenderingStrategy extends AbstractListenerAggregate
         $request   = $e->getRequest();
         $response  = $e->getResponse();
         $viewModel = $e->getViewModel();
-        if (! $viewModel instanceof ViewModel) {
-            return;
+        if (!$viewModel instanceof ViewModel) {
+            return null;
         }
 
         $view = $this->view;

@@ -6,11 +6,6 @@ namespace Jield\ModuleManager;
 
 use Laminas\EventManager\Event;
 
-use function gettype;
-use function is_object;
-use function is_string;
-use function sprintf;
-
 /**
  * Custom event for use with module manager
  * Composes Module objects
@@ -18,16 +13,15 @@ use function sprintf;
 class ModuleEvent extends Event
 {
     /**
-     * Module events triggered by eventmanager
+     * Module events triggered by the event manager
      */
-    public const string EVENT_MERGE_CONFIG        = 'mergeConfig';
-    public const string EVENT_LOAD_MODULES        = 'loadModules';
+    public const string EVENT_MERGE_CONFIG = 'mergeConfig';
+    public const string EVENT_LOAD_MODULES = 'loadModules';
     public const string EVENT_LOAD_MODULE_RESOLVE = 'loadModule.resolve';
-    public const string EVENT_LOAD_MODULE         = 'loadModule';
-    public const string EVENT_LOAD_MODULES_POST   = 'loadModules.post';
+    public const string EVENT_LOAD_MODULE = 'loadModule';
+    public const string EVENT_LOAD_MODULES_POST = 'loadModules.post';
 
-    /** @var mixed */
-    protected mixed $module;
+    protected object $module;
 
     /** @var string */
     protected string $moduleName;
@@ -50,19 +44,10 @@ class ModuleEvent extends Event
      *
      * @param string $moduleName
      * @return ModuleEvent
-     *@throws Exception\InvalidArgumentException
+     * @throws Exception\InvalidArgumentException
      */
     public function setModuleName(string $moduleName): static
     {
-        if (! is_string(value: $moduleName)) {
-            throw new Exception\InvalidArgumentException(
-                message: sprintf(
-                    '%s expects a string as an argument; %s provided',
-                    __METHOD__,
-                    gettype(value: $moduleName)
-                )
-            );
-        }
         // Performance tweak, don't add it as param.
         $this->moduleName = $moduleName;
 
@@ -84,19 +69,10 @@ class ModuleEvent extends Event
      *
      * @param object $module
      * @return ModuleEvent
-     *@throws Exception\InvalidArgumentException
+     * @throws Exception\InvalidArgumentException
      */
     public function setModule(object $module): static
     {
-        if (! is_object(value: $module)) {
-            throw new Exception\InvalidArgumentException(
-                message: sprintf(
-                    '%s expects a module object as an argument; %s provided',
-                    __METHOD__,
-                    gettype(value: $module)
-                )
-            );
-        }
         // Performance tweak, don't add it as param.
         $this->module = $module;
 

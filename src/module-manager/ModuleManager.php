@@ -8,11 +8,8 @@ use Laminas\EventManager\EventManager;
 use Laminas\EventManager\EventManagerInterface;
 use Override;
 use Traversable;
-use function current;
 use function is_array;
 use function is_object;
-use function is_string;
-use function key;
 use function sprintf;
 
 class ModuleManager implements ModuleManagerInterface
@@ -55,18 +52,8 @@ class ModuleManager implements ModuleManagerInterface
             return;
         }
 
-        foreach ($this->getModules() as $moduleName => $module) {
-            if (is_object(value: $module)) {
-                if (!is_string(value: $moduleName)) {
-                    throw new Exception\RuntimeException(message: sprintf(
-                        'Module (%s) must have a key identifier.',
-                        $module::class
-                    ));
-                }
-                $module = [$moduleName => $module];
-            }
-
-            $this->loadModule(module: $module);
+        foreach ($this->getModules() as $moduleName) {
+            $this->loadModule(moduleName: $moduleName);
         }
 
         $this->modulesAreLoaded = true;
@@ -116,12 +103,6 @@ class ModuleManager implements ModuleManagerInterface
     #[Override]
     public function loadModule(string $moduleName): mixed
     {
-        $moduleName = $moduleName;
-        if (is_array(value: $moduleName)) {
-            $moduleName = key(array: $moduleName);
-            $moduleName = current(array: $moduleName);
-        }
-
         if (isset($this->loadedModules[$moduleName])) {
             return $this->loadedModules[$moduleName];
         }
@@ -145,13 +126,11 @@ class ModuleManager implements ModuleManagerInterface
 
         $this->loadFinished++;
 
-        if (!is_object(value: $moduleName)) {
-            $moduleName = $this->loadModuleByName(event: $event);
-        }
-        $event->setModule(module: $moduleName);
+        $module = $this->loadModuleByName(event: $event);
+        $event->setModule(module: $module);
         $event->setName(name: ModuleEvent::EVENT_LOAD_MODULE);
 
-        $this->loadedModules[$moduleName] = $moduleName;
+        $this->loadedModules[$moduleName] = $module;
         $this->getEventManager()->triggerEvent(event: $event);
 
         $this->loadFinished--;
@@ -171,6 +150,8 @@ class ModuleManager implements ModuleManagerInterface
         $result = $this->getEventManager()->triggerEventUntil(callback: static fn($r): bool => is_object(value: $r), event: $event);
 
         $module = $result->last();
+
+
         if (!is_object(value: $module)) {
             throw new Exception\RuntimeException(message: sprintf(
                 'Module (%s) could not be initialized.',

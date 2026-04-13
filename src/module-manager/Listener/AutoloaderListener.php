@@ -4,10 +4,9 @@ declare(strict_types=1);
 
 namespace Jield\ModuleManager\Listener;
 
-use Jield\Loader\AutoloaderFactory;
 use Jield\ModuleManager\Feature\AutoloaderProviderInterface;
 use Jield\ModuleManager\ModuleEvent;
-
+use Jield\Mvc\Loader\AutoloaderFactory;
 use function method_exists;
 
 class AutoloaderListener extends AbstractListener
@@ -17,8 +16,8 @@ class AutoloaderListener extends AbstractListener
     {
         $module = $e->getModule();
         if (
-            ! $module instanceof AutoloaderProviderInterface
-            && ! method_exists(object_or_class: $module, method: 'getAutoloaderConfig')
+            !$module instanceof AutoloaderProviderInterface
+            && !method_exists(object_or_class: $module, method: 'getAutoloaderConfig')
         ) {
             return;
         }

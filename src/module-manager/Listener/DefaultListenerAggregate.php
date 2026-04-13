@@ -9,20 +9,14 @@ use Laminas\EventManager\EventManagerInterface;
 use Laminas\EventManager\ListenerAggregateInterface;
 use Override;
 
-class DefaultListenerAggregate extends AbstractListener implements
-    ListenerAggregateInterface
+class DefaultListenerAggregate extends AbstractListener implements ListenerAggregateInterface
 {
-    /** @var array */
     protected array $listeners = [];
 
-    /** @var ConfigMergerInterface */
-    protected ConfigMergerInterface $configListener;
+    protected ?ConfigMergerInterface $configListener = null;
 
     /**
      * Attach one or more listeners
-     *
-     * @param int $priority
-     * @return void
      */
     #[Override]
     public function attach(EventManagerInterface $events, $priority = 1): void
@@ -33,18 +27,20 @@ class DefaultListenerAggregate extends AbstractListener implements
 
         // High priority, we assume module autoloading (for FooNamespace\Module
         // classes) should be available before anything else.
-        // Register it only if use_jield_loader config is true, however.
-        if ($options->useJieldLoader()) {
+        // Register it only if use_laminas_loader config is true, however.
+        if ($options->useLaminasLoader()) {
             $moduleLoaderListener = new ModuleLoaderListener(options: $options);
             $moduleLoaderListener->attach(events: $events);
             $this->listeners[] = $moduleLoaderListener;
         }
+
+
         $this->listeners[] = $events->attach(eventName: ModuleEvent::EVENT_LOAD_MODULE_RESOLVE, listener: new ModuleResolverListener());
 
-        if ($options->useJieldLoader()) {
+        if ($options->useLaminasLoader()) {
             // High priority, because most other loadModule listeners will assume
             // the module's classes are available via autoloading
-            // Register it only if use_jield_loader config is true, however.
+            // Register it only if use_laminas_loader config is true, however.
             $this->listeners[] = $events->attach(
                 eventName: ModuleEvent::EVENT_LOAD_MODULE,
                 listener: new AutoloaderListener(options: $options),
@@ -71,8 +67,6 @@ class DefaultListenerAggregate extends AbstractListener implements
 
     /**
      * Detach all previously attached listeners
-     *
-     * @return void
      */
     #[Override]
     public function detach(EventManagerInterface $events): void
@@ -91,8 +85,6 @@ class DefaultListenerAggregate extends AbstractListener implements
 
     /**
      * Get the config merger.
-     *
-     * @return ConfigMergerInterface
      */
     public function getConfigListener(): ConfigMergerInterface
     {
@@ -104,8 +96,6 @@ class DefaultListenerAggregate extends AbstractListener implements
 
     /**
      * Set the config merger to use.
-     *
-     * @return DefaultListenerAggregate
      */
     public function setConfigListener(ConfigMergerInterface $configListener): static
     {
