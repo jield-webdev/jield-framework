@@ -60,7 +60,6 @@ use Jield\ApiTools\MvcAuth\Factory\AclAuthorizationFactory;
 use Jield\ApiTools\MvcAuth\Factory\AuthenticationAdapterDelegatorFactory;
 use Jield\ApiTools\MvcAuth\Factory\AuthenticationServiceFactory;
 use Jield\ApiTools\MvcAuth\Factory\DefaultAuthenticationListenerFactory;
-use Jield\ApiTools\MvcAuth\Factory\DefaultAuthHttpAdapterFactory;
 use Jield\ApiTools\MvcAuth\Factory\DefaultAuthorizationListenerFactory;
 use Jield\ApiTools\MvcAuth\Factory\DefaultResourceResolverListenerFactory;
 use Jield\ApiTools\MvcAuth\Factory\FileResolverFactory;
@@ -80,8 +79,7 @@ use Jield\ApiTools\Versioning\ContentTypeListener;
 use Jield\ApiTools\Versioning\Factory\AcceptListenerFactory;
 use Jield\ApiTools\Versioning\Factory\ContentTypeListenerFactory;
 use Jield\ApiTools\Versioning\VersionListener;
-use Jield\Authentication\Adapter\Http;
-use Jield\Authentication\Storage\NonPersistent;
+use Laminas\ConfigAggregator\ConfigAggregator;
 use Laminas\Filter\File\RenameUpload;
 use Laminas\InputFilter\InputFilterAbstractServiceFactory;
 use Laminas\ServiceManager\Factory\InvokableFactory;
@@ -90,6 +88,15 @@ use Laminas\Validator\File\UploadFile;
 final class ConfigProvider
 {
     public function __invoke(): array
+    {
+        return (new ConfigAggregator(providers: [
+            fn (): array => $this->getBaseConfig(),
+            ListenerConfigProvider::class,
+            SettingsProvider::class,
+        ]))->getMergedConfig();
+    }
+
+    private function getBaseConfig(): array
     {
         return [
             'service_manager'    => $this->getServiceMangerConfig(),
@@ -215,12 +222,10 @@ final class ConfigProvider
                 'Jield\ApiTools\MvcAuth\Authentication'      => AuthenticationServiceFactory::class,
                 'Jield\ApiTools\MvcAuth\FileResolver'        => FileResolverFactory::class,
                 DefaultAuthenticationListener::class         => DefaultAuthenticationListenerFactory::class,
-                Http::class                                  => DefaultAuthHttpAdapterFactory::class,
                 AclAuthorization::class                      => AclAuthorizationFactory::class,
                 DefaultAuthorizationListener::class          => DefaultAuthorizationListenerFactory::class,
                 DefaultResourceResolverListener::class       => DefaultResourceResolverListenerFactory::class,
                 'Jield\ApiTools\OAuth2\Service\OAuth2Server' => NamedOAuth2ServerFactory::class,
-                NonPersistent::class                         => InvokableFactory::class,
                 DefaultAuthenticationPostListener::class     => InvokableFactory::class,
                 DefaultAuthorizationPostListener::class      => InvokableFactory::class,
 

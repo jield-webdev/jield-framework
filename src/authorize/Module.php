@@ -54,7 +54,7 @@ class Module implements
     public function getModuleDependencies(): array
     {
         return [
-            'Laminas\Cache',
+            \Laminas\Cache\ConfigProvider::class,
         ];
     }
 }

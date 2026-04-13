@@ -4,16 +4,14 @@ namespace Jield\Mvc;
 
 use ArrayObject;
 use Exception;
-use Laminas\EventManager\AbstractListenerAggregate;
-use Laminas\EventManager\EventManagerInterface;
 use Jield\Mvc\Controller\ControllerManager;
 use Jield\Mvc\Exception\InvalidControllerException;
+use Laminas\EventManager\AbstractListenerAggregate;
+use Laminas\EventManager\EventManagerInterface;
 use Laminas\Router\RouteMatch;
 use Laminas\ServiceManager\Exception\InvalidServiceException;
 use Laminas\Stdlib\ArrayUtils;
 use Throwable;
-
-use function function_exists;
 use function is_object;
 
 /**
@@ -47,15 +45,12 @@ class DispatchListener extends AbstractListenerAggregate
     /**
      * Attach listeners to an event manager
      *
-     * @param  int $priority
+     * @param int $priority
      * @return void
      */
     public function attach(EventManagerInterface $events, $priority = 1): void
     {
         $this->listeners[] = $events->attach(MvcEvent::EVENT_DISPATCH, [$this, 'onDispatch']);
-        if (function_exists('zend_monitor_custom_event_ex')) {
-            $this->listeners[] = $events->attach(MvcEvent::EVENT_DISPATCH_ERROR, [$this, 'reportMonitorEvent']);
-        }
     }
 
     /**
@@ -66,7 +61,7 @@ class DispatchListener extends AbstractListenerAggregate
     public function onDispatch(MvcEvent $e): mixed
     {
         if (null !== $e->getResult()) {
-            return;
+            return null;
         }
 
         $routeMatch        = $e->getRouteMatch();
@@ -77,7 +72,7 @@ class DispatchListener extends AbstractListenerAggregate
         $controllerManager = $this->controllerManager;
 
         // Query abstract controllers, too!
-        if (! $controllerManager->has($controllerName)) {
+        if (!$controllerManager->has($controllerName)) {
             $return = $this->marshalControllerNotFoundEvent(
                 $application::ERROR_CONTROLLER_NOT_FOUND,
                 $controllerName,
@@ -89,7 +84,7 @@ class DispatchListener extends AbstractListenerAggregate
 
         try {
             $controller = $controllerManager->get($controllerName);
-        } catch (InvalidControllerException | InvalidServiceException $exception) {
+        } catch (InvalidControllerException|InvalidServiceException $exception) {
             $return = $this->marshalControllerNotFoundEvent(
                 $application::ERROR_CONTROLLER_INVALID,
                 $controllerName,
@@ -125,7 +120,7 @@ class DispatchListener extends AbstractListenerAggregate
             $e->setParam('exception', $caughtException);
 
             $return = $application->getEventManager()->triggerEvent($e)->last();
-            if (! $return) {
+            if (!$return) {
                 $return = $e->getResult();
             }
         }
@@ -155,7 +150,7 @@ class DispatchListener extends AbstractListenerAggregate
      */
     protected function complete(mixed $return, MvcEvent $event): mixed
     {
-        if (! is_object($return)) {
+        if (!is_object($return)) {
             if (ArrayUtils::hasStringKeys($return)) {
                 $return = new ArrayObject($return, ArrayObject::ARRAY_AS_PROPS);
             }
@@ -167,8 +162,8 @@ class DispatchListener extends AbstractListenerAggregate
     /**
      * Marshal a controller not found exception event
      *
-     * @param  string $type
-     * @param  string $controllerName
+     * @param string $type
+     * @param string $controllerName
      * @param Throwable|Exception $exception
      * @return mixed
      */
@@ -191,7 +186,7 @@ class DispatchListener extends AbstractListenerAggregate
         $events  = $application->getEventManager();
         $results = $events->triggerEvent($event);
         $return  = $results->last();
-        if (! $return) {
+        if (!$return) {
             $return = $event->getResult();
         }
         return $return;
@@ -200,7 +195,7 @@ class DispatchListener extends AbstractListenerAggregate
     /**
      * Marshal a bad controller exception event
      *
-     * @param  string $controllerName
+     * @param string $controllerName
      * @param Throwable|Exception $exception
      * @return mixed
      */
@@ -219,7 +214,7 @@ class DispatchListener extends AbstractListenerAggregate
         $events  = $application->getEventManager();
         $results = $events->triggerEvent($event);
         $return  = $results->last();
-        if (! $return) {
+        if (!$return) {
             return $event->getResult();
         }
 

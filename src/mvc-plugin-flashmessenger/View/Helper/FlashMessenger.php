@@ -115,6 +115,45 @@ class FlashMessenger
     }
 
     /**
+     * Get the flash messenger plugin
+     *
+     * @return PluginFlashMessenger
+     */
+    public function getPluginFlashMessenger()
+    {
+        if (null === $this->pluginFlashMessenger) {
+            $this->setPluginFlashMessenger(new PluginFlashMessenger());
+        }
+        assert($this->pluginFlashMessenger instanceof PluginFlashMessenger);
+
+        return $this->pluginFlashMessenger;
+    }
+
+    /**
+     * Set the flash messenger plugin
+     *
+     * @param PluginFlashMessenger $pluginFlashMessenger
+     * @return FlashMessenger
+     * @throws InvalidArgumentException For an invalid $pluginFlashMessenger.
+     */
+    public function setPluginFlashMessenger(PluginFlashMessenger $pluginFlashMessenger)
+    {
+        if (
+            !$pluginFlashMessenger instanceof PluginFlashMessenger
+        ) {
+            throw new InvalidArgumentException(sprintf(
+                '%s expects a %s instance; received %s',
+                __METHOD__,
+                PluginFlashMessenger::class,
+                is_object($pluginFlashMessenger) ? $pluginFlashMessenger::class : gettype($pluginFlashMessenger)
+            ));
+        }
+
+        $this->pluginFlashMessenger = $pluginFlashMessenger;
+        return $this;
+    }
+
+    /**
      * Proxy the flash messenger plugin controller
      *
      * @param string $method
@@ -139,20 +178,6 @@ class FlashMessenger
     {
         $flashMessenger = $this->getPluginFlashMessenger();
         $messages       = $flashMessenger->getMessagesFromNamespace($namespace);
-        return $this->renderMessages($namespace, $messages, $classes, $autoEscape);
-    }
-
-    /**
-     * Render Current Messages
-     *
-     * @param string $namespace
-     * @param bool|null $autoEscape
-     * @return string
-     */
-    public function renderCurrent(string $namespace = 'default', array $classes = [], ?bool $autoEscape = null)
-    {
-        $flashMessenger = $this->getPluginFlashMessenger();
-        $messages       = $flashMessenger->getCurrentMessagesFromNamespace($namespace);
         return $this->renderMessages($namespace, $messages, $classes, $autoEscape);
     }
 
@@ -221,168 +246,19 @@ class FlashMessenger
         return $markup;
     }
 
-    /**
-     * Set whether or not auto escaping should be used
-     *
-     * @param bool $autoEscape
-     * @return self
-     */
-    public function setAutoEscape(bool $autoEscape = true)
+    private function getClasses(string $namespaceName): string
     {
-        $this->autoEscape = (bool)$autoEscape;
-        return $this;
-    }
-
-    /**
-     * Return whether auto escaping is enabled or disabled
-     *
-     * @return bool
-     */
-    public function getAutoEscape()
-    {
-        return $this->autoEscape;
-    }
-
-    /**
-     * Set the string used to close message representation
-     *
-     * @param string $messageCloseString
-     * @return FlashMessenger
-     */
-    public function setMessageCloseString(string $messageCloseString, ?string $namespaceName = null)
-    {
-        $namespaceName = $namespaceName ?? $this->getDefaultNamespaceName();
-        $namespace     = $this->getNamespace($namespaceName);
+        $namespace = $this->getNamespace($namespaceName);
         if ($namespace === null) {
-            $this->messageCloseString = $messageCloseString;
-        } else {
-            $namespace->setMessageCloseString($messageCloseString);
+            return $this->classMessages[$namespaceName] ?? '';
         }
 
-        return $this;
+        return $namespace->getClasses();
     }
 
-    /**
-     * Get the string used to close message representation
-     *
-     * @return string
-     */
-    public function getMessageCloseString(?string $namespaceName = null)
+    private function getNamespace(string $namespace): ?FlashMessengerNamespace
     {
-        $namespaceName = $namespaceName ?? $this->getDefaultNamespaceName();
-        $namespace     = $this->getNamespace($namespaceName);
-        if ($namespace === null) {
-            return $this->messageCloseString;
-        }
-
-        return $namespace->getMessageCloseString();
-    }
-
-    /**
-     * Set the formatted string used to open message representation
-     *
-     * @param string $messageOpenFormat
-     * @return FlashMessenger
-     */
-    public function setMessageOpenFormat(string $messageOpenFormat, ?string $namespaceName = null)
-    {
-        $namespaceName = $namespaceName ?? $this->getDefaultNamespaceName();
-        $namespace     = $this->getNamespace($namespaceName);
-        if ($namespace === null) {
-            $this->messageOpenFormat = $messageOpenFormat;
-        } else {
-            $namespace->setMessageOpenFormat($messageOpenFormat);
-        }
-        return $this;
-    }
-
-    /**
-     * Get the formatted string used to open message representation
-     *
-     * @return string
-     */
-    public function getMessageOpenFormat(?string $namespaceName = null)
-    {
-        $namespaceName = $namespaceName ?? $this->getDefaultNamespaceName();
-        $namespace     = $this->getNamespace($namespaceName);
-        if ($namespace === null) {
-            return $this->messageOpenFormat;
-        }
-
-        return $namespace->getMessageOpenFormat();
-    }
-
-    /**
-     * Set the string used to separate messages
-     *
-     * @param string $messageSeparatorString
-     * @return FlashMessenger
-     */
-    public function setMessageSeparatorString(string $messageSeparatorString, ?string $namespaceName = null)
-    {
-        $namespaceName = $namespaceName ?? $this->getDefaultNamespaceName();
-        $namespace     = $this->getNamespace($namespaceName);
-        if ($namespace === null) {
-            $this->messageSeparatorString = $messageSeparatorString;
-        } else {
-            $namespace->setMessageSeparatorString($messageSeparatorString);
-        }
-        return $this;
-    }
-
-    /**
-     * Get the string used to separate messages
-     *
-     * @return string
-     */
-    public function getMessageSeparatorString(?string $namespaceName = null)
-    {
-        $namespaceName = $namespaceName ?? $this->getDefaultNamespaceName();
-        $namespace     = $this->getNamespace($namespaceName);
-        if ($namespace === null) {
-            return $this->messageSeparatorString;
-        }
-
-        return $namespace->getMessageSeparatorString();
-    }
-
-    /**
-     * Set the flash messenger plugin
-     *
-     * @param PluginFlashMessenger $pluginFlashMessenger
-     * @return FlashMessenger
-     * @throws InvalidArgumentException For an invalid $pluginFlashMessenger.
-     */
-    public function setPluginFlashMessenger(PluginFlashMessenger $pluginFlashMessenger)
-    {
-        if (
-            !$pluginFlashMessenger instanceof PluginFlashMessenger
-        ) {
-            throw new InvalidArgumentException(sprintf(
-                '%s expects a %s instance; received %s',
-                __METHOD__,
-                PluginFlashMessenger::class,
-                is_object($pluginFlashMessenger) ? $pluginFlashMessenger::class : gettype($pluginFlashMessenger)
-            ));
-        }
-
-        $this->pluginFlashMessenger = $pluginFlashMessenger;
-        return $this;
-    }
-
-    /**
-     * Get the flash messenger plugin
-     *
-     * @return PluginFlashMessenger
-     */
-    public function getPluginFlashMessenger()
-    {
-        if (null === $this->pluginFlashMessenger) {
-            $this->setPluginFlashMessenger(new PluginFlashMessenger());
-        }
-        assert($this->pluginFlashMessenger instanceof PluginFlashMessenger);
-
-        return $this->pluginFlashMessenger;
+        return $this->namespaces[$namespace] ?? null;
     }
 
     /**
@@ -411,19 +287,38 @@ class FlashMessenger
         return $this->escapeHtmlHelper;
     }
 
-    private function getNamespace(string $namespace): ?FlashMessengerNamespace
+    /**
+     * Get the formatted string used to open message representation
+     *
+     * @return string
+     */
+    public function getMessageOpenFormat(?string $namespaceName = null)
     {
-        return $this->namespaces[$namespace] ?? null;
-    }
-
-    private function getClasses(string $namespaceName): string
-    {
-        $namespace = $this->getNamespace($namespaceName);
+        $namespaceName = $namespaceName ?? $this->getDefaultNamespaceName();
+        $namespace     = $this->getNamespace($namespaceName);
         if ($namespace === null) {
-            return $this->classMessages[$namespaceName] ?? '';
+            return $this->messageOpenFormat;
         }
 
-        return $namespace->getClasses();
+        return $namespace->getMessageOpenFormat();
+    }
+
+    /**
+     * Set the formatted string used to open message representation
+     *
+     * @param string $messageOpenFormat
+     * @return FlashMessenger
+     */
+    public function setMessageOpenFormat(string $messageOpenFormat, ?string $namespaceName = null)
+    {
+        $namespaceName = $namespaceName ?? $this->getDefaultNamespaceName();
+        $namespace     = $this->getNamespace($namespaceName);
+        if ($namespace === null) {
+            $this->messageOpenFormat = $messageOpenFormat;
+        } else {
+            $namespace->setMessageOpenFormat($messageOpenFormat);
+        }
+        return $this;
     }
 
     /**
@@ -432,5 +327,110 @@ class FlashMessenger
     private function getDefaultNamespaceName(): string
     {
         return PluginFlashMessenger::NAMESPACE_DEFAULT;
+    }
+
+    /**
+     * Get the string used to separate messages
+     *
+     * @return string
+     */
+    public function getMessageSeparatorString(?string $namespaceName = null)
+    {
+        $namespaceName = $namespaceName ?? $this->getDefaultNamespaceName();
+        $namespace     = $this->getNamespace($namespaceName);
+        if ($namespace === null) {
+            return $this->messageSeparatorString;
+        }
+
+        return $namespace->getMessageSeparatorString();
+    }
+
+    /**
+     * Set the string used to separate messages
+     *
+     * @param string $messageSeparatorString
+     * @return FlashMessenger
+     */
+    public function setMessageSeparatorString(string $messageSeparatorString, ?string $namespaceName = null)
+    {
+        $namespaceName = $namespaceName ?? $this->getDefaultNamespaceName();
+        $namespace     = $this->getNamespace($namespaceName);
+        if ($namespace === null) {
+            $this->messageSeparatorString = $messageSeparatorString;
+        } else {
+            $namespace->setMessageSeparatorString($messageSeparatorString);
+        }
+        return $this;
+    }
+
+    /**
+     * Get the string used to close message representation
+     *
+     * @return string
+     */
+    public function getMessageCloseString(?string $namespaceName = null)
+    {
+        $namespaceName = $namespaceName ?? $this->getDefaultNamespaceName();
+        $namespace     = $this->getNamespace($namespaceName);
+        if ($namespace === null) {
+            return $this->messageCloseString;
+        }
+
+        return $namespace->getMessageCloseString();
+    }
+
+    /**
+     * Set the string used to close message representation
+     *
+     * @param string $messageCloseString
+     * @return FlashMessenger
+     */
+    public function setMessageCloseString(string $messageCloseString, ?string $namespaceName = null)
+    {
+        $namespaceName = $namespaceName ?? $this->getDefaultNamespaceName();
+        $namespace     = $this->getNamespace($namespaceName);
+        if ($namespace === null) {
+            $this->messageCloseString = $messageCloseString;
+        } else {
+            $namespace->setMessageCloseString($messageCloseString);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Render Current Messages
+     *
+     * @param string $namespace
+     * @param bool|null $autoEscape
+     * @return string
+     */
+    public function renderCurrent(string $namespace = 'default', array $classes = [], ?bool $autoEscape = null)
+    {
+        $flashMessenger = $this->getPluginFlashMessenger();
+        $messages       = $flashMessenger->getCurrentMessagesFromNamespace($namespace);
+        return $this->renderMessages($namespace, $messages, $classes, $autoEscape);
+    }
+
+    /**
+     * Return whether auto escaping is enabled or disabled
+     *
+     * @return bool
+     */
+    public function getAutoEscape()
+    {
+        return $this->autoEscape;
+    }
+
+    /**
+     * Set whether or not auto escaping should be used
+     *
+     * @param bool $autoEscape
+     * @return self
+     */
+    public function setAutoEscape(bool $autoEscape = true)
+    {
+        $this->autoEscape = (bool)$autoEscape;
+        return $this;
     }
 }

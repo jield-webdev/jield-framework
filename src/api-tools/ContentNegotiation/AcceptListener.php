@@ -52,7 +52,7 @@ class AcceptListener
         }
 
         $result = $e->getResult();
-        if (!is_array(value: $result) && !$result instanceof ViewModel) {
+        if (!is_array(value: $result) && !$result instanceof ViewModelInterface) {
             // We will only attempt to re-cast ContentNegotiation\ViewModel
             // results or arrays to what the AcceptableViewModelSelector gives
             // us. Anything else, we cannot handle.
@@ -142,11 +142,11 @@ class AcceptListener
      *
      * If the result is an array, we pass those values as the view model variables.
      *
-     * @param array|ViewModel $result
+     * @param array|ViewModelInterface $result
      */
     protected function populateViewModel(ViewModel|array $result, ViewModelInterface $viewModel, MvcEvent $e): void
     {
-        if ($result instanceof ViewModel) {
+        if ($result instanceof ViewModelInterface) {
             // "Re-cast" content-negotiation view models to the view model type
             // selected by the AcceptableViewModelSelector
 

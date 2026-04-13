@@ -3,7 +3,7 @@
 namespace Jield\Mvc\Service;
 
 // phpcs:ignore
-use Interop\Container\ContainerInterface;
+use Psr\Container\ContainerInterface;
 use Jield\ModuleManager\Feature\ControllerPluginProviderInterface;
 use Jield\ModuleManager\Feature\ControllerProviderInterface;
 use Jield\ModuleManager\Feature\RouteProviderInterface;

@@ -19,29 +19,14 @@ class AssetManager implements
     AssetFilterManagerAwareInterface,
     AssetCacheManagerAwareInterface
 {
-    /**
-     * @var ResolverInterface
-     */
     protected ResolverInterface $resolver;
 
-    /**
-     * @var AssetFilterManager The AssetFilterManager service.
-     */
     protected AssetFilterManager $filterManager;
 
-    /**
-     * @var AssetCacheManager The AssetCacheManager service.
-     */
     protected AssetCacheManager $cacheManager;
 
-    /**
-     * @var AssetInterface The asset
-     */
     protected ?AssetInterface $asset = null;
 
-    /**
-     * @var string The requested path
-     */
     protected string $path;
 
     /**

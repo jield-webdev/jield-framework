@@ -1,46 +1,48 @@
 <?php
 
-use AssetManager\Command\WarmupCommand;
+namespace Jield\AssetManager;
+
+use Jield\AssetManager\Command\WarmupCommand;
 
 return [
     'service_manager'                                                    => [
         'factories'  => [
-            AssetManager\Service\AssetManager::class              => AssetManager\Service\AssetManagerServiceFactory::class,
-            AssetManager\Service\AssetFilterManager::class        => AssetManager\Service\AssetFilterManagerServiceFactory::class,
-            AssetManager\Service\AssetCacheManager::class         => AssetManager\Service\AssetCacheManagerServiceFactory::class,
-            AssetManager\Resolver\AggregateResolver::class        => AssetManager\Service\AggregateResolverServiceFactory::class,
-            AssetManager\Resolver\MapResolver::class              => AssetManager\Service\MapResolverServiceFactory::class,
-            AssetManager\Resolver\PathStackResolver::class        => AssetManager\Service\PathStackResolverServiceFactory::class,
-            AssetManager\Resolver\PrioritizedPathsResolver::class => AssetManager\Service\PrioritizedPathsResolverServiceFactory::class,
-            AssetManager\Resolver\CollectionResolver::class       => AssetManager\Service\CollectionResolverServiceFactory::class,
-            AssetManager\Resolver\ConcatResolver::class           => AssetManager\Service\ConcatResolverServiceFactory::class,
-            AssetManager\Resolver\AliasPathStackResolver::class   => AssetManager\Service\AliasPathStackResolverServiceFactory::class,
-            WarmupCommand::class                                  => \Laminas\ServiceManager\AbstractFactory\ConfigAbstractFactory::class,
+            \Jield\AssetManager\Service\AssetManager::class              => \Jield\AssetManager\Service\AssetManagerServiceFactory::class,
+            \Jield\AssetManager\Service\AssetFilterManager::class        => \Jield\AssetManager\Service\AssetFilterManagerServiceFactory::class,
+            \Jield\AssetManager\Service\AssetCacheManager::class         => \Jield\AssetManager\Service\AssetCacheManagerServiceFactory::class,
+            \Jield\AssetManager\Resolver\AggregateResolver::class        => \Jield\AssetManager\Service\AggregateResolverServiceFactory::class,
+            \Jield\AssetManager\Resolver\MapResolver::class              => \Jield\AssetManager\Service\MapResolverServiceFactory::class,
+            \Jield\AssetManager\Resolver\PathStackResolver::class        => \Jield\AssetManager\Service\PathStackResolverServiceFactory::class,
+            \Jield\AssetManager\Resolver\PrioritizedPathsResolver::class => \Jield\AssetManager\Service\PrioritizedPathsResolverServiceFactory::class,
+            \Jield\AssetManager\Resolver\CollectionResolver::class       => \Jield\AssetManager\Service\CollectionResolverServiceFactory::class,
+            \Jield\AssetManager\Resolver\ConcatResolver::class           => \Jield\AssetManager\Service\ConcatResolverServiceFactory::class,
+            \Jield\AssetManager\Resolver\AliasPathStackResolver::class   => \Jield\AssetManager\Service\AliasPathStackResolverServiceFactory::class,
+            WarmupCommand::class                                         => \Laminas\ServiceManager\AbstractFactory\ConfigAbstractFactory::class,
         ],
         'invokables' => [
-            AssetManager\Service\MimeResolver::class => AssetManager\Service\MimeResolver::class,
+            \Jield\AssetManager\Service\MimeResolver::class => \Jield\AssetManager\Service\MimeResolver::class,
         ],
         'aliases'    => [
             //Alias left here for BC
-            'mime_resolver'                          => AssetManager\Service\MimeResolver::class,
-            'AssetManager\Service\AggregateResolver' => AssetManager\Resolver\AggregateResolver::class
+            'mime_resolver'      => \Jield\AssetManager\Service\MimeResolver::class,
+            'aggregate_resolver' => \Jield\AssetManager\Resolver\AggregateResolver::class
         ],
     ],
     \Laminas\ServiceManager\AbstractFactory\ConfigAbstractFactory::class => [
         WarmupCommand::class => [
-            \AssetManager\Service\AssetManager::class,
+            \Jield\AssetManager\Service\AssetManager::class,
             'Config'
         ],
     ],
     'asset_manager'                                                      => [
         'clear_output_buffer' => true,
         'resolvers'           => [
-            AssetManager\Resolver\MapResolver::class              => 3000,
-            AssetManager\Resolver\ConcatResolver::class           => 2500,
-            AssetManager\Resolver\CollectionResolver::class       => 2000,
-            AssetManager\Resolver\PrioritizedPathsResolver::class => 1500,
-            AssetManager\Resolver\AliasPathStackResolver::class   => 1000,
-            AssetManager\Resolver\PathStackResolver::class        => 500,
+            \Jield\AssetManager\Resolver\MapResolver::class              => 3000,
+            \Jield\AssetManager\Resolver\ConcatResolver::class           => 2500,
+            \Jield\AssetManager\Resolver\CollectionResolver::class       => 2000,
+            \Jield\AssetManager\Resolver\PrioritizedPathsResolver::class => 1500,
+            \Jield\AssetManager\Resolver\AliasPathStackResolver::class   => 1000,
+            \Jield\AssetManager\Resolver\PathStackResolver::class        => 500,
         ],
         'view_helper'         => [
             'append_timestamp' => true,
@@ -50,10 +52,10 @@ return [
     ],
     'view_helpers'                                                       => [
         'factories' => [
-            AssetManager\View\Helper\Asset::class => AssetManager\Service\AssetViewHelperFactory::class
+            \Jield\AssetManager\View\Helper\Asset::class => \Jield\AssetManager\Service\AssetViewHelperFactory::class
         ],
         'aliases'   => [
-            'asset' => AssetManager\View\Helper\Asset::class
+            'asset' => \Jield\AssetManager\View\Helper\Asset::class
         ]
     ],
     'laminas-cli'                                                        => [

@@ -6,8 +6,7 @@ namespace Jield\ModuleManager\Listener;
 
 use Jield\ModuleManager\ModuleEvent;
 use Laminas\EventManager\EventManagerInterface;
-use Laminas\ServiceManager\Config as ServiceConfig;
-use Laminas\ServiceManager\ConfigInterface as ServiceConfigInterface;
+use Laminas\ServiceManager\ServiceLocatorInterface;
 use Laminas\ServiceManager\ServiceManager;
 use Laminas\Stdlib\ArrayUtils;
 use Override;
@@ -16,7 +15,6 @@ use function class_exists;
 use function gettype;
 use function is_array;
 use function is_object;
-use function is_scalar;
 use function is_string;
 use function method_exists;
 use function spl_object_hash;
@@ -140,8 +138,14 @@ class ServiceListener implements ServiceListenerInterface
 
             $config = $module->{$sm['module_class_method']}();
 
-            if ($config instanceof ServiceConfigInterface) {
-                $config = $this->serviceConfigToArray(config: $config);
+            if (is_object(value: $config)) {
+                if (method_exists(object_or_class: $config, method: '__invoke')) {
+                    $config = $config();
+                } elseif (method_exists(object_or_class: $config, method: 'getConfig')) {
+                    $config = $config->getConfig();
+                } elseif (method_exists(object_or_class: $config, method: 'toArray')) {
+                    $config = $config->toArray();
+                }
             }
 
             if ($config instanceof Traversable) {
@@ -187,7 +191,7 @@ class ServiceListener implements ServiceListenerInterface
                 }
 
                 $instance = $this->defaultServiceManager->get(id: $sm['service_manager']);
-                if (!$instance instanceof ServiceManager) {
+                if (!$instance instanceof ServiceLocatorInterface) {
                     throw new Exception\RuntimeException(message: sprintf(
                         'Could not find a valid ServiceManager for %s',
                         $sm['service_manager']
@@ -197,14 +201,12 @@ class ServiceListener implements ServiceListenerInterface
                 $sm['service_manager'] = $instance;
             }
 
-            $serviceConfig = new ServiceConfig($smConfig);
-
             // The service listener is meant to operate during bootstrap, and, as such,
             // needs to be able to override existing configuration.
             $allowOverride = $sm['service_manager']->getAllowOverride();
             $sm['service_manager']->setAllowOverride(flag: true);
 
-            $serviceConfig->configureServiceManager(services: $sm['service_manager']);
+            $sm['service_manager']->configure(config: $smConfig);
 
             $sm['service_manager']->setAllowOverride(flag: $allowOverride);
         }
@@ -215,56 +217,42 @@ class ServiceListener implements ServiceListenerInterface
      *
      * Extracts the various service configuration arrays.
      *
-     * @param string|ServiceConfigInterface $config ServiceConfigInterface or
-     *     class name resolving to one.
+     * @param string $config class name resolving to one.
      * @return array
-     * @throws Exception\RuntimeException If resolved class name is not a
-     *     ServiceConfigInterface implementation.
-     * @throws Exception\RuntimeException Under jield-servicemanager v2 if the
-     *     configuration instance is not specifically a ServiceConfig, as there
-     *     is no way to extract service configuration in that case.
      */
-    protected function serviceConfigToArray(ServiceConfigInterface|string $config): array
+    protected function serviceConfigToArray(string $config): array
     {
-        if (is_string(value: $config) && class_exists(class: $config)) {
-            $class  = $config;
-            $config = new $class();
-        }
+        $className = $config;
 
-        if (!$config instanceof ServiceConfigInterface) {
+        if (!class_exists(class: $className)) {
             throw new Exception\RuntimeException(message: sprintf(
-                'Invalid service manager configuration class provided; received "%s", expected an instance of %s',
-                is_object(value: $config) ? $config::class : (is_scalar(value: $config) ? $config : gettype(value: $config)),
-                ServiceConfigInterface::class
+                'Invalid service manager configuration class provided; "%s" could not be found',
+                $className
             ));
         }
 
-        if (method_exists(object_or_class: $config, method: 'toArray')) {
-            // jield-servicemanager v3 interface
-            return $config->toArray();
+        $instance = new $className();
+
+        if (method_exists(object_or_class: $instance, method: '__invoke')) {
+            $config = $instance();
+        } elseif (method_exists(object_or_class: $instance, method: 'getConfig')) {
+            $config = $instance->getConfig();
+        } elseif (method_exists(object_or_class: $instance, method: 'toArray')) {
+            $config = $instance->toArray();
+        } elseif ($instance instanceof Traversable) {
+            $config = ArrayUtils::iteratorToArray(iterator: $instance);
+        } else {
+            $config = null;
         }
 
-        // For jield-servicemanager v2, we need a Laminas\ServiceManager\Config
-        // instance specifically.
-        if (!$config instanceof ServiceConfig) {
+        if (!is_array(value: $config)) {
             throw new Exception\RuntimeException(message: sprintf(
-                'Invalid service manager configuration class provided; received "%s", expected an instance of %s',
-                is_object(value: $config) ? $config::class : (is_scalar(value: $config) ? $config : gettype(value: $config)),
-                ServiceConfig::class
+                'Invalid service manager configuration class provided; "%s" did not return an array',
+                $className
             ));
         }
 
-        // Pull service configuration from discrete methods.
-        return [
-            'abstract_factories' => $config->getAbstractFactories(),
-            'aliases'            => $config->getAliases(),
-            'delegators'         => $config->getDelegators(),
-            'factories'          => $config->getFactories(),
-            'initializers'       => $config->getInitializers(),
-            'invokables'         => $config->getInvokables(),
-            'services'           => $config->getServices(),
-            'shared'             => $config->getShared(),
-        ];
+        return $config;
     }
 
     /**

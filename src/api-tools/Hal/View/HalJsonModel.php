@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Jield\ApiTools\Hal\View;
 
+use Jield\ApiTools\ContentNegotiation\JsonModel;
 use Jield\ApiTools\Hal\Collection;
 use Jield\ApiTools\Hal\Entity;
-use Laminas\View\Model\JsonModel;
 
 use Override;
 use function sprintf;

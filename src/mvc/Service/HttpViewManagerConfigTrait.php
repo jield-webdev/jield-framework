@@ -4,7 +4,7 @@ namespace Jield\Mvc\Service;
 
 use ArrayAccess;
 // phpcs:ignore
-use Interop\Container\ContainerInterface;
+use Psr\Container\ContainerInterface;
 
 use function is_array;
 

@@ -8,7 +8,7 @@ use Jield\ApiTools\Enum\RouteMethodEnum;
 use Jield\ApiTools\Enum\RouteTypeEnum;
 use Jield\ApiTools\Listener\AbstractRoutedListener;
 use Jield\ApiTools\ValueObject\ListenerValueObject;
-use Jield\ConfigAggregator\GlobTrait;
+use Laminas\ConfigAggregator\GlobTrait;
 use ReflectionClass;
 use ReflectionIntersectionType;
 use ReflectionMethod;
@@ -133,7 +133,7 @@ final class ListenerConfigProvider
             }
 
             if ($type instanceof ReflectionUnionType || $type instanceof ReflectionIntersectionType) {
-                $arguments[] = (string) $type;
+                $arguments[] = (string)$type;
                 continue;
             }
 

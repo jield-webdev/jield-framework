@@ -3,12 +3,12 @@
 namespace Jield\AssetManager;
 
 use Jield\AssetManager\Service\AssetManager;
-use Laminas\EventManager\EventInterface;
-use Laminas\EventManager\EventManagerInterface;
-use Laminas\Http\Response;
 use Jield\ModuleManager\Feature\BootstrapListenerInterface;
 use Jield\ModuleManager\Feature\ConfigProviderInterface;
 use Jield\Mvc\MvcEvent;
+use Laminas\EventManager\EventInterface;
+use Laminas\EventManager\EventManagerInterface;
+use Laminas\Http\Response;
 use Override;
 
 
@@ -20,9 +20,9 @@ class Module implements
      * {@inheritDoc}
      */
     #[Override]
-    public function getConfig(): \Traversable|array
+    public function getConfig(): array
     {
-        return include __DIR__ . '/../config/module.config.php';
+        return include __DIR__ . '/../../config/asset-manager/module.config.php';
     }
 
     /**
@@ -42,7 +42,7 @@ class Module implements
         $request        = $event->getRequest();
         $serviceManager = $event->getApplication()->getServiceManager();
         /** @var AssetManager $assetManager */
-        $assetManager = $serviceManager->get(__NAMESPACE__ . '\Service\AssetManager');
+        $assetManager = $serviceManager->get(AssetManager::class);
 
         if (!$assetManager->resolvesToAsset(request: $request)) {
             return null;

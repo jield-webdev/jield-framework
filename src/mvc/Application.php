@@ -24,7 +24,6 @@ use function array_unique;
  * - RouteListener
  * - Router
  * - DispatchListener
- * - MiddlewareListener
  * - ViewManager
  *
  * The most common workflow is:
@@ -59,7 +58,6 @@ class Application implements
     protected array $defaultListeners
         = [
             'RouteListener',
-            'MiddlewareListener',
             'DispatchListener',
             'HttpMethodListener',
             'ViewManager',

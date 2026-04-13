@@ -2,13 +2,6 @@
 
 namespace Jield\Mvc\Controller;
 
-use Laminas\EventManager\EventInterface as Event;
-use Laminas\EventManager\EventManager;
-use Laminas\EventManager\EventManagerAwareInterface;
-use Laminas\EventManager\EventManagerInterface;
-use Laminas\Http\Header\Accept\FieldValuePart\AbstractFieldValuePart;
-use Laminas\Http\PhpEnvironment\Response as HttpResponse;
-use Laminas\Http\Request as HttpRequest;
 use Jield\Mvc\Controller\Plugin\Forward;
 use Jield\Mvc\Controller\Plugin\Layout;
 use Jield\Mvc\Controller\Plugin\Params;
@@ -16,13 +9,19 @@ use Jield\Mvc\Controller\Plugin\Redirect;
 use Jield\Mvc\Controller\Plugin\Url;
 use Jield\Mvc\InjectApplicationEventInterface;
 use Jield\Mvc\MvcEvent;
+use Laminas\EventManager\EventInterface as Event;
+use Laminas\EventManager\EventManager;
+use Laminas\EventManager\EventManagerAwareInterface;
+use Laminas\EventManager\EventManagerInterface;
+use Laminas\Http\Header\Accept\FieldValuePart\AbstractFieldValuePart;
+use Laminas\Http\PhpEnvironment\Response as HttpResponse;
+use Laminas\Http\Request as HttpRequest;
 use Laminas\ServiceManager\ServiceManager;
 use Laminas\Stdlib\DispatchableInterface as Dispatchable;
 use Laminas\Stdlib\RequestInterface as Request;
 use Laminas\Stdlib\ResponseInterface as Response;
 use Laminas\View\Model\ModelInterface;
 use Laminas\View\Model\ViewModel;
-
 use function array_merge;
 use function array_values;
 use function call_user_func_array;
@@ -54,23 +53,33 @@ abstract class AbstractController implements
     EventManagerAwareInterface,
     InjectApplicationEventInterface
 {
-    /** @var PluginManager */
     protected PluginManager $plugins;
 
-    /** @var Request */
     protected Request $request;
 
-    /** @var Response */
     protected Response $response;
 
-    /** @var Event */
     protected Event $event;
 
-    /** @var EventManagerInterface */
     protected EventManagerInterface $events;
 
     /** @var null|string|string[] */
     protected string|array|null $eventIdentifier;
+
+    /**
+     * Transform an "action" token into a method name
+     *
+     * @param string $action
+     * @return string
+     */
+    public static function getMethodFromAction($action): string
+    {
+        $method = str_replace(['.', '-', '_'], ' ', $action);
+        $method = ucwords($method);
+        $method = str_replace(' ', '', $method);
+        $method = lcfirst($method);
+        return $method . 'Action';
+    }
 
     /**
      * Execute the request
@@ -88,7 +97,7 @@ abstract class AbstractController implements
     public function dispatch(Request $request, ?Response $response = null): mixed
     {
         $this->request = $request;
-        if (! $response) {
+        if (!$response) {
             $response = new HttpResponse();
         }
         $this->response = $response;
@@ -109,31 +118,53 @@ abstract class AbstractController implements
     }
 
     /**
-     * Get request object
+     * Get the attached event
      *
-     * @return Request
+     * Will create a new MvcEvent if none provided.
+     *
+     * @return MvcEvent
      */
-    public function getRequest(): HttpRequest|Request
+    public function getEvent(): Event|MvcEvent
     {
-        if (! $this->request) {
-            $this->request = new HttpRequest();
+        if (!$this->event) {
+            $this->setEvent(new MvcEvent());
         }
 
-        return $this->request;
+        return $this->event;
     }
 
     /**
-     * Get response object
+     * Set an event to use during dispatch
      *
-     * @return Response
+     * By default, will re-cast to MvcEvent if another event type is provided.
+     *
+     * @return void
      */
-    public function getResponse(): HttpResponse|Response
+    public function setEvent(Event $e): void
     {
-        if (! $this->response) {
-            $this->response = new HttpResponse();
+        if (!$e instanceof MvcEvent) {
+            $eventParams = $e->getParams();
+            $e           = new MvcEvent();
+            $e->setParams($eventParams);
+            unset($eventParams);
+        }
+        $this->event = $e;
+    }
+
+    /**
+     * Retrieve the event manager
+     *
+     * Lazy-loads an EventManager instance if none registered.
+     *
+     * @return EventManagerInterface
+     */
+    public function getEventManager(): EventManagerInterface
+    {
+        if (!$this->events) {
+            $this->setEventManager(new EventManager());
         }
 
-        return $this->response;
+        return $this->events;
     }
 
     /**
@@ -159,7 +190,7 @@ abstract class AbstractController implements
         $events->setIdentifiers(array_merge(
             $identifiers,
             array_values(class_implements($className)),
-            (array) $this->eventIdentifier
+            (array)$this->eventIdentifier
         ));
 
         $this->events = $events;
@@ -169,53 +200,74 @@ abstract class AbstractController implements
     }
 
     /**
-     * Retrieve the event manager
-     *
-     * Lazy-loads an EventManager instance if none registered.
-     *
-     * @return EventManagerInterface
-     */
-    public function getEventManager(): EventManagerInterface
-    {
-        if (! $this->events) {
-            $this->setEventManager(new EventManager());
-        }
-
-        return $this->events;
-    }
-
-    /**
-     * Set an event to use during dispatch
-     *
-     * By default, will re-cast to MvcEvent if another event type is provided.
+     * Register the default events for this controller
      *
      * @return void
      */
-    public function setEvent(Event $e): void
+    protected function attachDefaultListeners(): void
     {
-        if (! $e instanceof MvcEvent) {
-            $eventParams = $e->getParams();
-            $e           = new MvcEvent();
-            $e->setParams($eventParams);
-            unset($eventParams);
-        }
-        $this->event = $e;
+        $events = $this->getEventManager();
+        $events->attach(MvcEvent::EVENT_DISPATCH, [$this, 'onDispatch']);
     }
 
     /**
-     * Get the attached event
+     * Get request object
      *
-     * Will create a new MvcEvent if none provided.
-     *
-     * @return MvcEvent
+     * @return Request
      */
-    public function getEvent(): Event|MvcEvent
+    public function getRequest(): HttpRequest|Request
     {
-        if (! $this->event) {
-            $this->setEvent(new MvcEvent());
+        if (!$this->request) {
+            $this->request = new HttpRequest();
         }
 
-        return $this->event;
+        return $this->request;
+    }
+
+    /**
+     * Get response object
+     *
+     * @return Response
+     */
+    public function getResponse(): HttpResponse|Response
+    {
+        if (!$this->response) {
+            $this->response = new HttpResponse();
+        }
+
+        return $this->response;
+    }
+
+    /**
+     * Method overloading: return/call plugins
+     *
+     * If the plugin is a functor, call it, passing the parameters provided.
+     * Otherwise, return the plugin instance.
+     *
+     * @param string $method
+     * @param array $params
+     * @return mixed
+     */
+    public function __call($method, $params)
+    {
+        $plugin = $this->plugin($method);
+        if (is_callable($plugin)) {
+            return call_user_func_array($plugin, $params);
+        }
+
+        return $plugin;
+    }
+
+    /**
+     * Get plugin instance
+     *
+     * @param string $name Name of plugin to return
+     * @param null|array $options Options to pass to plugin constructor (if not already instantiated)
+     * @return mixed
+     */
+    public function plugin($name, ?array $options = null): mixed
+    {
+        return $this->getPluginManager()->get($name, $options);
     }
 
     /**
@@ -225,7 +277,7 @@ abstract class AbstractController implements
      */
     public function getPluginManager(): PluginManager
     {
-        if (! $this->plugins) {
+        if (!$this->plugins) {
             $this->setPluginManager(new PluginManager(new ServiceManager()));
         }
 
@@ -244,63 +296,5 @@ abstract class AbstractController implements
         $this->plugins->setController($this);
 
         return $this;
-    }
-
-    /**
-     * Get plugin instance
-     *
-     * @param  string     $name    Name of plugin to return
-     * @param  null|array $options Options to pass to plugin constructor (if not already instantiated)
-     * @return mixed
-     */
-    public function plugin($name, ?array $options = null): mixed
-    {
-        return $this->getPluginManager()->get($name, $options);
-    }
-
-    /**
-     * Method overloading: return/call plugins
-     *
-     * If the plugin is a functor, call it, passing the parameters provided.
-     * Otherwise, return the plugin instance.
-     *
-     * @param  string $method
-     * @param  array  $params
-     * @return mixed
-     */
-    public function __call($method, $params)
-    {
-        $plugin = $this->plugin($method);
-        if (is_callable($plugin)) {
-            return call_user_func_array($plugin, $params);
-        }
-
-        return $plugin;
-    }
-
-    /**
-     * Register the default events for this controller
-     *
-     * @return void
-     */
-    protected function attachDefaultListeners(): void
-    {
-        $events = $this->getEventManager();
-        $events->attach(MvcEvent::EVENT_DISPATCH, [$this, 'onDispatch']);
-    }
-
-    /**
-     * Transform an "action" token into a method name
-     *
-     * @param  string $action
-     * @return string
-     */
-    public static function getMethodFromAction($action): string
-    {
-        $method = str_replace(['.', '-', '_'], ' ', $action);
-        $method = ucwords($method);
-        $method = str_replace(' ', '', $method);
-        $method = lcfirst($method);
-        return $method . 'Action';
     }
 }

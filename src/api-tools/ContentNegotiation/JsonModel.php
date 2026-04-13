@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace Jield\ApiTools\ContentNegotiation;
 
+use ArrayIterator;
 use Jield\ApiTools\Hal\Collection as HalCollection;
 use Jield\ApiTools\Hal\Entity as HalEntity;
 use JsonSerializable;
 use Jield\Json\Json;
 use Laminas\Stdlib\JsonSerializable as StdlibJsonSerializable;
-use Laminas\View\Model\JsonModel as BaseJsonModel;
-use Override;
+use Laminas\View\Model\ModelInterface;
+use Laminas\View\Model\ViewModel;
 use function json_last_error;
 use const JSON_ERROR_CTRL_CHAR;
 use const JSON_ERROR_DEPTH;
@@ -18,14 +19,35 @@ use const JSON_ERROR_NONE;
 use const JSON_ERROR_STATE_MISMATCH;
 use const JSON_ERROR_UTF8;
 
-class JsonModel extends BaseJsonModel
+class JsonModel implements ModelInterface
 {
+    private ViewModel $model;
+
+    /**
+     * @var array
+     */
+    private array $options = [];
+
+    /**
+     * JSONP callback.
+     *
+     * @var string|null
+     */
+    protected ?string $jsonpCallback = null;
+
     /**
      * Mark view model as terminal by default (intended for use with APIs)
      *
      * @var bool
      */
     protected bool $terminate = true;
+
+    public function __construct(iterable $variables = [], string $template = '', array $options = [])
+    {
+        $this->model   = new ViewModel($variables, $template);
+        $this->options = $options;
+        $this->model->setTerminal(true);
+    }
 
     /**
      * Set variables
@@ -36,14 +58,17 @@ class JsonModel extends BaseJsonModel
      * @param bool $overwrite
      * @return self
      */
-    #[Override]
-    public function setVariables(\Traversable|array|StdlibJsonSerializable|JsonSerializable $variables, bool $overwrite = false): JsonModel
+    public function setVariables(
+        \Traversable|array|StdlibJsonSerializable|JsonSerializable $variables,
+        bool $overwrite = false
+    ): JsonModel
     {
         if ($variables instanceof JsonSerializable) {
             $variables = $variables->jsonSerialize();
         }
 
-        return parent::setVariables(variables: $variables, overwrite: $overwrite);
+        $this->model->setVariables(variables: $variables, overwrite: $overwrite);
+        return $this;
     }
 
     /**
@@ -54,11 +79,32 @@ class JsonModel extends BaseJsonModel
      * @param bool $flag
      * @return static
      */
-    #[Override]
     public function setTerminal(bool $flag): static
     {
         // Do nothing; should always terminate
         return $this;
+    }
+
+    /**
+     * Set JSONP callback.
+     *
+     * @param string|null $callback
+     * @return static
+     */
+    public function setJsonpCallback(?string $callback): static
+    {
+        $this->jsonpCallback = $callback;
+        return $this;
+    }
+
+    /**
+     * Get JSONP callback.
+     *
+     * @return string|null
+     */
+    public function getJsonpCallback(): ?string
+    {
+        return $this->jsonpCallback;
     }
 
     /**
@@ -74,10 +120,9 @@ class JsonModel extends BaseJsonModel
      *
      * @return string
      */
-    #[Override]
     public function serialize(): false|string
     {
-        $variables = $this->getVariables();
+        $variables = $this->model->getVariables();
 
         // 'payload' == payload for HAL representations
         if (isset($variables['payload'])) {
@@ -105,6 +150,97 @@ class JsonModel extends BaseJsonModel
         }
 
         return $serialized;
+    }
+
+    public function getVariable(string $name, mixed $default = null): mixed
+    {
+        return $this->model->getVariable(name: $name, default: $default);
+    }
+
+    public function setVariable(string $name, mixed $value): static
+    {
+        $this->model->setVariable(name: $name, value: $value);
+        return $this;
+    }
+
+    public function getVariables(): array
+    {
+        return $this->model->getVariables();
+    }
+
+    public function setTemplate(string $template): static
+    {
+        $this->model->setTemplate(template: $template);
+        return $this;
+    }
+
+    public function getTemplate(): string
+    {
+        return $this->model->getTemplate();
+    }
+
+    public function addChild(ModelInterface $child, string|null $captureTo = null, bool|null $append = null): static
+    {
+        $this->model->addChild(child: $child, captureTo: $captureTo, append: $append);
+        return $this;
+    }
+
+    public function getChildren(): array
+    {
+        return $this->model->getChildren();
+    }
+
+    public function hasChildren(): bool
+    {
+        return $this->model->hasChildren();
+    }
+
+    public function setCaptureTo(string $capture): static
+    {
+        $this->model->setCaptureTo(capture: $capture);
+        return $this;
+    }
+
+    public function captureTo(): string
+    {
+        return $this->model->captureTo();
+    }
+
+    public function terminate(): bool
+    {
+        return $this->model->terminate();
+    }
+
+    public function setAppend(bool $append): static
+    {
+        $this->model->setAppend(append: $append);
+        return $this;
+    }
+
+    public function isAppend(): bool
+    {
+        return $this->model->isAppend();
+    }
+
+    public function count(): int
+    {
+        return $this->model->count();
+    }
+
+    public function getIterator(): ArrayIterator
+    {
+        return new ArrayIterator($this->model->getChildren());
+    }
+
+    public function setOptions(array $options): static
+    {
+        $this->options = $options;
+        return $this;
+    }
+
+    public function getOptions(): array
+    {
+        return $this->options;
     }
 
     /**

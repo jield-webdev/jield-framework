@@ -3,7 +3,6 @@
 namespace Jield\Mvc\ResponseSender;
 
 use Laminas\Http\Response\Stream;
-
 use function fpassthru;
 
 class SimpleStreamResponseSender extends AbstractResponseSender
@@ -22,23 +21,24 @@ class SimpleStreamResponseSender extends AbstractResponseSender
         $stream   = $response->getStream();
         fpassthru($stream);
         $event->setContentSent();
+
+        return $this;
     }
 
     /**
      * Send stream response
      *
-     * @return SimpleStreamResponseSender
+     * @return void
      */
-    public function __invoke(SendResponseEvent $event): static
+    public function __invoke(SendResponseEvent $event): void
     {
         $response = $event->getResponse();
-        if (! $response instanceof Stream) {
-            return $this;
+        if (!$response instanceof Stream) {
+            return;
         }
 
         $this->sendHeaders($event);
         $this->sendStream($event);
         $event->stopPropagation(true);
-        return $this;
     }
 }

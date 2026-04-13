@@ -3,7 +3,7 @@
 namespace Jield\Mvc\Service;
 
 // phpcs:ignore
-use Interop\Container\ContainerInterface;
+use Psr\Container\ContainerInterface;
 use Laminas\Router\RouteMatch;
 use Laminas\ServiceManager\Exception\ServiceNotCreatedException;
 use Laminas\View\Helper as ViewHelper;

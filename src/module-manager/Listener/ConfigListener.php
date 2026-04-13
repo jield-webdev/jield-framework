@@ -4,21 +4,21 @@ declare(strict_types=1);
 
 namespace Jield\ModuleManager\Listener;
 
-use Jield\Config\Config;
-use Jield\Config\Factory as ConfigFactory;
+use Jield\ModuleManager\Feature\ConfigProviderInterface;
+use Jield\ModuleManager\ModuleEvent;
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\EventManager\ListenerAggregateInterface;
 use Laminas\EventManager\ListenerAggregateTrait;
-use Jield\ModuleManager\Feature\ConfigProviderInterface;
-use Jield\ModuleManager\ModuleEvent;
 use Laminas\Stdlib\ArrayUtils;
 use Laminas\Stdlib\Glob;
 use Override;
 use Traversable;
+use function class_exists;
 use function file_exists;
 use function gettype;
 use function is_array;
 use function is_callable;
+use function is_file;
 use function is_string;
 use function sprintf;
 
@@ -30,21 +30,10 @@ class ConfigListener extends AbstractListener implements
 
     public const string STATIC_PATH = 'static_path';
     public const string GLOB_PATH = 'glob_path';
-
-    /** @var array */
-    protected array $configs = [];
-
-    /** @var array */
+    protected array $configs      = [];
     protected array $mergedConfig = [];
-
-    /** @var Config|null */
-    protected ?Config $mergedConfigObject;
-
-    /** @var bool */
-    protected bool $skipConfig = false;
-
-    /** @var array */
-    protected array $paths = [];
+    protected bool  $skipConfig   = false;
+    protected array $paths        = [];
 
     public function __construct(?ListenerOptions $options = null)
     {
@@ -58,7 +47,6 @@ class ConfigListener extends AbstractListener implements
         }
     }
 
-    /** {@inheritDoc} */
     #[Override]
     public function attach(EventManagerInterface $events, $priority = 1): void
     {
@@ -94,18 +82,54 @@ class ConfigListener extends AbstractListener implements
     public function onLoadModule(ModuleEvent $e): static
     {
         $module = $e->getModule();
+        $config = null;
 
         if (
-            !$module instanceof ConfigProviderInterface
-            && !is_callable(value: [$module, 'getConfig'])
+            $module instanceof ConfigProviderInterface
+            || is_callable(value: [$module, 'getConfig'])
         ) {
+            $config = $module->getConfig();
+        } else {
+            $configProvider = $this->resolveConfigProvider(moduleName: $e->getModuleName());
+            if ($configProvider !== null) {
+                $config = $this->getConfigFromProvider($configProvider);
+            }
+        }
+
+        if ($config === null) {
             return $this;
         }
 
-        $config = $module->getConfig();
         $this->addConfig(key: $e->getModuleName(), config: $config);
 
         return $this;
+    }
+
+    private function resolveConfigProvider(string $moduleName): ?object
+    {
+        $configProviderClass = sprintf('%s\\ConfigProvider', $moduleName);
+        if (!class_exists(class: $configProviderClass)) {
+            return null;
+        }
+
+        return new $configProviderClass();
+    }
+
+    private function getConfigFromProvider(object $provider): mixed
+    {
+        if (is_callable(value: $provider)) {
+            return $provider();
+        }
+
+        if (is_callable(value: [$provider, 'getConfig'])) {
+            return $provider->getConfig();
+        }
+
+        if (is_callable(value: [$provider, 'toArray'])) {
+            return $provider->toArray();
+        }
+
+        return null;
     }
 
     /**
@@ -127,6 +151,7 @@ class ConfigListener extends AbstractListener implements
         foreach ($this->configs as $config) {
             $this->mergedConfig = ArrayUtils::merge(a: $this->mergedConfig, b: $config);
         }
+        $this->mergedConfig = $this->normalizeServiceManagerConfig($this->mergedConfig);
 
         return $this;
     }
@@ -168,13 +193,6 @@ class ConfigListener extends AbstractListener implements
     #[Override]
     public function getMergedConfig(bool $returnConfigAsObject = true): mixed
     {
-        if ($returnConfigAsObject === true) {
-            if ($this->mergedConfigObject === null) {
-                $this->mergedConfigObject = new Config($this->mergedConfig);
-            }
-            return $this->mergedConfigObject;
-        }
-
         return $this->mergedConfig;
     }
 
@@ -184,8 +202,7 @@ class ConfigListener extends AbstractListener implements
     #[Override]
     public function setMergedConfig(array $config): static
     {
-        $this->mergedConfig       = $config;
-        $this->mergedConfigObject = null;
+        $this->mergedConfig = $this->normalizeServiceManagerConfig($config);
         return $this;
     }
 
@@ -332,14 +349,14 @@ class ConfigListener extends AbstractListener implements
     {
         switch ($type) {
             case self::STATIC_PATH:
-                $this->addConfig(key: $path, config: ConfigFactory::fromFile($path));
+                $this->addConfig(key: $path, config: $this->loadConfigFile($path));
                 break;
 
             case self::GLOB_PATH:
                 // We want to keep track of where each value came from so we don't
                 // use ConfigFactory::fromFiles() since it does merging internally.
                 foreach (Glob::glob(pattern: $path, flags: Glob::GLOB_BRACE, forceFallback: true) as $file) {
-                    $this->addConfig(key: $file, config: ConfigFactory::fromFile($file));
+                    $this->addConfig(key: $file, config: $this->loadConfigFile($file));
                 }
                 break;
         }
@@ -363,5 +380,64 @@ class ConfigListener extends AbstractListener implements
     protected function getCachedConfig(): mixed
     {
         return include $this->getOptions()->getConfigCacheFile();
+    }
+
+    /**
+     * Load a config file that returns an array.
+     *
+     * @throws Exception\InvalidArgumentException
+     */
+    private function loadConfigFile(string $path): array
+    {
+        if (!is_file($path)) {
+            throw new Exception\InvalidArgumentException(
+                message: sprintf(
+                    'Config file "%s" does not exist or is not a file.',
+                    $path
+                )
+            );
+        }
+
+        $config = include $path;
+        if (!is_array(value: $config)) {
+            throw new Exception\InvalidArgumentException(
+                message: sprintf(
+                    'Config file "%s" must return an array; %s given.',
+                    $path,
+                    gettype(value: $config)
+                )
+            );
+        }
+
+        return $config;
+    }
+
+    /**
+     * Normalize service manager configuration keys for v4 compatibility.
+     *
+     * Laminas ServiceManager v4 uses "dependencies" as the preferred config
+     * key, while older code still expects "service_manager". Keep both in sync.
+     */
+    private function normalizeServiceManagerConfig(array $config): array
+    {
+        $hasDependencies  = isset($config['dependencies']) && is_array(value: $config['dependencies']);
+        $hasServiceConfig = isset($config['service_manager']) && is_array(value: $config['service_manager']);
+
+        if (!$hasDependencies && !$hasServiceConfig) {
+            return $config;
+        }
+
+        $normalized = [];
+        if ($hasDependencies) {
+            $normalized = ArrayUtils::merge(a: $normalized, b: $config['dependencies']);
+        }
+        if ($hasServiceConfig) {
+            $normalized = ArrayUtils::merge(a: $normalized, b: $config['service_manager']);
+        }
+
+        $config['service_manager'] = $normalized;
+        $config['dependencies']    = $normalized;
+
+        return $config;
     }
 }

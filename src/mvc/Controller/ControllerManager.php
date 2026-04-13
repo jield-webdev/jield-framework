@@ -3,14 +3,13 @@
 namespace Jield\Mvc\Controller;
 
 // phpcs:ignore
-use Interop\Container\ContainerInterface;
 use Laminas\EventManager\EventManagerAwareInterface;
 use Laminas\EventManager\SharedEventManagerInterface;
 use Laminas\ServiceManager\AbstractPluginManager;
 use Laminas\ServiceManager\ConfigInterface;
 use Laminas\ServiceManager\Exception\InvalidServiceException;
 use Laminas\Stdlib\DispatchableInterface;
-
+use Psr\Container\ContainerInterface;
 use function get_debug_type;
 use function method_exists;
 use function sprintf;
@@ -24,15 +23,11 @@ class ControllerManager extends AbstractPluginManager
 {
     /**
      * We do not want arbitrary classes instantiated as controllers.
-     *
-     * @var bool
      */
-    protected $autoAddInvokableClass = false;
+    protected bool $autoAddInvokableClass = false;
 
     /**
      * Controllers must be of this type.
-     *
-     * @var string
      */
     protected string $instanceOf = DispatchableInterface::class;
 
@@ -42,12 +37,21 @@ class ControllerManager extends AbstractPluginManager
      * Injects an initializer for injecting controllers with an
      * event manager and plugin manager.
      *
-     * @param  ConfigInterface|ContainerInterface $configOrContainerInstance
+     * @param ContainerInterface $configOrContainerInstance
      */
-    public function __construct($configOrContainerInstance, array $config = [])
+    public function __construct(ContainerInterface $configOrContainerInstance, array $config = [])
     {
-        $this->addInitializer([$this, 'injectEventManager']);
-        $this->addInitializer([$this, 'injectPluginManager']);
+        $initializers = [
+            [$this, 'injectEventManager'],
+            [$this, 'injectPluginManager'],
+        ];
+
+        if (isset($config['initializers'])) {
+            $config['initializers'] = array_merge($config['initializers'], $initializers);
+        } else {
+            $config['initializers'] = $initializers;
+        }
+
         parent::__construct($configOrContainerInstance, $config);
     }
 
@@ -56,12 +60,12 @@ class ControllerManager extends AbstractPluginManager
      *
      * {@inheritDoc}
      */
-    public function validate($plugin): void
+    public function validate($instance): void
     {
-        if (! $plugin instanceof $this->instanceOf) {
+        if (!$instance instanceof $this->instanceOf) {
             throw new InvalidServiceException(sprintf(
                 'Plugin of type "%s" is invalid; must implement %s',
-                get_debug_type($plugin),
+                get_debug_type($instance),
                 $this->instanceOf
             ));
         }
@@ -81,12 +85,12 @@ class ControllerManager extends AbstractPluginManager
      */
     public function injectEventManager(ContainerInterface $container, $controller): void
     {
-        if (! $controller instanceof EventManagerAwareInterface) {
+        if (!$controller instanceof EventManagerAwareInterface) {
             return;
         }
 
         $events = $controller->getEventManager();
-        if (! $events || ! $events->getSharedManager() instanceof SharedEventManagerInterface) {
+        if (!$events || !$events->getSharedManager() instanceof SharedEventManagerInterface) {
             $controller->setEventManager($container->get('EventManager'));
         }
     }
@@ -98,7 +102,7 @@ class ControllerManager extends AbstractPluginManager
      */
     public function injectPluginManager(ContainerInterface $container, $controller): void
     {
-        if (! method_exists($controller, 'setPluginManager')) {
+        if (!method_exists($controller, 'setPluginManager')) {
             return;
         }
 

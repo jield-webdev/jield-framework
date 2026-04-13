@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Jield\ModuleManager\Listener;
 
+use Jield\ModuleManager\ModuleEvent;
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\EventManager\ListenerAggregateInterface;
-use Jield\ModuleManager\ModuleEvent;
 use Override;
 
 class DefaultListenerAggregate extends AbstractListener implements
@@ -67,7 +67,6 @@ class DefaultListenerAggregate extends AbstractListener implements
         $configListener->attach(events: $events);
         $this->listeners[] = $locatorRegistrationListener;
         $this->listeners[] = $configListener;
-        return $this;
     }
 
     /**
@@ -97,7 +96,7 @@ class DefaultListenerAggregate extends AbstractListener implements
      */
     public function getConfigListener(): ConfigMergerInterface
     {
-        if (! $this->configListener instanceof ConfigMergerInterface) {
+        if (!$this->configListener instanceof ConfigMergerInterface) {
             $this->setConfigListener(configListener: new ConfigListener(options: $this->getOptions()));
         }
         return $this->configListener;

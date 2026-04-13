@@ -3,7 +3,7 @@
 namespace Jield\Mvc\Service;
 
 // phpcs:ignore
-use Interop\Container\ContainerInterface;
+use Psr\Container\ContainerInterface;
 use Jield\Mvc\View\Http\DefaultRenderingStrategy;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Laminas\View\View;

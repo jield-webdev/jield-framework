@@ -3,7 +3,7 @@
 namespace Jield\Mvc\Controller\Plugin\Service;
 
 // phpcs:ignore
-use Interop\Container\ContainerInterface;
+use Psr\Container\ContainerInterface;
 use Jield\Mvc\Controller\Plugin\Forward;
 use Laminas\ServiceManager\Exception\ServiceNotCreatedException;
 use Laminas\ServiceManager\Factory\FactoryInterface;

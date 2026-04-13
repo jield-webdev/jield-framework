@@ -4,7 +4,6 @@ namespace Jield\Mvc\ResponseSender;
 
 use Laminas\EventManager\Event;
 use Laminas\Stdlib\ResponseInterface;
-
 use function spl_object_hash;
 
 class SendResponseEvent extends Event
@@ -15,16 +14,12 @@ class SendResponseEvent extends Event
     public const string EVENT_SEND_RESPONSE = 'sendResponse';
     /**#@-*/
 
-    /** @var string Event name */
     protected $name = 'sendResponse';
 
-    /** @var ResponseInterface */
     protected ResponseInterface $response;
 
-    /** @var array */
     protected array $headersSent = [];
 
-    /** @var array */
     protected array $contentSent = [];
 
     /**
