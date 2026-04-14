@@ -2,7 +2,6 @@
 
 namespace Jield\Mvc\Factory;
 
-// phpcs:ignore
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Laminas\View\Resolver as ViewResolver;
 use Psr\Container\ContainerInterface;
@@ -16,8 +15,8 @@ class ViewTemplateMapResolverFactory implements FactoryInterface
      * Creates a Laminas\View\Resolver\AggregateResolver and populates it with the
      * ['view_manager']['template_map']
      *
-     * @param  string $requestedName
-     * @param  null|array $options
+     * @param string $requestedName
+     * @param null|array $options
      * @return ViewResolver\TemplateMapResolver
      */
     public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): ViewResolver\TemplateMapResolver

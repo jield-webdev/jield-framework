@@ -8,6 +8,7 @@ use Laminas\Router\RouteStackInterface;
 use Laminas\Stdlib\RequestInterface as Request;
 use Laminas\Stdlib\ResponseInterface as Response;
 use Laminas\View\Model\ModelInterface as Model;
+use Laminas\View\Model\ViewModel;
 
 class MvcEvent extends Event
 {
@@ -33,7 +34,7 @@ class MvcEvent extends Event
 
     protected ?RouteMatch $routeMatch;
 
-    protected Model $viewModel;
+    protected ?Model $viewModel = null;
 
     /**
      * Set application instance
@@ -156,13 +157,11 @@ class MvcEvent extends Event
         return $this;
     }
 
-    /**
-     * Get the view model
-     *
-     * @return Model
-     */
     public function getViewModel(): Model
     {
+        if (null === $this->viewModel) {
+            $this->viewModel = new ViewModel();
+        }
         return $this->viewModel;
     }
 
@@ -202,7 +201,7 @@ class MvcEvent extends Event
      * @param string $message
      * @return MvcEvent
      */
-    public function setError($message): static
+    public function setError(string $message): static
     {
         $this->setParam('error', $message);
         return $this;
@@ -234,7 +233,7 @@ class MvcEvent extends Event
      * @param string $name
      * @return MvcEvent
      */
-    public function setController($name): static
+    public function setController(string $name): static
     {
         $this->setParam('controller', $name);
         return $this;
@@ -256,7 +255,7 @@ class MvcEvent extends Event
      * @param string $class
      * @return MvcEvent
      */
-    public function setControllerClass($class): static
+    public function setControllerClass(string $class): static
     {
         $this->setParam('controller-class', $class);
         return $this;

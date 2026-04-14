@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Jield\ApiTools\ApiProblem\Listener;
 
 use Jield\ApiTools\ApiProblem\ApiProblemResponse;
-use Laminas\Http\Response as HttpResponse;
 use Jield\Mvc\ResponseSender\HttpResponseSender;
 use Jield\Mvc\ResponseSender\SendResponseEvent;
+use Laminas\Http\Response as HttpResponse;
 use Override;
 
 /**
@@ -15,11 +15,8 @@ use Override;
  */
 class SendApiProblemResponseListener extends HttpResponseSender
 {
-    /** @var HttpResponse */
-    protected HttpResponse $applicationResponse;
-
-    /** @var bool */
-    protected bool $displayExceptions = false;
+    protected ?HttpResponse $applicationResponse = null;
+    protected bool          $displayExceptions   = false;
 
     public function setApplicationResponse(HttpResponse $response): static
     {
@@ -59,16 +56,16 @@ class SendApiProblemResponseListener extends HttpResponseSender
      *
      */
     #[Override]
-    public function sendContent(SendResponseEvent $e): HttpResponseSender
+    public function sendContent(SendResponseEvent $event): static
     {
-        $response = $e->getResponse();
-        if (! $response instanceof ApiProblemResponse) {
+        $response = $event->getResponse();
+        if (!$response instanceof ApiProblemResponse) {
             return $this;
         }
 
         $response->getApiProblem()->setDetailIncludesStackTrace(flag: $this->displayExceptions());
 
-        return parent::sendContent(event: $e);
+        return parent::sendContent(event: $event);
     }
 
     /**
@@ -79,10 +76,10 @@ class SendApiProblemResponseListener extends HttpResponseSender
      *
      */
     #[Override]
-    public function sendHeaders(SendResponseEvent $e): \Jield\Mvc\ResponseSender\AbstractResponseSender
+    public function sendHeaders(SendResponseEvent $event): static
     {
-        $response = $e->getResponse();
-        if (! $response instanceof ApiProblemResponse) {
+        $response = $event->getResponse();
+        if (!$response instanceof ApiProblemResponse) {
             return $this;
         }
 
@@ -90,7 +87,7 @@ class SendApiProblemResponseListener extends HttpResponseSender
             $this->mergeHeaders(applicationResponse: $this->applicationResponse, apiProblemResponse: $response);
         }
 
-        return parent::sendHeaders(event: $e);
+        return parent::sendHeaders(event: $event);
     }
 
     /**
@@ -101,15 +98,13 @@ class SendApiProblemResponseListener extends HttpResponseSender
     public function __invoke(SendResponseEvent $event): void
     {
         $response = $event->getResponse();
-        if (! $response instanceof ApiProblemResponse) {
-            return $this;
+        if (!$response instanceof ApiProblemResponse) {
+            return;
         }
 
-        $this->sendHeaders(e: $event)
-             ->sendContent(e: $event);
+        $this->sendHeaders(event: $event)
+            ->sendContent(event: $event);
         $event->stopPropagation(flag: true);
-
-        return $this;
     }
 
     /**

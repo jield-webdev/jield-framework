@@ -4,10 +4,9 @@ declare(strict_types=1);
 
 namespace Jield\Twig\View;
 
+use Jield\Mvc\MvcEvent;
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\EventManager\ListenerAggregateInterface;
-use Laminas\View\Model\ModelInterface;
-use Laminas\View\ViewEvent;
 
 class TwigStrategy implements ListenerAggregateInterface
 {
@@ -29,8 +28,8 @@ class TwigStrategy implements ListenerAggregateInterface
      */
     public function attach(EventManagerInterface $events, $priority = 100): void
     {
-        $this->listeners[] = $events->attach(ViewEvent::EVENT_RENDERER, [$this, 'selectRenderer'], $priority);
-        $this->listeners[] = $events->attach(ViewEvent::EVENT_RESPONSE, [$this, 'injectResponse'], $priority);
+        $this->listeners[] = $events->attach(MvcEvent::EVENT_RENDER, [$this, 'render'], $priority);
+        $this->listeners[] = $events->attach(MvcEvent::EVENT_RENDER_ERROR, [$this, 'render'], $priority);
     }
 
     /**
@@ -45,43 +44,31 @@ class TwigStrategy implements ListenerAggregateInterface
     }
 
     /**
-     * Determine if the renderer can load the requested template.
-     *
-     * @return bool|TwigRenderer
+     * Render the view model when the template is a Twig template.
      */
-    public function selectRenderer(ViewEvent $e)
+    public function render(MvcEvent $e): void
     {
-        $model = $e->getModel();
-        if (! $model instanceof ModelInterface) {
-            return false;
-        }
-
+        $model    = $e->getViewModel();
         $template = $model->getTemplate();
+
         if ($template === '') {
-            return false;
-        }
-
-        if ($this->renderer->canRender($template)) {
-            return $this->renderer;
-        }
-        return false;
-    }
-
-    /**
-     * Inject the response from the renderer.
-     */
-    public function injectResponse(ViewEvent $e): void
-    {
-        $renderer = $e->getRenderer();
-        if ($renderer !== $this->renderer) {
             return;
         }
-        $result   = $e->getResult();
-        $response = $e->getResponse();
 
-        if ($response) {
-            $response->setContent($result);
+        if (!$this->renderer->canRender($template)) {
+            return;
         }
+
+        $content  = $this->renderer->render($model);
+        $response = $e->getResponse();
+        if ($response) {
+            $response->setContent($content);
+            $e->setResult($response);
+        } else {
+            $e->setResult($content);
+        }
+
+        $e->stopPropagation();
     }
 
     public function setListeners(array $listeners): TwigStrategy

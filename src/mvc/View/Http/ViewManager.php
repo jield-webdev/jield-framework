@@ -5,6 +5,7 @@ namespace Jield\Mvc\View\Http;
 use ArrayAccess;
 use Jield\Mvc\MvcEvent;
 use Laminas\EventManager\AbstractListenerAggregate;
+use Laminas\EventManager\EventManager;
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\EventManager\ListenerAggregateInterface;
 use Laminas\Stdlib\DispatchableInterface;
@@ -39,24 +40,21 @@ use function is_string;
  */
 class ViewManager extends AbstractListenerAggregate
 {
-    /** @var array application configuration service */
     protected array $config;
 
     protected MvcEvent $event;
 
     protected ContainerInterface $services;
 
-    protected mixed $renderer;
-    protected mixed $resolver;
-    protected mixed $view;
-    protected mixed $viewModel;
+    protected ?View           $view      = null;
+    protected ?ModelInterface $viewModel = null;
 
     /**
      * {@inheritDoc}
      */
     public function attach(EventManagerInterface $events, $priority = 1): void
     {
-        $this->listeners[] = $events->attach(MvcEvent::EVENT_BOOTSTRAP, [$this, 'onBootstrap'], 10000);
+        $this->listeners[] = $events->attach(eventName: MvcEvent::EVENT_BOOTSTRAP, listener: [$this, 'onBootstrap'], priority: 10000);
     }
 
     /**
@@ -65,7 +63,7 @@ class ViewManager extends AbstractListenerAggregate
      * @param MvcEvent $event
      * @return void
      */
-    public function onBootstrap($event): void
+    public function onBootstrap(MvcEvent $event): void
     {
         $application  = $event->getApplication();
         $services     = $application->getServiceManager();
@@ -92,43 +90,43 @@ class ViewManager extends AbstractListenerAggregate
         $injectViewModelListener = new InjectViewModelListener();
 
         $this->registerMvcRenderingStrategies($events);
-        $this->registerViewStrategies();
+        $this->registerViewStrategies($events);
 
         $routeNotFoundStrategy->attach($events);
         $exceptionStrategy->attach($events);
-        $events->attach(MvcEvent::EVENT_DISPATCH_ERROR, [$injectViewModelListener, 'injectViewModel'], -100);
-        $events->attach(MvcEvent::EVENT_RENDER_ERROR, [$injectViewModelListener, 'injectViewModel'], -100);
+        $events->attach(eventName: MvcEvent::EVENT_DISPATCH_ERROR, listener: [$injectViewModelListener, 'injectViewModel'], priority: -100);
+        $events->attach(eventName: MvcEvent::EVENT_RENDER_ERROR, listener: [$injectViewModelListener, 'injectViewModel'], priority: -100);
         $mvcRenderingStrategy->attach($events);
 
         $sharedEvents->attach(
             DispatchableInterface::class,
             MvcEvent::EVENT_DISPATCH,
-            [$createViewModelListener, 'createViewModelFromArray'],
-            -80
+            listener: [$createViewModelListener, 'createViewModelFromArray'],
+            priority: -80
         );
         $sharedEvents->attach(
             DispatchableInterface::class,
             MvcEvent::EVENT_DISPATCH,
-            [$routeNotFoundStrategy, 'prepareNotFoundViewModel'],
-            -90
+            listener: [$routeNotFoundStrategy, 'prepareNotFoundViewModel'],
+            priority: -90
         );
         $sharedEvents->attach(
             DispatchableInterface::class,
             MvcEvent::EVENT_DISPATCH,
-            [$createViewModelListener, 'createViewModelFromNull'],
-            -80
+            listener: [$createViewModelListener, 'createViewModelFromNull'],
+            priority: -80
         );
         $sharedEvents->attach(
             DispatchableInterface::class,
             MvcEvent::EVENT_DISPATCH,
-            [$injectTemplateListener, 'injectTemplate'],
-            -90
+            listener: [$injectTemplateListener, 'injectTemplate'],
+            priority: -90
         );
         $sharedEvents->attach(
             DispatchableInterface::class,
             MvcEvent::EVENT_DISPATCH,
-            [$injectViewModelListener, 'injectViewModel'],
-            -100
+            listener: [$injectViewModelListener, 'injectViewModel'],
+            priority: -100
         );
     }
 
@@ -196,7 +194,7 @@ class ViewManager extends AbstractListenerAggregate
 
             $listener = $this->services->get($mvcStrategy);
             if ($listener instanceof ListenerAggregateInterface) {
-                $listener->attach($events, 100);
+                $listener->attach(events: $events, priority: 100);
             }
         }
     }
@@ -212,7 +210,7 @@ class ViewManager extends AbstractListenerAggregate
      *
      * @return void
      */
-    protected function registerViewStrategies(): void
+    protected function registerViewStrategies(EventManager $events): void
     {
         if (!isset($this->config['strategies'])) {
             return;
@@ -225,8 +223,7 @@ class ViewManager extends AbstractListenerAggregate
             return;
         }
 
-        $view   = $this->getView();
-        $events = $view->getEventManager();
+        $view = $this->getView();
 
         foreach ($strategies as $strategy) {
             if (!is_string($strategy)) {
@@ -235,7 +232,7 @@ class ViewManager extends AbstractListenerAggregate
 
             $listener = $this->services->get($strategy);
             if ($listener instanceof ListenerAggregateInterface) {
-                $listener->attach($events, 100);
+                $listener->attach(events: $events, priority: 100);
             }
         }
     }

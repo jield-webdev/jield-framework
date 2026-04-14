@@ -3,19 +3,17 @@
 namespace Jield\Mvc\Service;
 
 use ArrayAccess;
-// phpcs:ignore
 use Psr\Container\ContainerInterface;
-
 use function is_array;
+
+// phpcs:ignore
 
 trait HttpViewManagerConfigTrait
 {
     /**
      * Retrieve view_manager configuration, if present.
-     *
-     * @return array
      */
-    private function getConfig(ContainerInterface $container): ArrayAccess|array
+    private function getConfig(ContainerInterface $container): array
     {
         $config = $container->has('config') ? $container->get('config') : [];
 

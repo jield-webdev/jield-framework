@@ -6,7 +6,6 @@ namespace Jield\Mvc\Controller;
 use Laminas\EventManager\EventManagerAwareInterface;
 use Laminas\EventManager\SharedEventManagerInterface;
 use Laminas\ServiceManager\AbstractPluginManager;
-use Laminas\ServiceManager\ConfigInterface;
 use Laminas\ServiceManager\Exception\InvalidServiceException;
 use Laminas\Stdlib\DispatchableInterface;
 use Psr\Container\ContainerInterface;
@@ -21,24 +20,10 @@ use function sprintf;
  */
 class ControllerManager extends AbstractPluginManager
 {
-    /**
-     * We do not want arbitrary classes instantiated as controllers.
-     */
     protected bool $autoAddInvokableClass = false;
 
-    /**
-     * Controllers must be of this type.
-     */
     protected string $instanceOf = DispatchableInterface::class;
 
-    /**
-     * Constructor
-     *
-     * Injects an initializer for injecting controllers with an
-     * event manager and plugin manager.
-     *
-     * @param ContainerInterface $configOrContainerInstance
-     */
     public function __construct(ContainerInterface $configOrContainerInstance, array $config = [])
     {
         $initializers = [
@@ -83,7 +68,7 @@ class ControllerManager extends AbstractPluginManager
      *
      * @param DispatchableInterface $controller
      */
-    public function injectEventManager(ContainerInterface $container, $controller): void
+    public function injectEventManager(ContainerInterface $container, DispatchableInterface $controller): void
     {
         if (!$controller instanceof EventManagerAwareInterface) {
             return;

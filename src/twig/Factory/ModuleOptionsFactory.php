@@ -14,6 +14,6 @@ class ModuleOptionsFactory implements FactoryInterface
     {
         $config = $container->get('config');
 
-        return new ModuleOptions($config['jield_twig'] ?? $config['zfctwig'] ?? []);
+        return new ModuleOptions($config['jield_twig'] ?? []);
     }
 }

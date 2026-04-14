@@ -8,6 +8,7 @@ use Laminas\EventManager\EventManagerInterface;
 use Laminas\ServiceManager\ServiceManager;
 use Laminas\Stdlib\RequestInterface;
 use Laminas\Stdlib\ResponseInterface;
+use Psr\Container\ContainerInterface;
 use function array_merge;
 use function array_unique;
 
@@ -64,30 +65,16 @@ class Application implements
             'SendResponseListener',
         ];
 
-    /**
-     * MVC event token
-     *
-     * @var MvcEvent
-     */
     protected MvcEvent $event;
-
-    /** @var EventManagerInterface */
-    protected EventManagerInterface $events;
-
-    /** @var RequestInterface */
-    protected mixed $request;
-
-    /** @var ResponseInterface */
-    protected mixed $response;
 
     /**
      * Constructor
      */
     public function __construct(
-        protected ServiceManager $serviceManager,
-        ?EventManagerInterface   $events = null,
-        ?RequestInterface        $request = null,
-        ?ResponseInterface       $response = null
+        protected ContainerInterface     $serviceManager,
+        protected ?EventManagerInterface $events = null,
+        protected ?RequestInterface      $request = null,
+        protected ?ResponseInterface     $response = null
     )
     {
         $this->setEventManager(eventManager: $events ?: $serviceManager->get(id: 'EventManager'));
@@ -144,10 +131,8 @@ class Application implements
 
     /**
      * Retrieve the service manager
-     *
-     * @return ServiceManager
      */
-    public function getServiceManager(): ServiceManager
+    public function getServiceManager(): ContainerInterface
     {
         return $this->serviceManager;
     }

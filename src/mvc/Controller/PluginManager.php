@@ -65,8 +65,7 @@ class PluginManager extends AbstractPluginManager
             CreateHttpNotFoundModel::class     => InvokableFactory::class,
         ];
 
-    /** @var DispatchableInterface */
-    protected DispatchableInterface $controller;
+    protected ?DispatchableInterface $controller = null;
 
     /**
      * Retrieve a registered instance
@@ -85,7 +84,7 @@ class PluginManager extends AbstractPluginManager
     public function get($id, ?array $options = null): DispatchableInterface
     {
         $plugin = parent::get($id, $options);
-        $this->injectController($plugin);
+        $this->injectController(plugin: $plugin);
 
         return $plugin;
     }
@@ -120,7 +119,7 @@ class PluginManager extends AbstractPluginManager
      */
     public function injectController(object $plugin): void
     {
-        if (!method_exists($plugin, 'setController')) {
+        if (!method_exists(object_or_class: $plugin, method: 'setController')) {
             return;
         }
 
@@ -140,9 +139,9 @@ class PluginManager extends AbstractPluginManager
     public function validate($instance): void
     {
         if (!$instance instanceof $this->instanceOf) {
-            throw new InvalidServiceException(sprintf(
+            throw new InvalidServiceException(message: sprintf(
                 'Plugin of type "%s" is invalid; must implement %s',
-                get_debug_type($instance),
+                get_debug_type(value: $instance),
                 $this->instanceOf
             ));
         }

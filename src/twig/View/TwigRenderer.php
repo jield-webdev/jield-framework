@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Jield\Twig\View;
 
 use Laminas\View\Exception;
-use Laminas\View\HelperPluginManager;
+use Laminas\View\HelperPluginManagerInterface;
 use Laminas\View\Model\ModelInterface;
 use Laminas\View\Renderer\RendererInterface;
 use Laminas\View\View;
@@ -22,7 +22,7 @@ class TwigRenderer implements RendererInterface
 {
     protected bool $canRenderTrees = true;
 
-    protected HelperPluginManager $helperPluginManager;
+    protected HelperPluginManagerInterface $helperPluginManager;
 
     /** @var array Cache for the plugin call */
     private array $pluginCache = [];
@@ -79,17 +79,10 @@ class TwigRenderer implements RendererInterface
      * Get plugin instance, proxy to HelperPluginManager::get
      *
      * @param string $name Name of plugin to return
-     * @param null|array $options Options to pass to plugin constructor (if not already instantiated)
      */
-    public function plugin(string $name, ?array $options = null)
+    public function plugin(string $name)
     {
-        $helper = $this->getHelperPluginManager()->setRenderer($this);
-
-        if ($helper->has($name)) {
-            return $helper->get($name, $options);
-        }
-
-        return $this->getHelperPluginManager()->get($name, $options);
+        return $this->getHelperPluginManager()->get($name);
     }
 
     /**
@@ -128,14 +121,13 @@ class TwigRenderer implements RendererInterface
     /**
      * @return $this
      */
-    public function setHelperPluginManager(HelperPluginManager $helperPluginManager): self
+    public function setHelperPluginManager(HelperPluginManagerInterface $helperPluginManager): self
     {
-        $helperPluginManager->setRenderer($this);
         $this->helperPluginManager = $helperPluginManager;
         return $this;
     }
 
-    public function getHelperPluginManager(): HelperPluginManager
+    public function getHelperPluginManager(): HelperPluginManagerInterface
     {
         return $this->helperPluginManager;
     }

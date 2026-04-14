@@ -7,6 +7,9 @@ use Laminas\ServiceManager\Factory\FactoryInterface;
 use Laminas\View\Helper\ViewModel as ViewModelHelper;
 use Laminas\View\HelperPluginManager;
 use Laminas\View\Resolver as ViewResolver;
+use Laminas\View\Resolver\PrefixPathStackResolver;
+use Laminas\View\Resolver\TemplateMapResolver;
+use Laminas\View\Resolver\TemplatePathStack;
 use Psr\Container\ContainerInterface;
 
 class ViewResolverFactory implements FactoryInterface
@@ -17,19 +20,20 @@ class ViewResolverFactory implements FactoryInterface
      * Creates a Laminas\View\Resolver\AggregateResolver and attaches the template
      * map resolver and path stack resolver
      *
-     * @param  string $requestedName
-     * @param  null|array $options
+     * @param ContainerInterface $container
+     * @param string $requestedName
+     * @param null|array $options
      * @return ViewResolver\AggregateResolver
      */
     public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): ViewResolver\AggregateResolver
     {
         $resolver = new ViewResolver\AggregateResolver();
 
-        /** @var ResolverInterface $mapResolver */
+        /** @var TemplateMapResolver $mapResolver */
         $mapResolver = $container->get('ViewTemplateMapResolver');
-        /** @var ResolverInterface $pathResolver */
+        /** @var TemplatePathStack $pathResolver */
         $pathResolver = $container->get('ViewTemplatePathStack');
-        /** @var ResolverInterface $prefixPathStackResolver */
+        /** @var PrefixPathStackResolver $prefixPathStackResolver */
         $prefixPathStackResolver = $container->get('ViewPrefixPathStackResolver');
         $pluginManager           = $container->get(HelperPluginManager::class);
         $viewModelHelper         = $pluginManager->get(ViewModelHelper::class);

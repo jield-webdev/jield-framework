@@ -8,167 +8,32 @@ use Laminas\Stdlib\AbstractOptions;
 
 class ModuleOptions extends AbstractOptions
 {
-    /** @var string */
-    protected $environmentLoader = '';
+    protected string $environmentLoader = '';
 
-    /** @var string */
-    protected $environmentClass = '';
+    protected string $environmentClass = '';
 
-    /** @var array */
-    protected $environmentOptions = [];
+    protected array $environmentOptions = [];
 
-    /** @var array */
-    protected $globals = [];
+    protected array $globals = [];
 
-    /** @var array */
-    protected $loaderChain = [];
+    protected array $loaderChain = [];
 
-    /** @var array */
-    protected $extensions = [];
+    protected array $extensions = [];
 
-    /** @var string */
-    protected $suffix = '';
+    protected string $suffix = '';
 
-    /** @var bool */
-    protected $enableFallbackFunctions = true;
+    protected bool $enableFallbackFunctions = true;
 
-    /** @var bool */
-    protected $disableZfModel = true;
-
-    /** @var array */
-    protected $helperManager = [];
-
-    /**
-     * @return $this
-     */
-    public function setDisableZfModel(bool $disableZfModel): self
-    {
-        $this->disableZfModel = $disableZfModel;
-        return $this;
-    }
-
-    public function getDisableZfModel(): bool
-    {
-        return $this->disableZfModel;
-    }
-
-    /**
-     * @return $this
-     */
-    public function setEnableFallbackFunctions(bool $enableFallbackFunctions): self
-    {
-        $this->enableFallbackFunctions = $enableFallbackFunctions;
-        return $this;
-    }
-
-    public function getEnableFallbackFunctions(): bool
-    {
-        return $this->enableFallbackFunctions;
-    }
-
-    /**
-     * @return $this
-     */
-    public function setEnvironmentLoader(string $environmentLoader): self
-    {
-        $this->environmentLoader = $environmentLoader;
-        return $this;
-    }
+    protected array $helperManager = [];
 
     public function getEnvironmentLoader(): string
     {
         return $this->environmentLoader;
     }
 
-    /**
-     * @param array $environmentOptions
-     * @return $this
-     */
-    public function setEnvironmentOptions(array $environmentOptions): self
+    public function setEnvironmentLoader(string $environmentLoader): ModuleOptions
     {
-        $this->environmentOptions = $environmentOptions;
-        return $this;
-    }
-
-    /**
-     * @return array
-     */
-    public function getEnvironmentOptions(): array
-    {
-        return $this->environmentOptions;
-    }
-
-    /**
-     * @param array $extensions
-     * @return $this
-     */
-    public function setExtensions(array $extensions): self
-    {
-        $this->extensions = $extensions;
-        return $this;
-    }
-
-    /**
-     * @return array
-     */
-    public function getExtensions(): array
-    {
-        return $this->extensions;
-    }
-
-    /**
-     * @param array $helperManager
-     * @return $this
-     */
-    public function setHelperManager(array $helperManager): self
-    {
-        $this->helperManager = $helperManager;
-        return $this;
-    }
-
-    /**
-     * @return array
-     */
-    public function getHelperManager(): array
-    {
-        return $this->helperManager;
-    }
-
-    /**
-     * @param array $loaderChain
-     * @return $this
-     */
-    public function setLoaderChain(array $loaderChain): self
-    {
-        $this->loaderChain = $loaderChain;
-        return $this;
-    }
-
-    /**
-     * @return array
-     */
-    public function getLoaderChain(): array
-    {
-        return $this->loaderChain;
-    }
-
-    /**
-     * @return $this
-     */
-    public function setSuffix(string $suffix): self
-    {
-        $this->suffix = $suffix;
-        return $this;
-    }
-
-    public function getSuffix(): string
-    {
-        return $this->suffix;
-    }
-
-    public function setEnvironmentClass(string $environmentClass): self
-    {
-        $this->environmentClass = $environmentClass;
+        $this->environmentLoader = $environmentLoader;
         return $this;
     }
 
@@ -177,20 +42,86 @@ class ModuleOptions extends AbstractOptions
         return $this->environmentClass;
     }
 
-    /**
-     * @param array $globals
-     */
-    public function setGlobals(array $globals): self
+    public function setEnvironmentClass(string $environmentClass): ModuleOptions
+    {
+        $this->environmentClass = $environmentClass;
+        return $this;
+    }
+
+    public function getEnvironmentOptions(): array
+    {
+        return $this->environmentOptions;
+    }
+
+    public function setEnvironmentOptions(array $environmentOptions): ModuleOptions
+    {
+        $this->environmentOptions = $environmentOptions;
+        return $this;
+    }
+
+    public function getGlobals(): array
+    {
+        return $this->globals;
+    }
+
+    public function setGlobals(array $globals): ModuleOptions
     {
         $this->globals = $globals;
         return $this;
     }
 
-    /**
-     * @return array
-     */
-    public function getGlobals(): array
+    public function getLoaderChain(): array
     {
-        return $this->globals;
+        return $this->loaderChain;
+    }
+
+    public function setLoaderChain(array $loaderChain): ModuleOptions
+    {
+        $this->loaderChain = $loaderChain;
+        return $this;
+    }
+
+    public function getExtensions(): array
+    {
+        return $this->extensions;
+    }
+
+    public function setExtensions(array $extensions): ModuleOptions
+    {
+        $this->extensions = $extensions;
+        return $this;
+    }
+
+    public function getSuffix(): string
+    {
+        return $this->suffix;
+    }
+
+    public function setSuffix(string $suffix): ModuleOptions
+    {
+        $this->suffix = $suffix;
+        return $this;
+    }
+
+    public function enableFallbackFunctions(): bool
+    {
+        return $this->enableFallbackFunctions;
+    }
+
+    public function setEnableFallbackFunctions(bool $enableFallbackFunctions): ModuleOptions
+    {
+        $this->enableFallbackFunctions = $enableFallbackFunctions;
+        return $this;
+    }
+
+    public function getHelperManager(): array
+    {
+        return $this->helperManager;
+    }
+
+    public function setHelperManager(array $helperManager): ModuleOptions
+    {
+        $this->helperManager = $helperManager;
+        return $this;
     }
 }

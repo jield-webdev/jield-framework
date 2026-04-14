@@ -7,6 +7,7 @@ namespace Jield\Twig\Factory;
 use Jield\Twig\MapLoader;
 use Jield\Twig\ModuleOptions;
 use Laminas\ServiceManager\Factory\FactoryInterface;
+use Laminas\View\Resolver\TemplateMapResolver;
 use Psr\Container\ContainerInterface;
 use function pathinfo;
 use const PATHINFO_EXTENSION;
@@ -25,8 +26,8 @@ class MapLoaderFactory implements FactoryInterface
 
         $templateMap = new MapLoader();
         foreach ($laminasTemplateMap as $name => $path) {
-            if ($options->getSuffix() === pathinfo((string)$path, PATHINFO_EXTENSION)) {
-                $templateMap->add($name, (string)$path);
+            if ($options->getSuffix() === pathinfo(path: (string)$path, flags: PATHINFO_EXTENSION)) {
+                $templateMap->add(name: $name, path: (string)$path);
             }
         }
 

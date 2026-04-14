@@ -35,7 +35,7 @@ class EnvironmentFactory implements FactoryInterface
         /** @var Environment $env */
         $env = new $envClass($container->get($options->getEnvironmentLoader()), $options->getEnvironmentOptions());
 
-        if ($options->getEnableFallbackFunctions()) {
+        if ($options->enableFallbackFunctions()) {
             $helperPluginManager = $container->get('ViewHelperManager');
             $env->registerUndefinedFunctionCallback(
                 function ($name) use ($helperPluginManager) {
