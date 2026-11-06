@@ -7,7 +7,7 @@ namespace Jield\Form\Element;
 use Jield\Form\Element;
 use Jield\Form\Exception\InvalidArgumentException;
 use Laminas\InputFilter\InputProviderInterface;
-use Laminas\Validator\Explode as ExplodeValidator;
+use Jield\Validator\Each;
 use Laminas\Validator\InArray as InArrayValidator;
 use Laminas\Validator\ValidatorInterface;
 use Stringable;
@@ -21,20 +21,20 @@ use const E_USER_DEPRECATED;
 
 /**
  * @psalm-type ValueOption = array{
- *     value: string|int|Stringable,
- *     label: string,
+ *     value?: string|int|Stringable,
+ *     label?: string,
  *     selected?: bool,
  *     disabled?: bool,
  *     attributes?: array<array-key, mixed>,
  * }|scalar|Stringable
+ * @psalm-type EmptyOption = string|array{value?: string|int|Stringable, label?: string, selected?: bool, disabled?: bool, attributes?: array<array-key, mixed>}
  * @psalm-type BasicValueOptions = array<array-key, ValueOption>
  * @psalm-type OptGroup = array{
  *     options: BasicValueOptions,
  *     disabled?: bool,
- *     label: string,
+ *     label?: string,
  * }
  * @psalm-type ValueOptions = array<array-key, OptGroup|ValueOption>
- * @final
  */
 class Select extends Element implements InputProviderInterface
 {
@@ -44,7 +44,7 @@ class Select extends Element implements InputProviderInterface
     ];
 
     /** @var null|ValidatorInterface */
-    protected ?ValidatorInterface $validator;
+    protected ?ValidatorInterface $validator = null;
 
     /** @var bool */
     protected bool $disableInArrayValidator = false;
@@ -52,9 +52,9 @@ class Select extends Element implements InputProviderInterface
     /**
      * Create an empty option (option with label but no value). If set to null, no option is created
      *
-     * @var null|string|array
+     * @var EmptyOption|null
      */
-    protected string|array|null $emptyOption;
+    protected string|array|null $emptyOption = null;
 
     /** @var ValueOptions */
     protected array $valueOptions = [];
@@ -73,38 +73,26 @@ class Select extends Element implements InputProviderInterface
 
     /**
      * @param ValueOptions $options
-     * @return $this
+     * @return static
      */
     public function setValueOptions(array $options): static
     {
         $this->valueOptions = $options;
 
-        // Update InArrayValidator validator haystack
-        if (null !== $this->validator) {
-            if ($this->validator instanceof InArrayValidator) {
-                $validator = $this->validator;
-            }
-            if (
-                $this->validator instanceof ExplodeValidator
-                && $this->validator->getValidator() instanceof InArrayValidator
-            ) {
-                $validator = $this->validator->getValidator();
-            }
-            if (! empty($validator)) {
-                $validator->setHaystack($this->getValueOptionsValues());
-            }
-        }
+        // Validators are immutable; rebuild them for the updated options.
+        $this->validator = null;
 
         return $this;
     }
 
     /**
-     * @return $this
+     * @return static
      */
     public function unsetValueOption(string $key): static
     {
         if (isset($this->valueOptions[$key])) {
             unset($this->valueOptions[$key]);
+            $this->validator = null;
         }
 
         return $this;
@@ -117,7 +105,7 @@ class Select extends Element implements InputProviderInterface
      * - value_options: list of values and labels for the select options
      * - empty_option: should an empty option be prepended to the options ?
      *
-     * @return $this
+     * @return static
      * @throws InvalidArgumentException
      */
     public function setOptions(iterable $options): static
@@ -125,34 +113,38 @@ class Select extends Element implements InputProviderInterface
         parent::setOptions(options: $options);
 
         if (isset($this->options['value_options'])) {
-            $this->setValueOptions(options: $this->options['value_options']);
+            /** @var ValueOptions $valueOptions */
+            $valueOptions = $this->options['value_options'];
+            $this->setValueOptions(options: $valueOptions);
         }
         // Alias for 'value_options'
         if (isset($this->options['options'])) {
-            $this->setValueOptions(options: $this->options['options']);
+            /** @var ValueOptions $valueOptions */
+            $valueOptions = $this->options['options'];
+            $this->setValueOptions(options: $valueOptions);
         }
 
         if (isset($this->options['empty_option'])) {
-            $this->setEmptyOption(emptyOption: $this->options['empty_option']);
+            $this->setEmptyOption(emptyOption: \Jield\Stdlib\Value::nullableArrayOrString($this->options['empty_option']));
         }
 
         if (isset($this->options['disable_inarray_validator'])) {
-            $this->setDisableInArrayValidator(disableOption: $this->options['disable_inarray_validator']);
+            $this->setDisableInArrayValidator(disableOption: \Jield\Stdlib\Value::bool($this->options['disable_inarray_validator']));
         }
 
         if (isset($this->options['use_hidden_element'])) {
-            $this->setUseHiddenElement(useHiddenElement: $this->options['use_hidden_element']);
+            $this->setUseHiddenElement(useHiddenElement: \Jield\Stdlib\Value::bool($this->options['use_hidden_element']));
         }
 
         if (isset($this->options['unselected_value'])) {
-            $this->setUnselectedValue(unselectedValue: $this->options['unselected_value']);
+            $this->setUnselectedValue(unselectedValue: \Jield\Stdlib\Value::string($this->options['unselected_value']));
         }
 
         return $this;
     }
 
-    /** @inheritDoc */
-    public function setAttribute(string $key, $value): \Jield\Form\ElementInterface|Select|static
+    /** @param mixed $value */
+    public function setAttribute(string $key, $value): static
     {
         /** @psalm-suppress DocblockTypeContradiction */
         if ($key === 'options' && is_iterable(value: $value)) {
@@ -161,20 +153,22 @@ class Select extends Element implements InputProviderInterface
                 . 'version 4.0 of this library',
                 error_level: E_USER_DEPRECATED,
             );
+            /** @var ValueOptions $value */
             $this->setValueOptions(options: $value);
             return $this;
         }
-        return parent::setAttribute(key: $key, value: $value);
+        return parent::setAttribute(key: $key, value: \Jield\Stdlib\Value::plainScalar($value));
     }
 
     /**
      * Set the flag to allow for disabling the automatic addition of an InArray validator.
      *
-     * @return $this
+     * @return static
      */
     public function setDisableInArrayValidator(bool $disableOption): static
     {
         $this->disableInArrayValidator = $disableOption;
+        $this->validator = null;
         return $this;
     }
 
@@ -189,8 +183,8 @@ class Select extends Element implements InputProviderInterface
     /**
      * Set the string for an empty option (can be empty string). If set to null, no option will be added
      *
-     * @param array|string|null $emptyOption
-     * @return $this
+     * @param EmptyOption|null $emptyOption
+     * @return static
      */
     public function setEmptyOption(array|string|null $emptyOption): static
     {
@@ -201,7 +195,7 @@ class Select extends Element implements InputProviderInterface
     /**
      * Return the string for the empty option (null if none)
      *
-     * @return null|string|array
+     * @return EmptyOption|null
      */
     public function getEmptyOption(): array|string|null
     {
@@ -213,17 +207,14 @@ class Select extends Element implements InputProviderInterface
      */
     protected function getValidator(): ?ValidatorInterface
     {
-        if (null === $this->validator && ! $this->disableInArrayValidator()) {
+        if (null === $this->validator && !$this->disableInArrayValidator()) {
             $validator = new InArrayValidator(options: [
                 'haystack' => $this->getValueOptionsValues(),
-                'strict'   => false,
+                'strict' => false,
             ]);
 
             if ($this->isMultiple()) {
-                $validator = new ExplodeValidator(options: [
-                    'validator'      => $validator,
-                    'valueDelimiter' => null, // skip explode if only one value
-                ]);
+                $validator = new Each($validator);
             }
 
             $this->validator = $validator;
@@ -234,7 +225,7 @@ class Select extends Element implements InputProviderInterface
     /**
      * Do we render hidden element?
      *
-     * @return $this
+     * @return static
      */
     public function setUseHiddenElement(bool $useHiddenElement): static
     {
@@ -253,7 +244,7 @@ class Select extends Element implements InputProviderInterface
     /**
      * Set the value if the select is not selected
      *
-     * @return $this
+     * @return static
      */
     public function setUnselectedValue(string $unselectedValue): static
     {
@@ -288,11 +279,11 @@ class Select extends Element implements InputProviderInterface
         if ($this->useHiddenElement() && $this->isMultiple()) {
             $unselectedValue = $this->getUnselectedValue();
 
-            $spec['allow_empty']       = true;
+            $spec['allow_empty'] = true;
             $spec['continue_if_empty'] = true;
-            $spec['filters']           = [
+            $spec['filters'] = [
                 [
-                    'name'    => 'Callback',
+                    'name' => 'Callback',
                     'options' => [
                         'callback' => static function ($value) use ($unselectedValue) {
                             if ($value === $unselectedValue) {
@@ -319,7 +310,7 @@ class Select extends Element implements InputProviderInterface
      */
     protected function getValueOptionsValues(): array
     {
-        $values  = [];
+        $values = [];
         $options = $this->getValueOptions();
         foreach ($options as $key => $optionSpec) {
             if (is_array(value: $optionSpec) && array_key_exists(key: 'options', array: $optionSpec)) {
@@ -349,7 +340,9 @@ class Select extends Element implements InputProviderInterface
      */
     public function isMultiple(): bool
     {
-        return isset($this->attributes['multiple'])
-            && ($this->attributes['multiple'] === true || $this->attributes['multiple'] === 'multiple');
+        return (
+            isset($this->attributes['multiple'])
+            && ($this->attributes['multiple'] === true || $this->attributes['multiple'] === 'multiple')
+        );
     }
 }

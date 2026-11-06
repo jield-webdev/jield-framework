@@ -14,8 +14,9 @@ use Symfony\Component\Console\Output\OutputInterface;
 #[AsCommand(name: 'search:test-index', description: 'Test the search engine index')]
 final class TestIndex extends Command
 {
-    public function __construct(private readonly ConsoleService $consoleService)
-    {
+    public function __construct(
+        private readonly ConsoleService $consoleService,
+    ) {
         parent::__construct();
     }
 
@@ -26,11 +27,12 @@ final class TestIndex extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
+        /** @var mixed $reset */
         $reset = $input->getOption(name: 'reset');
 
         $output->writeln(messages: '<info>Testing the search engine index</info>');
 
-        $this->consoleService->testIndex(output: $output, clearIndex: $reset);
+        $this->consoleService->testIndex(output: $output, clearIndex: \Jield\Stdlib\Value::bool($reset));
 
         $output->writeln(messages: '');
         $output->writeln(messages: '<info>Test the search engine index completed</info>');

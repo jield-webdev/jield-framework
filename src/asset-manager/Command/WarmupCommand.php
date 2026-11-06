@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Jield\AssetManager\Command;
 
-
 use Jield\AssetManager\Service\AssetManager;
 use Override;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+
 use function sprintf;
 
 final class WarmupCommand extends Command
@@ -18,8 +18,10 @@ final class WarmupCommand extends Command
     /** @var string */
     protected static string $defaultName = 'assetmanager:warmup';
 
-    public function __construct(private readonly AssetManager $assetManager, private readonly array $appConfig)
-    {
+    public function __construct(
+        private readonly AssetManager $assetManager,
+        private readonly array $appConfig,
+    ) {
         parent::__construct(name: self::$defaultName);
     }
 
@@ -34,7 +36,9 @@ final class WarmupCommand extends Command
     #[Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $purge   = $input->getOption(name: 'purge');
+        /** @var mixed $purge */
+        $purge = $input->getOption(name: 'purge');
+        /** @var mixed $verbose */
         $verbose = $input->getOption(name: 'verbose');
 
         if ($verbose) {
@@ -46,7 +50,7 @@ final class WarmupCommand extends Command
                 $output->writeln(messages: '<comment>Purge requested, starting purge</comment>');
             }
 
-            $this->purgeCache(output: $output, verbose: $verbose);
+            $this->purgeCache(output: $output, verbose: \Jield\Stdlib\Value::bool($verbose));
         }
 
         if ($verbose) {
@@ -61,14 +65,18 @@ final class WarmupCommand extends Command
             }
         } else {
             if ($verbose) {
-                $output->writeln(messages: sprintf('<comment>Collected %d assets, warming up</comment>', count(value: $collection)));
+                $output->writeln(messages: sprintf(
+                    '<comment>Collected %d assets, warming up</comment>',
+                    count(value: $collection),
+                ));
             }
 
+            /** @var mixed $path */
             foreach ($collection as $path) {
-                $asset = $this->assetManager->getResolver()->resolve(fileName: $path);
+                $asset = $this->assetManager->getResolver()->resolve(fileName: \Jield\Stdlib\Value::string($path));
 
-                $this->assetManager->getAssetFilterManager()->setFilters(path: $path, asset: $asset);
-                $this->assetManager->getAssetCacheManager()->setCache(path: $path, asset: $asset)->dump();
+                $this->assetManager->getAssetFilterManager()->setFilters(path: \Jield\Stdlib\Value::string($path), asset: \Jield\Stdlib\Value::instance($asset, \Jield\AssetManager\Asset\AssetInterface::class));
+                $this->assetManager->getAssetCacheManager()->setCache(path: \Jield\Stdlib\Value::string($path), asset: \Jield\Stdlib\Value::instance($asset, \Jield\AssetManager\Asset\AssetInterface::class))->dump();
             }
         }
 
@@ -84,30 +92,31 @@ final class WarmupCommand extends Command
      */
     private function purgeCache(OutputInterface $output, bool $verbose = false): void
     {
-
         if (empty($this->appConfig['asset_manager']['caching'])) {
             return;
         }
 
-        foreach ($this->appConfig['asset_manager']['caching'] as $configName => $config) {
-
+        /** @var mixed $configName
+         * @var mixed $config
+         */
+        foreach (\Jield\Stdlib\Value::iterable($this->appConfig['asset_manager']['caching']) as $configName => $config) {
             if (empty($config['options']['dir'])) {
                 continue;
             }
 
             if ($verbose) {
-                $output->writeln(messages: sprintf('Purging %s on "%s"', $configName, $config['options']['dir']));
+                $output->writeln(messages: sprintf('Purging %s on "%s"', \Jield\Stdlib\Value::scalar($configName), \Jield\Stdlib\Value::scalar($config['options']['dir'])));
             }
 
+            /** @var mixed $node */
             $node = $config['options']['dir'];
 
             if ($configName !== 'default') {
-                $node .= '/' . $configName;
+                $node = \Jield\Stdlib\Value::stringify($node) . ('/' . \Jield\Stdlib\Value::stringify($configName));
             }
 
-            $this->recursiveRemove(node: $node, output: $output, verbose: $verbose);
+            $this->recursiveRemove(node: \Jield\Stdlib\Value::string($node), output: $output, verbose: $verbose);
         }
-
     }
 
     /**
@@ -130,7 +139,6 @@ final class WarmupCommand extends Command
                 $this->recursiveRemove(node: $node . '/' . $object, output: $output, verbose: $verbose);
             }
         } elseif (is_file(filename: $node)) {
-
             //Filetype check (we only want to purge css and js files)
             if (!str_contains(haystack: $node, needle: '.css') && !str_contains(haystack: $node, needle: '.js')) {
                 return;

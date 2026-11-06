@@ -8,8 +8,9 @@ namespace Jield\Authorize\Guard;
 
 use Jield\Authorize\Provider\Resource\ProviderInterface as ResourceProviderInterface;
 use Jield\Authorize\Provider\Rule\ProviderInterface as RuleProviderInterface;
-use Psr\Container\ContainerInterface;
 use Laminas\EventManager\AbstractListenerAggregate;
+use Psr\Container\ContainerInterface;
+
 use function array_keys;
 
 abstract class AbstractGuard extends AbstractListenerAggregate implements
@@ -29,13 +30,15 @@ abstract class AbstractGuard extends AbstractListenerAggregate implements
     public function __construct(array $rules, ContainerInterface $container)
     {
         $this->container = $container;
+        /** @var mixed $rule */
         foreach ($rules as $rule) {
-            $rule['roles']  = (array)$rule['roles'];
-            $rule['action'] = isset($rule['action']) ? (array)$rule['action'] : [null];
-            foreach ($this->extractResourcesFromRule($rule) as $resource) {
-                $this->rules[$resource] = ['roles' => (array)$rule['roles']];
+            \Jield\Stdlib\Value::setPath($rule, ['roles'], \Jield\Stdlib\Value::toArray(\Jield\Stdlib\Value::accessible($rule)['roles']));
+            \Jield\Stdlib\Value::setPath($rule, ['action'], isset($rule['action']) ? \Jield\Stdlib\Value::toArray($rule['action']) : [null]);
+            /** @var mixed $resource */
+            foreach (\Jield\Stdlib\Value::iterable($this->extractResourcesFromRule(\Jield\Stdlib\Value::array($rule))) as $resource) {
+                $this->rules[\Jield\Stdlib\Value::key($resource)] = ['roles' => \Jield\Stdlib\Value::toArray($rule['roles'])];
                 if (isset($rule['assertion'])) {
-                    $this->rules[$resource]['assertion'] = $rule['assertion'];
+                    $this->rules[\Jield\Stdlib\Value::key($resource)]['assertion'] = $rule['assertion'];
                 }
             }
         }
@@ -45,17 +48,14 @@ abstract class AbstractGuard extends AbstractListenerAggregate implements
 
     public function getResources(): array
     {
-        $resources = [];
-        $resources = array_keys($this->rules);
-
-        return $resources;
+        return array_map(strval(...), array_keys($this->rules));
     }
 
     public function getRules(): array
     {
         $rules = [];
         foreach ($this->rules as $resource => $ruleData) {
-            $rule   = [];
+            $rule = [];
             $rule[] = $ruleData['roles'];
             $rule[] = $resource;
             if (isset($ruleData['assertion'])) {

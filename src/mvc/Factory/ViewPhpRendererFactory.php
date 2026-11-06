@@ -1,12 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\Mvc\Factory;
 
+use Jield\Mvc\View\Renderer\PhpRenderer;
 use Laminas\ServiceManager\Factory\FactoryInterface;
-use Laminas\View\Factory\Configuration;
 use Laminas\View\HelperPluginManagerInterface;
-use Laminas\View\Renderer\PhpRenderer;
-use Laminas\View\Resolver\ResolverInterface;
 use Psr\Container\ContainerInterface;
 
 class ViewPhpRendererFactory implements FactoryInterface
@@ -19,9 +19,8 @@ class ViewPhpRendererFactory implements FactoryInterface
     public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): PhpRenderer
     {
         return new PhpRenderer(
-            $container->get(HelperPluginManagerInterface::class),
-            $container->get(ResolverInterface::class),
-            Configuration::strictVariables($container),
+            \Jield\Stdlib\Service::get($container, \Laminas\View\Renderer\PhpRenderer::class),
+            \Jield\Stdlib\Service::get($container, HelperPluginManagerInterface::class),
         );
     }
 }

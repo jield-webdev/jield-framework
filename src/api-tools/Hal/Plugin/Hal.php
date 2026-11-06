@@ -22,6 +22,8 @@ use Jield\ApiTools\Hal\Link\SelfLinkInjector;
 use Jield\ApiTools\Hal\Link\SelfLinkInjectorInterface;
 use Jield\ApiTools\Hal\Metadata\MetadataMap;
 use Jield\ApiTools\Hal\ResourceFactory;
+use Jield\Mvc\Controller\Plugin\PluginInterface as ControllerPluginInterface;
+use Jield\Mvc\View\Helper\AbstractHelper;
 use Laminas\EventManager\Event;
 use Laminas\EventManager\EventInterface;
 use Laminas\EventManager\EventManagerAwareInterface;
@@ -29,11 +31,10 @@ use Laminas\EventManager\EventManagerAwareTrait;
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\Hydrator\ExtractionInterface;
 use Laminas\Hydrator\HydratorPluginManager;
-use Jield\Mvc\Controller\Plugin\PluginInterface as ControllerPluginInterface;
 use Laminas\Paginator\Paginator;
 use Laminas\Stdlib\DispatchableInterface;
-use Laminas\View\Helper\AbstractHelper;
 use Override;
+
 use function array_key_exists;
 use function array_merge;
 use function count;
@@ -44,14 +45,13 @@ use function method_exists;
 use function spl_object_hash;
 use function sprintf;
 use function trigger_error;
+
 use const E_USER_DEPRECATED;
 
 /**
  * Generate links for use with HAL payloads
  */
-class Hal extends AbstractHelper implements
-    ControllerPluginInterface,
-    EventManagerAwareInterface
+class Hal extends AbstractHelper implements ControllerPluginInterface, EventManagerAwareInterface
 {
     use EventManagerAwareTrait;
 
@@ -94,8 +94,9 @@ class Hal extends AbstractHelper implements
      */
     protected array $entityHashStack = [];
 
-    public function __construct(protected HydratorPluginManager $hydrators)
-    {
+    public function __construct(
+        protected HydratorPluginManager $hydrators,
+    ) {
         $this->hydrators = $hydrators;
     }
 
@@ -111,7 +112,7 @@ class Hal extends AbstractHelper implements
     #[Override]
     public function getController(): DispatchableInterface
     {
-        return $this->controller;
+        return \Jield\Stdlib\Value::instance($this->controller, \Laminas\Stdlib\DispatchableInterface::class);
     }
 
     /**
@@ -120,7 +121,7 @@ class Hal extends AbstractHelper implements
      * @psalm-suppress ParamNameMismatch
      */
     #[Override]
-    public function setEventManager(EventManagerInterface $eventManager): void
+    public function setEventManager(EventManagerInterface $eventManager): static
     {
         $eventManager->setIdentifiers(identifiers: [
             static::class,
@@ -129,7 +130,8 @@ class Hal extends AbstractHelper implements
 
         $this->events = $eventManager;
 
-        $eventManager->attach(eventName: 'getIdFromEntity', listener: function (EventInterface $e) {
+        $eventManager->attach(eventName: 'getIdFromEntity', listener: static function (EventInterface $e) {
+            /** @var mixed $entity */
             $entity = $e->getParam(name: 'entity');
 
             // Found id in array
@@ -168,7 +170,7 @@ class Hal extends AbstractHelper implements
         if (!$this->resourceFactory instanceof ResourceFactory) {
             $this->resourceFactory = new ResourceFactory(
                 entityHydratorManager: $this->getEntityHydratorManager(),
-                entityExtractor: $this->getEntityExtractor()
+                entityExtractor: $this->getEntityExtractor(),
             );
         }
 
@@ -189,7 +191,7 @@ class Hal extends AbstractHelper implements
         if (!$this->entityHydratorManager instanceof EntityHydratorManager) {
             $this->entityHydratorManager = new EntityHydratorManager(
                 hydrators: $this->hydrators,
-                map: $this->getMetadataMap()
+                map: $this->getMetadataMap(),
             );
         }
 
@@ -208,9 +210,7 @@ class Hal extends AbstractHelper implements
     public function getEntityExtractor(): EntityExtractor
     {
         if (!$this->entityExtractor instanceof EntityExtractor) {
-            $this->entityExtractor = new EntityExtractor(
-                entityHydratorManager: $this->getEntityHydratorManager()
-            );
+            $this->entityExtractor = new EntityExtractor(entityHydratorManager: $this->getEntityHydratorManager());
         }
 
         return $this->entityExtractor;
@@ -269,7 +269,7 @@ class Hal extends AbstractHelper implements
             . '%s instance',
             __METHOD__,
             static::class,
-            LinkUrlBuilder::class
+            LinkUrlBuilder::class,
         ));
     }
 
@@ -288,7 +288,7 @@ class Hal extends AbstractHelper implements
             . '%s instance',
             __METHOD__,
             static::class,
-            LinkUrlBuilder::class
+            LinkUrlBuilder::class,
         ));
     }
 
@@ -333,7 +333,7 @@ class Hal extends AbstractHelper implements
      */
     public function getLinkCollectionExtractor(): LinkCollectionExtractorInterface
     {
-        return $this->linkCollectionExtractor;
+        return \Jield\Stdlib\Value::instance($this->linkCollectionExtractor, \Jield\ApiTools\Hal\Extractor\LinkCollectionExtractorInterface::class);
     }
 
     public function setLinkCollectionExtractor(LinkCollectionExtractorInterface $extractor): static
@@ -375,11 +375,14 @@ class Hal extends AbstractHelper implements
      */
     public function setRenderEmbeddedResources(bool $value): static
     {
-        trigger_error(message: sprintf(
-            '%s has been deprecated; please use %s::setRenderEmbeddedEntities',
-            __METHOD__,
-            static::class
-        ), error_level: E_USER_DEPRECATED);
+        trigger_error(
+            message: sprintf(
+                '%s has been deprecated; please use %s::setRenderEmbeddedEntities',
+                __METHOD__,
+                static::class,
+            ),
+            error_level: E_USER_DEPRECATED,
+        );
         $this->renderEmbeddedEntities = $value;
         return $this;
     }
@@ -405,11 +408,14 @@ class Hal extends AbstractHelper implements
      */
     public function getRenderEmbeddedResources(): bool
     {
-        trigger_error(message: sprintf(
-            '%s has been deprecated; please use %s::getRenderEmbeddedEntities',
-            __METHOD__,
-            static::class
-        ), error_level: E_USER_DEPRECATED);
+        trigger_error(
+            message: sprintf(
+                '%s has been deprecated; please use %s::getRenderEmbeddedEntities',
+                __METHOD__,
+                static::class,
+            ),
+            error_level: E_USER_DEPRECATED,
+        );
         return $this->renderEmbeddedEntities;
     }
 
@@ -457,11 +463,10 @@ class Hal extends AbstractHelper implements
      */
     public function getHydratorForResource(object $resource): false|ExtractionInterface
     {
-        trigger_error(message: sprintf(
-            '%s is deprecated; please use %s::getHydratorForEntity',
-            __METHOD__,
-            static::class
-        ), error_level: E_USER_DEPRECATED);
+        trigger_error(
+            message: sprintf('%s is deprecated; please use %s::getHydratorForEntity', __METHOD__, static::class),
+            error_level: E_USER_DEPRECATED,
+        );
         return static::getHydratorForEntity(entity: $resource);
     }
 
@@ -513,8 +518,10 @@ class Hal extends AbstractHelper implements
      */
     public function renderCollection(Collection $halCollection): array|ApiProblem
     {
-        $this->getEventManager()->trigger(eventName: __FUNCTION__, target: $this, argv: ['collection' => $halCollection]);
-        $collection     = $halCollection->getCollection();
+        $this->getEventManager()->trigger(eventName: __FUNCTION__, target: $this, argv: [
+            'collection' => $halCollection,
+        ]);
+        $collection = $halCollection->getCollection();
         $collectionName = $halCollection->getCollectionName();
 
         if ($collection instanceof Paginator) {
@@ -528,35 +535,32 @@ class Hal extends AbstractHelper implements
 
         /** @psalm-suppress PossiblyFalseReference */
         $maxDepth = is_object(value: $collection) && $metadataMap->has(class: $collection)
-            ? $metadataMap->get(class: $collection)->getMaxDepth()
+            ? \Jield\Stdlib\Value::instance($metadataMap->get(class: $collection), \Jield\ApiTools\Hal\Metadata\Metadata::class)->getMaxDepth()
             : null;
 
         /** @var array<string,mixed> $payload */
-        $payload              = $halCollection->getAttributes();
-        $payload['_links']    = $this->fromResource(resource: $halCollection);
+        $payload = $halCollection->getAttributes();
+        $payload['_links'] = $this->fromResource(resource: $halCollection);
         $payload['_embedded'] = [
             $collectionName => $this->extractCollection(halCollection: $halCollection, depth: 0, maxDepth: $maxDepth),
         ];
 
         if ($collection instanceof Paginator) {
-            $payload['page_count']  = intval(value: $payload['page_count'] ?? $collection->count());
-            $payload['page_size']   = intval(value: $payload['page_size'] ?? $halCollection->getPageSize());
+            $payload['page_count'] = intval(value: $payload['page_count'] ?? $collection->count());
+            $payload['page_size'] = intval(value: $payload['page_size'] ?? $halCollection->getPageSize());
             $payload['total_items'] = intval(value: $payload['total_items'] ?? $collection->getTotalItemCount());
-            $payload['page']        = $payload['page_count'] > 0
-                ? $halCollection->getPage()
-                : 0;
+            $payload['page'] = $payload['page_count'] > 0 ? $halCollection->getPage() : 0;
         } elseif (is_countable(value: $collection)) {
             $payload['total_items'] = intval(value: $payload['total_items'] ?? count(value: $collection));
         }
 
-        $payload = new ArrayObject(array: $payload);
-        $this->getEventManager()->trigger(
-            eventName: __FUNCTION__ . '.post',
-            target: $this,
-            argv: ['payload' => $payload, 'collection' => $halCollection]
-        );
+        $payload = new ArrayObject( $payload);
+        $this->getEventManager()->trigger(eventName: __FUNCTION__ . '.post', target: $this, argv: [
+            'payload' => $payload,
+            'collection' => $halCollection,
+        ]);
 
-        return (array)$payload;
+        return \Jield\Stdlib\Value::toArray($payload);
     }
 
     /**
@@ -572,10 +576,14 @@ class Hal extends AbstractHelper implements
      * @param int|null $maxDepth maximum rendering depth for the current metadata
      * @throws Exception\CircularReferenceException
      */
-    public function renderEntity(Entity $halEntity, bool $renderEntity = true, int $depth = 0, ?int $maxDepth = null): array
-    {
+    public function renderEntity(
+        Entity $halEntity,
+        bool $renderEntity = true,
+        int $depth = 0,
+        ?int $maxDepth = null,
+    ): array {
         $this->getEventManager()->trigger(eventName: __FUNCTION__, target: $this, argv: ['entity' => $halEntity]);
-        $entity      = $halEntity->getEntity();
+        $entity = $halEntity->getEntity();
         $entityLinks = clone $halEntity->getLinks(); // Clone to prevent link duplication
 
         $metadataMap = $this->getMetadataMap();
@@ -583,7 +591,7 @@ class Hal extends AbstractHelper implements
         if (is_object(value: $entity)) {
             if ($maxDepth === null && $metadataMap->has(class: $entity)) {
                 /** @psalm-suppress PossiblyFalseReference */
-                $maxDepth = $metadataMap->get(class: $entity)->getMaxDepth();
+                $maxDepth = \Jield\Stdlib\Value::instance($metadataMap->get(class: $entity), \Jield\ApiTools\Hal\Metadata\Metadata::class)->getMaxDepth();
             }
 
             if ($maxDepth === null) {
@@ -595,7 +603,7 @@ class Hal extends AbstractHelper implements
                     throw new Exception\CircularReferenceException(message: sprintf(
                         "Circular reference detected in '%s'. %s",
                         $entity::class,
-                        "Either set a 'max_depth' metadata attribute or remove the reference"
+                        "Either set a 'max_depth' metadata attribute or remove the reference",
                     ));
                 }
 
@@ -603,7 +611,7 @@ class Hal extends AbstractHelper implements
             }
         }
 
-        if (!$renderEntity || ($maxDepth !== null && $depth > $maxDepth)) {
+        if (!$renderEntity || $maxDepth !== null && $depth > $maxDepth) {
             $entity = [];
         }
 
@@ -617,17 +625,29 @@ class Hal extends AbstractHelper implements
                 /** @psalm-suppress PossiblyFalseArgument,ArgumentTypeCoercion */
                 $value = $this->getResourceFactory()->createEntityFromMetadata(
                     object: $value,
-                    metadata: $metadataMap->get(class: $value),
-                    renderEmbeddedEntities: $this->getRenderEmbeddedEntities()
+                    metadata: \Jield\Stdlib\Value::instance($metadataMap->get(class: $value), \Jield\ApiTools\Hal\Metadata\Metadata::class),
+                    renderEmbeddedEntities: $this->getRenderEmbeddedEntities(),
                 );
             }
 
             if ($value instanceof Entity) {
-                $this->extractEmbeddedEntity(parent: $entity, key: (string)$key, entity: $value, depth: $depth + 1, maxDepth: $maxDepth);
+                $this->extractEmbeddedEntity(
+                    parent: $entity,
+                    key: (string) $key,
+                    entity: $value,
+                    depth: $depth + 1,
+                    maxDepth: $maxDepth,
+                );
             }
 
             if ($value instanceof Collection) {
-                $this->extractEmbeddedCollection(parent: $entity, key: (string)$key, collection: $value, depth: $depth + 1, maxDepth: $maxDepth);
+                $this->extractEmbeddedCollection(
+                    parent: $entity,
+                    key: (string) $key,
+                    collection: $value,
+                    depth: $depth + 1,
+                    maxDepth: $maxDepth,
+                );
             }
 
             if ($value instanceof Link) {
@@ -649,12 +669,11 @@ class Hal extends AbstractHelper implements
         $halEntity->setLinks(links: $entityLinks);
         $entity['_links'] = $this->fromResource(resource: $halEntity);
 
-        $payload = new ArrayObject(array: $entity);
-        $this->getEventManager()->trigger(
-            eventName: __FUNCTION__ . '.post',
-            target: $this,
-            argv: ['payload' => $payload, 'entity' => $halEntity]
-        );
+        $payload = new ArrayObject( $entity);
+        $this->getEventManager()->trigger(eventName: __FUNCTION__ . '.post', target: $this, argv: [
+            'payload' => $payload,
+            'entity' => $halEntity,
+        ]);
 
         if (isset($entityHash)) {
             unset($this->entityHashStack[$entityHash]);
@@ -663,30 +682,25 @@ class Hal extends AbstractHelper implements
         return $payload->getArrayCopy();
     }
 
-    public function createEntity(mixed $entity, string $route, string $routeIdentifierName): Entity
+    public function createEntity(mixed $entity, string $route, string $routeIdentifierName): Entity|Collection
     {
         $metadataMap = $this->getMetadataMap();
 
-        if (is_object(value: $entity) && $metadataMap->has(class: $entity)) {
+        if (is_object($entity) && $metadataMap->has($entity)) {
             /** @psalm-suppress PossiblyFalseArgument,ArgumentTypeCoercion */
-            $halEntity = $this->getResourceFactory()->createEntityFromMetadata(
-                object: $entity,
-                metadata: $metadataMap->get(class: $entity)
-            );
+            $halEntity = $this->getResourceFactory()->createEntityFromMetadata($entity, \Jield\Stdlib\Value::instance($metadataMap->get($entity), \Jield\ApiTools\Hal\Metadata\Metadata::class));
         } elseif (!$entity instanceof \Jield\ApiTools\Hal\Entity) {
             /** @var mixed $id */
-            $id        = $this->getIdFromEntity(entity: $entity) ?: null;
-            $halEntity = new Entity(entity: $entity, id: $id);
+            $id = $this->getIdFromEntity(\Jield\Stdlib\Value::arrayOrObject($entity)) ?: null;
+            $halEntity = new Entity(\Jield\Stdlib\Value::arrayOrObject($entity), $id);
         } else {
             $halEntity = $entity;
         }
 
-        $metadata = !is_array(value: $entity) && $metadataMap->has(class: $entity)
-            ? $metadataMap->get(class: $entity)
-            : false;
+        $metadata = is_object($entity) && $metadataMap->has($entity) ? $metadataMap->get($entity) : false;
 
-        if (!$metadata || ($metadata->getForceSelfLink())) {
-            $this->injectSelfLink(resource: $halEntity, route: $route, routeIdentifier: $routeIdentifierName);
+        if (!$metadata || $metadata->getForceSelfLink()) {
+            $this->injectSelfLink($halEntity, $route, $routeIdentifierName);
         }
 
         return $halEntity;
@@ -697,18 +711,17 @@ class Hal extends AbstractHelper implements
      */
     public function fromLinkCollection(LinkCollection $collection): array
     {
-        return $this->linkCollectionExtractor->extract(collection: $collection);
+        return \Jield\Stdlib\Value::present($this->linkCollectionExtractor)->extract(collection: $collection);
     }
 
     public function fromLink(\Jield\ApiTools\Hal\Link\Link $linkDefinition): array
     {
-        $this->getEventManager()->trigger(eventName: __FUNCTION__ . '.pre', target: $this, argv: ['linkDefinition' => $linkDefinition]);
+        $this->getEventManager()->trigger(__FUNCTION__ . '.pre', $this, ['linkDefinition' => $linkDefinition]);
 
-        $linkExtractor = $this->linkCollectionExtractor->getLinkExtractor();
+        $linkExtractor = \Jield\Stdlib\Value::present($this->linkCollectionExtractor)->getLinkExtractor();
 
-        return $linkExtractor->extract(link: $linkDefinition);
+        return $linkExtractor->extract($linkDefinition);
     }
-
 
     /**
      * Create HAL links "object" from an entity or collection
@@ -728,7 +741,7 @@ class Hal extends AbstractHelper implements
             /** @psalm-suppress PossiblyFalseArgument */
             $collection = $this->getResourceFactory()->createCollectionFromMetadata(
                 object: $collection,
-                metadata: $metadataMap->get(class: $collection)
+                metadata: \Jield\Stdlib\Value::instance($metadataMap->get(class: $collection), \Jield\ApiTools\Hal\Metadata\Metadata::class),
             );
         }
 
@@ -738,20 +751,26 @@ class Hal extends AbstractHelper implements
 
         $metadata = $metadataMap->get(class: $collection);
         /** @psalm-suppress RedundantConditionGivenDocblockType */
-        if (!$metadata || ($metadata->getForceSelfLink())) {
-            $this->injectSelfLink(resource: $collection, route: $route);
+        if (!$metadata || $metadata->getForceSelfLink()) {
+            $this->injectSelfLink(resource: $collection, route: \Jield\Stdlib\Value::string($route));
         }
 
         return $collection;
     }
 
-
     /**
      * Inject a "self" relational link based on the route and identifier
      */
-    public function injectSelfLink(LinkCollectionAwareInterface $resource, string $route, string $routeIdentifier = 'id'): void
-    {
-        $this->getSelfLinkInjector()->injectSelfLink(resource: $resource, route: $route, routeIdentifier: $routeIdentifier);
+    public function injectSelfLink(
+        LinkCollectionAwareInterface $resource,
+        string $route,
+        string $routeIdentifier = 'id',
+    ): void {
+        $this->getSelfLinkInjector()->injectSelfLink(
+            resource: $resource,
+            route: $route,
+            routeIdentifier: $routeIdentifier,
+        );
     }
 
     /**
@@ -770,8 +789,13 @@ class Hal extends AbstractHelper implements
      * Removes the key from the parent representation, and creates a
      * representation for the key in the _embedded object.
      */
-    protected function extractEmbeddedEntity(array &$parent, string $key, Entity $entity, int $depth = 0, ?int $maxDepth = null): void
-    {
+    protected function extractEmbeddedEntity(
+        array &$parent,
+        string $key,
+        Entity $entity,
+        int $depth = 0,
+        ?int $maxDepth = null,
+    ): void {
         // No need to increment depth for this call
         $rendered = $this->renderEntity(halEntity: $entity, renderEntity: true, depth: $depth, maxDepth: $maxDepth);
 
@@ -779,7 +803,7 @@ class Hal extends AbstractHelper implements
             $parent['_embedded'] = [];
         }
 
-        $parent['_embedded'][$key] = $rendered;
+        \Jield\Stdlib\Value::setPath($parent, ['_embedded', $key], $rendered);
         unset($parent[$key]);
     }
 
@@ -795,20 +819,19 @@ class Hal extends AbstractHelper implements
      * @param int|null $maxDepth maximum rendering depth for the current metadata
      */
     protected function extractEmbeddedCollection(
-        array      &$parent,
-        string     $key,
+        array &$parent,
+        string $key,
         Collection $collection,
-        int        $depth = 0,
-        ?int       $maxDepth = null
-    ): void
-    {
+        int $depth = 0,
+        ?int $maxDepth = null,
+    ): void {
         $rendered = $this->extractCollection(halCollection: $collection, depth: $depth + 1, maxDepth: $maxDepth);
 
         if (!isset($parent['_embedded'])) {
             $parent['_embedded'] = [];
         }
 
-        $parent['_embedded'][$key] = $rendered;
+        \Jield\Stdlib\Value::setPath($parent, ['_embedded', $key], $rendered);
         unset($parent[$key]);
     }
 
@@ -822,23 +845,23 @@ class Hal extends AbstractHelper implements
      */
     protected function extractCollection(Collection $halCollection, int $depth = 0, ?int $maxDepth = null): array
     {
-        $collection          = [];
-        $events              = $this->getEventManager();
+        $collection = [];
+        $events = $this->getEventManager();
         $routeIdentifierName = $halCollection->getRouteIdentifierName();
-        $entityRoute         = $halCollection->getEntityRoute();
-        $entityRouteParams   = $halCollection->getEntityRouteParams();
-        $entityRouteOptions  = $halCollection->getEntityRouteOptions();
-        $metadataMap         = $this->getMetadataMap();
+        $entityRoute = $halCollection->getEntityRoute();
+        $entityRouteParams = $halCollection->getEntityRouteParams();
+        $entityRouteOptions = $halCollection->getEntityRouteOptions();
+        $metadataMap = $this->getMetadataMap();
 
         /** @var mixed $entity */
         foreach ($halCollection->getCollection() as $entity) {
             /** @psalm-var ArrayObject<string, mixed> $eventParams */
-            $eventParams = new ArrayObject(array: [
-                'collection'   => $halCollection,
-                'entity'       => $entity,
-                'resource'     => $entity,
-                'route'        => $entityRoute,
-                'routeParams'  => $entityRouteParams,
+            $eventParams = new ArrayObject( [
+                'collection' => $halCollection,
+                'entity' => $entity,
+                'resource' => $entity,
+                'route' => $entityRoute,
+                'routeParams' => $entityRouteParams,
                 'routeOptions' => $entityRouteOptions,
             ]);
             $events->trigger(eventName: 'renderCollection.resource', target: $this, argv: $eventParams);
@@ -850,33 +873,56 @@ class Hal extends AbstractHelper implements
             /** @psalm-suppress RedundantConditionGivenDocblockType */
             if (is_object(value: $entity) && $metadataMap->has(class: $entity)) {
                 /** @psalm-suppress PossiblyFalseArgument,ArgumentTypeCoercion */
-                $entity = $this->getResourceFactory()->createEntityFromMetadata(object: $entity, metadata: $metadataMap->get(class: $entity));
+                $entity = $this->getResourceFactory()->createEntityFromMetadata(
+                    object: $entity,
+                    metadata: \Jield\Stdlib\Value::instance($metadataMap->get(class: $entity), \Jield\ApiTools\Hal\Metadata\Metadata::class),
+                );
             }
 
             if ($entity instanceof Entity) {
                 // Depth does not increment at this level
-                $collection[] = $this->renderEntity(halEntity: $entity, renderEntity: $this->getRenderCollections(), depth: $depth, maxDepth: $maxDepth);
+                $collection[] = $this->renderEntity(
+                    halEntity: $entity,
+                    renderEntity: $this->getRenderCollections(),
+                    depth: $depth,
+                    maxDepth: $maxDepth,
+                );
                 continue;
             }
 
             /** @psalm-suppress RedundantConditionGivenDocblockType */
             if (!is_array(value: $entity)) {
-                $entity = $this->getEntityExtractor()->extract(object: $entity);
+                $entity = $this->getEntityExtractor()->extract(object: \Jield\Stdlib\Value::object($entity));
             }
 
             /** @var mixed $value */
             foreach ($entity as $key => $value) {
                 if (is_object(value: $value) && $metadataMap->has(class: $value)) {
                     /** @psalm-suppress PossiblyFalseArgument,ArgumentTypeCoercion */
-                    $value = $this->getResourceFactory()->createEntityFromMetadata(object: $value, metadata: $metadataMap->get(class: $value));
+                    $value = $this->getResourceFactory()->createEntityFromMetadata(
+                        object: $value,
+                        metadata: \Jield\Stdlib\Value::instance($metadataMap->get(class: $value), \Jield\ApiTools\Hal\Metadata\Metadata::class),
+                    );
                 }
 
                 if ($value instanceof Entity) {
-                    $this->extractEmbeddedEntity(parent: $entity, key: (string)$key, entity: $value, depth: $depth + 1, maxDepth: $maxDepth);
+                    $this->extractEmbeddedEntity(
+                        parent: $entity,
+                        key: (string) $key,
+                        entity: $value,
+                        depth: $depth + 1,
+                        maxDepth: $maxDepth,
+                    );
                 }
 
                 if ($value instanceof Collection) {
-                    $this->extractEmbeddedCollection(parent: $entity, key: (string)$key, collection: $value, depth: $depth + 1, maxDepth: $maxDepth);
+                    $this->extractEmbeddedCollection(
+                        parent: $entity,
+                        key: (string) $key,
+                        collection: $value,
+                        depth: $depth + 1,
+                        maxDepth: $maxDepth,
+                    );
                 }
             }
 
@@ -901,18 +947,19 @@ class Hal extends AbstractHelper implements
             }
 
             /* $entity is always an array here. We don't have metadata config for arrays so the static link is forced
-               by default (at the moment) and should be removed manually if not required. But at some point it should
-               be discussed if it makes sense to force static links in this particular use-case.  */
+             * by default (at the moment) and should be removed manually if not required. But at some point it should
+             * be discussed if it makes sense to force static links in this particular use-case.  */
             $selfLink = new Link(relation: 'self');
 
             /** @var null|array $routeOptions */
             $routeOptions = $eventParams['routeOptions'] ?? null;
             $selfLink->setRoute(
-                route: (string)$eventParams['route'],
-                params: array_merge((array)$eventParams['routeParams'], [$routeIdentifierName => $id]),
-                options: $routeOptions
+                route: (string) $eventParams['route'],
+                params: array_merge(\Jield\Stdlib\Value::toArray($eventParams['routeParams']), [$routeIdentifierName => $id]),
+                options: $routeOptions,
             );
-            $links->add(link: $selfLink);
+            $links->remove('self');
+            $links->idempotentAdd(link: $selfLink);
 
             $entity['_links'] = $this->fromLinkCollection(collection: $links);
 
@@ -932,22 +979,22 @@ class Hal extends AbstractHelper implements
      * to use for URL assembly.
      *
      * @param object|array $entity
-     * @return mixed|false
+     * @return mixed
      * @todo   Remove 'resource' from parameters sent to event for 1.0.0
      * @todo   Remove trigger of getIdFromResource for 1.0.0
      */
     protected function getIdFromEntity(object|array $entity): mixed
     {
         $params = [
-            'entity'   => $entity,
+            'entity' => $entity,
             'resource' => $entity,
         ];
 
-        $callback = fn(mixed $r): bool => null !== $r && false !== $r;
+        $callback = static fn(mixed $r): bool => null !== $r && false !== $r;
 
         $results = $this->getEventManager()->triggerEventUntil(
             callback: $callback,
-            event: new Event(name: __FUNCTION__, target: $this, params: $params)
+            event: new Event(name: __FUNCTION__, target: $this, params: $params),
         );
 
         if ($results->stopped()) {
@@ -956,7 +1003,7 @@ class Hal extends AbstractHelper implements
 
         $results = $this->getEventManager()->triggerEventUntil(
             callback: $callback,
-            event: new Event(name: 'getIdFromResource', target: $this, params: $params)
+            event: new Event(name: 'getIdFromResource', target: $this, params: $params),
         );
 
         if ($results->stopped()) {
@@ -997,11 +1044,7 @@ class Hal extends AbstractHelper implements
             return $links;
         }
 
-        if (!$link instanceof Link) {
-            throw new Exception\InvalidArgumentException(
-                message: 'Invalid link discovered; cannot inject into representation'
-            );
-        }
+        
 
         $links->idempotentAdd(link: $link);
 

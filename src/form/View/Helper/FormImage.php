@@ -18,20 +18,20 @@ class FormImage extends FormInput
      * @var array
      */
     protected array $validTagAttributes = [
-        'name'           => true,
-        'alt'            => true,
-        'autofocus'      => true,
-        'disabled'       => true,
-        'form'           => true,
-        'formaction'     => true,
-        'formenctype'    => true,
-        'formmethod'     => true,
+        'name' => true,
+        'alt' => true,
+        'autofocus' => true,
+        'disabled' => true,
+        'form' => true,
+        'formaction' => true,
+        'formenctype' => true,
+        'formmethod' => true,
         'formnovalidate' => true,
-        'formtarget'     => true,
-        'height'         => true,
-        'src'            => true,
-        'type'           => true,
-        'width'          => true,
+        'formtarget' => true,
+        'height' => true,
+        'src' => true,
+        'type' => true,
+        'width' => true,
     ];
 
     /**
@@ -45,7 +45,7 @@ class FormImage extends FormInput
         if (empty($src)) {
             throw new Exception\DomainException(message: sprintf(
                 '%s requires that the element has an assigned src; none discovered',
-                __METHOD__
+                __METHOD__,
             ));
         }
 

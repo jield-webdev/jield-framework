@@ -1,63 +1,65 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\ApiTools;
 
 use Jield\ApiTools\ContentNegotiation\JsonModel;
 use Jield\ApiTools\Hal\View\HalJsonModel;
 use Jield\ApiTools\MvcAuth\Authentication\OAuth2Adapter;
 use Jield\ApiTools\OAuth2\Adapter\PdoAdapter;
+use Jield\Mvc\View\Model\ViewModel;
 use Laminas\Router\Http\Literal;
-use Laminas\View\Model\ViewModel;
 
 final class SettingsProvider
 {
     public function __invoke(): array
     {
         return [
-            'router'                        => [
+            'router' => [
                 'routes' => [
                     'oauth' => [
-                        'type'          => Literal::class,
-                        'options'       => [
-                            'route'    => '/oauth',
+                        'type' => Literal::class,
+                        'options' => [
+                            'route' => '/oauth',
                             'defaults' => [
                                 'controller' => \Jield\ApiTools\OAuth2\Controller\AuthController::class,
-                                'action'     => 'token'
+                                'action' => 'token',
                             ],
                         ],
                         'may_terminate' => true,
-                        'child_routes'  => [
-                            'revoke'    => [
-                                'type'    => Literal::class,
+                        'child_routes' => [
+                            'revoke' => [
+                                'type' => Literal::class,
                                 'options' => [
-                                    'route'    => '/revoke',
+                                    'route' => '/revoke',
                                     'defaults' => [
                                         'action' => 'revoke',
                                     ],
                                 ],
                             ],
                             'authorize' => [
-                                'type'    => Literal::class,
+                                'type' => Literal::class,
                                 'options' => [
-                                    'route'    => '/authorize',
+                                    'route' => '/authorize',
                                     'defaults' => [
                                         'action' => 'authorize',
                                     ],
                                 ],
                             ],
-                            'resource'  => [
-                                'type'    => Literal::class,
+                            'resource' => [
+                                'type' => Literal::class,
                                 'options' => [
-                                    'route'    => '/resource',
+                                    'route' => '/resource',
                                     'defaults' => [
                                         'action' => 'resource',
                                     ],
                                 ],
                             ],
-                            'code'      => [
-                                'type'    => Literal::class,
+                            'code' => [
+                                'type' => Literal::class,
                                 'options' => [
-                                    'route'    => '/receivecode',
+                                    'route' => '/receivecode',
                                     'defaults' => [
                                         'action' => 'receiveCode',
                                     ],
@@ -67,15 +69,15 @@ final class SettingsProvider
                     ],
                 ],
             ],
-            'api-tools-oauth2'              => [
-                'storage'                    => PdoAdapter::class,
+            'api-tools-oauth2' => [
+                'storage' => PdoAdapter::class,
 
                 /**
                  * These special OAuth2Server options are parsed outside the options array
                  */
-                'allow_implicit'             => true, // default (set to true when you need to support browser-based or mobile apps)
-                'access_lifetime'            => 3600, // default (set a value in seconds for access tokens lifetime)
-                'enforce_state'              => true,  // default
+                'allow_implicit' => true, // default (set to true when you need to support browser-based or mobile apps)
+                'access_lifetime' => 3600, // default (set a value in seconds for access tokens lifetime)
+                'enforce_state' => true, // default
 
                 /*
                  * Config can include:
@@ -89,45 +91,43 @@ final class SettingsProvider
                  *       // see https://github.com/bshaffer/oauth2-server-php/blob/develop/src/OAuth2/Storage/Pdo.php#L57-L66
                  *   ]
                  */
-                'grant_types'                => [
+                'grant_types' => [
                     'client_credentials' => true,
                     'authorization_code' => true,
-                    'password'           => true,
-                    'refresh_token'      => true,
-                    'jwt'                => true,
+                    'password' => true,
+                    'refresh_token' => true,
+                    'jwt' => true,
                 ],
                 'api_problem_error_response' => true,
                 /**
                  * These are all OAuth2Server options with their default values
                  */
-                'options'                    => [
-                    'use_jwt_access_tokens'             => true,
-                    'store_encrypted_token_string'      => true,
-                    'use_openid_connect'                => true,
-                    'jwt_extra_payload_callable'        => null,
-                    'auth_code_lifetime'                => 3600,
-                    'id_lifetime'                       => 3600,
-                    'www_realm'                         => 'Service',
-                    'token_param_name'                  => 'access_token',
-                    'token_bearer_header_name'          => 'Bearer',
-                    'require_exact_redirect_uri'        => true,
+                'options' => [
+                    'use_jwt_access_tokens' => true,
+                    'store_encrypted_token_string' => true,
+                    'use_openid_connect' => true,
+                    'jwt_extra_payload_callable' => null,
+                    'auth_code_lifetime' => 3600,
+                    'id_lifetime' => 3600,
+                    'www_realm' => 'Service',
+                    'token_param_name' => 'access_token',
+                    'token_bearer_header_name' => 'Bearer',
+                    'require_exact_redirect_uri' => true,
                     'allow_credentials_in_request_body' => true,
-                    'allow_public_clients'              => true,
-                    'always_issue_new_refresh_token'    => true,
-                    'unset_refresh_token_after_use'     => true,
+                    'allow_public_clients' => true,
+                    'always_issue_new_refresh_token' => true,
+                    'unset_refresh_token_after_use' => true,
                 ],
             ],
-            'api-tools-mvc-auth'            => [
+            'api-tools-mvc-auth' => [
                 'authentication' => [
-                    'map'      => [
-                        'Api\\V1' => 'jield_oauth2_pdo_adapter',
-                    ],
+                    'map' => [],
                     'adapters' => [
                         'jield_oauth2_pdo_adapter' => [
                             'adapter' => OAuth2Adapter::class,
                             'storage' => [
-                                'storage' => PdoAdapter::class
-                            ]
+                                'storage' => PdoAdapter::class,
+                            ],
                         ],
                     ],
                 ],
@@ -137,7 +137,7 @@ final class SettingsProvider
                 // - named selectors (see below)
                 // - an array of specific selectors, in the same format as for the
                 //   selectors key
-                'controllers'                    => [
+                'controllers' => [
                     \Jield\ApiTools\OAuth2\Controller\AuthController::class => [
                         JsonModel::class => [
                             'application/json',
@@ -154,9 +154,9 @@ final class SettingsProvider
                 // view model type pointing to the Accept mediatypes that will trigger
                 // selection of that view model; see the documentation on the
                 // AcceptableViewModelSelector plugin for details on the format:
-                // http://docs.jield.dev/jield-mvc/plugins/#acceptableviewmodelselector-plugin
-                'selectors'                      => [
-                    'Json'    => [
+                // http://docs.laminas.dev/laminas-mvc/plugins/#acceptableviewmodelselector-plugin
+                'selectors' => [
+                    'Json' => [
                         \Jield\ApiTools\ContentNegotiation\JsonModel::class => [
                             'application/json',
                             'application/*+json',
@@ -171,11 +171,11 @@ final class SettingsProvider
                 ],
                 // Array of controller service name => allowed accept header pairs.
                 // The allowed content type may be a string, or an array of strings.
-                'accept_whitelist'               => [],
+                'accept_whitelist' => [],
 
                 // Array of controller service name => allowed content type pairs.
                 // The allowed content type may be a string, or an array of strings.
-                'content_type_whitelist'         => [],
+                'content_type_whitelist' => [],
 
                 // Enable x-http method override feature
                 // When set to 'true' the  http method in the request will be overridden
@@ -185,20 +185,20 @@ final class SettingsProvider
                 // Map incoming HTTP request methods to acceptable X-HTTP-Method-Override
                 // values; when matched, the override value will be used for the incoming
                 // request.
-                'http_override_methods'          => [
+                'http_override_methods' => [
                     // Example:
                     // The following allows the X-HTTP-Method-Override header to override
                     // a GET request using one of the values in the supplied array:
                     // 'GET' => ['HEAD', 'POST', 'PUT', 'DELETE', 'PATCH']
                 ],
             ],
-            'api-tools-versioning'          => [
-                'content-type'    => [
+            'api-tools-versioning' => [
+                'content-type' => [
                     // @codingStandardsIgnoreStart
                     // Array of regular expressions to apply against the content-type
                     // header. All capturing expressions should be named:
                     // (?P<name_to_capture>expression)
-                    // Default: '#^application/vnd\.(?P<jield_ver_vendor>[^.]+)\.v(?P<jield_ver_version>\d+)\.(?P<jield_ver_resource>[a-zA-Z0-9_-]+)$#'
+                    // Default: '#^application/vnd\.(?P<laminas_ver_vendor>[^.]+)\.v(?P<laminas_ver_version>\d+)\.(?P<laminas_ver_resource>[a-zA-Z0-9_-]+)$#'
                     //
                     // Example:
                     // '#^application/vendor\.(?P<vendor>mwop)\.v(?P<version>\d+)\.(?P<resource>status|user)$#',
@@ -206,7 +206,7 @@ final class SettingsProvider
                 ],
                 // Default version number to use if none is provided by the API consumer. Default: 1
                 'default_version' => 1,
-                'uri'             => [
+                'uri' => [
                     // Array of routes that should prepend the "api-tools-versioning" route
                     // (i.e., "/v:version"). Any route in this array will be chained to
                     // that route, but can still be referenced by their route name.

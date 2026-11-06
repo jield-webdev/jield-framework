@@ -9,6 +9,7 @@ use Laminas\Filter\FilterChain;
 use Laminas\Hydrator\ExtractionInterface;
 use Laminas\Hydrator\HydratorPluginManager;
 use Laminas\Hydrator\HydratorPluginManagerInterface;
+
 use function class_exists;
 use function gettype;
 use function is_object;
@@ -16,6 +17,7 @@ use function is_string;
 use function method_exists;
 use function sprintf;
 use function trigger_error;
+
 use const E_USER_DEPRECATED;
 
 class Metadata
@@ -37,7 +39,7 @@ class Metadata
     /**
      * Hydrator to use when extracting object of this class
      */
-    protected ExtractionInterface $hydrator;
+    protected ?ExtractionInterface $hydrator = null;
 
     protected HydratorPluginManagerInterface|HydratorPluginManager $hydrators;
 
@@ -51,7 +53,7 @@ class Metadata
      *
      * @var string
      */
-    protected string $entityRoute;
+    protected ?string $entityRoute = null;
 
     /**
      * Name of the route parameter identifier for the entity
@@ -93,7 +95,7 @@ class Metadata
      *
      * @var string
      */
-    protected string $route;
+    protected ?string $route = null;
 
     /**
      * Additional options to use when generating a static link for this entity
@@ -114,7 +116,7 @@ class Metadata
      *
      * @var string
      */
-    protected string $url;
+    protected ?string $url = null;
 
     /**
      * Maximum number of nesting levels
@@ -134,15 +136,12 @@ class Metadata
      */
     public function __construct(string $class, array $options = [], ?HydratorPluginManagerInterface $hydrators = null)
     {
-        $filter = new FilterChain();
-        $filter->attachByName(name: 'WordUnderscoreToCamelCase')
-            ->attachByName(name: 'StringToLower');
 
         if (!class_exists(class: $class)) {
             throw new Exception\InvalidArgumentException(message: sprintf(
                 'Class provided to %s must exist; received "%s"',
                 static::class,
-                $class
+                $class,
             ));
         }
 
@@ -155,9 +154,10 @@ class Metadata
         /** @var string|bool $legacyIdentifierName */
         $legacyIdentifierName = false;
 
+        /** @var mixed $value */
         foreach ($options as $key => $value) {
             /** @var string $filteredKey */
-            $filteredKey = $filter(value: $key);
+            $filteredKey = strtolower(str_replace('_', '', (string) $key));
 
             if ($filteredKey === 'class') {
                 continue;
@@ -180,28 +180,29 @@ class Metadata
 
             // Fix BC issue: s/identifier_name/route_identifier_name/
             if ($filteredKey === 'identifiername') {
+                /** @var mixed $legacyIdentifierName */
                 $legacyIdentifierName = $value;
                 continue;
             }
 
             $method = 'set' . $filteredKey;
             if (method_exists(object_or_class: $this, method: $method)) {
-                $this->$method($value);
+                \Jield\Stdlib\Value::call($this, $method, [$value], scope: self::class);
             } else {
                 throw new Exception\InvalidArgumentException(message: sprintf(
                     'Unhandled option passed to Metadata constructor: %s %s',
                     $method,
-                    $key
+                    $key,
                 ));
             }
         }
 
         if (is_string(value: $legacyIdentifierName)) {
-            if ($this->routeIdentifierName === null || !$this->routeIdentifierName) {
+            if (!$this->routeIdentifierName) {
                 $this->setRouteIdentifierName(identifier: $legacyIdentifierName);
             }
 
-            if ($this->entityIdentifierName === null || !$this->entityIdentifierName) {
+            if (!$this->entityIdentifierName) {
                 $this->setEntityIdentifierName(identifier: $legacyIdentifierName);
             }
         }
@@ -284,9 +285,9 @@ class Metadata
     {
         if (null === $this->entityRoute) {
             if ($this->hasRoute()) {
-                $this->setEntityRoute(route: $this->getRoute());
+                $this->setEntityRoute(route: \Jield\Stdlib\Value::string($this->getRoute()));
             } else {
-                $this->setEntityRoute(route: $this->getUrl());
+                $this->setEntityRoute(route: \Jield\Stdlib\Value::string($this->getUrl()));
             }
         }
 
@@ -405,14 +406,12 @@ class Metadata
     public function setHydrator(ExtractionInterface|string $hydrator): static
     {
         if (is_string(value: $hydrator)) {
-            if (
-                null !== $this->hydrators
-                && $this->hydrators->has(id: $hydrator)
-            ) {
+            if ($this->hydrators->has($hydrator)) {
+                /** @var mixed $hydrator */
                 $hydrator = $this->hydrators->get($hydrator);
             } elseif (class_exists(class: $hydrator)) {
                 /** @var ExtractionInterface $hydrator */
-                $hydrator = new $hydrator();
+                $hydrator = \Jield\Stdlib\Value::instantiate($hydrator);
             }
         }
 
@@ -427,7 +426,7 @@ class Metadata
 
             throw new Exception\InvalidArgumentException(message: sprintf(
                 'Hydrator class must implement Laminas\Hydrator\ExtractionInterface; received "%s"',
-                $type
+                $type,
             ));
         }
 
@@ -522,11 +521,10 @@ class Metadata
      */
     public function setResourceRoute(string $route): static
     {
-        trigger_error(message: sprintf(
-            '%s is deprecated; please use %s::setEntityRoute',
-            __METHOD__,
-            static::class
-        ), error_level: E_USER_DEPRECATED);
+        trigger_error(
+            message: sprintf('%s is deprecated; please use %s::setEntityRoute', __METHOD__, static::class),
+            error_level: E_USER_DEPRECATED,
+        );
         return $this->setEntityRoute(route: $route);
     }
 
@@ -604,7 +602,7 @@ class Metadata
      * Set whether to force the existance of "self" links.
      *
      * @param bool $forceSelfLink A truthy value
-     * @return $this
+     * @return static
      */
     public function setForceSelfLink(bool $forceSelfLink): static
     {

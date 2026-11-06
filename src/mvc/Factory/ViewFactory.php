@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\Mvc\Factory;
 
 use Laminas\ServiceManager\Factory\FactoryInterface;
@@ -19,8 +21,8 @@ class ViewFactory implements FactoryInterface
     public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): View
     {
         return new View(
-            $container->get(RendererInterface::class),
-            $container->get(HelperPluginManagerInterface::class),
+            \Jield\Stdlib\Service::get($container, RendererInterface::class),
+            \Jield\Stdlib\Service::get($container, HelperPluginManagerInterface::class),
             Configuration::defaultLayout($container),
             Configuration::defaultCaptureTo($container),
         );

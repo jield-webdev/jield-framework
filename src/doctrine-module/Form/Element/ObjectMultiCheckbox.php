@@ -17,42 +17,43 @@ class ObjectMultiCheckbox extends MultiCheckbox
     use GetProxy;
 
     /**
-     * @param array $options
+     * @param iterable $options
      *
-     * @return $this
+     * @return static
      */
     #[\Override]
-    public function setOptions(iterable $options): self
+    public function setOptions(iterable $options): static
     {
-        $this->getProxy()->setOptions(options: $options);
+        $this->getProxy()->setOptions(options: \Jield\Stdlib\Value::array($options));
 
         return parent::setOptions(options: $options);
     }
 
-    /** @return \Jield\Form\Element */
+    /** @return $this */
     #[\Override]
-    public function setOption(string $key, mixed $value): \Jield\Form\Element
+    public function setOption(string $key, mixed $value): static
     {
         $this->getProxy()->setOptions(options: [$key => $value]);
 
-        return parent::setOption(key: $key, value: $value);
+        parent::setOption(key: $key, value: $value);
+        return $this;
     }
 
     /**
      * {@inheritDoc}
      */
     #[\Override]
-    public function setValue($value): ObjectMultiCheckbox|\Jield\Form\Element\Checkbox|\Jield\Form\ElementInterface|MultiCheckbox
+    public function setValue($value): static
     {
         if ($value instanceof Traversable) {
             $value = ArrayUtils::iteratorToArray(iterator: $value);
         } elseif ($value === null) {
             return parent::setValue(value: []);
-        } elseif (! is_array(value: $value)) {
-            $value = (array) $value;
+        } elseif (!is_array(value: $value)) {
+            $value = \Jield\Stdlib\Value::toArray($value);
         }
 
-        return parent::setValue(value: array_map(callback: [$this->getProxy(), 'getValue'], array: $value));
+        return parent::setValue(value: array_map(callback: [$this->getProxy(), 'getValue'], array: \Jield\Stdlib\Value::array($value)));
     }
 
     /**
@@ -67,9 +68,10 @@ class ObjectMultiCheckbox extends MultiCheckbox
             return $this->valueOptions;
         }
 
+        /** @var ValueOptionSpec $proxyValueOptions */
         $proxyValueOptions = $this->getProxy()->getValueOptions();
 
-        if (! empty($proxyValueOptions)) {
+        if (!empty($proxyValueOptions)) {
             $this->setValueOptions(options: $proxyValueOptions);
         }
 

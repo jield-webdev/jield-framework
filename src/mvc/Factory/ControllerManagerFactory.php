@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\Mvc\Factory;
 
 // phpcs:ignore
@@ -23,8 +25,11 @@ class ControllerManagerFactory implements FactoryInterface
      * @param  null|array $options
      * @return ControllerManager
      */
-    public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): ControllerManager
-    {
+    public function __invoke(
+        ContainerInterface $container,
+        string $requestedName,
+        ?array $options = null,
+    ): ControllerManager {
         if ($options) {
             return new ControllerManager($container, $options);
         }

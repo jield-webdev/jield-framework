@@ -10,10 +10,12 @@ class Entity implements Link\LinkCollectionAwareInterface
 {
     use Link\LinkCollectionAwareTrait;
 
-    protected iterable|Paginator $entity = [];
+    protected object|array $entity = [];
 
-    public function __construct(Paginator|iterable $entity, protected ?int $id = null)
-    {
+    public function __construct(
+        object|array $entity,
+        protected mixed $id = null,
+    ) {
         $this->entity = $entity;
     }
 

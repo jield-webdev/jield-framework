@@ -20,7 +20,7 @@ class UnauthenticatedListener
         }
 
         $authResult = $mvcAuthEvent->getAuthenticationResult();
-        if ($authResult->isValid()) {
+        if (\Jield\Stdlib\Value::present($authResult)->isValid()) {
             return null;
         }
 

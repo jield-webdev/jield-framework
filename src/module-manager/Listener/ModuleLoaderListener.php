@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace Jield\ModuleManager\Listener;
 
+use Jield\ModuleManager\Loader\ModuleAutoloader;
 use Jield\ModuleManager\ModuleEvent;
-use Jield\Mvc\Loader\ModuleAutoloader;
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\EventManager\ListenerAggregateInterface;
 use Override;
+
 use function file_exists;
 
 class ModuleLoaderListener extends AbstractListener implements ListenerAggregateInterface
@@ -28,7 +29,7 @@ class ModuleLoaderListener extends AbstractListener implements ListenerAggregate
         parent::__construct(options: $options);
 
         $this->generateCache = $this->options->getModuleMapCacheEnabled();
-        $this->moduleLoader  = new ModuleAutoloader($this->options->getModulePaths());
+        $this->moduleLoader = new ModuleAutoloader($this->options->getModulePaths());
 
         if ($this->hasCachedClassMap()) {
             $this->generateCache = false;
@@ -43,14 +44,14 @@ class ModuleLoaderListener extends AbstractListener implements ListenerAggregate
         $this->callbacks[] = $events->attach(
             eventName: ModuleEvent::EVENT_LOAD_MODULES,
             listener: [$this->moduleLoader, 'register'],
-            priority: 9000
+            priority: 9000,
         );
 
         if ($this->generateCache) {
-            $this->callbacks[] = $events->attach(
-                eventName: ModuleEvent::EVENT_LOAD_MODULES_POST,
-                listener: [$this, 'onLoadModulesPost']
-            );
+            $this->callbacks[] = $events->attach(eventName: ModuleEvent::EVENT_LOAD_MODULES_POST, listener: [
+                $this,
+                'onLoadModulesPost',
+            ]);
         }
     }
 
@@ -58,24 +59,26 @@ class ModuleLoaderListener extends AbstractListener implements ListenerAggregate
     #[Override]
     public function detach(EventManagerInterface $events): void
     {
+        /** @var mixed $callback */
         foreach ($this->callbacks as $index => $callback) {
-            if ($events->detach(listener: $callback)) {
-                unset($this->callbacks[$index]);
-            }
+            $events->detach(listener: \Jield\Stdlib\Value::callback($callback));
+
+            unset($this->callbacks[$index]);
         }
     }
 
     /** @return bool */
     protected function hasCachedClassMap(): bool
     {
-        return $this->options->getModuleMapCacheEnabled()
-            && file_exists(filename: $this->options->getModuleMapCacheFile());
+        return (
+            $this->options->getModuleMapCacheEnabled() && file_exists(filename: $this->options->getModuleMapCacheFile())
+        );
     }
 
     /** @return array */
     protected function getCachedConfig(): array
     {
-        return include $this->options->getModuleMapCacheFile();
+        return \Jield\Stdlib\Value::array(include $this->options->getModuleMapCacheFile());
     }
 
     /**
@@ -86,7 +89,7 @@ class ModuleLoaderListener extends AbstractListener implements ListenerAggregate
         $this->moduleLoader->unregister();
         $this->writeArrayToFile(
             filePath: $this->options->getModuleMapCacheFile(),
-            array: $this->moduleLoader->getModuleClassMap()
+            array: $this->moduleLoader->getModuleClassMap(),
         );
     }
 }

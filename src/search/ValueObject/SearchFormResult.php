@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Jield\Search\ValueObject;
 
 use Doctrine\Common\Collections\Order;
+
 use function array_key_exists;
 use function base64_decode;
 use function base64_encode;
@@ -14,54 +15,40 @@ use function strtoupper;
 final class SearchFormResult
 {
     public function __construct(
-        private string       $order = "",
-        private string       $direction = Order::Ascending->value,
-        private ?string      $query = null,
-        private array        $filter = [],
-        private array        $facet = [],
-        private DateInterval $dateInterval = new DateInterval()
-    )
-    {
-    }
+        private string $order = '',
+        private string $direction = Order::Ascending->value,
+        private ?string $query = null,
+        private array $filter = [],
+        private array $facet = [],
+        private DateInterval $dateInterval = new DateInterval(),
+    ) {}
 
     public static function fromArray(array $params): SearchFormResult
     {
-        $query
-            = null === ($params["query"] ?? null)
-            ? null
-            : trim(string: $params["query"]);
+        $query = null === ($params['query'] ?? null) ? null : trim(string: \Jield\Stdlib\Value::string($params['query']));
 
         return new self(
-            order: $params["order"] ?? "default",
-            direction: $params["direction"] ?? Order::Ascending->value,
+            order: \Jield\Stdlib\Value::string($params['order'] ?? 'default'),
+            direction: \Jield\Stdlib\Value::string($params['direction'] ?? Order::Ascending->value),
             query: $query,
-            filter: $params["filter"] ?? [],
-            facet: $params["facet"] ?? [],
-            dateInterval: DateInterval::fromValue(
-                value: $params["dateInterval"] ?? ""
-            )
+            filter: \Jield\Stdlib\Value::array($params['filter'] ?? []),
+            facet: \Jield\Stdlib\Value::array($params['facet'] ?? []),
+            dateInterval: DateInterval::fromValue(value: \Jield\Stdlib\Value::string($params['dateInterval'] ?? '')),
         );
     }
 
-    public function updateFromEncodedFilter(
-        string $encodedFilter
-    ): SearchFormResult
+    public function updateFromEncodedFilter(string $encodedFilter): SearchFormResult
     {
         try {
-            $filter = (array)json_decode(
-                json: base64_decode(string: $encodedFilter),
-                associative: true
-            );
+            $filter = \Jield\Stdlib\Value::toArray(json_decode(json: \Jield\Stdlib\Value::string(base64_decode(string: $encodedFilter, strict: true)), associative: true));
         } catch (\Exception) {
             $filter = [];
         }
 
-        $this->filter       = (array)($filter["filter"] ?? []);
-        $this->facet        = (array)($filter["facet"] ?? []);
-        $this->dateInterval = DateInterval::fromValue(
-            value: $filter["dateInterval"] ?? ""
-        );
-        $this->query        = $filter["query"] ?? null;
+        $this->filter = \Jield\Stdlib\Value::toArray($filter['filter'] ?? []);
+        $this->facet = \Jield\Stdlib\Value::toArray($filter['facet'] ?? []);
+        $this->dateInterval = DateInterval::fromValue(value: \Jield\Stdlib\Value::string($filter['dateInterval'] ?? ''));
+        $this->query = \Jield\Stdlib\Value::nullableString($filter['query'] ?? null);
 
         return $this;
     }
@@ -80,18 +67,18 @@ final class SearchFormResult
 
     public function getHash(): string
     {
-        return base64_encode(string: json_encode(value: $this->toArray()));
+        return base64_encode(string: \Jield\Stdlib\Value::string(json_encode(value: $this->toArray())));
     }
 
     public function toArray(): array
     {
         return [
-            "order"        => $this->order,
-            "direction"    => $this->direction,
-            "query"        => $this->query,
-            "filter"       => $this->filter,
-            "facet"        => $this->facet,
-            "dateInterval" => $this->dateInterval->toValue(),
+            'order' => $this->order,
+            'direction' => $this->direction,
+            'query' => $this->query,
+            'filter' => $this->filter,
+            'facet' => $this->facet,
+            'dateInterval' => $this->dateInterval->toValue(),
         ];
     }
 
@@ -105,11 +92,7 @@ final class SearchFormResult
         return $this->filter[$key] ?? $default;
     }
 
-    public function setFilterByKey(
-        string $key,
-        mixed  $value,
-        bool   $force = false
-    ): SearchFormResult
+    public function setFilterByKey(string $key, mixed $value, bool $force = false): SearchFormResult
     {
         //Only set the value when we force it or when it does not exist
         if ($force || !array_key_exists(key: $key, array: $this->filter)) {
@@ -119,15 +102,11 @@ final class SearchFormResult
         return $this;
     }
 
-    public function setFacetByKey(
-        string $key,
-        mixed  $value,
-        bool   $force = false
-    ): SearchFormResult
+    public function setFacetByKey(string $key, mixed $value, bool $force = false): SearchFormResult
     {
         //Only set the value when we force it or when it does not exist
         if ($force || !array_key_exists(key: $key, array: $this->facet)) {
-            $this->facet[$key]["values"] = $value;
+            \Jield\Stdlib\Value::setPath($this->facet, [$key, 'values'], $value);
         }
 
         return $this;
@@ -135,10 +114,12 @@ final class SearchFormResult
 
     public function hasFilterByKey(string $key): bool
     {
-        return array_key_exists(key: $key, array: $this->filter) &&
-            "" !== $this->filter[$key] &&
-            null !== $this->filter[$key] &&
-            [] !== $this->filter[$key];
+        return (
+            array_key_exists(key: $key, array: $this->filter)
+            && '' !== $this->filter[$key]
+            && null !== $this->filter[$key]
+            && [] !== $this->filter[$key]
+        );
     }
 
     public function hasQuery(): bool
@@ -148,7 +129,7 @@ final class SearchFormResult
 
     public function hasDefaultOrder(): bool
     {
-        return $this->order === "default";
+        return $this->order === 'default';
     }
 
     public function getOrder(): string
@@ -183,13 +164,11 @@ final class SearchFormResult
     {
         $direction = strtoupper(string: $this->direction);
 
-        if (
-            !in_array(
-                needle: $direction,
-                haystack: [Order::Ascending->value, Order::Descending->value],
-                strict: true
-            )
-        ) {
+        if (!in_array(
+            needle: $direction,
+            haystack: [Order::Ascending->value, Order::Descending->value],
+            strict: true,
+        )) {
             return Order::Descending->value;
         }
 
@@ -198,8 +177,9 @@ final class SearchFormResult
 
     public function addFilters(array $filters): SearchFormResult
     {
+        /** @var mixed $value */
         foreach ($filters as $key => $value) {
-            $this->addFilter(key: $key, value: $value);
+            $this->addFilter(key: \Jield\Stdlib\Value::string($key), value: $value);
         }
 
         return $this;
@@ -208,7 +188,11 @@ final class SearchFormResult
     public function addFilter(string $key, mixed $value): SearchFormResult
     {
         if (array_key_exists(key: $key, array: $this->filter)) {
-            $this->filter[$key] += $value;
+            /** @var mixed $existing */
+            $existing = $this->filter[$key];
+            $this->filter[$key] = is_array($existing) && is_array($value)
+                ? $existing + $value
+                : \Jield\Stdlib\Value::numeric($existing) + \Jield\Stdlib\Value::numeric($value);
         } else {
             $this->filter[$key] = $value;
         }
@@ -221,9 +205,7 @@ final class SearchFormResult
         return $this->dateInterval;
     }
 
-    public function setDateInterval(
-        DateInterval $dateInterval
-    ): SearchFormResult
+    public function setDateInterval(DateInterval $dateInterval): SearchFormResult
     {
         $this->dateInterval = $dateInterval;
         return $this;

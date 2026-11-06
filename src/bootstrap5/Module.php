@@ -15,21 +15,22 @@ final class Module implements ConfigProviderInterface, BootstrapListenerInterfac
 {
     public function getConfig(): array
     {
-        return include __DIR__ . '/../../config/bootstrap5/module.config.php';
+        return new ConfigProvider()();
     }
 
     public function onBootstrap(EventInterface $e): void
     {
+        /** @var mixed $app */
         $app = $e->getParam(name: 'application');
         /** @var ServiceManager $sm */
-        $sm = $app->getServiceManager();
+        $sm = \Jield\Stdlib\Value::call($app, 'getServiceManager');
 
-        $setTitle = $sm->get(id: InjectJavascriptAndCss::class);
-        $setTitle->attach(events: $app->getEventManager());
+        $setTitle = \Jield\Stdlib\Service::get($sm, InjectJavascriptAndCss::class);
+        $setTitle->attach(events: \Jield\Stdlib\Value::instance(\Jield\Stdlib\Value::call($app, 'getEventManager'), \Laminas\EventManager\EventManagerInterface::class));
     }
 
     public function getModuleDependencies(): array
     {
-        return [\Jield\Authorize\Module::class];
+        return ['Jield\\Authorize'];
     }
 }

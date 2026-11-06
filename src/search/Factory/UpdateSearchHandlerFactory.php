@@ -12,9 +12,6 @@ final class UpdateSearchHandlerFactory implements FactoryInterface
 {
     public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): mixed
     {
-        return new $requestedName(
-            container: $container,
-            entityManager: $container->get(EntityManager::class),
-        );
+        return \Jield\Stdlib\Value::instantiate($requestedName, ['container' => $container, 'entityManager' => \Jield\Stdlib\Service::get($container, EntityManager::class)]);
     }
 }

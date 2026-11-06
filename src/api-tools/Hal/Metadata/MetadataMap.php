@@ -8,6 +8,7 @@ use Jield\ApiTools\Hal\Exception;
 use Laminas\Hydrator\HydratorPluginManager;
 use Laminas\Hydrator\HydratorPluginManagerInterface;
 use Laminas\ServiceManager\ServiceManager;
+
 use function array_key_exists;
 use function get_debug_type;
 use function get_parent_class;
@@ -17,9 +18,9 @@ use function sprintf;
 
 class MetadataMap
 {
-    protected null|HydratorPluginManagerInterface|HydratorPluginManager $hydrators;
+    protected HydratorPluginManagerInterface|HydratorPluginManager|null $hydrators = null;
 
-    /** @var array<class-string, array<string,string>|Metadata> */
+    /** @var array<class-string, array<string,mixed>|Metadata> */
     protected array $map = [];
 
     /**
@@ -49,7 +50,7 @@ class MetadataMap
     public function getHydratorManager(): HydratorPluginManager|HydratorPluginManagerInterface
     {
         if (null === $this->hydrators) {
-            $hydrators = new HydratorPluginManager(configInstanceOrParentLocator: new ServiceManager());
+            $hydrators = new HydratorPluginManager(creationContext: new ServiceManager());
             $this->setHydratorManager(hydrators: $hydrators);
             return $hydrators;
         }
@@ -64,7 +65,7 @@ class MetadataMap
      * Each definition may be an instance of Metadata, or an array
      * of options used to define a Metadata instance.
      *
-     * @param array<class-string, array<string,string>|Metadata> $map
+     * @param array<array-key, mixed> $map
      * @return static
      * @throws Exception\InvalidArgumentException
      */
@@ -76,11 +77,11 @@ class MetadataMap
                 throw new Exception\InvalidArgumentException(message: sprintf(
                     '%s expects each map to be an array or a Jield\ApiTools\Hal\Metadata instance; received "%s"',
                     __METHOD__,
-                    get_debug_type(value: $metadata)
+                    get_debug_type(value: $metadata),
                 ));
             }
 
-            $this->map[$class] = $metadata;
+            $this->map[\Jield\Stdlib\Value::classString($class)] = $metadata instanceof Metadata ? $metadata : \Jield\Stdlib\Value::stringKeyedArray($metadata);
         }
 
         return $this;
@@ -139,7 +140,11 @@ class MetadataMap
             return $this->map[$class];
         }
 
-        $this->map[$class] = new Metadata(class: $class, options: $this->map[$class], hydrators: $this->getHydratorManager());
+        $this->map[$class] = new Metadata(
+            class: $class,
+            options: $this->map[$class],
+            hydrators: $this->getHydratorManager(),
+        );
         return $this->map[$class];
     }
 }

@@ -21,10 +21,10 @@ final class ObjectSelectFactory implements FactoryInterface
      *
      * @return ObjectSelect
      */
-    public function __invoke(ContainerInterface $container, string $requestedName, array|null $options = null): ObjectSelect
+    public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): ObjectSelect
     {
-        $entityManager = $container->get(EntityManager::class);
-        $element       = new ObjectSelect();
+        $entityManager = \Jield\Stdlib\Service::get($container, EntityManager::class);
+        $element = new ObjectSelect();
 
         $element->getProxy()->setObjectManager(objectManager: $entityManager);
 

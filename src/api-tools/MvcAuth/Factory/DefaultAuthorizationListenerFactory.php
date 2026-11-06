@@ -10,6 +10,7 @@ use Laminas\ServiceManager\Exception\ServiceNotCreatedException;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Override;
 use Psr\Container\ContainerInterface;
+
 use function sprintf;
 
 /**
@@ -24,19 +25,21 @@ class DefaultAuthorizationListenerFactory implements FactoryInterface
      * @throws ServiceNotCreatedException If the AuthorizationInterface service is missing.
      */
     #[Override]
-    public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): DefaultAuthorizationListener
-    {
-        if (!$container->has(id: AuthorizationInterface::class)) {
+    public function __invoke(
+        ContainerInterface $container,
+        $requestedName,
+        ?array $options = null,
+    ): DefaultAuthorizationListener {
+        if (!$container->has(AuthorizationInterface::class)) {
             throw new ServiceNotCreatedException(message: sprintf(
                 'Cannot create %s service; no %s service available!',
                 DefaultAuthorizationListener::class,
-                AuthorizationInterface::class
+                AuthorizationInterface::class,
             ));
         }
 
-        $authorization = $container->get(AuthorizationInterface::class);
+        $authorization = \Jield\Stdlib\Service::get($container, AuthorizationInterface::class);
 
         return new DefaultAuthorizationListener(authorization: $authorization);
     }
-
 }

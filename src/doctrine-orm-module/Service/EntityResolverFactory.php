@@ -16,20 +16,26 @@ final class EntityResolverFactory extends AbstractFactory
     /**
      * {@inheritDoc}
      */
-    public function __invoke(ContainerInterface $container, $requestedName, array|null $options = null): mixed
+    public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): mixed
     {
         $options = $this->getOptions(container: $container, key: 'entity_resolver');
         assert(assertion: $options instanceof EntityResolver);
+        /** @var mixed $eventManager */
         $eventManager = $container->get($options->getEventManager());
-        $resolvers    = $options->getResolvers();
+        $resolvers = $options->getResolvers();
 
         $targetEntityListener = new ResolveTargetEntityListener();
 
+        /** @var mixed $newEntity */
         foreach ($resolvers as $oldEntity => $newEntity) {
-            $targetEntityListener->addResolveTargetEntity(originalEntity: $oldEntity, newEntity: $newEntity, mapping: []);
+            $targetEntityListener->addResolveTargetEntity(
+                originalEntity: \Jield\Stdlib\Value::string($oldEntity),
+                newEntity: \Jield\Stdlib\Value::string($newEntity),
+                mapping: [],
+            );
         }
 
-        $eventManager->addEventSubscriber($targetEntityListener);
+        \Jield\Stdlib\Value::call($eventManager, 'addEventSubscriber', [$targetEntityListener]);
 
         return $eventManager;
     }

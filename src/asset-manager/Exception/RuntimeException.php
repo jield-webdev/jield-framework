@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\AssetManager\Exception;
 
 /**
@@ -7,6 +9,4 @@ namespace Jield\AssetManager\Exception;
  * @package    AssetManager
  * @subpackage Exception
  */
-class RuntimeException extends \RuntimeException implements ExceptionInterface
-{
-}
+class RuntimeException extends \RuntimeException implements ExceptionInterface {}

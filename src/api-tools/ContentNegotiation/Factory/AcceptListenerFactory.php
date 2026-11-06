@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Jield\ApiTools\ContentNegotiation\Factory;
 
-use Psr\Container\ContainerInterface;
 use Jield\ApiTools\ContentNegotiation\AcceptListener;
 use Jield\ApiTools\ContentNegotiation\ContentNegotiationOptions;
 use Jield\Mvc\Controller\Plugin\AcceptableViewModelSelector;
+use Psr\Container\ContainerInterface;
 
 class AcceptListenerFactory
 {
@@ -15,7 +15,7 @@ class AcceptListenerFactory
     {
         return new AcceptListener(
             selector: $this->getAcceptableViewModelSelector(container: $container),
-            config: $container->get(ContentNegotiationOptions::class)->toArray()
+            config: \Jield\Stdlib\Service::get($container, ContentNegotiationOptions::class)->toArray(),
         );
     }
 
@@ -25,15 +25,15 @@ class AcceptListenerFactory
      */
     private function getAcceptableViewModelSelector(ContainerInterface $container): AcceptableViewModelSelector
     {
-        if (! $container->has(id: 'ControllerPluginManager')) {
+        if (!$container->has('ControllerPluginManager')) {
             return new AcceptableViewModelSelector();
         }
 
-        $plugins = $container->get('ControllerPluginManager');
-        if (! $plugins->has('AcceptableViewModelSelector')) {
+        $plugins = \Jield\Stdlib\Service::get($container, \Jield\Mvc\Controller\PluginManager::class, 'ControllerPluginManager');
+        if (!$plugins->has('AcceptableViewModelSelector')) {
             return new AcceptableViewModelSelector();
         }
 
-        return $plugins->get('AcceptableViewModelSelector');
+        return \Jield\Stdlib\Service::get($plugins, AcceptableViewModelSelector::class, 'AcceptableViewModelSelector');
     }
 }

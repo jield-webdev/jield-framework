@@ -6,6 +6,7 @@ namespace Jield\Twig;
 
 use Jield\Mvc\Plugin\FlashMessenger\Factory\FlashMessengerFactory;
 use Jield\Mvc\Plugin\FlashMessenger\View\Helper\FlashMessenger as FlashMessengerHelper;
+use Jield\Mvc\Navigation\View\HelperConfig;
 use Jield\Twig\Factory\ChainLoaderFactory;
 use Jield\Twig\Factory\EnvironmentFactory;
 use Jield\Twig\Factory\ExtensionFactory;
@@ -15,7 +16,6 @@ use Jield\Twig\Factory\StackLoaderFactory;
 use Jield\Twig\Factory\TwigRendererFactory;
 use Jield\Twig\Factory\TwigResolverFactory;
 use Jield\Twig\Factory\TwigStrategyFactory;
-use Laminas\Navigation\View\HelperConfig;
 use Twig\Environment;
 use Twig\Loader;
 use Twig\Loader\ChainLoader;
@@ -27,10 +27,10 @@ final class ConfigProvider
         $dependencies = $this->getDependencies();
 
         return [
-            'jield_twig'      => $this->getJieldTwigConfig(),
-            'view_helpers'    => $this->getViewHelperConfig(),
-            'view_manager'    => $this->getViewManagerConfig(),
-            'dependencies'    => $dependencies,
+            'jield_twig' => $this->getJieldTwigConfig(),
+            'view_helpers' => $this->getViewHelperConfig(),
+            'view_manager' => $this->getViewManagerConfig(),
+            'dependencies' => $dependencies,
             'service_manager' => $dependencies,
         ];
     }
@@ -38,25 +38,25 @@ final class ConfigProvider
     public function getDependencies(): array
     {
         return [
-            'aliases'   => [
-                'JieldTwigExtension'               => Extension::class,
-                'JieldTwigLoaderChain'             => Loader\ChainLoader::class,
-                'JieldTwigLoaderTemplateMap'       => MapLoader::class,
+            'aliases' => [
+                'JieldTwigExtension' => Extension::class,
+                'JieldTwigLoaderChain' => Loader\ChainLoader::class,
+                'JieldTwigLoaderTemplateMap' => MapLoader::class,
                 'JieldTwigLoaderTemplatePathStack' => StackLoader::class,
-                'JieldTwigRenderer'                => View\TwigRenderer::class,
-                'JieldTwigResolver'                => View\TwigResolver::class,
-                'JieldTwigViewStrategy'            => View\TwigStrategy::class,
+                'JieldTwigRenderer' => View\TwigRenderer::class,
+                'JieldTwigResolver' => View\TwigResolver::class,
+                'JieldTwigViewStrategy' => View\TwigStrategy::class,
             ],
             'factories' => [
-                Environment::class       => EnvironmentFactory::class,
-                ChainLoader::class       => ChainLoaderFactory::class,
-                Extension::class         => ExtensionFactory::class,
-                MapLoader::class         => MapLoaderFactory::class,
-                StackLoader::class       => StackLoaderFactory::class,
+                Environment::class => EnvironmentFactory::class,
+                ChainLoader::class => ChainLoaderFactory::class,
+                Extension::class => ExtensionFactory::class,
+                MapLoader::class => MapLoaderFactory::class,
+                StackLoader::class => StackLoaderFactory::class,
                 View\TwigRenderer::class => TwigRendererFactory::class,
                 View\TwigResolver::class => TwigResolverFactory::class,
                 View\TwigStrategy::class => TwigStrategyFactory::class,
-                ModuleOptions::class     => ModuleOptionsFactory::class,
+                ModuleOptions::class => ModuleOptionsFactory::class,
             ],
         ];
     }
@@ -64,19 +64,19 @@ final class ConfigProvider
     public function getJieldTwigConfig(): array
     {
         return [
-            'environment_loader'        => ChainLoader::class,
-            'environment_class'         => Environment::class,
-            'environment_options'       => [],
-            'loader_chain'              => [
+            'environment_loader' => ChainLoader::class,
+            'environment_class' => Environment::class,
+            'environment_options' => [],
+            'loader_chain' => [
                 MapLoader::class,
                 StackLoader::class,
             ],
-            'extensions'                => [
+            'extensions' => [
                 Extension::class,
             ],
-            'suffix'                    => 'twig',
+            'suffix' => 'twig',
             'enable_fallback_functions' => true,
-            'helper_manager'            => [
+            'helper_manager' => [
                 'configs' => [
                     HelperConfig::class,
                 ],
@@ -87,7 +87,7 @@ final class ConfigProvider
     public function getViewHelperConfig(): array
     {
         return [
-            'aliases'   => [
+            'aliases' => [
                 'flashmessenger' => FlashMessengerHelper::class,
                 'flashMessenger' => FlashMessengerHelper::class,
                 'FlashMessenger' => FlashMessengerHelper::class,

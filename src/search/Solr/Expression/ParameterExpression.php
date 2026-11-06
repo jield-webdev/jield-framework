@@ -14,9 +14,9 @@ use function implode;
 class ParameterExpression extends Expression implements Stringable
 {
     /** @param mixed[] $parameters */
-    public function __construct(private readonly array $parameters)
-    {
-    }
+    public function __construct(
+        private readonly array $parameters,
+    ) {}
 
     public function __toString(): string
     {
@@ -25,7 +25,8 @@ class ParameterExpression extends Expression implements Stringable
         return implode(separator: ', ', array: array_map(callback: Util::sanitize(...), array: $parameters));
     }
 
-    #[Pure] private function replaceNull(mixed $value): mixed
+    #[Pure]
+    private function replaceNull(mixed $value): mixed
     {
         return $value ?? new PhraseExpression(expr: '');
     }

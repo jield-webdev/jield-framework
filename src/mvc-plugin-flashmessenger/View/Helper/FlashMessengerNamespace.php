@@ -11,13 +11,14 @@ namespace Jield\Mvc\Plugin\FlashMessenger\View\Helper;
  */
 class FlashMessengerNamespace
 {
-    private string $messageCloseString     = '</li></ul>';
-    private string $messageOpenFormat      = '<ul%s><li>';
+    private string $messageCloseString = '</li></ul>';
+    private string $messageOpenFormat = '<ul%s><li>';
     private string $messageSeparatorString = '</li><li>';
 
-    public function __construct(private string $name, private string $classes = '')
-    {
-    }
+    public function __construct(
+        private string $name,
+        private string $classes = '',
+    ) {}
 
     public function getName(): string
     {

@@ -20,17 +20,18 @@ class GeofiltExpression extends Expression implements Stringable
         private readonly string $field,
         private readonly ?GeolocationExpression $geolocation = null,
         ?int $distance = null,
-        private readonly array $additionalParams = []
+        private readonly array $additionalParams = [],
     ) {
-        $this->distance = (int)$distance;
+        $this->distance = (int) $distance;
     }
 
-    #[Pure] public function __toString(): string
+    #[Pure]
+    public function __toString(): string
     {
         $params = ['sfield' => $this->field];
 
         if ($this->geolocation) {
-            $params['pt'] = (string)$this->geolocation;
+            $params['pt'] = (string) $this->geolocation;
         }
 
         if ($this->distance) {

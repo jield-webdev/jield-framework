@@ -6,6 +6,4 @@ namespace Jield\Search\Solr\Expression\Exception;
 
 use LengthException as BaseLengthException;
 
-class LengthException extends BaseLengthException implements ExceptionInterface
-{
-}
+class LengthException extends BaseLengthException implements ExceptionInterface {}

@@ -6,13 +6,15 @@ namespace Jield\ApiTools\MvcAuth\Authentication;
 
 use Jield\ApiTools\MvcAuth\Identity;
 use Jield\ApiTools\MvcAuth\MvcAuthEvent;
+use Laminas\Http\Header\ContentType as ContentTypeHeader;
 use Laminas\Http\Request;
 use Laminas\Http\Response;
-use Laminas\Http\Header\ContentType as ContentTypeHeader;
 use OAuth2\Request as OAuth2Request;
 use OAuth2\Response as OAuth2Response;
 use OAuth2\Server as OAuth2Server;
 use Override;
+use Throwable;
+
 use function in_array;
 use function is_array;
 use function is_string;
@@ -33,16 +35,17 @@ class OAuth2Adapter extends AbstractAdapter
     /**
      * Request methods that will not have request bodies
      */
-    private array $requestsWithoutBodies
-        = [
-            'GET',
-            'HEAD',
-            'OPTIONS',
-        ];
+    private array $requestsWithoutBodies = [
+        'GET',
+        'HEAD',
+        'OPTIONS',
+    ];
 
     /** @psalm-param null|string|string[] $types */
-    public function __construct(private readonly OAuth2Server $oauth2Server, $types = null)
-    {
+    public function __construct(
+        private readonly OAuth2Server $oauth2Server,
+        $types = null,
+    ) {
         if (is_string(value: $types) && ($types !== '' && $types !== '0')) {
             $types = [$types];
         }
@@ -87,15 +90,15 @@ class OAuth2Adapter extends AbstractAdapter
             return 'oauth2';
         }
 
-        $contentTypeHeader = $request->getHeaders()->has(name: 'Content-Type')
-            ? $request->getHeaders()->get(name: 'Content-Type')
+        $contentTypeHeader = \Jield\Stdlib\Value::instance($request->getHeaders(), \Laminas\Http\Headers::class)->has('Content-Type')
+            ? \Jield\Stdlib\Value::instance($request->getHeaders(), \Laminas\Http\Headers::class)->get('Content-Type')
             : null;
 
         if (
-            !in_array(needle: $request->getMethod(), haystack: $this->requestsWithoutBodies)
+            !in_array(needle: $request->getMethod(), haystack: $this->requestsWithoutBodies, strict: true)
             && $contentTypeHeader instanceof ContentTypeHeader
-            && $contentTypeHeader->match(matchAgainst: 'application/x-www-form-urlencoded')
-            && $request->getPost(name: 'access_token')
+            && $contentTypeHeader->match('application/x-www-form-urlencoded')
+            && \Jield\Stdlib\Value::truthy($request->getPost(name: 'access_token'))
         ) {
             return 'oauth2';
         }
@@ -115,36 +118,58 @@ class OAuth2Adapter extends AbstractAdapter
      * @return void
      */
     #[Override]
-    public function preAuth(Request $request, Response $response)
-    {
-    }
+    public function preAuth(Request $request, Response $response) {}
 
     /**
      * Attempt to authenticate the current request.
      */
     #[Override]
-    public function authenticate(Request $request, Response $response, MvcAuthEvent $mvcAuthEvent): Identity\IdentityInterface|\Laminas\Http\PhpEnvironment\Response
-    {
+    public function authenticate(
+        Request $request,
+        Response $response,
+        MvcAuthEvent $mvcAuthEvent,
+    ): Identity\IdentityInterface|Response {
         $oauth2request = new OAuth2Request(
-            query: $request->getQuery()->toArray(),
-            request: $request->getPost()->toArray(),
+            query: \Jield\Stdlib\Value::array(\Jield\Stdlib\Value::call($request->getQuery(), 'toArray')),
+            request: \Jield\Stdlib\Value::array(\Jield\Stdlib\Value::call($request->getPost(), 'toArray')),
             attributes: [],
-            cookies: $request->getCookie() ? $request->getCookie()->getArrayCopy() : [],
-            files: $request->getFiles() ? $request->getFiles()->toArray() : [],
-            server: method_exists(object_or_class: $request, method: 'getServer') ? $request->getServer()->toArray() : $_SERVER,
-            content: $request->getContent(),
-            headers: $request->getHeaders()->toArray()
+            cookies: ($cookie = $request->getCookie()) instanceof \Laminas\Http\Header\Cookie ? $cookie->getArrayCopy() : [],
+            files: \Jield\Stdlib\Value::array($request->getFiles()->toArray()),
+            server: \Jield\Stdlib\Value::array(method_exists(object_or_class: $request, method: 'getServer')
+                ? \Jield\Stdlib\Value::call($request->getServer(), 'toArray')
+                : $_SERVER),
+            content: \Jield\Stdlib\Value::nullableString($request->getContent()),
+            headers: \Jield\Stdlib\Value::instance($request->getHeaders(), \Laminas\Http\Headers::class)->toArray(),
         );
 
-        $token = $this->oauth2Server->getAccessTokenData(request: $oauth2request);
+        try {
+            /** @var mixed $token */
+            $token = $this->oauth2Server->getAccessTokenData(request: $oauth2request);
+        } catch (Throwable $exception) {
+            // The OAuth2 JWT decoder can raise an OpenSSL error for a missing or malformed public key.
+            if (!str_starts_with($exception->getMessage(), 'openssl_verify():')) {
+                throw $exception;
+            }
+
+            $response->setStatusCode(401);
+            $response->getHeaders()->addHeaderLine('Content-Type', 'application/json');
+            $response->getHeaders()->addHeaderLine('Cache-Control', 'no-store');
+            $response->getHeaders()->addHeaderLine('WWW-Authenticate', 'Bearer error="invalid_token"');
+            $response->setContent(json_encode([
+                'error' => 'invalid_token',
+                'error_description' => 'The access token provided is invalid',
+            ], JSON_THROW_ON_ERROR));
+
+            return $response;
+        }
 
         // Failure to validate
         if (!$token) {
             return $this->processInvalidToken(response: $response);
         }
 
-        $identity = new Identity\AuthenticatedIdentity(identity: $token);
-        $identity->setName(name: 'user_' . $token['user_id']);
+        $identity = new Identity\AuthenticatedIdentity(identity: \Jield\Stdlib\Value::array($token));
+        $identity->setName(name: 'user_' . \Jield\Stdlib\Value::stringify($token['user_id']));
 
         return $identity;
     }
@@ -155,16 +180,21 @@ class OAuth2Adapter extends AbstractAdapter
      */
     private function processInvalidToken(Response $response): Response|Identity\GuestIdentity
     {
+        /** @var mixed $oauth2Response */
         $oauth2Response = $this->oauth2Server->getResponse();
-        $status         = $oauth2Response->getStatusCode();
+        /** @var mixed $status */
+        $status = \Jield\Stdlib\Value::call($oauth2Response, 'getStatusCode');
 
         // 401 or 403 mean invalid credentials or unauthorized scopes; report those.
-        if (in_array(needle: $status, haystack: [401, 403], strict: true) && null !== $oauth2Response->getParameter(name: 'error')) {
-            return $this->mergeOAuth2Response(status: $status, response: $response, oauth2Response: $oauth2Response);
+        if (
+            in_array(needle: $status, haystack: [401, 403], strict: true)
+            && null !== \Jield\Stdlib\Value::call($oauth2Response, 'getParameter', ['name' => 'error'])
+        ) {
+            return $this->mergeOAuth2Response(status: $status, response: $response, oauth2Response: \Jield\Stdlib\Value::instance($oauth2Response, \OAuth2\Response::class));
         }
 
         // Merge in any headers; typically sets a WWW-Authenticate header.
-        $this->mergeOAuth2ResponseHeaders(response: $response, oauth2Headers: $oauth2Response->getHttpHeaders());
+        $this->mergeOAuth2ResponseHeaders(response: $response, oauth2Headers: \Jield\Stdlib\Value::array(\Jield\Stdlib\Value::call($oauth2Response, 'getHttpHeaders')));
 
         // Otherwise, no credentials were present at all, so we just return a guest identity.
         return new Identity\GuestIdentity();
@@ -192,8 +222,9 @@ class OAuth2Adapter extends AbstractAdapter
         }
 
         $headers = $response->getHeaders();
+        /** @var mixed $value */
         foreach ($oauth2Headers as $header => $value) {
-            $headers->addHeaderLine(headerFieldNameOrLine: $header, fieldValue: $value);
+            $headers->addHeaderLine(headerFieldNameOrLine: \Jield\Stdlib\Value::string($header), fieldValue: \Jield\Stdlib\Value::nullableString($value));
         }
 
         return $response;

@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Jield\ApiTools\Hal\View;
 
-use Jield\ApiTools\ContentNegotiation\JsonModel;
 use Jield\ApiTools\Hal\Collection;
 use Jield\ApiTools\Hal\Entity;
-
+use Jield\Mvc\View\Model\JsonModel;
 use Override;
+
 use function sprintf;
 use function trigger_error;
 
@@ -20,9 +20,6 @@ use const E_USER_DEPRECATED;
  */
 class HalJsonModel extends JsonModel
 {
-    /** @var bool */
-    protected bool $terminate = true;
-
     /**
      * Does the payload represent a HAL collection?
      *
@@ -46,7 +43,10 @@ class HalJsonModel extends JsonModel
      */
     public function isResource(): bool
     {
-        trigger_error(message: sprintf('%s is deprecated; please use %s::isEntity', __METHOD__, static::class), error_level: E_USER_DEPRECATED);
+        trigger_error(
+            message: sprintf('%s is deprecated; please use %s::isEntity', __METHOD__, static::class),
+            error_level: E_USER_DEPRECATED,
+        );
         return static::isEntity();
     }
 
@@ -89,11 +89,11 @@ class HalJsonModel extends JsonModel
      *
      * Does nothing; does not allow re-setting "terminate" terminate.
      *
-     * @param bool $terminate
+     * @param  bool $terminate
      * @return static
      */
     #[Override]
-    public function setTerminal(bool $terminate = true): static
+    public function setTerminal($terminate = true): static
     {
         return $this;
     }

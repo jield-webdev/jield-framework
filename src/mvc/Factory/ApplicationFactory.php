@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\Mvc\Factory;
 
 // phpcs:ignore
@@ -23,9 +25,9 @@ class ApplicationFactory implements FactoryInterface
     {
         return new Application(
             $container,
-            $container->get('EventManager'),
-            $container->get('Request'),
-            $container->get('Response')
+            \Jield\Stdlib\Service::get($container, \Laminas\EventManager\EventManagerInterface::class, 'EventManager'),
+            \Jield\Stdlib\Service::get($container, \Laminas\Stdlib\RequestInterface::class, 'Request'),
+            \Jield\Stdlib\Service::get($container, \Laminas\Stdlib\ResponseInterface::class, 'Response'),
         );
     }
 }

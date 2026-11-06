@@ -20,19 +20,17 @@ class RangeExpression extends Expression implements Stringable
     /**
      * Create new range query object
      *
-     * @param string|int|Expression $start
-     * @param int|string|Expression|null $end
+     * @param string|int|float|ExpressionInterface|null $start
+     * @param int|float|string|ExpressionInterface|null $end
      */
     public function __construct(
-        protected                            $start = null,
-        protected Expression|int|string|null $end = null,
+        protected ExpressionInterface|float|int|string|null $start = null,
+        protected ExpressionInterface|float|int|string|null $end = null,
         /**
          * Inclusive or exclusive the range start/end?
          */
-        protected bool                       $inclusive = true
-    )
-    {
-    }
+        protected bool $inclusive = true,
+    ) {}
 
     public function __toString(): string
     {
@@ -41,14 +39,14 @@ class RangeExpression extends Expression implements Stringable
             $this->inclusive ? '[' : '{',
             $this->cast(value: $this->start),
             $this->cast(value: $this->end),
-            $this->inclusive ? ']' : '}'
+            $this->inclusive ? ']' : '}',
         );
     }
 
     /**
-     * @param string|ExpressionInterface|null $value
+     * @param string|int|float|ExpressionInterface|null $value
      */
-    private function cast(ExpressionInterface|string|null $value): ExpressionInterface|string
+    private function cast(ExpressionInterface|int|float|string|null $value): string
     {
         return $value === null ? '*' : Util::sanitize(value: $value);
     }

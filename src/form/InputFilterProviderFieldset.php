@@ -26,14 +26,14 @@ final class InputFilterProviderFieldset extends Fieldset implements InputFilterP
             $filterSpec = ArrayUtils::iteratorToArray(iterator: $filterSpec);
         }
 
-        $this->filterSpec = $filterSpec;
+        $this->filterSpec = \Jield\Stdlib\Value::array($filterSpec);
     }
 
     /**
      * Set options for a fieldset. Accepted options are:
      * - input_filter_spec: specification to be returned by getInputFilterSpecification
      *
-     * @return $this
+     * @return static
      * @throws Exception\InvalidArgumentException
      */
     public function setOptions(iterable $options): static
@@ -41,7 +41,7 @@ final class InputFilterProviderFieldset extends Fieldset implements InputFilterP
         parent::setOptions(options: $options);
 
         if (isset($this->options['input_filter_spec'])) {
-            $this->setInputFilterSpecification(filterSpec: $this->options['input_filter_spec']);
+            $this->setInputFilterSpecification(filterSpec: \Jield\Stdlib\Value::iterable($this->options['input_filter_spec']));
         }
 
         return $this;

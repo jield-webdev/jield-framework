@@ -1,14 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\Mvc\Factory;
 
-use Laminas\Router\RouteMatch;
+use Jield\Mvc\Router\RouteMatch;
+use Laminas\View\Factory\Configuration;
 use Laminas\View\Helper as ViewHelper;
 use Laminas\View\Helper\BasePath;
 use Laminas\View\Helper\Doctype;
 use Laminas\View\HelperPluginManager;
-use Laminas\View\Factory\Configuration;
 use Psr\Container\ContainerInterface;
+
 use function is_callable;
 
 class ViewHelperManagerFactory extends AbstractPluginManagerFactory
@@ -33,16 +36,27 @@ class ViewHelperManagerFactory extends AbstractPluginManagerFactory
      * @return HelperPluginManager
      * @throws ServiceNotCreatedException
      */
-    public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): HelperPluginManager
-    {
-        $options                = $options ?: [];
+    public function __invoke(
+        ContainerInterface $container,
+        string $requestedName,
+        ?array $options = null,
+    ): HelperPluginManager {
+        $options = $options ?: [];
         $options['factories'] ??= [];
-        $plugins                = parent::__invoke($container, $requestedName, $options);
+        \Jield\Stdlib\Value::setPath($options, ['initializers', null], static function (ContainerInterface $pluginContainer, mixed $helper) use (
+            $container,
+        ): void {
+            if (method_exists(\Jield\Stdlib\Value::objectOrString($helper), 'setView')) {
+                \Jield\Stdlib\Value::call($helper, 'setView', [\Jield\Stdlib\Service::get($container, \Jield\Mvc\View\Renderer\PhpRenderer::class)]);
+            }
+            if (method_exists(\Jield\Stdlib\Value::objectOrString($helper), 'setTranslator')) {
+                \Jield\Stdlib\Value::call($helper, 'setTranslator', [\Jield\Stdlib\Service::get($container, \Laminas\Translator\TranslatorInterface::class)]);
+            }
+        });
+        $plugins = parent::__invoke($container, $requestedName, $options);
 
         // Override plugin factories
-        $plugins = $this->injectOverrideFactories($plugins, $container);
-
-        return $plugins;
+        return $this->injectOverrideFactories(\Jield\Stdlib\Value::instance($plugins, \Laminas\View\HelperPluginManager::class), $container);
     }
 
     /**
@@ -50,23 +64,31 @@ class ViewHelperManagerFactory extends AbstractPluginManagerFactory
      *
      * @return HelperPluginManager
      */
-    private function injectOverrideFactories(HelperPluginManager $plugins, ContainerInterface $services): HelperPluginManager
-    {
-        if (class_exists(ViewHelper\Url::class)) {
-            $urlFactory = $this->createUrlHelperFactory($services);
-            $plugins->setFactory(ViewHelper\Url::class, $urlFactory);
-            $plugins->setFactory('laminasviewhelperurl', $urlFactory);
-        }
+    private function injectOverrideFactories(
+        HelperPluginManager $plugins,
+        ContainerInterface $services,
+    ): HelperPluginManager {
+        $plugins->configure(['factories' => [\Jield\Mvc\View\Helper\Url::class => $this->createUrlHelperFactory($services)]]);
+        $plugins->configure(['factories' => [\Jield\Mvc\View\Helper\ServerUrl::class => static fn() => new \Jield\Mvc\View\Helper\ServerUrl()]]);
+        $plugins->configure(['factories' => [\Jield\Mvc\View\Helper\Identity::class => static fn() => new \Jield\Mvc\View\Helper\Identity(\Jield\Stdlib\Service::get($services, \Laminas\Authentication\AuthenticationService::class))]]);
+        $plugins->configure(['factories' => [\Jield\Mvc\View\Helper\Translate::class => static fn() => new \Jield\Mvc\View\Helper\Translate()]]);
+        $plugins->configure(['aliases' => [
+            'url' => \Jield\Mvc\View\Helper\Url::class,
+            'serverUrl' => \Jield\Mvc\View\Helper\ServerUrl::class,
+            'serverurl' => \Jield\Mvc\View\Helper\ServerUrl::class,
+            'identity' => \Jield\Mvc\View\Helper\Identity::class,
+            'translate' => \Jield\Mvc\View\Helper\Translate::class,
+        ]]);
 
         // Configure base path helper
         $basePathFactory = $this->createBasePathHelperFactory($services);
-        $plugins->setFactory(ViewHelper\BasePath::class, $basePathFactory);
-        $plugins->setFactory('laminasviewhelperbasepath', $basePathFactory);
+        $plugins->configure(['factories' => [ViewHelper\BasePath::class => $basePathFactory]]);
+        $plugins->configure(['factories' => ['laminasviewhelperbasepath' => $basePathFactory]]);
 
         // Configure doctype view helper
         $doctypeFactory = $this->createDoctypeHelperFactory($services);
-        $plugins->setFactory(ViewHelper\Doctype::class, $doctypeFactory);
-        $plugins->setFactory('laminasviewhelperdoctype', $doctypeFactory);
+        $plugins->configure(['factories' => [ViewHelper\Doctype::class => $doctypeFactory]]);
+        $plugins->configure(['factories' => ['laminasviewhelperdoctype' => $doctypeFactory]]);
 
         return $plugins;
     }
@@ -83,12 +105,10 @@ class ViewHelperManagerFactory extends AbstractPluginManagerFactory
     private function createUrlHelperFactory(ContainerInterface $services): callable
     {
         return static function () use ($services): object {
-            $helperClass = ViewHelper\Url::class;
-            $helper      = new $helperClass();
+            $helperClass = \Jield\Mvc\View\Helper\Url::class;
+            $helper = new $helperClass();
             $helper->setRouter($services->get('HttpRouter'));
-            $match = $services->get('Application')
-                ->getMvcEvent()
-                ->getRouteMatch();
+            $match = \Jield\Stdlib\Service::get($services, \Jield\Mvc\ApplicationInterface::class, 'Application')->getMvcEvent()->getRouteMatch();
             if ($match instanceof RouteMatch) {
                 $helper->setRouteMatch($match);
             }
@@ -106,18 +126,20 @@ class ViewHelperManagerFactory extends AbstractPluginManagerFactory
     private function createBasePathHelperFactory(ContainerInterface $services): callable|\Closure
     {
         return static function () use ($services): BasePath {
-            $config   = Configuration::get($services);
+            $config = Configuration::get($services);
+            /** @var mixed $basePath */
             $basePath = $config['view_manager']['base_path'] ?? null;
+            /** @var mixed $basePath */
             $basePath = $config['view_helper_config']['base_path'] ?? $basePath;
 
-            $helper = new ViewHelper\BasePath($basePath);
+            $helper = new ViewHelper\BasePath(\Jield\Stdlib\Value::nullableString($basePath));
             if ($basePath !== null) {
                 return $helper;
             }
 
-            $request = $services->get('Request');
+            $request = \Jield\Stdlib\Service::get($services, \Laminas\Stdlib\RequestInterface::class, 'Request');
             if (is_callable([$request, 'getBasePath'])) {
-                $helper->setBasePath($request->getBasePath());
+                $helper->setBasePath(\Jield\Stdlib\Value::string(\Jield\Stdlib\Value::call($request, 'getBasePath')));
             }
             return $helper;
         };
@@ -134,11 +156,13 @@ class ViewHelperManagerFactory extends AbstractPluginManagerFactory
     private function createDoctypeHelperFactory(ContainerInterface $services): callable|\Closure
     {
         return static function () use ($services): Doctype {
-            $config  = Configuration::get($services);
+            $config = Configuration::get($services);
+            /** @var mixed $doctype */
             $doctype = $config['view_manager']['doctype'] ?? Doctype::DEFAULT_DOCTYPE;
+            /** @var mixed $doctype */
             $doctype = $config['view_helper_config']['doctype'] ?? $doctype;
 
-            return new ViewHelper\Doctype($doctype);
+            return new ViewHelper\Doctype(\Jield\Stdlib\Value::key($doctype));
         };
     }
 }

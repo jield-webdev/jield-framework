@@ -16,11 +16,8 @@ final class AuthorizeServiceFactory implements FactoryInterface
      * @throws ContainerExceptionInterface
      * @throws NotFoundExceptionInterface
      */
-    public function __invoke(
-        ContainerInterface $container,
-        $requestedName,
-        ?array $options = null
-    ): AuthorizeService {
+    public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): AuthorizeService
+    {
         return new AuthorizeService(container: $container);
     }
 }

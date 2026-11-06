@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Jield\ApiTools\Rpc;
 
+use Jield\Mvc\MvcEvent;
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\EventManager\ListenerAggregateInterface;
 use Laminas\EventManager\ListenerAggregateTrait;
 use Laminas\Http\Request;
 use Laminas\Http\Response;
-use Jield\Mvc\MvcEvent;
 use Override;
 use Stringable;
 
@@ -40,45 +40,48 @@ class OptionsListener implements ListenerAggregateInterface
     #[Override]
     public function attach(EventManagerInterface $events, $priority = 1): void
     {
-        $this->listeners[] = $events->attach(eventName: MvcEvent::EVENT_ROUTE, listener: $this->onRoute(...), priority: -100);
+        $this->listeners[] = $events->attach(
+            eventName: MvcEvent::EVENT_ROUTE,
+            listener: $this->onRoute(...),
+            priority: -100,
+        );
     }
 
     public function onRoute(MvcEvent $event): ?Response
     {
         $matches = $event->getRouteMatch();
-        if (! $matches) {
+        if (!$matches) {
             // No matches, nothing to do
             return null;
         }
 
+        /** @var mixed $controller */
         $controller = $matches->getParam(name: 'controller', default: false);
-        if (! $controller) {
+        if (!$controller) {
             // No controller in the matches, nothing to do
             return null;
         }
 
-        if (! array_key_exists(key: $controller, array: $this->config)) {
+        if (!array_key_exists(key: \Jield\Stdlib\Value::plainScalar($controller), array: $this->config)) {
             // No matching controller in our configuration, nothing to do
             return null;
         }
 
+        /** @var mixed $config */
         $config = $this->config[$controller];
 
-        if (
-            ! array_key_exists(key: 'http_methods', array: $config)
-            || empty($config['http_methods'])
-        ) {
+        if (!array_key_exists(key: 'http_methods', array: \Jield\Stdlib\Value::array($config)) || empty($config['http_methods'])) {
             // No HTTP methods set for controller, nothing to do
             return null;
         }
 
         $request = $event->getRequest();
-        if (! $request instanceof Request) {
+        if (!$request instanceof Request) {
             // Not an HTTP request? nothing to do
             return null;
         }
 
-        $methods = $this->normalizeMethods(methods: $config['http_methods']);
+        $methods = $this->normalizeMethods(methods: \Jield\Stdlib\Value::arrayOrString($config['http_methods']));
 
         $method = $request->getMethod();
         if ($method === Request::METHOD_OPTIONS) {
@@ -86,7 +89,7 @@ class OptionsListener implements ListenerAggregateInterface
             return $this->getOptionsResponse(event: $event, options: $methods);
         }
 
-        if (in_array(needle: $method, haystack: $methods)) {
+        if (in_array(needle: $method, haystack: $methods, strict: true)) {
             // Valid HTTP method; nothing to do
             return null;
         }
@@ -140,7 +143,7 @@ class OptionsListener implements ListenerAggregateInterface
     protected function getOptionsResponse(MvcEvent $event, array $options): Response
     {
         $response = $event->getResponse();
-        $this->createAllowHeader(options: $options, response: $response);
+        $this->createAllowHeader(options: $options, response: \Jield\Stdlib\Value::instance($response, \Laminas\Http\Response::class));
         return $response;
     }
 

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\Mvc;
 
 use Jield\Mvc\Service\ServiceManagerConfig;
@@ -9,6 +11,7 @@ use Laminas\ServiceManager\ServiceManager;
 use Laminas\Stdlib\RequestInterface;
 use Laminas\Stdlib\ResponseInterface;
 use Psr\Container\ContainerInterface;
+
 use function array_merge;
 use function array_unique;
 
@@ -41,9 +44,7 @@ use function array_unique;
  * if you wish to setup your own listeners and/or workflow; alternately, you
  * can simply extend the class to override such behavior.
  */
-class Application implements
-    ApplicationInterface,
-    EventManagerAwareInterface
+class Application implements ApplicationInterface, EventManagerAwareInterface
 {
     public const string ERROR_CONTROLLER_CANNOT_DISPATCH = 'error-controller-cannot-dispatch';
     public const string ERROR_CONTROLLER_NOT_FOUND = 'error-controller-not-found';
@@ -56,14 +57,13 @@ class Application implements
      *
      * @var array
      */
-    protected array $defaultListeners
-        = [
-            'RouteListener',
-            'DispatchListener',
-            'HttpMethodListener',
-            'ViewManager',
-            'SendResponseListener',
-        ];
+    protected array $defaultListeners = [
+        'RouteListener',
+        'DispatchListener',
+        'HttpMethodListener',
+        'ViewManager',
+        'SendResponseListener',
+    ];
 
     protected MvcEvent $event;
 
@@ -71,15 +71,14 @@ class Application implements
      * Constructor
      */
     public function __construct(
-        protected ContainerInterface     $serviceManager,
+        protected ContainerInterface $serviceManager,
         protected ?EventManagerInterface $events = null,
-        protected ?RequestInterface      $request = null,
-        protected ?ResponseInterface     $response = null
-    )
-    {
-        $this->setEventManager(eventManager: $events ?: $serviceManager->get(id: 'EventManager'));
-        $this->request  = $request ?: $serviceManager->get(id: 'Request');
-        $this->response = $response ?: $serviceManager->get(id: 'Response');
+        protected ?RequestInterface $request = null,
+        protected ?ResponseInterface $response = null,
+    ) {
+        $this->setEventManager(eventManager: $events ?: \Jield\Stdlib\Service::get($serviceManager, \Laminas\EventManager\EventManagerInterface::class, 'EventManager'));
+        $this->request = $request ?: \Jield\Stdlib\Service::get($serviceManager, \Laminas\Stdlib\RequestInterface::class, 'Request');
+        $this->response = $response ?: \Jield\Stdlib\Service::get($serviceManager, \Laminas\Stdlib\ResponseInterface::class, 'Response');
     }
 
     /**
@@ -89,7 +88,7 @@ class Application implements
      */
     public function getConfig(): object|array
     {
-        return $this->serviceManager->get(id: 'config');
+        return \Jield\Stdlib\Value::arrayOrObject($this->serviceManager->get('config'));
     }
 
     /**
@@ -100,18 +99,19 @@ class Application implements
      * event.
      *
      * @param array $listeners List of listeners to attach.
-     * @return Application
+     * @return static
      */
     public function bootstrap(array $listeners = []): static
     {
         $serviceManager = $this->serviceManager;
-        $events         = $this->events;
+        $events = $this->events;
 
         // Setup default listeners
         $listeners = array_unique(array: array_merge($this->defaultListeners, $listeners));
 
+        /** @var mixed $listener */
         foreach ($listeners as $listener) {
-            $serviceManager->get(id: $listener)->attach($events);
+            \Jield\Stdlib\Value::call($serviceManager->get(\Jield\Stdlib\Value::string($listener)), 'attach', [$events]);
         }
 
         // Setup MVC Event
@@ -119,12 +119,12 @@ class Application implements
         $event->setName(name: MvcEvent::EVENT_BOOTSTRAP);
         $event->setTarget(target: $this);
         $event->setApplication(application: $this);
-        $event->setRequest(request: $this->request);
-        $event->setResponse(response: $this->response);
-        $event->setRouter(router: $serviceManager->get(id: 'Router'));
+        $event->setRequest(request: \Jield\Stdlib\Value::instance($this->request, \Laminas\Stdlib\RequestInterface::class));
+        $event->setResponse(response: \Jield\Stdlib\Value::instance($this->response, \Laminas\Stdlib\ResponseInterface::class));
+        $event->setRouter(router: \Jield\Stdlib\Service::get($serviceManager, \Laminas\Router\RouteStackInterface::class, 'Router'));
 
         // Trigger bootstrap events
-        $events->triggerEvent(event: $event);
+        \Jield\Stdlib\Value::present($events)->triggerEvent(event: $event);
 
         return $this;
     }
@@ -144,7 +144,7 @@ class Application implements
      */
     public function getRequest(): RequestInterface
     {
-        return $this->request;
+        return \Jield\Stdlib\Value::instance($this->request, \Laminas\Stdlib\RequestInterface::class);
     }
 
     /**
@@ -154,7 +154,7 @@ class Application implements
      */
     public function getResponse(): ResponseInterface
     {
-        return $this->response;
+        return \Jield\Stdlib\Value::instance($this->response, \Laminas\Stdlib\ResponseInterface::class);
     }
 
     /**
@@ -170,16 +170,16 @@ class Application implements
     /**
      * Set the event manager instance
      *
-     * @return Application
+     * @return void
      */
-    public function setEventManager(EventManagerInterface $eventManager): static
+    public function setEventManager(EventManagerInterface $eventManager): void
     {
         $eventManager->setIdentifiers(identifiers: [
             self::class,
             static::class,
         ]);
         $this->events = $eventManager;
-        return $this;
+        
     }
 
     /**
@@ -191,7 +191,7 @@ class Application implements
      */
     public function getEventManager(): EventManagerInterface
     {
-        return $this->events;
+        return \Jield\Stdlib\Value::instance($this->events, \Laminas\EventManager\EventManagerInterface::class);
     }
 
     /**
@@ -216,24 +216,28 @@ class Application implements
     public static function init($configuration = []): Application
     {
         // Prepare the service manager
+        /** @var mixed $smConfig */
         $smConfig = $configuration['service_manager'] ?? [];
-        $smConfig = new ServiceManagerConfig(config: $smConfig);
+        $smConfig = new ServiceManagerConfig(config: \Jield\Stdlib\Value::array($smConfig));
 
         $serviceManager = new ServiceManager();
         $smConfig->configureServiceManager(services: $serviceManager);
         $serviceManager->setService(name: 'ApplicationConfig', service: $configuration);
 
         // Load modules
-        $serviceManager->get(id: 'ModuleManager')->loadModules();
+        \Jield\Stdlib\Service::get($serviceManager, \Jield\ModuleManager\ModuleManager::class, 'ModuleManager')->loadModules();
 
         // Prepare list of listeners to bootstrap
-        $listenersFromAppConfig     = $configuration['listeners'] ?? [];
-        $config                     = $serviceManager->get(id: 'config');
+        /** @var mixed $listenersFromAppConfig */
+        $listenersFromAppConfig = $configuration['listeners'] ?? [];
+        /** @var mixed $config */
+        $config = $serviceManager->get('config');
+        /** @var mixed $listenersFromConfigService */
         $listenersFromConfigService = $config['listeners'] ?? [];
 
-        $listeners = array_unique(array: array_merge($listenersFromConfigService, $listenersFromAppConfig));
+        $listeners = array_unique(array: array_merge(\Jield\Stdlib\Value::array($listenersFromConfigService), \Jield\Stdlib\Value::array($listenersFromAppConfig)));
 
-        return $serviceManager->get(id: 'Application')->bootstrap($listeners);
+        return \Jield\Stdlib\Value::instance(\Jield\Stdlib\Service::get($serviceManager, \Jield\Mvc\ApplicationInterface::class, 'Application')->bootstrap(\Jield\Stdlib\Value::strings($listeners)), \Jield\Mvc\Application::class);
     }
 
     /**
@@ -250,12 +254,12 @@ class Application implements
      *           discovered controller, and controller class (if known).
      *           Typically, a handler should return a populated Response object
      *           that can be returned immediately.
-     * @return self
+     * @return static
      */
     public function run(): static
     {
         $events = $this->events;
-        $event  = $this->event;
+        $event = $this->event;
 
         // Define callback used to determine whether or not to short-circuit
         $shortCircuit = static function ($r) use ($event): bool {
@@ -271,15 +275,16 @@ class Application implements
         // Trigger route event
         $event->setName(name: MvcEvent::EVENT_ROUTE);
         $event->stopPropagation(flag: false); // Clear before triggering
-        $result = $events->triggerEventUntil(callback: $shortCircuit, event: $event);
+        $result = \Jield\Stdlib\Value::present($events)->triggerEventUntil(callback: $shortCircuit, event: $event);
         if ($result->stopped()) {
+            /** @var mixed $response */
             $response = $result->last();
             if ($response instanceof ResponseInterface) {
                 $event->setName(name: MvcEvent::EVENT_FINISH);
                 $event->setTarget(target: $this);
                 $event->setResponse(response: $response);
                 $event->stopPropagation(flag: false); // Clear before triggering
-                $events->triggerEvent(event: $event);
+                \Jield\Stdlib\Value::present($events)->triggerEvent(event: $event);
                 $this->response = $response;
                 return $this;
             }
@@ -292,22 +297,23 @@ class Application implements
         // Trigger dispatch event
         $event->setName(name: MvcEvent::EVENT_DISPATCH);
         $event->stopPropagation(flag: false); // Clear before triggering
-        $result = $events->triggerEventUntil(callback: $shortCircuit, event: $event);
+        $result = \Jield\Stdlib\Value::present($events)->triggerEventUntil(callback: $shortCircuit, event: $event);
 
         // Complete response
+        /** @var mixed $response */
         $response = $result->last();
         if ($response instanceof ResponseInterface) {
             $event->setName(name: MvcEvent::EVENT_FINISH);
             $event->setTarget(target: $this);
             $event->setResponse(response: $response);
             $event->stopPropagation(flag: false); // Clear before triggering
-            $events->triggerEvent(event: $event);
+            \Jield\Stdlib\Value::present($events)->triggerEvent(event: $event);
             $this->response = $response;
             return $this;
         }
 
         $response = $this->response;
-        $event->setResponse(response: $response);
+        $event->setResponse(response: \Jield\Stdlib\Value::instance($response, \Laminas\Stdlib\ResponseInterface::class));
         return $this->completeRequest(event: $event);
     }
 
@@ -317,7 +323,7 @@ class Application implements
      * Triggers "render" and "finish" events, and returns response from
      * event object.
      *
-     * @return Application
+     * @return static
      */
     protected function completeRequest(MvcEvent $event): static
     {
@@ -326,11 +332,11 @@ class Application implements
 
         $event->setName(name: MvcEvent::EVENT_RENDER);
         $event->stopPropagation(flag: false); // Clear before triggering
-        $events->triggerEvent(event: $event);
+        \Jield\Stdlib\Value::present($events)->triggerEvent(event: $event);
 
         $event->setName(name: MvcEvent::EVENT_FINISH);
         $event->stopPropagation(flag: false); // Clear before triggering
-        $events->triggerEvent(event: $event);
+        \Jield\Stdlib\Value::present($events)->triggerEvent(event: $event);
 
         return $this;
     }

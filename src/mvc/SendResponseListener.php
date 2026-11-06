@@ -1,32 +1,33 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\Mvc;
 
-use Laminas\EventManager\AbstractListenerAggregate;
-use Laminas\EventManager\EventManager;
-use Laminas\EventManager\EventManagerAwareInterface;
-use Laminas\EventManager\EventManagerInterface;
 use Jield\Mvc\ResponseSender\HttpResponseSender;
 use Jield\Mvc\ResponseSender\PhpEnvironmentResponseSender;
 use Jield\Mvc\ResponseSender\SendResponseEvent;
 use Jield\Mvc\ResponseSender\SimpleStreamResponseSender;
+use Laminas\EventManager\AbstractListenerAggregate;
+use Laminas\EventManager\EventManager;
+use Laminas\EventManager\EventManagerAwareInterface;
+use Laminas\EventManager\EventManagerInterface;
 use Laminas\Stdlib\ResponseInterface as Response;
 
-class SendResponseListener extends AbstractListenerAggregate implements
-    EventManagerAwareInterface
+class SendResponseListener extends AbstractListenerAggregate implements EventManagerAwareInterface
 {
     /** @var SendResponseEvent */
-    protected SendResponseEvent $event;
+    protected ?SendResponseEvent $event = null;
 
     /** @var EventManagerInterface */
-    protected EventManagerInterface $eventManager;
+    protected ?EventManagerInterface $eventManager = null;
 
     /**
      * Inject an EventManager instance
      *
-     * @return SendResponseListener
+     * @return void
      */
-    public function setEventManager(EventManagerInterface $eventManager): static
+    public function setEventManager(EventManagerInterface $eventManager): void
     {
         $eventManager->setIdentifiers([
             self::class,
@@ -34,7 +35,7 @@ class SendResponseListener extends AbstractListenerAggregate implements
         ]);
         $this->eventManager = $eventManager;
         $this->attachDefaultListeners();
-        return $this;
+        
     }
 
     /**
@@ -46,7 +47,7 @@ class SendResponseListener extends AbstractListenerAggregate implements
      */
     public function getEventManager(): EventManagerInterface
     {
-        if (! $this->eventManager instanceof EventManagerInterface) {
+        if (!$this->eventManager instanceof EventManagerInterface) {
             $this->setEventManager(new EventManager());
         }
         return $this->eventManager;
@@ -60,7 +61,7 @@ class SendResponseListener extends AbstractListenerAggregate implements
      */
     public function attach(EventManagerInterface $events, $priority = 1): void
     {
-        $this->listeners[] = $events->attach(MvcEvent::EVENT_FINISH, [$this, 'sendResponse'], -10000);
+        $this->listeners[] = $events->attach(MvcEvent::EVENT_FINISH, [$this, 'sendResponse'], -10_000);
     }
 
     /**
@@ -71,9 +72,7 @@ class SendResponseListener extends AbstractListenerAggregate implements
     public function sendResponse(MvcEvent $e): void
     {
         $response = $e->getResponse();
-        if (! $response instanceof Response) {
-            return; // there is no response to send
-        }
+        
         $event = $this->getEvent();
         $event->setResponse($response);
         $event->setTarget($this);
@@ -87,7 +86,7 @@ class SendResponseListener extends AbstractListenerAggregate implements
      */
     public function getEvent(): SendResponseEvent
     {
-        if (! $this->event instanceof SendResponseEvent) {
+        if (!$this->event instanceof SendResponseEvent) {
             $this->setEvent(new SendResponseEvent());
         }
         return $this->event;
@@ -96,9 +95,9 @@ class SendResponseListener extends AbstractListenerAggregate implements
     /**
      * Set the send response event
      *
-     * @return SendResponseEvent
+     * @return static
      */
-    public function setEvent(SendResponseEvent $e): SendResponseEvent
+    public function setEvent(SendResponseEvent $e): static
     {
         $this->event = $e;
         return $this;

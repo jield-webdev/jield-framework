@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\Mvc\Factory;
 
 // phpcs:ignore
@@ -16,8 +18,11 @@ class ViewManagerFactory implements FactoryInterface
      * @param  null|array $options
      * @return HttpViewManager
      */
-    public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): HttpViewManager
-    {
-        return $container->get('HttpViewManager');
+    public function __invoke(
+        ContainerInterface $container,
+        string $requestedName,
+        ?array $options = null,
+    ): HttpViewManager {
+        return \Jield\Stdlib\Value::instance($container->get('HttpViewManager'), \Jield\Mvc\View\Http\ViewManager::class);
     }
 }

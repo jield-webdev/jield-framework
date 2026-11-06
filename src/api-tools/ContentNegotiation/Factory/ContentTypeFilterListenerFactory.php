@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Jield\ApiTools\ContentNegotiation\Factory;
 
-use Psr\Container\ContainerInterface;
 use Jield\ApiTools\ContentNegotiation\ContentNegotiationOptions;
 use Jield\ApiTools\ContentNegotiation\ContentTypeFilterListener;
+use Psr\Container\ContainerInterface;
 
 class ContentTypeFilterListenerFactory
 {
@@ -14,7 +14,7 @@ class ContentTypeFilterListenerFactory
     {
         $listener = new ContentTypeFilterListener();
 
-        $options = $container->get(ContentNegotiationOptions::class);
+        $options = \Jield\Stdlib\Service::get($container, ContentNegotiationOptions::class);
         $listener->setConfig(config: $options->getContentTypeWhitelist());
 
         return $listener;

@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace Jield\ApiTools\Versioning;
 
+use Jield\Mvc\MvcEvent;
+use Jield\Mvc\Router\RouteMatch;
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\EventManager\ListenerAggregateInterface;
 use Laminas\EventManager\ListenerAggregateTrait;
-use Jield\Mvc\MvcEvent;
-use Laminas\Router\RouteMatch;
 use Override;
+
 use function preg_match;
 use function preg_quote;
 use function preg_replace;
@@ -24,7 +25,11 @@ class VersionListener implements ListenerAggregateInterface
     #[Override]
     public function attach(EventManagerInterface $events, $priority = 1): void
     {
-        $this->listeners[] = $events->attach(eventName: MvcEvent::EVENT_ROUTE, listener: $this->onRoute(...), priority: -41);
+        $this->listeners[] = $events->attach(
+            eventName: MvcEvent::EVENT_ROUTE,
+            listener: $this->onRoute(...),
+            priority: -41,
+        );
     }
 
     /**
@@ -33,8 +38,9 @@ class VersionListener implements ListenerAggregateInterface
      */
     public function onRoute(MvcEvent $e): ?RouteMatch
     {
+        $matches = [];
         $routeMatches = $e->getRouteMatch();
-        if (!($routeMatches instanceof RouteMatch)) {
+        if (!$routeMatches instanceof RouteMatch) {
             return null;
         }
 
@@ -44,6 +50,7 @@ class VersionListener implements ListenerAggregateInterface
             return null;
         }
 
+        /** @var mixed $controller */
         $controller = $routeMatches->getParam(name: 'controller', default: false);
         if (!$controller) {
             // no controller; we have bigger problems!
@@ -56,7 +63,11 @@ class VersionListener implements ListenerAggregateInterface
             return null;
         }
 
-        $replacement = preg_replace(pattern: $pattern, replacement: '\V' . $version . '\\', subject: (string) $controller);
+        $replacement = preg_replace(
+            pattern: $pattern,
+            replacement: '\V' . $version . '\\',
+            subject: (string) $controller,
+        );
         if ($controller === $replacement) {
             return null;
         }
@@ -69,7 +80,7 @@ class VersionListener implements ListenerAggregateInterface
      * Retrieve the version from the route match.
      *
      * The route prototype sets "version", while the Content-Type listener sets
-     * "jield_ver_version"; check both to obtain the version, giving priority to the
+     * "laminas_ver_version"; check both to obtain the version, giving priority to the
      * route prototype result.
      *
      * @param RouteMatch $routeMatches
@@ -77,11 +88,12 @@ class VersionListener implements ListenerAggregateInterface
      */
     protected function getVersionFromRouteMatch(RouteMatch $routeMatches): false|int
     {
-        $version = $routeMatches->getParam(name: 'jield_ver_version', default: false);
+        /** @var mixed $version */
+        $version = $routeMatches->getParam(name: 'laminas_ver_version', default: false);
         if ($version) {
-            return $version;
+            return filter_var($version, FILTER_VALIDATE_INT);
         }
 
-        return $routeMatches->getParam(name: 'version', default: false);
+        return filter_var($routeMatches->getParam(name: 'version', default: false), FILTER_VALIDATE_INT);
     }
 }

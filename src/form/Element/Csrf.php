@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Jield\Form\Element;
 
-use Laminas\Filter\StringTrim;
 use Jield\Form\Element;
 use Jield\Form\ElementPrepareAwareInterface;
 use Jield\Form\FormInterface;
+use Laminas\Filter\StringTrim;
 use Laminas\InputFilter\InputProviderInterface;
-use Laminas\Validator\Csrf as CsrfValidator;
+use Laminas\Session\Validator\Csrf as CsrfValidator;
 
 use function array_merge;
 use function assert;
@@ -26,20 +26,20 @@ class Csrf extends Element implements InputProviderInterface, ElementPrepareAwar
     protected array $csrfValidatorOptions = [];
 
     /** @var null|CsrfValidator */
-    protected ?CsrfValidator $csrfValidator;
+    protected ?CsrfValidator $csrfValidator = null;
 
     /**
      * Accepted options for Csrf:
      * - csrf_options: an array used in the Csrf
      *
-     * @return $this
+     * @return static
      */
     public function setOptions(iterable $options): static
     {
         parent::setOptions(options: $options);
 
         if (isset($this->options['csrf_options'])) {
-            $this->setCsrfValidatorOptions(options: $this->options['csrf_options']);
+            $this->setCsrfValidatorOptions(options: \Jield\Stdlib\Value::array($this->options['csrf_options']));
         }
 
         return $this;
@@ -51,7 +51,7 @@ class Csrf extends Element implements InputProviderInterface, ElementPrepareAwar
     }
 
     /**
-     * @return $this
+     * @return static
      */
     public function setCsrfValidatorOptions(array $options): static
     {
@@ -66,7 +66,7 @@ class Csrf extends Element implements InputProviderInterface, ElementPrepareAwar
     {
         if (null === $this->csrfValidator) {
             $csrfOptions = $this->getCsrfValidatorOptions();
-            $csrfOptions = array_merge(['name' => $this->getName()], $csrfOptions);
+            $csrfOptions = array_merge(['name' => \Jield\Stdlib\Value::nonEmptyString($this->getName())], $csrfOptions);
             $this->setCsrfValidator(validator: new CsrfValidator($csrfOptions));
             assert(assertion: null !== $this->csrfValidator);
         }
@@ -74,7 +74,7 @@ class Csrf extends Element implements InputProviderInterface, ElementPrepareAwar
     }
 
     /**
-     * @return $this
+     * @return static
      */
     public function setCsrfValidator(CsrfValidator $validator): static
     {
@@ -102,8 +102,8 @@ class Csrf extends Element implements InputProviderInterface, ElementPrepareAwar
      */
     public function getAttributes(): array
     {
-        $attributes          = parent::getAttributes();
-        $validator           = $this->getCsrfValidator();
+        $attributes = parent::getAttributes();
+        $validator = $this->getCsrfValidator();
         $attributes['value'] = $validator->getHash();
         return $attributes;
     }
@@ -118,8 +118,8 @@ class Csrf extends Element implements InputProviderInterface, ElementPrepareAwar
     public function getInputSpecification(): array
     {
         $spec = [
-            'required'   => true,
-            'filters'    => [
+            'required' => true,
+            'filters' => [
                 ['name' => StringTrim::class],
             ],
             'validators' => [
@@ -140,6 +140,6 @@ class Csrf extends Element implements InputProviderInterface, ElementPrepareAwar
      */
     public function prepareElement(FormInterface $form): void
     {
-        $this->getCsrfValidator()->getHash(true);
+        $this->getCsrfValidator()->getHash();
     }
 }

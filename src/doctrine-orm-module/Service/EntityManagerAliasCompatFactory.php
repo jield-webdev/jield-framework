@@ -23,8 +23,11 @@ final class EntityManagerAliasCompatFactory implements FactoryInterface
      *             from `doctrine.entitymanager.orm_default`
      *
      */
-    public function __invoke(ContainerInterface $container, string $requestedName, array|null $options = null): EntityManager
-    {
-        return $container->get('doctrine.entitymanager.orm_default');
+    public function __invoke(
+        ContainerInterface $container,
+        string $requestedName,
+        ?array $options = null,
+    ): EntityManager {
+        return \Jield\Stdlib\Value::instance(\Jield\Stdlib\Service::get($container, \Doctrine\ORM\EntityManagerInterface::class, 'doctrine.entitymanager.orm_default'), \Doctrine\ORM\EntityManager::class);
     }
 }

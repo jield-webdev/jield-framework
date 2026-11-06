@@ -17,7 +17,7 @@ class Checkbox extends Element implements InputProviderInterface
     ];
 
     /** @var null|ValidatorInterface */
-    protected ?ValidatorInterface $validator;
+    protected ?ValidatorInterface $validator = null;
 
     /** @var bool */
     protected bool $useHiddenElement = true;
@@ -36,20 +36,20 @@ class Checkbox extends Element implements InputProviderInterface
      *
      * @inheritDoc
      */
-    public function setOptions(iterable $options): Element
+    public function setOptions(iterable $options): static
     {
         parent::setOptions(options: $options);
 
         if (isset($this->options['use_hidden_element'])) {
-            $this->setUseHiddenElement(useHiddenElement: $this->options['use_hidden_element']);
+            $this->setUseHiddenElement(useHiddenElement: \Jield\Stdlib\Value::bool($this->options['use_hidden_element']));
         }
 
         if (isset($this->options['unchecked_value'])) {
-            $this->setUncheckedValue(uncheckedValue: $this->options['unchecked_value']);
+            $this->setUncheckedValue(uncheckedValue: \Jield\Stdlib\Value::nullableString($this->options['unchecked_value']));
         }
 
         if (isset($this->options['checked_value'])) {
-            $this->setCheckedValue(checkedValue: $this->options['checked_value']);
+            $this->setCheckedValue(checkedValue: \Jield\Stdlib\Value::string($this->options['checked_value']));
         }
 
         return $this;
@@ -58,7 +58,7 @@ class Checkbox extends Element implements InputProviderInterface
     /**
      * Do we render hidden element?
      *
-     * @return self
+     * @return static
      */
     public function setUseHiddenElement(bool $useHiddenElement): static
     {
@@ -77,7 +77,7 @@ class Checkbox extends Element implements InputProviderInterface
     /**
      * Set the value to use when checkbox is unchecked
      *
-     * @return self
+     * @return static
      */
     public function setUncheckedValue(?string $uncheckedValue): static
     {
@@ -96,7 +96,7 @@ class Checkbox extends Element implements InputProviderInterface
     /**
      * Set the value to use when checkbox is checked
      *
-     * @return self
+     * @return static
      */
     public function setCheckedValue(string $checkedValue): static
     {
@@ -120,7 +120,7 @@ class Checkbox extends Element implements InputProviderInterface
         if (null === $this->validator) {
             $this->validator = new InArrayValidator(options: [
                 'haystack' => [$this->checkedValue, $this->uncheckedValue],
-                'strict'   => false,
+                'strict' => false,
             ]);
         }
         return $this->validator;
@@ -165,7 +165,7 @@ class Checkbox extends Element implements InputProviderInterface
      * Checks or unchecks the checkbox.
      *
      * @param bool $value The flag to set.
-     * @return $this
+     * @return static
      */
     public function setChecked(bool $value): static
     {
@@ -179,10 +179,10 @@ class Checkbox extends Element implements InputProviderInterface
      * @param mixed $value A boolean flag or string that is checked against the "checked value".
      * @inheritDoc
      */
-    public function setValue(mixed $value): Checkbox|\Jield\Form\ElementInterface|static
+    public function setValue(mixed $value): static
     {
         // Cast to strings because POST data comes in string form
-        $checked     = (string) $value === $this->getCheckedValue();
+        $checked = (string) $value === $this->getCheckedValue();
         $this->value = $checked ? $this->getCheckedValue() : $this->getUncheckedValue();
         return $this;
     }

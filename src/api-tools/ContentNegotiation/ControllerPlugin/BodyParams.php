@@ -17,21 +17,23 @@ class BodyParams extends AbstractPlugin
     {
         $controller = $this->getController();
         if ($controller instanceof AbstractController) {
-            $parameterData = $controller->getEvent()->getParam(name: 'JieldContentNegotiationParameterData');
+            /** @var mixed $parameterData */
+            $parameterData = $controller->getEvent()->getParam(name: 'LaminasContentNegotiationParameterData');
             if ($parameterData instanceof ParameterDataContainer) {
                 return $parameterData->getBodyParams();
             }
         }
 
-        if (!method_exists(object_or_class: $controller, method: 'getRequest')) {
+        if (!method_exists(object_or_class: \Jield\Stdlib\Value::objectOrString($controller), method: 'getRequest')) {
             return [];
         }
 
-        $request = $controller->getRequest();
-        if (!method_exists(object_or_class: $request, method: 'getPost')) {
+        /** @var mixed $request */
+        $request = \Jield\Stdlib\Value::call($controller, 'getRequest');
+        if (!method_exists(object_or_class: \Jield\Stdlib\Value::objectOrString($request), method: 'getPost')) {
             return [];
         }
 
-        return $request->getPost()->toArray();
+        return \Jield\Stdlib\Value::array(\Jield\Stdlib\Value::call(\Jield\Stdlib\Value::call($request, 'getPost'), 'toArray'));
     }
 }

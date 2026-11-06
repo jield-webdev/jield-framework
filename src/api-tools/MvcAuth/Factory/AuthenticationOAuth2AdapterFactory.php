@@ -15,9 +15,7 @@ final class AuthenticationOAuth2AdapterFactory
     /**
      * Intentionally empty and private to prevent instantiation
      */
-    private function __construct()
-    {
-    }
+    private function __construct() {}
 
     /**
      * Create and return an OAuth2Adapter instance.
@@ -29,13 +27,13 @@ final class AuthenticationOAuth2AdapterFactory
      */
     public static function factory(array|string $type, array $config, ContainerInterface $container): OAuth2Adapter
     {
-        if (! isset($config['storage']) || ! is_array(value: $config['storage'])) {
+        if (!isset($config['storage']) || !is_array(value: $config['storage'])) {
             throw new ServiceNotCreatedException(message: 'Missing storage details for OAuth2 server');
         }
 
         return new OAuth2Adapter(
             oauth2Server: OAuth2ServerFactory::factory(config: $config['storage'], container: $container),
-            types: $type
+            types: \Jield\Stdlib\Value::nullableArrayOrString($type),
         );
     }
 }

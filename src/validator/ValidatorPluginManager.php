@@ -11,6 +11,7 @@ use Laminas\ServiceManager\ServiceManager;
 use Laminas\Validator\ValidatorInterface;
 use Laminas\Validator\ValidatorPluginManagerAwareInterface;
 use Psr\Container\ContainerInterface;
+
 use function array_replace_recursive;
 
 /**
@@ -19,15 +20,16 @@ use function array_replace_recursive;
  */
 final class ValidatorPluginManager extends AbstractSingleInstancePluginManager
 {
-    private const array DEFAULT_CONFIGURATION
-        = [
-            'factories' => [
-                IsFloat::class => InvokableFactory::class,
-            ],
-            'aliases'   => [
-                'isFloat' => IsFloat::class,
-            ],
-        ];
+    private \Laminas\Validator\ValidatorPluginManager $nativePlugins;
+
+    private const array DEFAULT_CONFIGURATION = [
+        'factories' => [
+            IsFloat::class => InvokableFactory::class,
+        ],
+        'aliases' => [
+            'isFloat' => IsFloat::class,
+        ],
+    ];
 
     /**
      * Whether to share by default; default to false
@@ -42,22 +44,20 @@ final class ValidatorPluginManager extends AbstractSingleInstancePluginManager
     public function __construct(ContainerInterface $creationContext, array $config = [])
     {
         /** @var ServiceManagerConfiguration $config */
-        $config = array_replace_recursive(self::DEFAULT_CONFIGURATION, $config);
+        $config = array_replace_recursive(self::DEFAULT_CONFIGURATION, \Jield\Stdlib\Value::stringKeyedArray($config));
+        $this->nativePlugins = new \Laminas\Validator\ValidatorPluginManager($creationContext, $config);
         parent::__construct($creationContext, $config);
 
-        $this->addInitializer(Closure::fromCallable([$this, 'injectValidatorPluginManager']));
+        $this->configure(['initializers' => [Closure::fromCallable([$this, 'injectValidatorPluginManager'])]]);
     }
 
     /** @internal */
-    protected function injectValidatorPluginManager(
-        ContainerInterface $container,
-        object             $validator,
-    ): void
+    protected function injectValidatorPluginManager(ContainerInterface $container, object $validator): void
     {
         if (!$validator instanceof ValidatorPluginManagerAwareInterface) {
             return;
         }
 
-        $validator->setValidatorPluginManager($this);
+        $validator->setValidatorPluginManager($this->nativePlugins);
     }
 }

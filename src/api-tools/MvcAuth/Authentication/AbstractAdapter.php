@@ -6,6 +6,7 @@ namespace Jield\ApiTools\MvcAuth\Authentication;
 
 use Laminas\Http\Request;
 use Override;
+
 use function in_array;
 use function preg_split;
 use function strtolower;
@@ -34,10 +35,10 @@ abstract class AbstractAdapter implements AdapterInterface
             return false;
         }
 
-        $authorization = trim(string: $authorization->getFieldValue());
-        $type          = $this->getTypeFromAuthorizationHeader(header: $authorization);
+        $authorization = trim(string: \Jield\Stdlib\Value::instance($authorization, \Laminas\Http\Header\HeaderInterface::class)->getFieldValue());
+        $type = $this->getTypeFromAuthorizationHeader(header: $authorization);
 
-        if (!in_array(needle: $type, haystack: $this->authorizationTokenTypes)) {
+        if (!in_array(needle: $type, haystack: $this->authorizationTokenTypes, strict: true)) {
             return false;
         }
 
@@ -57,8 +58,11 @@ abstract class AbstractAdapter implements AdapterInterface
             return false;
         }
 
-        [$type, $credential] = preg_split(pattern: '# #', subject: $header, limit: 2);
+        /** @var mixed $type
+         * @var mixed $credential
+         */
+        [$type, $credential] = explode(' ', $header, 2);
 
-        return strtolower(string: $type);
+        return strtolower(string: \Jield\Stdlib\Value::string($type));
     }
 }

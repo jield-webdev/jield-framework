@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\Mvc\View\Http;
 
+use Jield\Mvc\MvcEvent;
 use Laminas\EventManager\AbstractListenerAggregate;
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\Http\Request as HttpRequest;
-use Jield\Mvc\MvcEvent;
 
 class InjectRoutematchParamsListener extends AbstractListenerAggregate
 {
@@ -31,29 +33,33 @@ class InjectRoutematchParamsListener extends AbstractListenerAggregate
      */
     public function injectParams(MvcEvent $e): void
     {
-        $routeMatchParams = $e->getRouteMatch()->getParams();
-        $request          = $e->getRequest();
+        $routeMatchParams = \Jield\Stdlib\Value::present($e->getRouteMatch())->getParams();
+        $request = $e->getRequest();
 
-        if (! $request instanceof HttpRequest) {
+        if (!$request instanceof HttpRequest) {
             // unsupported request type
             return;
         }
 
-        $params = $request->get();
+        $params = \Jield\Stdlib\Value::instance($request->getQuery(), \Laminas\Stdlib\ParametersInterface::class);
 
         if ($this->overwrite) {
             // Overwrite existing parameters, or create new ones if not present.
+            /** @var mixed $val */
             foreach ($routeMatchParams as $key => $val) {
-                $params->$key = $val;
+                $params->set($key, $val);
             }
             return;
         }
 
         // Only create new parameters.
+        /** @var mixed $val */
         foreach ($routeMatchParams as $key => $val) {
-            if (! $params->offsetExists($key)) {
-                $params->$key = $val;
+            if (array_key_exists($key, \Jield\Stdlib\Value::array($params->toArray()))) {
+                continue;
             }
+
+            $params->set($key, $val);
         }
     }
 

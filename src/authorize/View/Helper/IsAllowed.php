@@ -21,11 +21,11 @@ class IsAllowed
 
     /**
      * @param mixed $resource
-     * @param mixed|null $privilege
+     * @param mixed $privilege
      * @return bool
      */
     public function __invoke(mixed $resource, mixed $privilege = null): bool
     {
-        return $this->authorizeService->isAllowed(resource: $resource, privilege: $privilege);
+        return $this->authorizeService->isAllowed(resource: \Jield\Stdlib\Value::instanceOrString($resource, \Laminas\Permissions\Acl\Resource\ResourceInterface::class), privilege: \Jield\Stdlib\Value::nullableString($privilege));
     }
 }

@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Jield\ApiTools\OAuth2\Provider\UserId;
 
-use Jield\Authentication\AuthenticationServiceInterface;
+use Laminas\Authentication\AuthenticationServiceInterface;
 use Laminas\Stdlib\RequestInterface;
-
 use Override;
+
 use function is_array;
 use function is_object;
 use function method_exists;
@@ -23,24 +23,27 @@ class AuthenticationService implements UserIdProviderInterface
      *
      * @param array $config
      */
-    public function __construct(private readonly ?AuthenticationServiceInterface $authenticationService = null, array $config = [])
-    {
+    public function __construct(
+        private readonly ?AuthenticationServiceInterface $authenticationService = null,
+        array $config = [],
+    ) {
         if (isset($config['api-tools-oauth2']['user_id'])) {
-            $this->userId = $config['api-tools-oauth2']['user_id'];
+            $this->userId = \Jield\Stdlib\Value::string($config['api-tools-oauth2']['user_id']);
         }
     }
 
     /**
-     * Use implementation of Jield\Authentication\AuthenticationServiceInterface to fetch the identity.
+     * Use implementation of Laminas\Authentication\AuthenticationServiceInterface to fetch the identity.
      *
      */
     #[Override]
     public function __invoke(RequestInterface $request): mixed
     {
-        if (!$this->authenticationService instanceof \Jield\Authentication\AuthenticationServiceInterface) {
+        if (!$this->authenticationService instanceof \Laminas\Authentication\AuthenticationServiceInterface) {
             return null;
         }
 
+        /** @var mixed $identity */
         $identity = $this->authenticationService->getIdentity();
 
         if (is_object(value: $identity)) {
@@ -48,9 +51,9 @@ class AuthenticationService implements UserIdProviderInterface
                 return $identity->{$this->userId};
             }
 
-            $method = "get" . ucfirst(string: $this->userId);
+            $method = 'get' . ucfirst(string: $this->userId);
             if (method_exists(object_or_class: $identity, method: $method)) {
-                return $identity->$method();
+                return \Jield\Stdlib\Value::call($identity, $method);
             }
 
             return null;

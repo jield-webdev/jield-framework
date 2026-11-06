@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\AssetManager\Service;
 
 use Assetic\Contracts\Asset\AssetInterface;
@@ -23,9 +25,9 @@ class AssetFilterManager implements MimeResolverAwareInterface
     /**
      * Construct the AssetFilterManager
      */
-    public function __construct(protected array $config = [])
-    {
-    }
+    public function __construct(
+        protected array $config = [],
+    ) {}
 
     /**
      * Get the filter configuration.
@@ -39,40 +41,43 @@ class AssetFilterManager implements MimeResolverAwareInterface
      * See if there are filters for the asset, and if so, set them.
      *
      * @param string $path
-     * @param \AssetManager\Asset\AssetInterface $asset
+     * @param \Jield\AssetManager\Asset\AssetInterface $asset
      *
      * @throws Exception\RuntimeException on invalid filters
      */
-    public function setFilters(string $path, \AssetManager\Asset\AssetInterface $asset): void
+    public function setFilters(string $path, \Jield\AssetManager\Asset\AssetInterface $asset): void
     {
         $config = $this->getConfig();
 
         if (!empty($config[$path])) {
+            /** @var mixed $filters */
             $filters = $config[$path];
         } elseif (!empty($config[$asset->getMimeType()])) {
+            /** @var mixed $filters */
             $filters = $config[$asset->getMimeType()];
         } else {
-            $extension = $this->getMimeResolver()->getExtension(mimetype: $asset->getMimeType());
+            /** @var mixed $extension */
+            $extension = $this->getMimeResolver()->getExtension(mimetype: \Jield\Stdlib\Value::string($asset->getMimeType()));
             if (!empty($config[$extension])) {
+                /** @var mixed $filters */
                 $filters = $config[$extension];
             } else {
                 return;
             }
         }
 
-        foreach ($filters as $filter) {
+        /** @var mixed $filter */
+        foreach (\Jield\Stdlib\Value::iterable($filters) as $filter) {
             if (is_null(value: $filter)) {
                 continue;
             }
 
             if (!empty($filter['filter'])) {
-                $this->ensureByFilter(asset: $asset, filter: $filter['filter']);
+                $this->ensureByFilter(asset: $asset, filter: \Jield\Stdlib\Value::instanceOrString($filter['filter'], \Assetic\Contracts\Filter\FilterInterface::class));
             } elseif (!empty($filter['service'])) {
-                $this->ensureByService(asset: $asset, service: $filter['service']);
+                $this->ensureByService(asset: $asset, service: \Jield\Stdlib\Value::string(\Jield\Stdlib\Value::accessible($filter)['service']));
             } else {
-                throw new Exception\RuntimeException(
-                    message: 'Invalid filter supplied. Expected Filter or Service.'
-                );
+                throw new Exception\RuntimeException(message: 'Invalid filter supplied. Expected Filter or Service.');
             }
         }
     }
@@ -86,7 +91,7 @@ class AssetFilterManager implements MimeResolverAwareInterface
      */
     protected function ensureByService(AssetInterface $asset, string $service): void
     {
-        $this->ensureByFilter(asset: $asset, filter: $this->container->get($service));
+        $this->ensureByFilter(asset: $asset, filter: \Jield\Stdlib\Value::instanceOrString($this->container->get($service), \Assetic\Contracts\Filter\FilterInterface::class));
     }
 
     /**
@@ -108,23 +113,21 @@ class AssetFilterManager implements MimeResolverAwareInterface
         $filterClass = $filter;
 
         if (!is_subclass_of(object_or_class: $filterClass, class: FilterInterface::class, allow_string: true)) {
-            $filterClass .= (str_ends_with(haystack: $filterClass, needle: 'Filter')) ? '' : 'Filter';
+            $filterClass .= str_ends_with(haystack: $filterClass, needle: 'Filter') ? '' : 'Filter';
             $filterClass = 'Assetic\Filter\\' . $filterClass;
         }
 
         if (!class_exists(class: $filterClass)) {
-            throw new Exception\RuntimeException(
-                message: 'No filter found for ' . $filter
-            );
+            throw new Exception\RuntimeException(message: 'No filter found for ' . $filter);
         }
 
         if (!isset($this->filterInstances[$filterClass])) {
-            $this->filterInstances[$filterClass] = new $filterClass();
+            $this->filterInstances[$filterClass] = \Jield\Stdlib\Value::instantiate($filterClass);
         }
 
         $filterInstance = $this->filterInstances[$filterClass];
 
-        $asset->ensureFilter(filter: $filterInstance);
+        $asset->ensureFilter(filter: \Jield\Stdlib\Value::instance($filterInstance, \Assetic\Contracts\Filter\FilterInterface::class));
     }
 
     public function getContainer(): ContainerInterface

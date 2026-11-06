@@ -15,22 +15,22 @@ class FormEmail extends FormInput
      * @var array
      */
     protected array $validTagAttributes = [
-        'name'         => true,
+        'name' => true,
         'autocomplete' => true,
-        'autofocus'    => true,
-        'disabled'     => true,
-        'form'         => true,
-        'list'         => true,
-        'maxlength'    => true,
-        'minlength'    => true,
-        'multiple'     => true,
-        'pattern'      => true,
-        'placeholder'  => true,
-        'readonly'     => true,
-        'required'     => true,
-        'size'         => true,
-        'type'         => true,
-        'value'        => true,
+        'autofocus' => true,
+        'disabled' => true,
+        'form' => true,
+        'list' => true,
+        'maxlength' => true,
+        'minlength' => true,
+        'multiple' => true,
+        'pattern' => true,
+        'placeholder' => true,
+        'readonly' => true,
+        'required' => true,
+        'size' => true,
+        'type' => true,
+        'value' => true,
     ];
 
     /**

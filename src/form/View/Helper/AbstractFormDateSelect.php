@@ -27,7 +27,7 @@ abstract class AbstractFormDateSelect extends AbstractHelper
      *
      * @var null|FormSelect
      */
-    protected ?FormSelect $selectHelper;
+    protected ?FormSelect $selectHelper = null;
 
     /**
      * Date formatter to use
@@ -41,24 +41,24 @@ abstract class AbstractFormDateSelect extends AbstractHelper
      *
      * @var null|string
      */
-    protected ?string $pattern;
+    protected ?string $pattern = null;
 
     /**
      * Locale to use
      *
      * @var null|string
      */
-    protected ?string $locale;
+    protected ?string $locale = null;
 
     /**
      * @throws Exception\ExtensionNotLoadedException If ext/intl is not present.
      */
     public function __construct()
     {
-        if (! extension_loaded(extension: 'intl')) {
+        if (!extension_loaded(extension: 'intl')) {
             throw new Exception\ExtensionNotLoadedException(message: sprintf(
                 '%s component requires the intl PHP extension',
-                __NAMESPACE__
+                __NAMESPACE__,
             ));
         }
 
@@ -71,12 +71,12 @@ abstract class AbstractFormDateSelect extends AbstractHelper
      */
     protected function parsePattern(bool $renderDelimiters = true): array
     {
-        $pattern    = $this->getPattern();
+        $pattern = $this->getPattern();
         $pregResult = preg_split(
             pattern: "/([ \-,.\/]*(?:'[a-zA-Z]+')*[ \-,.\/]+)/",
             subject: $pattern,
             limit: -1,
-            flags: PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY
+            flags: PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY,
         );
         assert(assertion: $pregResult !== false);
 
@@ -103,7 +103,11 @@ abstract class AbstractFormDateSelect extends AbstractHelper
     public function getPattern(): string
     {
         if (null === $this->pattern) {
-            $intl          = new IntlDateFormatter(locale: $this->getLocale(), dateType: $this->dateType, timeType: IntlDateFormatter::NONE);
+            $intl = new IntlDateFormatter(
+                locale: $this->getLocale(),
+                dateType: $this->dateType,
+                timeType: IntlDateFormatter::NONE,
+            );
             $this->pattern = $intl->getPattern();
         }
 
@@ -113,7 +117,7 @@ abstract class AbstractFormDateSelect extends AbstractHelper
     /**
      * Set date formatter
      *
-     * @return $this
+     * @return static
      */
     public function setDateType(int $dateType): static
     {
@@ -142,7 +146,7 @@ abstract class AbstractFormDateSelect extends AbstractHelper
     /**
      * Set locale
      *
-     * @return $this
+     * @return static
      */
     public function setLocale(string $locale): static
     {
@@ -180,14 +184,14 @@ abstract class AbstractFormDateSelect extends AbstractHelper
             timeType: IntlDateFormatter::NONE,
             timezone: null,
             calendar: null,
-            pattern: $pattern
+            pattern: $pattern,
         );
-        $date           = new DateTime(datetime: '1970-01-01');
+        $date = new DateTime(datetime: '1970-01-01');
 
         $result = [];
         for ($month = 1; $month <= 12; $month++) {
-            $key          = $date->format(format: 'm');
-            $value        = $valueFormatter->format(datetime: $date->getTimestamp());
+            $key = $date->format(format: 'm');
+            $value = $valueFormatter->format(datetime: $date->getTimestamp());
             $result[$key] = $value;
 
             $date->modify(modifier: '+1 month');
@@ -223,7 +227,7 @@ abstract class AbstractFormDateSelect extends AbstractHelper
         }
 
         if (null !== $this->view && method_exists(object_or_class: $this->view, method: 'plugin')) {
-            $this->selectHelper = $this->view->plugin('formselect');
+            $this->selectHelper = $this->getView()->plugin('formselect', \Jield\Form\View\Helper\FormSelect::class);
         }
 
         if (null === $this->selectHelper) {

@@ -6,16 +6,21 @@ namespace Jield\Twig;
 
 use Laminas\Stdlib\AbstractOptions;
 
+/**
+ * @extends \Laminas\Stdlib\AbstractOptions<mixed>
+ */
 class ModuleOptions extends AbstractOptions
 {
     protected string $environmentLoader = '';
 
+    /** @var class-string<\Twig\Environment>|'' */
     protected string $environmentClass = '';
 
     protected array $environmentOptions = [];
 
     protected array $globals = [];
 
+    /** @var list<string> */
     protected array $loaderChain = [];
 
     protected array $extensions = [];
@@ -37,11 +42,13 @@ class ModuleOptions extends AbstractOptions
         return $this;
     }
 
+    /** @return class-string<\Twig\Environment>|'' */
     public function getEnvironmentClass(): string
     {
         return $this->environmentClass;
     }
 
+    /** @param class-string<\Twig\Environment> $environmentClass */
     public function setEnvironmentClass(string $environmentClass): ModuleOptions
     {
         $this->environmentClass = $environmentClass;
@@ -70,11 +77,13 @@ class ModuleOptions extends AbstractOptions
         return $this;
     }
 
+    /** @return list<string> */
     public function getLoaderChain(): array
     {
         return $this->loaderChain;
     }
 
+    /** @param list<string> $loaderChain */
     public function setLoaderChain(array $loaderChain): ModuleOptions
     {
         $this->loaderChain = $loaderChain;

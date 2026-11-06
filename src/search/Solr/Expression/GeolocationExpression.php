@@ -10,9 +10,11 @@ use function sprintf;
 
 class GeolocationExpression extends Expression implements Stringable
 {
-    public function __construct(private readonly float $latitude, private readonly float $longitude, private readonly int $precision)
-    {
-    }
+    public function __construct(
+        private readonly float $latitude,
+        private readonly float $longitude,
+        private readonly int $precision,
+    ) {}
 
     public function __toString(): string
     {

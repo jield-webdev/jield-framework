@@ -6,7 +6,7 @@ namespace DoctrineModule\Service\Authentication;
 
 use BadMethodCallException;
 use DoctrineModule\Service\AbstractFactory;
-use Jield\Authentication\AuthenticationService;
+use Laminas\Authentication\AuthenticationService;
 use Psr\Container\ContainerInterface;
 
 /**
@@ -17,8 +17,11 @@ final class AuthenticationServiceFactory extends AbstractFactory
     /**
      * {@inheritDoc}
      */
-    public function __invoke(ContainerInterface $container, $requestedName, array|null $options = null): AuthenticationService
-    {
+    public function __invoke(
+        ContainerInterface $container,
+        $requestedName,
+        ?array $options = null,
+    ): AuthenticationService {
         return new AuthenticationService(
             storage: $container->get('doctrine.authenticationstorage.' . $this->getName()),
             adapter: $container->get('doctrine.authenticationadapter.' . $this->getName()),

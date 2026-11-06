@@ -1,11 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\Mvc\Factory;
 
 // phpcs:ignore
 use Jield\Mvc\View\Http\InjectTemplateListener;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Psr\Container\ContainerInterface;
+
 use function is_array;
 
 class InjectTemplateListenerFactory implements FactoryInterface
@@ -17,15 +20,16 @@ class InjectTemplateListenerFactory implements FactoryInterface
      *
      * @return InjectTemplateListener
      */
-    public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): InjectTemplateListener
-    {
+    public function __invoke(
+        ContainerInterface $container,
+        string $requestedName,
+        ?array $options = null,
+    ): InjectTemplateListener {
         $listener = new InjectTemplateListener();
-        $config   = $container->get('config');
+        /** @var mixed $config */
+        $config = $container->get('config');
 
-        if (
-            isset($config['view_manager']['controller_map'])
-            && (is_array($config['view_manager']['controller_map']))
-        ) {
+        if (isset($config['view_manager']['controller_map']) && is_array($config['view_manager']['controller_map'])) {
             $listener->setControllerMap($config['view_manager']['controller_map']);
         }
 

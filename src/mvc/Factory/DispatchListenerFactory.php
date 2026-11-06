@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\Mvc\Factory;
 
 // phpcs:ignore
@@ -16,8 +18,11 @@ class DispatchListenerFactory implements FactoryInterface
      * @param  null|array $options
      * @return DispatchListener
      */
-    public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): DispatchListener
-    {
-        return new DispatchListener($container->get('ControllerManager'));
+    public function __invoke(
+        ContainerInterface $container,
+        string $requestedName,
+        ?array $options = null,
+    ): DispatchListener {
+        return new DispatchListener(\Jield\Stdlib\Service::get($container, \Jield\Mvc\Controller\ControllerManager::class, 'ControllerManager'));
     }
 }

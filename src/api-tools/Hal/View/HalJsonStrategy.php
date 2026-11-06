@@ -5,52 +5,47 @@ declare(strict_types=1);
 namespace Jield\ApiTools\Hal\View;
 
 use Jield\ApiTools\ApiProblem\View\ApiProblemModel;
-use Laminas\View\Model\ModelInterface;
+use Jield\Mvc\MvcEvent;
+use Laminas\EventManager\AbstractListenerAggregate;
+use Laminas\EventManager\EventManagerInterface;
 
-/**
- * Helper to render HAL JSON responses and determine content type.
- *
- * This will give the following content types:
- *
- * - application/hal+json for a result that contains HAL-compliant links
- * - application/json for all other responses
- */
-class HalJsonStrategy
+class HalJsonStrategy extends AbstractListenerAggregate
 {
-    /** @var string */
-    protected string $contentType = 'application/json';
+    public function __construct(
+        private readonly HalJsonRenderer $renderer,
+    ) {}
 
-    private HalJsonRenderer $renderer;
-
-    public function __construct(HalJsonRenderer $renderer)
+    public function attach(EventManagerInterface $events, $priority = 300): void
     {
-        $this->renderer = $renderer;
+        $this->listeners[] = $events->attach(MvcEvent::EVENT_RENDER, $this->render(...), $priority);
+        $this->listeners[] = $events->attach(MvcEvent::EVENT_RENDER_ERROR, $this->render(...), $priority);
     }
 
-    public function render(HalJsonModel $model): string
+    public function render(MvcEvent $event): void
     {
-        return $this->renderer->render(nameOrModel: $model);
-    }
-
-    /**
-     * Determine the response content-type to return based on the view model.
-     *
-     * @param ApiProblemModel|HalJsonModel|ModelInterface|null $model
-     * @return string The content-type to use.
-     */
-    public function getContentTypeFromModel(HalJsonModel|ApiProblemModel|ModelInterface|null $model): string
-    {
-        if ($model instanceof ApiProblemModel) {
-            return 'application/problem+json';
+        /** @var mixed $model */
+        $model = $event->getResult();
+        if (!$model instanceof HalJsonModel) {
+            $model = $event->getViewModel();
         }
-
-        if (
-            $model instanceof HalJsonModel
-            && ($model->isCollection() || $model->isEntity())
-        ) {
-            return 'application/hal+json';
+        if (!$model instanceof HalJsonModel) {
+            return;
         }
-
-        return $this->contentType;
+        $this->renderer->setViewEvent($event);
+        $body = $this->renderer->render($model);
+        /** @var mixed $problem */
+        $problem = $event->getResult();
+        $response = $event->getResponse();
+        if ($problem instanceof ApiProblemModel) {
+            $status = $problem->getApiProblem()->getStatus();
+            \Jield\Stdlib\Value::instance($response, \Laminas\Http\Response::class)->setStatusCode($status >= 100 && $status <= 599 ? $status : 500);
+        }
+        $response->setContent($body);
+        \Jield\Stdlib\Value::instance($response, \Laminas\Http\AbstractMessage::class)->getHeaders()->addHeaderLine(
+            'Content-Type',
+            $problem instanceof ApiProblemModel ? 'application/problem+json' : 'application/hal+json',
+        );
+        $event->setResult($response);
+        $event->stopPropagation();
     }
 }

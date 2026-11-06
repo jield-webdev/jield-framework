@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Jield\Validator;
 
 use Laminas\Validator\AbstractValidator;
+
 use function get_debug_type;
 
 final class IsFloat extends AbstractValidator
@@ -12,16 +13,14 @@ final class IsFloat extends AbstractValidator
     public const string NOT_FLOAT = 'NotFloat';
 
     /** @var array<string, string> */
-    protected array $messageTemplates
-        = [
-            self::NOT_FLOAT => 'Expected an float value but %type% provided',
-        ];
+    protected array $messageTemplates = [
+        self::NOT_FLOAT => 'Expected an float value but %type% provided',
+    ];
 
     /** @var array<string, string|array<string, string>> */
-    protected array $messageVariables
-        = [
-            'type' => 'type',
-        ];
+    protected array $messageVariables = [
+        'type' => 'type',
+    ];
 
     protected ?string $type = null;
 

@@ -1,15 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\Mvc\View\Http;
 
 use Exception;
+use Jield\Mvc\Application;
+use Jield\Mvc\MvcEvent;
+use Jield\Mvc\View\Model\ViewModel;
 use Laminas\EventManager\AbstractListenerAggregate;
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\Http\Response as HttpResponse;
-use Jield\Mvc\Application;
-use Jield\Mvc\MvcEvent;
 use Laminas\Stdlib\ResponseInterface as Response;
-use Laminas\View\Model\ViewModel;
 use Throwable;
 
 use function is_string;
@@ -58,11 +60,11 @@ class RouteNotFoundStrategy extends AbstractListenerAggregate
      * Set value indicating whether or not to display exceptions related to a not-found condition
      *
      * @param  bool $displayExceptions
-     * @return RouteNotFoundStrategy
+     * @return static
      */
     public function setDisplayExceptions($displayExceptions): static
     {
-        $this->displayExceptions = (bool) $displayExceptions;
+        $this->displayExceptions = $displayExceptions;
         return $this;
     }
 
@@ -80,11 +82,11 @@ class RouteNotFoundStrategy extends AbstractListenerAggregate
      * Set value indicating whether or not to display the reason for a not-found condition
      *
      * @param  bool $displayNotFoundReason
-     * @return RouteNotFoundStrategy
+     * @return static
      */
     public function setDisplayNotFoundReason($displayNotFoundReason): static
     {
-        $this->displayNotFoundReason = (bool) $displayNotFoundReason;
+        $this->displayNotFoundReason = $displayNotFoundReason;
         return $this;
     }
 
@@ -102,11 +104,11 @@ class RouteNotFoundStrategy extends AbstractListenerAggregate
      * Get template for not found conditions
      *
      * @param  string $notFoundTemplate
-     * @return RouteNotFoundStrategy
+     * @return static
      */
     public function setNotFoundTemplate($notFoundTemplate): static
     {
-        $this->notFoundTemplate = (string) $notFoundTemplate;
+        $this->notFoundTemplate = $notFoundTemplate;
         return $this;
     }
 
@@ -140,12 +142,9 @@ class RouteNotFoundStrategy extends AbstractListenerAggregate
             case Application::ERROR_CONTROLLER_INVALID:
             case Application::ERROR_ROUTER_NO_MATCH:
                 $this->reason = $error;
-                $response     = $e->getResponse();
-                if (! $response) {
-                    $response = new HttpResponse();
-                    $e->setResponse($response);
-                }
-                $response->setStatusCode(404);
+                $response = $e->getResponse();
+                
+                \Jield\Stdlib\Value::instance($response, \Laminas\Http\Response::class)->setStatusCode(404);
                 break;
             default:
                 return;
@@ -159,6 +158,7 @@ class RouteNotFoundStrategy extends AbstractListenerAggregate
      */
     public function prepareNotFoundViewModel(MvcEvent $e): void
     {
+        /** @var mixed $vars */
         $vars = $e->getResult();
         if ($vars instanceof Response) {
             // Already have a response as the result
@@ -166,12 +166,12 @@ class RouteNotFoundStrategy extends AbstractListenerAggregate
         }
 
         $response = $e->getResponse();
-        if ($response->getStatusCode() !== 404) {
+        if (\Jield\Stdlib\Value::instance($response, \Laminas\Http\Response::class)->getStatusCode() !== 404) {
             // Only handle 404 responses
             return;
         }
 
-        if (! $vars instanceof ViewModel) {
+        if (!$vars instanceof ViewModel) {
             $model = new ViewModel();
             if (is_string($vars)) {
                 $model->setVariable('message', $vars);
@@ -185,7 +185,7 @@ class RouteNotFoundStrategy extends AbstractListenerAggregate
             }
         }
 
-        $model->setTemplate($this->getNotFoundTemplate());
+        $model->setTemplate(\Jield\Stdlib\Value::nonEmptyString($this->getNotFoundTemplate()));
 
         // If displaying reasons, inject the reason
         $this->injectNotFoundReason($model);
@@ -210,7 +210,7 @@ class RouteNotFoundStrategy extends AbstractListenerAggregate
      */
     protected function injectNotFoundReason(ViewModel $model): void
     {
-        if (! $this->displayNotFoundReason()) {
+        if (!$this->displayNotFoundReason()) {
             return;
         }
 
@@ -237,16 +237,17 @@ class RouteNotFoundStrategy extends AbstractListenerAggregate
      */
     protected function injectException($model, $e): void
     {
-        if (! $this->displayExceptions()) {
+        if (!$this->displayExceptions()) {
             return;
         }
 
         $model->setVariable('display_exceptions', true);
 
+        /** @var mixed $exception */
         $exception = $e->getParam('exception', false);
 
         // @TODO clean up once PHP 7 requirement is enforced
-        if (! $exception instanceof Exception && ! $exception instanceof Throwable) {
+        if (!$exception instanceof Exception && !$exception instanceof Throwable) {
             return;
         }
 
@@ -268,7 +269,7 @@ class RouteNotFoundStrategy extends AbstractListenerAggregate
      */
     protected function injectController($model, $e): void
     {
-        if (! $this->displayExceptions() && ! $this->displayNotFoundReason()) {
+        if (!$this->displayExceptions() && !$this->displayNotFoundReason()) {
             return;
         }
 
@@ -279,8 +280,9 @@ class RouteNotFoundStrategy extends AbstractListenerAggregate
                 return;
             }
 
+            /** @var mixed $controller */
             $controller = $routeMatch->getParam('controller', false);
-            if (! $controller) {
+            if (!$controller) {
                 return;
             }
         }

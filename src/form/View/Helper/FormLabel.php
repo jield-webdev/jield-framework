@@ -16,7 +16,7 @@ use function sprintf;
 /** @final */
 class FormLabel extends AbstractHelper
 {
-    public const string APPEND  = 'append';
+    public const string APPEND = 'append';
     public const string PREPEND = 'prepend';
 
     /**
@@ -25,7 +25,7 @@ class FormLabel extends AbstractHelper
      * @var array
      */
     protected array $validTagAttributes = [
-        'for'  => true,
+        'for' => true,
         'form' => true,
     ];
 
@@ -37,28 +37,29 @@ class FormLabel extends AbstractHelper
      *
      * @template T as null|ElementInterface
      * @psalm-param T $element
-     * @psalm-return (T is null ? self : string)
+     * @psalm-return (T is null ? static : string)
      * @throws Exception\DomainException
      * @return string|FormLabel
      */
-    public function __invoke(?ElementInterface $element = null, ?string $labelContent = null, ?string $position = null): FormLabel|string|static
-    {
-        if (! $element) {
+    public function __invoke(
+        ?ElementInterface $element = null,
+        ?string $labelContent = null,
+        ?string $position = null,
+    ): string|static {
+        if (!$element) {
             return $this;
         }
 
         $openTag = $this->openTag(attributesOrElement: $element);
-        $label   = '';
+        $label = '';
         if ($labelContent === null || $position !== null) {
             $label = $element->getLabel();
             if (empty($label)) {
-                throw new Exception\DomainException(
-                    message: sprintf(
-                        '%s expects either label content as the second argument, '
-                        . 'or that the element provided has a label attribute; neither found',
-                        __METHOD__
-                    )
-                );
+                throw new Exception\DomainException(message: sprintf(
+                    '%s expects either label content as the second argument, '
+                    . 'or that the element provided has a label attribute; neither found',
+                    __METHOD__,
+                ));
             }
 
             $label = $this->translateLabel(label: $label);
@@ -81,7 +82,7 @@ class FormLabel extends AbstractHelper
             $labelContent = $label;
         }
 
-        return $openTag . $labelContent . $this->closeTag();
+        return $openTag . (string) ($labelContent) . $this->closeTag();
     }
 
     /**
@@ -102,19 +103,13 @@ class FormLabel extends AbstractHelper
             return sprintf('<label %s>', $attributes);
         }
 
-        if (! $attributesOrElement instanceof ElementInterface) {
-            throw new Exception\InvalidArgumentException(message: sprintf(
-                '%s expects an array or Jield\Form\ElementInterface instance; received "%s"',
-                __METHOD__,
-                get_debug_type(value: $attributesOrElement)
-            ));
-        }
+        
 
         $id = $this->getId(element: $attributesOrElement);
         if (null === $id) {
             throw new Exception\DomainException(message: sprintf(
                 '%s expects the Element provided to have either a name or an id present; neither found',
-                __METHOD__
+                __METHOD__,
             ));
         }
 
@@ -125,7 +120,7 @@ class FormLabel extends AbstractHelper
 
         $attributes = ['for' => $id];
 
-        if (! empty($labelAttributes)) {
+        if (!empty($labelAttributes)) {
             $attributes = array_merge($labelAttributes, $attributes);
         }
 

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\AssetManager\Asset;
 
 class HttpAsset extends \Assetic\Asset\HttpAsset implements AssetInterface

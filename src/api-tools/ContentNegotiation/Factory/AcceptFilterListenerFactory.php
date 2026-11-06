@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Jield\ApiTools\ContentNegotiation\Factory;
 
-use Psr\Container\ContainerInterface;
 use Jield\ApiTools\ContentNegotiation\AcceptFilterListener;
 use Jield\ApiTools\ContentNegotiation\ContentNegotiationOptions;
+use Psr\Container\ContainerInterface;
 
 class AcceptFilterListenerFactory
 {
@@ -14,7 +14,7 @@ class AcceptFilterListenerFactory
     {
         $listener = new AcceptFilterListener();
 
-        $options = $container->get(ContentNegotiationOptions::class);
+        $options = \Jield\Stdlib\Service::get($container, ContentNegotiationOptions::class);
         $listener->setConfig(config: $options->getAcceptWhitelist());
 
         return $listener;

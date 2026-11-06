@@ -7,6 +7,7 @@ namespace Jield\Form\View\Helper;
 use Jield\Form\Element;
 use Jield\Form\ElementInterface;
 use Laminas\View\HelperPluginManagerInterface;
+
 use function assert;
 use function is_callable;
 
@@ -19,50 +20,48 @@ class FormElement extends AbstractHelper
      *
      * @var array<class-string<ElementInterface>, string>
      */
-    protected array $classMap
-        = [
-            Element\Button::class              => 'formbutton',
-            Element\Csrf::class                => 'formhidden',
-            Element\Collection::class          => 'formcollection',
-            Element\CollectionInterface::class => 'formcollection',
-            Element\DateTimeSelect::class      => 'formdatetimeselect',
-            Element\DateSelect::class          => 'formdateselect',
-            Element\MonthSelect::class         => 'formmonthselect',
-        ];
+    protected array $classMap = [
+        Element\Button::class => 'formbutton',
+        Element\Csrf::class => 'formhidden',
+        Element\Collection::class => 'formcollection',
+        Element\CollectionInterface::class => 'formcollection',
+        Element\DateTimeSelect::class => 'formdatetimeselect',
+        Element\DateSelect::class => 'formdateselect',
+        Element\MonthSelect::class => 'formmonthselect',
+    ];
 
     /**
      * Type map to view helper
      *
      * @var array<string, string>
      */
-    protected array $typeMap
-        = [
-            'checkbox'       => 'formcheckbox',
-            'color'          => 'formcolor',
-            'date'           => 'formdate',
-            'datetime'       => 'formdatetime',
-            'datetime-local' => 'formdatetimelocal',
-            'email'          => 'formemail',
-            'file'           => 'formfile',
-            'hidden'         => 'formhidden',
-            'image'          => 'formimage',
-            'month'          => 'formmonth',
-            'multi_checkbox' => 'formmulticheckbox',
-            'number'         => 'formnumber',
-            'password'       => 'formpassword',
-            'radio'          => 'formradio',
-            'range'          => 'formrange',
-            'reset'          => 'formreset',
-            'search'         => 'formsearch',
-            'select'         => 'formselect',
-            'submit'         => 'formsubmit',
-            'tel'            => 'formtel',
-            'text'           => 'formtext',
-            'textarea'       => 'formtextarea',
-            'time'           => 'formtime',
-            'url'            => 'formurl',
-            'week'           => 'formweek',
-        ];
+    protected array $typeMap = [
+        'checkbox' => 'formcheckbox',
+        'color' => 'formcolor',
+        'date' => 'formdate',
+        'datetime' => 'formdatetime',
+        'datetime-local' => 'formdatetimelocal',
+        'email' => 'formemail',
+        'file' => 'formfile',
+        'hidden' => 'formhidden',
+        'image' => 'formimage',
+        'month' => 'formmonth',
+        'multi_checkbox' => 'formmulticheckbox',
+        'number' => 'formnumber',
+        'password' => 'formpassword',
+        'radio' => 'formradio',
+        'range' => 'formrange',
+        'reset' => 'formreset',
+        'search' => 'formsearch',
+        'select' => 'formselect',
+        'submit' => 'formsubmit',
+        'tel' => 'formtel',
+        'text' => 'formtext',
+        'textarea' => 'formtextarea',
+        'time' => 'formtime',
+        'url' => 'formurl',
+        'week' => 'formweek',
+    ];
 
     /**
      * Default helper name
@@ -71,9 +70,9 @@ class FormElement extends AbstractHelper
      */
     protected string $defaultHelper = self::DEFAULT_HELPER;
 
-    public function __construct(private readonly HelperPluginManagerInterface $helpers)
-    {
-    }
+    public function __construct(
+        private readonly HelperPluginManagerInterface $helpers,
+    ) {}
 
     /**
      * Invoke helper as function
@@ -82,10 +81,10 @@ class FormElement extends AbstractHelper
      *
      * @template T as null|ElementInterface
      * @psalm-param T $element
-     * @psalm-return (T is null ? self : string)
+     * @psalm-return (T is null ? static : string)
      * @return string|self
      */
-    public function __invoke(?ElementInterface $element = null): string|FormElement|static
+    public function __invoke(?ElementInterface $element = null): string|static
     {
         if (!$element) {
             return $this;
@@ -120,7 +119,7 @@ class FormElement extends AbstractHelper
     /**
      * Set default helper name
      *
-     * @return $this
+     * @return static
      */
     public function setDefaultHelper(string $name): static
     {
@@ -132,7 +131,7 @@ class FormElement extends AbstractHelper
     /**
      * Add form element type to plugin map
      *
-     * @return $this
+     * @return static
      */
     public function addType(string $type, string $plugin): static
     {
@@ -145,7 +144,7 @@ class FormElement extends AbstractHelper
      * Add instance class to plugin map
      *
      * @param class-string<ElementInterface> $class
-     * @return $this
+     * @return static
      */
     public function addClass(string $class, string $plugin): static
     {
@@ -159,9 +158,10 @@ class FormElement extends AbstractHelper
      */
     protected function renderHelper(string $name, ElementInterface $element): string
     {
+        /** @var mixed $helper */
         $helper = $this->helpers->get($name);
         assert(assertion: is_callable(value: $helper));
-        return $helper($element);
+        return \Jield\Stdlib\Value::string($helper($element));
     }
 
     /**
@@ -185,8 +185,8 @@ class FormElement extends AbstractHelper
     {
         $type = $element->getAttribute(key: 'type');
 
-        if (isset($this->typeMap[(string)$type])) {
-            return $this->renderHelper(name: $this->typeMap[(string)$type], element: $element);
+        if (isset($this->typeMap[(string) $type])) {
+            return $this->renderHelper(name: $this->typeMap[(string) $type], element: $element);
         }
 
         return null;

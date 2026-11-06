@@ -7,6 +7,7 @@ namespace Jield\Twig;
 use Twig\Error;
 use Twig\Loader;
 use Twig\Source;
+
 use function array_key_exists;
 use function file_exists;
 use function file_get_contents;
@@ -20,10 +21,7 @@ class MapLoader implements Loader\LoaderInterface
     public function add(string $name, string $path): self
     {
         if ($this->exists($name)) {
-            throw new Error\LoaderError(sprintf(
-                'Name "%s" already exists in map',
-                $name
-            ));
+            throw new Error\LoaderError(sprintf('Name "%s" already exists in map', $name));
         }
         $this->map[$name] = $path;
         return $this;
@@ -37,18 +35,12 @@ class MapLoader implements Loader\LoaderInterface
     public function getSourceContext(string $name): Source
     {
         if (!$this->exists($name)) {
-            throw new Error\LoaderError(sprintf(
-                'Unable to find template "%s" from template map',
-                $name
-            ));
+            throw new Error\LoaderError(sprintf('Unable to find template "%s" from template map', $name));
         }
-        if (!file_exists($this->map[$name])) {
-            throw new Error\LoaderError(sprintf(
-                'Unable to open file "%s" from template map',
-                $this->map[$name]
-            ));
+        if (!file_exists(\Jield\Stdlib\Value::string($this->map[$name]))) {
+            throw new Error\LoaderError(sprintf('Unable to open file "%s" from template map', \Jield\Stdlib\Value::scalar($this->map[$name])));
         }
-        return new Source(file_get_contents($this->map[$name]), $name, $this->map[$name]);
+        return new Source(\Jield\Stdlib\Value::string(file_get_contents(\Jield\Stdlib\Value::string($this->map[$name]))), $name, \Jield\Stdlib\Value::string($this->map[$name]));
     }
 
     public function getCacheKey(string $name): string
@@ -58,6 +50,7 @@ class MapLoader implements Loader\LoaderInterface
 
     public function isFresh(string $name, int $time): bool
     {
-        return filemtime($this->map[$name]) <= $time;
+        $modified = filemtime(\Jield\Stdlib\Value::string($this->map[$name]));
+        return $modified !== false && $modified <= $time;
     }
 }

@@ -26,8 +26,8 @@ class DefaultAuthorizationPostListener
             return null;
         }
 
-        if (! $response instanceof HttpResponse) {
-            return $response;
+        if (!$response instanceof HttpResponse) {
+            return \Jield\Stdlib\Value::nullableInstance($response, \Laminas\Http\Response::class);
         }
 
         $response->setStatusCode(code: 403);

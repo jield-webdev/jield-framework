@@ -14,6 +14,7 @@ use Twig\Error\LoaderError;
 use Twig\Error\RuntimeError;
 use Twig\Error\SyntaxError;
 use Twig\Loader;
+
 use function call_user_func_array;
 use function is_callable;
 use function sprintf;
@@ -28,13 +29,11 @@ class TwigRenderer implements RendererInterface
     private array $pluginCache = [];
 
     public function __construct(
-        protected View               $view,
+        protected View $view,
         protected Loader\ChainLoader $loader,
-        protected Environment        $environment,
-        protected TwigResolver       $resolver
-    )
-    {
-    }
+        protected Environment $environment,
+        protected TwigResolver $resolver,
+    ) {}
 
     /**
      * Overloading: proxy to helpers
@@ -142,62 +141,26 @@ class TwigRenderer implements RendererInterface
      */
     public function render(string|ModelInterface $templateNameOrModel, $variables = null): string
     {
-        $model = null;
-
+        /** @var mixed $variables */
+        $variables = $variables instanceof ModelInterface ? $variables->getVariables() : \Jield\Stdlib\Value::iterable($variables ?? []);
+        $values = is_array($variables) ? $variables : iterator_to_array($variables);
         if ($templateNameOrModel instanceof ModelInterface) {
-            $model               = $templateNameOrModel;
+            $model = $templateNameOrModel;
+            $modelVariables = $model->getVariables();
+            $values = [...$modelVariables, ...$values];
+            foreach ($model->getChildren() as $child) {
+                $capture = $child->captureTo();
+                $content = $this->canRender($child->getTemplate())
+                    ? $this->render($child)
+                    : $this->view->render($child, enableLayout: false);
+                $values[$capture] = $child->isAppend() ? \Jield\Stdlib\Value::stringify($values[$capture] ?? '') . $content : $content;
+            }
             $templateNameOrModel = $model->getTemplate();
-
-            if (empty($templateNameOrModel)) {
-                throw new Exception\DomainException(sprintf(
-                    '%s: received View Model argument, but template is empty',
-                    __METHOD__
-                ));
-            }
-
-            $values = (array)$model->getVariables();
         }
-
-        if (!$this->canRender($templateNameOrModel)) {
-            return '';
-        }
-
-        if (null === $variables) {
-            $variables = [];
-        }
-
-        if ($model && $this->canRenderTrees() && $model->hasChildren()) {
-            $values['content'] = $values['content'] ?? '';
-            foreach ($model as $child) {
-                /** @var ModelInterface $child */
-                if ($this->canRender($child->getTemplate())) {
-                    $templateName = $this->resolver->resolve($child->getTemplate());
-                    if ($templateName === false) {
-                        continue;
-                    }
-                    $template = $this->environment->load($templateName);
-
-                    $childValues = (array)$child->getVariables();
-                    if ($child->hasChildren()) {
-                        foreach ($child->getChildren() as $grandChild) {
-                            /** @var ModelInterface $grandChild */
-                            $childValues[$grandChild->captureTo()] = $this->render($grandChild);
-                        }
-                    }
-
-                    return $template->render($childValues);
-                }
-                $child->setOption('has_parent', true);
-                $values['content'] .= $this->view->render($child);
-            }
-        }
-
-        $templateName = $this->resolver->resolve($templateNameOrModel);
+        $templateName = $this->resolver->resolve(\Jield\Stdlib\Value::nonEmptyString($templateNameOrModel));
         if ($templateName === false) {
-            return '';
+            throw new Exception\DomainException(sprintf('Cannot resolve template "%s"', $templateNameOrModel));
         }
-
-        $template = $this->environment->load($templateName);
-        return $template->render((array)$variables);
+        return $this->environment->render($templateName, \Jield\Stdlib\Value::array($values));
     }
 }

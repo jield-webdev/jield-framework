@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Jield\Form\Element;
 
-use Laminas\Validator\Explode as ExplodeValidator;
+use Jield\Validator\Each;
 use Laminas\Validator\InArray as InArrayValidator;
 use Laminas\Validator\ValidatorInterface;
 
@@ -16,13 +16,9 @@ use function trigger_error;
 use const E_USER_DEPRECATED;
 
 /**
- * @psalm-type ValueOptionSpec = array<string, string>|list<array{
- *     label: non-empty-string,
- *     value: non-empty-string,
- *     selected?: bool,
- *     disabled?: bool,
- *     attributes?: array<string, scalar|null>,
- *     label_attributes?: array<string, scalar|null>,
+ * @psalm-type ValueOptionSpec = array<array-key, scalar|\Stringable|array{
+ *     label: string, value: scalar|\Stringable, selected?: bool, disabled?: bool,
+ *     attributes?: array<string, scalar|null>, label_attributes?: array<string, scalar|null>
  * }>
  */
 class MultiCheckbox extends Checkbox
@@ -39,7 +35,7 @@ class MultiCheckbox extends Checkbox
     protected bool $useHiddenElement = false;
 
     /** @var null|string */
-    protected ?string $uncheckedValue;
+    protected ?string $uncheckedValue = null;
 
     /** @var ValueOptionSpec */
     protected array $valueOptions = [];
@@ -54,18 +50,14 @@ class MultiCheckbox extends Checkbox
 
     /**
      * @param ValueOptionSpec $options
-     * @return self
+     * @return static
      */
     public function setValueOptions(array $options): static
     {
         $this->valueOptions = $options;
 
-        // Update Explode validator haystack
-        if ($this->validator instanceof ExplodeValidator) {
-            $validator = $this->validator->getValidator();
-            assert(assertion: $validator instanceof InArrayValidator);
-            $validator->setHaystack($this->getValueOptionsValues());
-        }
+        // Validators are immutable; rebuild them for the updated options.
+        $this->validator = null;
 
         return $this;
     }
@@ -76,12 +68,13 @@ class MultiCheckbox extends Checkbox
      * This method will only unset a value option when the element was created with a simple array of key-value pairs
      * for value options, for example ['value1' => 'label1', 'value2' => 'label2']
      *
-     * @return self
+     * @return static
      */
     public function unsetValueOption(string $key): static
     {
         if (isset($this->valueOptions[$key])) {
             unset($this->valueOptions[$key]);
+            $this->validator = null;
         }
 
         return $this;
@@ -95,26 +88,30 @@ class MultiCheckbox extends Checkbox
      *
      * @inheritDoc
      */
-    public function setOptions(iterable $options): Checkbox|\Jield\Form\Element|MultiCheckbox|static
+    public function setOptions(iterable $options): static
     {
         parent::setOptions(options: $options);
 
         if (isset($this->options['value_options'])) {
-            $this->setValueOptions(options: $this->options['value_options']);
+            /** @var ValueOptionSpec $valueOptions */
+            $valueOptions = $this->options['value_options'];
+            $this->setValueOptions(options: $valueOptions);
         }
         // Alias for 'value_options'
         if (isset($this->options['options'])) {
-            $this->setValueOptions(options: $this->options['options']);
+            /** @var ValueOptionSpec $valueOptions */
+            $valueOptions = $this->options['options'];
+            $this->setValueOptions(options: $valueOptions);
         }
         if (isset($this->options['disable_inarray_validator'])) {
-            $this->setDisableInArrayValidator(disableOption: $this->options['disable_inarray_validator']);
+            $this->setDisableInArrayValidator(disableOption: \Jield\Stdlib\Value::bool($this->options['disable_inarray_validator']));
         }
 
         return $this;
     }
 
-    /** @inheritDoc */
-    public function setAttribute(string $key, $value): \Jield\Form\ElementInterface|MultiCheckbox|static
+    /** @param mixed $value */
+    public function setAttribute(string $key, $value): static
     {
         /** @psalm-suppress DocblockTypeContradiction */
         if ($key === 'options' && is_iterable(value: $value)) {
@@ -123,20 +120,22 @@ class MultiCheckbox extends Checkbox
                 . 'version 4.0 of this library',
                 error_level: E_USER_DEPRECATED,
             );
+            /** @var ValueOptionSpec $value */
             $this->setValueOptions(options: $value);
             return $this;
         }
-        return parent::setAttribute(key: $key, value: $value);
+        return parent::setAttribute(key: $key, value: \Jield\Stdlib\Value::plainScalar($value));
     }
 
     /**
      * Set the flag to allow for disabling the automatic addition of an InArray validator.
      *
-     * @return self
+     * @return static
      */
     public function setDisableInArrayValidator(bool $disableOption): static
     {
         $this->disableInArrayValidator = $disableOption;
+        $this->validator = null;
         return $this;
     }
 
@@ -153,15 +152,12 @@ class MultiCheckbox extends Checkbox
      */
     protected function getValidator(): ?ValidatorInterface
     {
-        if (null === $this->validator && ! $this->disableInArrayValidator()) {
+        if (null === $this->validator && !$this->disableInArrayValidator()) {
             $inArrayValidator = new InArrayValidator(options: [
                 'haystack' => $this->getValueOptionsValues(),
-                'strict'   => false,
+                'strict' => false,
             ]);
-            $this->validator  = new ExplodeValidator(options: [
-                'validator'      => $inArrayValidator,
-                'valueDelimiter' => null, // skip explode if only one value
-            ]);
+            $this->validator = new Each($inArrayValidator);
         }
         return $this->validator;
     }
@@ -171,10 +167,10 @@ class MultiCheckbox extends Checkbox
      */
     protected function getValueOptionsValues(): array
     {
-        $values  = [];
+        $values = [];
         $options = $this->getValueOptions();
         foreach ($options as $key => $optionSpec) {
-            $value    = is_array(value: $optionSpec) ? $optionSpec['value'] : $key;
+            $value = is_array(value: $optionSpec) ? $optionSpec['value'] : $key;
             $values[] = $value;
         }
         if ($this->useHiddenElement()) {
@@ -184,7 +180,7 @@ class MultiCheckbox extends Checkbox
     }
 
     /** @inheritDoc */
-    public function setValue(mixed $value): Checkbox|\Jield\Form\ElementInterface|MultiCheckbox|static
+    public function setValue(mixed $value): static
     {
         $this->value = $value;
         return $this;

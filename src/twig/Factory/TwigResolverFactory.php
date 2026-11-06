@@ -13,6 +13,6 @@ class TwigResolverFactory implements FactoryInterface
 {
     public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): TwigResolver
     {
-        return new TwigResolver($container->get(Environment::class));
+        return new TwigResolver(\Jield\Stdlib\Service::get($container, Environment::class));
     }
 }

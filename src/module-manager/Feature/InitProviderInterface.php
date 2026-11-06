@@ -8,10 +8,5 @@ use Jield\ModuleManager\ModuleManagerInterface;
 
 interface InitProviderInterface
 {
-    /**
-     * Initialize workflow
-     *
-     * @return void
-     */
     public function init(ModuleManagerInterface $manager): void;
 }

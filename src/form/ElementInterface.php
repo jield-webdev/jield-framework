@@ -62,7 +62,7 @@ interface ElementInterface
      *
      * @return scalar|null
      */
-    public function getAttribute(string $key): float|bool|int|string|null;
+    public function getAttribute(string $key): mixed;
 
     /**
      * Return true if a specific attribute is set

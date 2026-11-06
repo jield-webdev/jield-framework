@@ -12,8 +12,10 @@ final class ConfigProvider
     /** @return mixed[] */
     public function __invoke(): array
     {
-        $config                 = include __DIR__ . '/../../config/docrine-orm-module/module.config.php';
-        $config['dependencies'] = $config['service_manager'];
+        /** @var mixed $config */
+        $config = include __DIR__ . '/../../config/docrine-orm-module/module.config.php';
+        \Jield\Stdlib\Value::setPath($config, ['dependencies'], \Jield\Stdlib\Value::accessible($config)['service_manager']);
+        $config = \Jield\Stdlib\Value::accessible($config);
         unset($config['service_manager']);
 
         return $config;

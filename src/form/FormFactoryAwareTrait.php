@@ -7,7 +7,7 @@ namespace Jield\Form;
 trait FormFactoryAwareTrait
 {
     /** @var null|Factory */
-    protected ?Factory $factory;
+    protected ?Factory $factory = null;
 
     /**
      * Compose a form factory into the object

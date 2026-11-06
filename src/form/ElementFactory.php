@@ -29,17 +29,19 @@ final class ElementFactory implements FactoryInterface
         }
 
         if (isset($options['name'])) {
+            /** @var mixed $name */
             $name = $options['name'];
         } else {
             // 'Jield\Form\Element' -> 'element'
             $parts = explode(separator: '\\', string: $requestedName);
-            $name  = strtolower(string: array_pop(array: $parts));
+            $name = strtolower(string: array_pop(array: $parts));
         }
 
         if (isset($options['options'])) {
+            /** @var mixed $options */
             $options = $options['options'];
         }
 
-        return new $requestedName($name, $options);
+        return \Jield\Stdlib\Value::instantiate($requestedName, [$name, $options]);
     }
 }

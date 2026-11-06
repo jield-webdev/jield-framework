@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 namespace Jield\ApiTools\ApiProblem\Factory;
 
-use Psr\Container\ContainerInterface;
 use Jield\ApiTools\ApiProblem\View\ApiProblemRenderer;
+use Psr\Container\ContainerInterface;
 
 class ApiProblemRendererFactory
 {
     public function __invoke(ContainerInterface $container): ApiProblemRenderer
     {
-        $config            = $container->get('config');
-        $displayExceptions = isset($config['view_manager'])
-            && isset($config['view_manager']['display_exceptions'])
-            && $config['view_manager']['display_exceptions'];
+        /** @var mixed $config */
+        $config = $container->get('config');
+        $displayExceptions =
+            isset($config['view_manager']['display_exceptions']) && \Jield\Stdlib\Value::truthy($config['view_manager']['display_exceptions']);
 
         $renderer = new ApiProblemRenderer();
         $renderer->setDisplayExceptions(flag: $displayExceptions);

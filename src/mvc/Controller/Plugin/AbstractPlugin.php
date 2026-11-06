@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\Mvc\Controller\Plugin;
 
 use Laminas\Stdlib\DispatchableInterface as Dispatchable;
@@ -7,7 +9,7 @@ use Laminas\Stdlib\DispatchableInterface as Dispatchable;
 abstract class AbstractPlugin implements PluginInterface
 {
     /** @var null|Dispatchable */
-    protected ?Dispatchable $controller;
+    protected ?Dispatchable $controller = null;
 
     /**
      * Set the current controller instance

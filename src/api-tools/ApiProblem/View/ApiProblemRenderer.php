@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 namespace Jield\ApiTools\ApiProblem\View;
 
+use Jield\Mvc\View\Renderer\JsonRenderer;
 use Laminas\View\Model\ModelInterface;
-use function json_encode;
-use const JSON_PARTIAL_OUTPUT_ON_ERROR;
-use const JSON_UNESCAPED_SLASHES;
+use Override;
 
-class ApiProblemRenderer
+class ApiProblemRenderer extends JsonRenderer
 {
     /**
      * Whether or not to render exception stack traces in API-Problem payloads.
@@ -33,12 +32,13 @@ class ApiProblemRenderer
 
     /**
      * @param string|ModelInterface $nameOrModel
-     * @param array|null $values
+     * @param iterable<non-empty-string, mixed>|null $values
      * @return string
      */
-    public function render(string|ModelInterface $nameOrModel, ?array $values = null): string
+    #[Override]
+    public function render($nameOrModel, $values = null): string
     {
-        if (! $nameOrModel instanceof ApiProblemModel) {
+        if (!$nameOrModel instanceof ApiProblemModel) {
             return '';
         }
 
@@ -48,9 +48,6 @@ class ApiProblemRenderer
             $apiProblem->setDetailIncludesStackTrace(flag: true);
         }
 
-        return json_encode(
-            value: $apiProblem->toArray(),
-            flags: JSON_UNESCAPED_SLASHES | JSON_PARTIAL_OUTPUT_ON_ERROR
-        );
+        return parent::render(templateNameOrModel: $apiProblem->toArray());
     }
 }

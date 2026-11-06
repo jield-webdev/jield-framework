@@ -12,7 +12,7 @@ use function sprintf;
 
 final class ConfigCannotBeCachedException extends RuntimeException
 {
-    private function __construct(string $message = "", int $code = 0, ?Throwable $previous = null)
+    private function __construct(string $message = '', int $code = 0, ?Throwable $previous = null)
     {
         parent::__construct(message: $message, code: $code, previous: $previous);
     }
@@ -23,10 +23,10 @@ final class ConfigCannotBeCachedException extends RuntimeException
         return new self(
             message: sprintf(
                 'Cannot export config into a cache file. Config contains uncacheable entries: %s',
-                $exportException->getMessage()
+                $exportException->getMessage(),
             ),
-            code: $exportException->getCode(),
-            previous: $exportException
+            code: \Jield\Stdlib\Value::int($exportException->getCode()),
+            previous: $exportException,
         );
     }
 }

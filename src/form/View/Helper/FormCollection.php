@@ -24,9 +24,9 @@ class FormCollection extends AbstractHelper
      * @var array
      */
     protected array $validTagAttributes = [
-        'name'     => true,
+        'name' => true,
         'disabled' => true,
-        'form'     => true,
+        'form' => true,
     ];
 
     /**
@@ -69,14 +69,14 @@ class FormCollection extends AbstractHelper
      *
      * @var null|HelperInterface
      */
-    protected ?HelperInterface $elementHelper;
+    protected ?HelperInterface $elementHelper = null;
 
     /**
      * The view helper used to render sub fieldsets.
      *
      * @var null|HelperInterface
      */
-    protected ?HelperInterface $fieldsetHelper;
+    protected ?HelperInterface $fieldsetHelper = null;
 
     /**
      * Invoke helper as function
@@ -85,12 +85,12 @@ class FormCollection extends AbstractHelper
      *
      * @template T as null|ElementInterface
      * @psalm-param T $element
-     * @psalm-return (T is null ? self : string)
+     * @psalm-return (T is null ? static : string)
      * @return string|FormCollection
      */
-    public function __invoke(?ElementInterface $element = null, bool $wrap = true): FormCollection|string|static
+    public function __invoke(?ElementInterface $element = null, bool $wrap = true): string|static
     {
-        if (! $element) {
+        if (!$element) {
             return $this;
         }
 
@@ -105,14 +105,14 @@ class FormCollection extends AbstractHelper
     public function render(ElementInterface $element): string
     {
         $renderer = $this->getView();
-        if ($renderer !== null && ! method_exists(object_or_class: $renderer, method: 'plugin')) {
+        if ($renderer !== null && !method_exists(object_or_class: $renderer, method: 'plugin')) {
             // Bail early if renderer is not pluggable
             return '';
         }
 
-        $markup         = '';
+        $markup = '';
         $templateMarkup = '';
-        $elementHelper  = $this->getElementHelper();
+        $elementHelper = $this->getElementHelper();
         assert(assertion: is_callable(value: $elementHelper));
 
         $fieldsetHelper = $this->getFieldsetHelper();
@@ -122,49 +122,37 @@ class FormCollection extends AbstractHelper
             $templateMarkup = $this->renderTemplate(collection: $element);
         }
 
+        $element = \Jield\Stdlib\Value::instance($element, FieldsetInterface::class);
         foreach ($element->getIterator() as $elementOrFieldset) {
             if ($elementOrFieldset instanceof FieldsetInterface) {
-                $markup .= $fieldsetHelper($elementOrFieldset, $this->shouldWrap());
+                $markup .= \Jield\Stdlib\Value::stringify($fieldsetHelper($elementOrFieldset, $this->shouldWrap()));
             } elseif ($elementOrFieldset instanceof ElementInterface) {
-                $markup .= $elementHelper($elementOrFieldset);
+                $markup .= \Jield\Stdlib\Value::stringify($elementHelper($elementOrFieldset));
             }
         }
 
-        if (! $this->shouldWrap) {
+        if (!$this->shouldWrap) {
             return $markup . $templateMarkup;
         }
 
         // Every collection is wrapped by a fieldset if needed
         $attributes = $element->getAttributes();
-        if (! $this->getDoctypeHelper()->isHtml5()) {
-            unset(
-                $attributes['name'],
-                $attributes['disabled'],
-                $attributes['form']
-            );
+        if (!$this->getDoctypeHelper()->isHtml5()) {
+            unset($attributes['name'], $attributes['disabled'], $attributes['form']);
         }
         $attributesString = $attributes !== [] ? ' ' . $this->createAttributesString(attributes: $attributes) : '';
 
-        $label  = $element->getLabel();
+        $label = $element->getLabel();
         $legend = '';
 
-        if (! empty($label)) {
+        if (!empty($label)) {
             $label = $this->translateLabel(label: $label);
             $label = $this->escapeLabel(element: $element, label: $label);
 
-            $legend = sprintf(
-                $this->labelWrapper,
-                $label
-            );
+            $legend = sprintf($this->labelWrapper, $label);
         }
 
-        return sprintf(
-            $this->wrapper,
-            $markup,
-            $legend,
-            $templateMarkup,
-            $attributesString
-        );
+        return sprintf($this->wrapper, $markup, $legend, $templateMarkup, $attributesString);
     }
 
     /**
@@ -175,7 +163,7 @@ class FormCollection extends AbstractHelper
         $elementHelper = $this->getElementHelper();
         assert(assertion: is_callable(value: $elementHelper));
         $escapeHtmlAttribHelper = $this->getEscapeHtmlAttrHelper();
-        $fieldsetHelper         = $this->getFieldsetHelper();
+        $fieldsetHelper = $this->getFieldsetHelper();
         assert(assertion: is_callable(value: $fieldsetHelper));
 
         $templateMarkup = '';
@@ -183,21 +171,18 @@ class FormCollection extends AbstractHelper
         $elementOrFieldset = $collection->getTemplateElement();
 
         if ($elementOrFieldset instanceof FieldsetInterface) {
-            $templateMarkup .= $fieldsetHelper($elementOrFieldset, $this->shouldWrap());
+            $templateMarkup .= \Jield\Stdlib\Value::stringify($fieldsetHelper($elementOrFieldset, $this->shouldWrap()));
         } elseif ($elementOrFieldset instanceof ElementInterface) {
-            $templateMarkup .= $elementHelper($elementOrFieldset);
+            $templateMarkup .= \Jield\Stdlib\Value::stringify($elementHelper($elementOrFieldset));
         }
 
-        return sprintf(
-            $this->getTemplateWrapper(),
-            $escapeHtmlAttribHelper(value: $templateMarkup)
-        );
+        return sprintf($this->getTemplateWrapper(), \Jield\Stdlib\Value::scalar($escapeHtmlAttribHelper(value: $templateMarkup)));
     }
 
     /**
      * If set to true, collections are automatically wrapped around a fieldset
      *
-     * @return $this
+     * @return static
      */
     public function setShouldWrap(bool $wrap): static
     {
@@ -217,7 +202,7 @@ class FormCollection extends AbstractHelper
      * Sets the name of the view helper that should be used to render sub elements.
      *
      * @param  string $defaultSubHelper The name of the view helper to set.
-     * @return $this
+     * @return static
      */
     public function setDefaultElementHelper(string $defaultSubHelper): static
     {
@@ -237,7 +222,7 @@ class FormCollection extends AbstractHelper
      * Sets the element helper that should be used by this collection.
      *
      * @param  HelperInterface $elementHelper The element helper to use.
-     * @return $this
+     * @return static
      */
     public function setElementHelper(HelperInterface $elementHelper): static
     {
@@ -257,13 +242,13 @@ class FormCollection extends AbstractHelper
         }
 
         if ($this->view !== null && method_exists(object_or_class: $this->view, method: 'plugin')) {
-            $this->elementHelper = $this->view->plugin($this->getDefaultElementHelper());
+            $this->elementHelper = \Jield\Stdlib\Value::nullableInstance($this->getView()->plugin($this->getDefaultElementHelper()), \Laminas\View\Helper\HelperInterface::class);
         }
 
-        if (! $this->elementHelper instanceof HelperInterface) {
+        if (!$this->elementHelper instanceof HelperInterface) {
             throw new RuntimeException(
                 message: 'Invalid element helper set in FormCollection. The helper must be an '
-                . 'instance of Laminas\View\Helper\HelperInterface.'
+                . 'instance of Laminas\View\Helper\HelperInterface.',
             );
         }
 
@@ -274,7 +259,7 @@ class FormCollection extends AbstractHelper
      * Sets the fieldset helper that should be used by this collection.
      *
      * @param  HelperInterface $fieldsetHelper The fieldset helper to use.
-     * @return $this
+     * @return static
      */
     public function setFieldsetHelper(HelperInterface $fieldsetHelper): static
     {
@@ -315,7 +300,7 @@ class FormCollection extends AbstractHelper
      *
      * The preset default is <pre><fieldset>%2$s%1$s%3$s</fieldset></pre>
      *
-     * @return $this
+     * @return static
      */
     public function setWrapper(string $wrapper): static
     {
@@ -330,7 +315,7 @@ class FormCollection extends AbstractHelper
      * parameter
      * This defaults to '<legend>%s</legend>'
      *
-     * @return $this
+     * @return static
      */
     public function setLabelWrapper(string $labelWrapper): static
     {
@@ -363,7 +348,7 @@ class FormCollection extends AbstractHelper
      *
      * THis defaults to '<span data-template="%s"></span>'
      *
-     * @return $this
+     * @return static
      */
     public function setTemplateWrapper(string $templateWrapper): static
     {

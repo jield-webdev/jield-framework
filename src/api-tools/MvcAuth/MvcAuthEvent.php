@@ -5,10 +5,13 @@ declare(strict_types=1);
 namespace Jield\ApiTools\MvcAuth;
 
 use Jield\ApiTools\MvcAuth\Identity\IdentityInterface;
-use Jield\Authentication\Result;
-use Laminas\EventManager\Event;
 use Jield\Mvc\MvcEvent;
+use Laminas\Authentication\Result;
+use Laminas\EventManager\Event;
 
+/**
+ * @extends \Laminas\EventManager\Event<object|string|null, array<string, mixed>>
+ */
 class MvcAuthEvent extends Event
 {
     public const string EVENT_AUTHENTICATION = 'authentication';
@@ -35,9 +38,11 @@ class MvcAuthEvent extends Event
      * @param mixed $authentication
      * @param mixed $authorization
      */
-    public function __construct(protected MvcEvent $mvcEvent, protected $authentication, protected $authorization)
-    {
-    }
+    public function __construct(
+        protected MvcEvent $mvcEvent,
+        protected $authentication,
+        protected $authorization,
+    ) {}
 
     public function getAuthenticationService(): mixed
     {
@@ -72,12 +77,12 @@ class MvcAuthEvent extends Event
 
     public function getIdentity(): mixed
     {
-        return $this->authentication->getIdentity();
+        return \Jield\Stdlib\Value::call($this->authentication, 'getIdentity');
     }
 
     public function setIdentity(IdentityInterface $identity): static
     {
-        $this->authentication->getStorage()->write($identity);
+        \Jield\Stdlib\Value::call(\Jield\Stdlib\Value::call($this->authentication, 'getStorage'), 'write', [$identity]);
         return $this;
     }
 

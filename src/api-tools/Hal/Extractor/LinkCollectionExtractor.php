@@ -7,8 +7,8 @@ namespace Jield\ApiTools\Hal\Extractor;
 use Jield\ApiTools\ApiProblem\Exception\DomainException;
 use Jield\ApiTools\Hal\Link\Link;
 use Jield\ApiTools\Hal\Link\LinkCollection;
-
 use Override;
+
 use function is_array;
 use function sprintf;
 
@@ -43,26 +43,27 @@ class LinkCollectionExtractor implements LinkCollectionExtractorInterface
     public function extract(LinkCollection $collection): array
     {
         $links = [];
+        /** @var mixed $linkDefinition */
         foreach ($collection as $rel => $linkDefinition) {
             if ($linkDefinition instanceof Link) {
                 $links[$rel] = $this->linkExtractor->extract(link: $linkDefinition);
                 continue;
             }
 
-            if (! is_array(value: $linkDefinition)) {
+            if (!is_array(value: $linkDefinition)) {
                 throw new DomainException(message: sprintf(
                     'Link object for relation "%s" in resource was malformed; cannot generate link',
-                    $rel
+                    $rel,
                 ));
             }
 
             $aggregate = [];
             /** @var mixed $subLink */
             foreach ($linkDefinition as $subLink) {
-                if (! $subLink instanceof Link) {
+                if (!$subLink instanceof Link) {
                     throw new DomainException(message: sprintf(
                         'Link object aggregated for relation "%s" in resource was malformed; cannot generate link',
-                        $rel
+                        $rel,
                     ));
                 }
 

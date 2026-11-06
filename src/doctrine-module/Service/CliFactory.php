@@ -15,16 +15,16 @@ use Symfony\Component\Console\Helper\HelperSet;
  */
 final class CliFactory implements FactoryInterface
 {
-    protected EventManagerInterface|null $events = null;
+    protected ?EventManagerInterface $events = null;
 
-    protected HelperSet $helperSet;
+    protected HelperSet $_helperSet;
 
-    protected array $commands = [];
+    protected array $_commands = [];
 
     public function getEventManager(ContainerInterface $container): EventManagerInterface
     {
         if (!$this->events instanceof \Laminas\EventManager\EventManagerInterface) {
-            $events = $container->get('EventManager');
+            $events = \Jield\Stdlib\Service::get($container, \Laminas\EventManager\EventManagerInterface::class, 'EventManager');
 
             $events->addIdentifiers([self::class, 'doctrine']);
 
@@ -39,7 +39,7 @@ final class CliFactory implements FactoryInterface
      *
      * @return Application
      */
-    public function __invoke(ContainerInterface $container, $requestedName, array|null $options = null): Application
+    public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): Application
     {
         $cli = new Application();
         $cli->setName(name: 'DoctrineModule Command Line Interface');
@@ -48,7 +48,9 @@ final class CliFactory implements FactoryInterface
         $cli->setAutoExit(boolean: false);
 
         // Load commands using event
-        $this->getEventManager(container: $container)->trigger(eventName: 'loadCli.post', target: $cli, argv: ['ServiceManager' => $container]);
+        $this->getEventManager(container: $container)->trigger(eventName: 'loadCli.post', target: $cli, argv: [
+            'ServiceManager' => $container,
+        ]);
 
         return $cli;
     }

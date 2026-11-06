@@ -21,12 +21,10 @@ final class NavigationHelperFactory implements FactoryInterface
         $services = $this->getApplicationServicesFromContainer($container);
 
         $menu = new Menu(
-            escapeHtml: $container->get(EscapeHtml::class),
-            escapeHtmlAttr: $container->get(EscapeHtmlAttr::class),
-            htmlAttributes: $container->get(HtmlAttributes::class),
-            translator: $services->has(TranslatorInterface::class)
-                ? $services->get(TranslatorInterface::class)
-                : null
+            escapeHtml: \Jield\Stdlib\Service::get($container, EscapeHtml::class),
+            escapeHtmlAttr: \Jield\Stdlib\Service::get($container, EscapeHtmlAttr::class),
+            htmlAttributes: \Jield\Stdlib\Service::get($container, HtmlAttributes::class),
+            translator: $services->has(TranslatorInterface::class) ? \Jield\Stdlib\Service::get($services, TranslatorInterface::class) : null,
         );
 
         return new Navigation($menu, $services);
@@ -36,6 +34,7 @@ final class NavigationHelperFactory implements FactoryInterface
     {
         try {
             $r = new ReflectionProperty($container, 'creationContext');
+            /** @var mixed $services */
             $services = $r->getValue($container);
         } catch (\ReflectionException) {
             return $container;

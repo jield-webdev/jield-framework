@@ -12,6 +12,7 @@ use Laminas\Session\Container;
 use Laminas\Session\ManagerInterface as Manager;
 use Laminas\Stdlib\SplQueue;
 use ReturnTypeWillChange;
+
 use function assert;
 use function count;
 
@@ -58,7 +59,7 @@ class FlashMessenger extends AbstractPlugin implements IteratorAggregate, Counta
      * Add a message with "info" type
      *
      * @param string $message
-     * @return FlashMessenger
+     * @return static
      */
     public function addInfoMessage(string $message): static
     {
@@ -72,7 +73,7 @@ class FlashMessenger extends AbstractPlugin implements IteratorAggregate, Counta
      * @param string $message
      * @param string|null $namespace
      * @param int $hops
-     * @return FlashMessenger Provides a fluent interface
+     * @return static
      */
     public function addMessage(string $message, ?string $namespace = null, int $hops = 1): static
     {
@@ -87,14 +88,11 @@ class FlashMessenger extends AbstractPlugin implements IteratorAggregate, Counta
             $container->setExpirationHops(hops: $hops, vars: null);
         }
 
-        if (
-            !isset($container->{$namespace})
-            || !$container->{$namespace} instanceof SplQueue
-        ) {
-            $container->{$namespace} = new SplQueue();
+        if (!isset($container[$namespace]) || !$container[$namespace] instanceof SplQueue) {
+            $container[$namespace] = new SplQueue();
         }
 
-        $container->{$namespace}->push($message);
+        \Jield\Stdlib\Value::call($container[$namespace], 'push', [$message]);
 
         $this->messageAdded = true;
 
@@ -110,7 +108,7 @@ class FlashMessenger extends AbstractPlugin implements IteratorAggregate, Counta
             return $this->container;
         }
 
-        $manager         = $this->getSessionManager();
+        $manager = $this->getSessionManager();
         $this->container = new Container(name: 'FlashMessenger', manager: $manager);
 
         return $this->container;
@@ -135,7 +133,7 @@ class FlashMessenger extends AbstractPlugin implements IteratorAggregate, Counta
     /**
      * Set the session manager
      *
-     * @return FlashMessenger
+     * @return static
      */
     public function setSessionManager(Manager $manager): static
     {
@@ -181,13 +179,14 @@ class FlashMessenger extends AbstractPlugin implements IteratorAggregate, Counta
         $container = $this->getContainer();
 
         $namespaces = [];
+        /** @var mixed $messages */
         foreach ($container as $namespace => $messages) {
-            $this->messages[$namespace] = $messages;
-            $namespaces[]               = $namespace;
+            $this->messages[$namespace] = \Jield\Stdlib\Value::instance($messages, SplQueue::class);
+            $namespaces[] = $namespace;
         }
 
         foreach ($namespaces as $namespace) {
-            unset($container->{$namespace});
+            unset($container[$namespace]);
         }
     }
 
@@ -373,7 +372,7 @@ class FlashMessenger extends AbstractPlugin implements IteratorAggregate, Counta
             $namespace = $this->getNamespace();
         }
 
-        return isset($container->{$namespace});
+        return isset($container[$namespace]);
     }
 
     /**
@@ -435,7 +434,7 @@ class FlashMessenger extends AbstractPlugin implements IteratorAggregate, Counta
 
         if ($this->hasCurrentMessages(namespace: $namespace)) {
             $container = $this->getContainer();
-            return $container->{$namespace}->toArray();
+            return \Jield\Stdlib\Value::strings(\Jield\Stdlib\Value::call($container[$namespace], 'toArray'));
         }
 
         return [];
@@ -511,7 +510,7 @@ class FlashMessenger extends AbstractPlugin implements IteratorAggregate, Counta
 
         if ($this->hasCurrentMessages(namespace: $namespace)) {
             $container = $this->getContainer();
-            unset($container->{$namespace});
+            unset($container[$namespace]);
             return true;
         }
 
@@ -528,6 +527,7 @@ class FlashMessenger extends AbstractPlugin implements IteratorAggregate, Counta
         $container = $this->getContainer();
 
         $namespaces = [];
+        /** @var mixed $messages */
         foreach ($container as $namespace => $messages) {
             $namespaces[] = $namespace;
         }
@@ -537,7 +537,7 @@ class FlashMessenger extends AbstractPlugin implements IteratorAggregate, Counta
         }
 
         foreach ($namespaces as $namespace) {
-            unset($container->{$namespace});
+            unset($container[$namespace]);
         }
 
         return true;

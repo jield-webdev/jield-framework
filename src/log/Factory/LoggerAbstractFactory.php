@@ -16,15 +16,7 @@ final class LoggerAbstractFactory implements AbstractFactoryInterface
             return false;
         }
 
-        $config = $container->has('config') ? $container->get('config') : [];
-        if (!is_array($config)) {
-            return false;
-        }
-
-        $monologConfig = $config['monolog'] ?? [];
-        if (!is_array($monologConfig)) {
-            return false;
-        }
+        $monologConfig = (new LoggerFactory())->getConfig($container);
 
         $loggerName = substr($requestedName, strlen(Logger::class . '.'));
         if ($loggerName === '') {
@@ -38,30 +30,9 @@ final class LoggerAbstractFactory implements AbstractFactoryInterface
     {
         $loggerName = substr($requestedName, strlen(Logger::class . '.'));
         $factory = new LoggerFactory();
-        $config = $this->getMonologConfig($container);
+        $config = $factory->getConfig($container);
 
-        return $factory->createLogger(
-            container: $container,
-            config: $config,
-            loggerName: $loggerName
-        );
+        return $factory->createLogger(container: $container, config: $config, loggerName: $loggerName);
     }
 
-    /**
-     * @return array<string, mixed>
-     */
-    private function getMonologConfig(ContainerInterface $container): array
-    {
-        $config = $container->has('config') ? $container->get('config') : [];
-        if (!is_array($config)) {
-            return [];
-        }
-
-        $monologConfig = $config['monolog'] ?? [];
-        if (!is_array($monologConfig)) {
-            return [];
-        }
-
-        return $monologConfig;
-    }
 }

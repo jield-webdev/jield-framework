@@ -9,6 +9,7 @@ use Jield\ApiTools\ApiProblem\ApiProblem;
 use Jield\ApiTools\ApiProblem\ApiProblemResponse;
 use Jield\ApiTools\Hal\Collection as HalCollection;
 use Jield\ApiTools\MvcAuth\Identity\IdentityInterface;
+use Jield\Mvc\Router\RouteMatch;
 use Laminas\EventManager\EventManager;
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\EventManager\ResponseCollection;
@@ -16,9 +17,9 @@ use Laminas\Http\Response;
 use Laminas\InputFilter\InputFilterInterface;
 use Laminas\Paginator\Adapter\ArrayAdapter;
 use Laminas\Paginator\Paginator;
-use Laminas\Router\RouteMatch;
 use Laminas\Stdlib\Parameters;
 use Override;
+
 use function array_merge;
 use function array_walk;
 use function gettype;
@@ -119,7 +120,7 @@ class Resource implements ResourceInterface
     }
 
     #[Override]
-    public function setEventManager(EventManagerInterface $eventManager): void
+    public function setEventManager(EventManagerInterface $eventManager): static
     {
         $eventManager->addIdentifiers(identifiers: [
             static::class,
@@ -166,18 +167,14 @@ class Resource implements ResourceInterface
     public function create(object|array $data): object|array
     {
         if (is_array(value: $data)) {
-            $data = (object)$data;
+            $data = (object) $data;
         }
 
-        if (!is_object(value: $data)) {
-            throw new Exception\InvalidArgumentException(message: sprintf(
-                'Data provided to create must be either an array or object; received "%s"',
-                gettype(value: $data)
-            ));
-        }
+        
 
         $results = $this->triggerEvent(name: __FUNCTION__, args: ['data' => $data]);
-        $last    = $results->last();
+        /** @var mixed $last */
+        $last = $results->last();
         if (!is_array(value: $last) && !is_object(value: $last)) {
             return $data;
         }
@@ -206,21 +203,17 @@ class Resource implements ResourceInterface
     public function update(int|string $id, object|array $data): object|array
     {
         if (is_array(value: $data)) {
-            $data = (object)$data;
+            $data = (object) $data;
         }
 
-        if (!is_object(value: $data)) {
-            throw new Exception\InvalidArgumentException(message: sprintf(
-                'Data provided to update must be either an array or object; received "%s"',
-                gettype(value: $data)
-            ));
-        }
+        
 
         $results = $this->triggerEvent(name: __FUNCTION__, args: [
-            'id'   => $id,
+            'id' => $id,
             'data' => $data,
         ]);
-        $last    = $results->last();
+        /** @var mixed $last */
+        $last = $results->last();
         if (!is_array(value: $last) && !is_object(value: $last)) {
             return $data;
         }
@@ -247,22 +240,26 @@ class Resource implements ResourceInterface
     #[Override]
     public function replaceList(array $data): object|array
     {
-        array_walk(array: $data, callback: function ($value, $key) use (&$data): void {
+        array_walk(array: $data, callback: static function ($value, $key) use (&$data): void {
             if (is_array(value: $value)) {
-                $data[$key] = (object)$value;
+                $data[$key] = (object) $value;
                 return;
             }
 
             if (!is_object(value: $value)) {
-                throw new Exception\InvalidArgumentException(message: sprintf(
-                    'Data provided to replaceList must contain only arrays or objects; received "%s"',
-                    gettype(value: $value)
-                ), code: 400);
+                throw new Exception\InvalidArgumentException(
+                    message: sprintf(
+                        'Data provided to replaceList must contain only arrays or objects; received "%s"',
+                        gettype(value: $value),
+                    ),
+                    code: 400,
+                );
             }
         });
 
         $results = $this->triggerEvent(name: __FUNCTION__, args: ['data' => $data]);
-        $last    = $results->last();
+        /** @var mixed $last */
+        $last = $results->last();
         if (!is_array(value: $last) && !is_object(value: $last)) {
             return $data;
         }
@@ -292,21 +289,17 @@ class Resource implements ResourceInterface
     public function patch(int|string $id, object|array $data): object|array
     {
         if (is_array(value: $data)) {
-            $data = (object)$data;
+            $data = (object) $data;
         }
 
-        if (!is_object(value: $data)) {
-            throw new Exception\InvalidArgumentException(message: sprintf(
-                'Data provided to patch must be either an array or object; received "%s"',
-                gettype(value: $data)
-            ));
-        }
+        
 
         $results = $this->triggerEvent(name: __FUNCTION__, args: [
-            'id'   => $id,
+            'id' => $id,
             'data' => $data,
         ]);
-        $last    = $results->last();
+        /** @var mixed $last */
+        $last = $results->last();
         if (!is_array(value: $last) && !is_object(value: $last)) {
             return $data;
         }
@@ -335,23 +328,27 @@ class Resource implements ResourceInterface
     public function patchList(array $data): object|array
     {
         $original = $data;
-        array_walk(array: $data, callback: function ($value, $key) use (&$data): void {
+        array_walk(array: $data, callback: static function ($value, $key) use (&$data): void {
             if (is_array(value: $value)) {
-                $data[$key] = new ArrayObject(array: $value);
+                $data[$key] = new ArrayObject( $value);
                 return;
             }
 
             if (!is_object(value: $value)) {
-                throw new Exception\InvalidArgumentException(message: sprintf(
-                    'Data provided to patchList must contain only arrays or objects; received "%s"',
-                    gettype(value: $value)
-                ), code: 400);
+                throw new Exception\InvalidArgumentException(
+                    message: sprintf(
+                        'Data provided to patchList must contain only arrays or objects; received "%s"',
+                        gettype(value: $value),
+                    ),
+                    code: 400,
+                );
             }
         });
 
-        $data    = new ArrayObject(array: $data);
+        $data = new ArrayObject( $data);
         $results = $this->triggerEvent(name: __FUNCTION__, args: ['data' => $data]);
-        $last    = $results->last();
+        /** @var mixed $last */
+        $last = $results->last();
         if (!is_array(value: $last) && !is_object(value: $last)) {
             return $original;
         }
@@ -370,7 +367,8 @@ class Resource implements ResourceInterface
     public function delete(int|string $id): Response|bool|ApiProblem|ApiProblemResponse
     {
         $results = $this->triggerEvent(name: __FUNCTION__, args: ['id' => $id]);
-        $last    = $results->last();
+        /** @var mixed $last */
+        $last = $results->last();
         if (
             !is_bool(value: $last)
             && !$last instanceof ApiProblem
@@ -387,13 +385,14 @@ class Resource implements ResourceInterface
      * Delete an existing collection of records
      *
      * @param array $data
-     * @return bool
+     * @return bool|Response
      */
     #[Override]
     public function deleteList(array $data): mixed
     {
         $results = $this->triggerEvent(name: __FUNCTION__, args: ['data' => $data]);
-        $last    = $results->last();
+        /** @var mixed $last */
+        $last = $results->last();
         if (!is_bool(value: $last) && !$last instanceof Response) {
             return false;
         }
@@ -416,7 +415,8 @@ class Resource implements ResourceInterface
     public function fetch(int|string $id): object|false|array
     {
         $results = $this->triggerEvent(name: __FUNCTION__, args: ['id' => $id]);
-        $last    = $results->last();
+        /** @var mixed $last */
+        $last = $results->last();
         if (!is_array(value: $last) && !is_object(value: $last)) {
             return false;
         }
@@ -439,7 +439,8 @@ class Resource implements ResourceInterface
     public function fetchAll(...$params): object|false|array
     {
         $results = $this->triggerEvent(name: __FUNCTION__, args: $params);
-        $last    = $results->last();
+        /** @var mixed $last */
+        $last = $results->last();
         if (
             !is_array(value: $last)
             && !$last instanceof HalCollection
@@ -447,7 +448,7 @@ class Resource implements ResourceInterface
             && !$last instanceof ApiProblemResponse
             && !is_object(value: $last)
         ) {
-            return new Paginator(adapter: new ArrayAdapter(array: []));
+            return new Paginator(new ArrayAdapter(array: []));
         }
 
         return $last;
@@ -460,9 +461,14 @@ class Resource implements ResourceInterface
      */
     protected function triggerEvent(string $name, array $args): ResponseCollection
     {
-        return $this->getEventManager()->triggerEventUntil(callback: fn($result) => $result instanceof ApiProblem
-            || $result instanceof ApiProblemResponse
-            || $result instanceof Response, event: $this->prepareEvent(name: $name, args: $args));
+        return $this->getEventManager()->triggerEventUntil(
+            callback: static fn($result) => (
+                $result instanceof ApiProblem
+                || $result instanceof ApiProblemResponse
+                || $result instanceof Response
+            ),
+            event: $this->prepareEvent(name: $name, args: $args),
+        );
     }
 
     /**
@@ -501,16 +507,11 @@ class Resource implements ResourceInterface
     protected function prepareEventParams(array $args): ArrayObject
     {
         $defaultParams = $this->getEventParams();
-        $params        = array_merge($defaultParams, $args);
+        $params = array_merge($defaultParams, $args);
         if ($params === []) {
             return new ArrayObject();
         }
 
-        $eventManager = $this->getEventManager();
-        if (method_exists(object_or_class: $eventManager, method: 'prepareArgs')) {
-            return $eventManager->prepareArgs(args: $params);
-        }
-
-        return new ArrayObject(array: $params);
+        return new ArrayObject($params);
     }
 }

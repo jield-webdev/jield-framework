@@ -18,9 +18,9 @@ class QueryString implements Stringable
 {
     private array $placeholders = [];
 
-    public function __construct(private readonly string $query)
-    {
-    }
+    public function __construct(
+        private readonly string $query,
+    ) {}
 
     /**
      * Add a value for a placeholder
@@ -49,6 +49,7 @@ class QueryString implements Stringable
     {
         $replacements = [];
 
+        /** @var mixed $value */
         foreach ($this->placeholders as $placeholder => $value) {
             if ($value instanceof DateTime) {
                 $value = new DateTimeExpression(date: $value);
@@ -60,7 +61,7 @@ class QueryString implements Stringable
                 $value = Util::sanitize(value: $value);
             }
 
-            $replacements['<' . $placeholder . '>'] = (string)$value;
+            $replacements['<' . $placeholder . '>'] = (string) $value;
         }
 
         return strtr($this->query, $replacements);

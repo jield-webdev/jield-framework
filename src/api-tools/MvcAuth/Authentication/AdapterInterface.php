@@ -48,5 +48,9 @@ interface AdapterInterface
      *
      * @return IdentityInterface|\Laminas\Http\PhpEnvironment\Response
      */
-    public function authenticate(Request $request, Response $response, MvcAuthEvent $mvcAuthEvent): IdentityInterface|\Laminas\Http\PhpEnvironment\Response;
+    public function authenticate(
+        Request $request,
+        Response $response,
+        MvcAuthEvent $mvcAuthEvent,
+    ): IdentityInterface|\Laminas\Http\PhpEnvironment\Response;
 }

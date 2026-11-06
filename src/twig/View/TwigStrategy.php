@@ -13,10 +13,9 @@ class TwigStrategy implements ListenerAggregateInterface
     /** @var callable[] */
     protected array $listeners = [];
 
-
-    public function __construct(protected TwigRenderer $renderer)
-    {
-    }
+    public function __construct(
+        protected TwigRenderer $renderer,
+    ) {}
 
     /**
      * Attach one or more listeners
@@ -28,8 +27,8 @@ class TwigStrategy implements ListenerAggregateInterface
      */
     public function attach(EventManagerInterface $events, $priority = 100): void
     {
-        $this->listeners[] = $events->attach(MvcEvent::EVENT_RENDER, [$this, 'render'], $priority);
-        $this->listeners[] = $events->attach(MvcEvent::EVENT_RENDER_ERROR, [$this, 'render'], $priority);
+        $this->listeners[] = $events->attach(MvcEvent::EVENT_RENDER, [$this, 'render'], -9000);
+        $this->listeners[] = $events->attach(MvcEvent::EVENT_RENDER_ERROR, [$this, 'render'], -9000);
     }
 
     /**
@@ -48,7 +47,7 @@ class TwigStrategy implements ListenerAggregateInterface
      */
     public function render(MvcEvent $e): void
     {
-        $model    = $e->getViewModel();
+        $model = $e->getViewModel();
         $template = $model->getTemplate();
 
         if ($template === '') {
@@ -59,18 +58,15 @@ class TwigStrategy implements ListenerAggregateInterface
             return;
         }
 
-        $content  = $this->renderer->render($model);
+        $content = $this->renderer->render($model);
         $response = $e->getResponse();
-        if ($response) {
-            $response->setContent($content);
-            $e->setResult($response);
-        } else {
-            $e->setResult($content);
-        }
+        $response->setContent($content);
+        $e->setResult($response);
 
         $e->stopPropagation();
     }
 
+    /** @param array<array-key, callable> $listeners */
     public function setListeners(array $listeners): TwigStrategy
     {
         $this->listeners = $listeners;

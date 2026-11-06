@@ -13,14 +13,14 @@ final class ConfigProvider
     {
         return [
             'controller_plugins' => $this->getControllerPluginConfig(),
-            'view_helpers'       => $this->getViewHelperConfig(),
+            'view_helpers' => $this->getViewHelperConfig(),
         ];
     }
 
     public function getControllerPluginConfig(): array
     {
         return [
-            'aliases'   => [
+            'aliases' => [
                 'flashmessenger' => FlashMessenger::class,
                 'flashMessenger' => FlashMessenger::class,
             ],
@@ -33,7 +33,7 @@ final class ConfigProvider
     public function getViewHelperConfig(): array
     {
         return [
-            'aliases'   => [
+            'aliases' => [
                 'flashmessenger' => View\Helper\FlashMessenger::class,
                 'flashMessenger' => View\Helper\FlashMessenger::class,
                 'FlashMessenger' => View\Helper\FlashMessenger::class,

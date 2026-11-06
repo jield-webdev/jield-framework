@@ -1,9 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\AssetManager\Cache;
 
 use Assetic\Contracts\Cache\CacheInterface;
-use Jield\Cache\Storage\StorageInterface;
+use Laminas\Cache\Storage\StorageInterface;
 use Override;
 
 /**
@@ -11,7 +13,6 @@ use Override;
  */
 class LaminasCacheAdapter implements CacheInterface
 {
-
     /** @var StorageInterface */
     protected StorageInterface $jieldCache;
 
@@ -31,7 +32,7 @@ class LaminasCacheAdapter implements CacheInterface
     #[Override]
     public function has($key)
     {
-        return $this->jieldCache->hasItem($key);
+        return $this->jieldCache->hasItem(\Jield\Stdlib\Value::nonEmptyString($key));
     }
 
     /**
@@ -40,7 +41,7 @@ class LaminasCacheAdapter implements CacheInterface
     #[Override]
     public function get($key)
     {
-        return $this->jieldCache->getItem($key);
+        return \Jield\Stdlib\Value::nullableString($this->jieldCache->getItem(\Jield\Stdlib\Value::nonEmptyString($key)));
     }
 
     /**
@@ -49,7 +50,7 @@ class LaminasCacheAdapter implements CacheInterface
     #[Override]
     public function set($key, $value)
     {
-        return $this->jieldCache->setItem($key, $value);
+        return $this->jieldCache->setItem(\Jield\Stdlib\Value::nonEmptyString($key), $value);
     }
 
     /**
@@ -58,6 +59,6 @@ class LaminasCacheAdapter implements CacheInterface
     #[Override]
     public function remove($key)
     {
-        return $this->jieldCache->removeItem($key);
+        return $this->jieldCache->removeItem(\Jield\Stdlib\Value::nonEmptyString($key));
     }
 }

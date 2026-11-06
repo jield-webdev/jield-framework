@@ -45,12 +45,12 @@ class DateSelect extends MonthSelect
      *
      * @inheritDoc
      */
-    public function setOptions(iterable $options): \Jield\Form\Element|DateSelect|MonthSelect|static
+    public function setOptions(iterable $options): static
     {
         parent::setOptions(options: $options);
 
         if (isset($this->options['day_attributes'])) {
-            $this->setDayAttributes(dayAttributes: $this->options['day_attributes']);
+            $this->setDayAttributes(dayAttributes: \Jield\Stdlib\Value::scalarMap($this->options['day_attributes']));
         }
 
         return $this;
@@ -75,7 +75,7 @@ class DateSelect extends MonthSelect
      * Set the day attributes
      *
      * @param array<string, scalar|null> $dayAttributes
-     * @return self
+     * @return static
      */
     public function setDayAttributes(array $dayAttributes): static
     {
@@ -94,8 +94,8 @@ class DateSelect extends MonthSelect
     }
 
     /**
-     * @param  PhpDateTime|iterable|string|null|mixed $value
-     * @return self
+     * @param  mixed $value
+     * @return static
      * @throws InvalidArgumentException
      */
     public function setValue($value): static
@@ -104,19 +104,21 @@ class DateSelect extends MonthSelect
             try {
                 $value = new PhpDateTime(datetime: $value);
             } catch (Exception) {
-                throw new InvalidArgumentException(message: 'Value should be a parsable string or an instance of DateTime');
+                throw new InvalidArgumentException(
+                    message: 'Value should be a parsable string or an instance of DateTime',
+                );
             }
         }
 
-        if (null === $value && ! $this->shouldCreateEmptyOption()) {
+        if (null === $value && !$this->shouldCreateEmptyOption()) {
             $value = new PhpDateTime();
         }
 
         if ($value instanceof DateTimeInterface) {
             $value = [
-                'year'  => $value->format(format: 'Y'),
+                'year' => $value->format(format: 'Y'),
                 'month' => $value->format(format: 'm'),
-                'day'   => $value->format(format: 'd'),
+                'day' => $value->format(format: 'd'),
             ];
         }
 
@@ -135,15 +137,18 @@ class DateSelect extends MonthSelect
 
     public function getValue(): ?string
     {
-        $year  = $this->getYearElement()->getValue();
+        /** @var mixed $year */
+        $year = $this->getYearElement()->getValue();
+        /** @var mixed $month */
         $month = $this->getMonthElement()->getValue();
-        $day   = $this->getDayElement()->getValue();
+        /** @var mixed $day */
+        $day = $this->getDayElement()->getValue();
 
         if ($this->shouldCreateEmptyOption() && null === $year && null === $month && null === $day) {
             return null;
         }
 
-        return sprintf('%04d-%02d-%02d', $year, $month, $day);
+        return sprintf('%04d-%02d-%02d', \Jield\Stdlib\Value::scalar($year), \Jield\Stdlib\Value::scalar($month), \Jield\Stdlib\Value::scalar($day));
     }
 
     /**
@@ -154,7 +159,7 @@ class DateSelect extends MonthSelect
         parent::prepareElement(form: $form);
 
         $name = $this->getName();
-        $this->dayElement->setName(name: $name . '[day]');
+        $this->dayElement->setName(name: (string) ($name) . '[day]');
     }
 
     /**
@@ -175,8 +180,8 @@ class DateSelect extends MonthSelect
     public function getInputSpecification(): array
     {
         $spec = [
-            'required'   => false,
-            'filters'    => [
+            'required' => false,
+            'filters' => [
                 ['name' => 'DateSelect'],
             ],
             'validators' => [
@@ -197,8 +202,8 @@ class DateSelect extends MonthSelect
      */
     public function __clone()
     {
-        $this->dayElement   = clone $this->dayElement;
+        $this->dayElement = clone $this->dayElement;
         $this->monthElement = clone $this->monthElement;
-        $this->yearElement  = clone $this->yearElement;
+        $this->yearElement = clone $this->yearElement;
     }
 }

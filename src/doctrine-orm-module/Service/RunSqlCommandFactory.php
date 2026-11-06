@@ -14,10 +14,10 @@ final class RunSqlCommandFactory implements FactoryInterface
     /**
      * {@inheritDoc}
      */
-    public function __invoke(ContainerInterface $container, $requestedName, array|null $options = null): RunSqlCommand
+    public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): RunSqlCommand
     {
         return new RunSqlCommand(
-            connectionProvider: new SingleConnectionProvider(connection: $container->get('doctrine.connection.orm_default')),
+            connectionProvider: new SingleConnectionProvider(connection: \Jield\Stdlib\Service::get($container, \Doctrine\DBAL\Connection::class, 'doctrine.connection.orm_default')),
         );
     }
 }

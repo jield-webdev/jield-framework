@@ -9,6 +9,4 @@ use Laminas\EventManager\ListenerAggregateInterface;
 /**
  * Interface for generic guard listeners
  */
-interface GuardInterface extends ListenerAggregateInterface
-{
-}
+interface GuardInterface extends ListenerAggregateInterface {}

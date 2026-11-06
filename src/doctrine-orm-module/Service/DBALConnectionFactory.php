@@ -19,6 +19,7 @@ use function is_string;
 
 /**
  * DBAL Connection ServiceManager factory
+  * @psalm-import-type Params from \Doctrine\DBAL\DriverManager
  */
 final class DBALConnectionFactory extends AbstractFactory
 {
@@ -29,46 +30,44 @@ final class DBALConnectionFactory extends AbstractFactory
      *
      * @return Connection
      */
-    public function __invoke(ContainerInterface $container, string $requestedName, array|null $options = null): Connection
+    public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): Connection
     {
         $options = $this->getOptions(container: $container, key: 'connection');
         assert(assertion: $options instanceof DBALConnection);
         $pdo = $options->getPdo();
 
         if (is_string(value: $pdo)) {
+            /** @var mixed $pdo */
             $pdo = $container->get($pdo);
             assert(assertion: $pdo instanceof PDO);
         }
 
         $params = [
-            'driverClass'  => $options->getDriverClass(),
+            'driverClass' => $options->getDriverClass(),
             'wrapperClass' => $options->getWrapperClass(),
-            'pdo'          => $pdo,
+            'pdo' => $pdo,
         ];
         $params = array_merge($params, $options->getParams());
 
         if (
             array_key_exists(key: 'platform', array: $params)
             && is_string(value: $params['platform'])
-            && $container->has(id: $params['platform'])
+            && $container->has($params['platform'])
         ) {
             $params['platform'] = $container->get($params['platform']);
         }
 
+        /** @var mixed $configuration */
         $configuration = $container->get($options->getConfiguration());
-        $eventManager  = $container->get($options->getEventManager());
-
-        $connection = DriverManager::getConnection($params, $configuration, $eventManager);
+        /** @var Params $managerConfiguration */
+        $managerConfiguration = $params;
+        $connection = DriverManager::getConnection($managerConfiguration, \Jield\Stdlib\Value::instance($configuration, \Doctrine\DBAL\Configuration::class));
+        /** @var mixed $doctrineType */
         foreach ($options->getDoctrineTypeMappings() as $dbType => $doctrineType) {
-            $connection->getDatabasePlatform()->registerDoctrineTypeMapping(dbType: $dbType, doctrineType: $doctrineType);
-        }
-
-        foreach ($options->getDoctrineCommentedTypes() as $type) {
-            $connection->getDatabasePlatform()->markDoctrineTypeCommented(Type::getType(name: $type));
-        }
-
-        if ($options->useSavepoints()) {
-            $connection->setNestTransactionsWithSavepoints(nestTransactionsWithSavepoints: true);
+            $connection->getDatabasePlatform()->registerDoctrineTypeMapping(
+                dbType: \Jield\Stdlib\Value::string($dbType),
+                doctrineType: \Jield\Stdlib\Value::string($doctrineType),
+            );
         }
 
         return $connection;

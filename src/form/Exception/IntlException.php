@@ -6,6 +6,4 @@ namespace Jield\Form\Exception;
 
 use RuntimeException;
 
-final class IntlException extends RuntimeException implements ExceptionInterface
-{
-}
+final class IntlException extends RuntimeException implements ExceptionInterface {}

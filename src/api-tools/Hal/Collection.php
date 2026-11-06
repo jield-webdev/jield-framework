@@ -9,6 +9,7 @@ use Jield\ApiTools\Hal\Exception\InvalidArgumentException;
 use Laminas\Paginator\Paginator;
 use Laminas\Stdlib\ArrayUtils;
 use Traversable;
+
 use function sprintf;
 
 /**
@@ -66,11 +67,10 @@ class Collection implements Link\LinkCollectionAwareInterface
 
     public function __construct(
         Paginator|iterable $collection,
-        ?string            $entityRoute = null,
-        ?iterable          $entityRouteParams = null,
-        ?iterable          $entityRouteOptions = null
-    )
-    {
+        ?string $entityRoute = null,
+        ?iterable $entityRouteParams = null,
+        ?iterable $entityRouteOptions = null,
+    ) {
         /** @psalm-suppress PossiblyInvalidPropertyAssignmentValue */
         $this->collection = $collection;
 
@@ -146,7 +146,7 @@ class Collection implements Link\LinkCollectionAwareInterface
     {
         $options = ArrayUtils::iteratorToArray(iterator: $options);
 
-        $this->collectionRouteOptions = $options;
+        $this->collectionRouteOptions = \Jield\Stdlib\Value::array($options);
         return $this;
     }
 
@@ -186,7 +186,7 @@ class Collection implements Link\LinkCollectionAwareInterface
         if ($page < 1) {
             throw new InvalidArgumentException(message: sprintf(
                 'Page must be a positive integer; received "%s"',
-                $page
+                $page,
             ));
         }
 
@@ -206,7 +206,7 @@ class Collection implements Link\LinkCollectionAwareInterface
         if ($size < 1 && $size !== -1) {
             throw new InvalidArgumentException(message: sprintf(
                 'size must be a positive integer or -1 (to disable pagination); received "%s"',
-                $size
+                $size,
             ));
         }
 
@@ -227,7 +227,7 @@ class Collection implements Link\LinkCollectionAwareInterface
     {
         $options = ArrayUtils::iteratorToArray(iterator: $options);
 
-        $this->entityRouteOptions = $options;
+        $this->entityRouteOptions = \Jield\Stdlib\Value::array($options);
         return $this;
     }
 
@@ -235,7 +235,7 @@ class Collection implements Link\LinkCollectionAwareInterface
     {
         $params = ArrayUtils::iteratorToArray(iterator: $params);
 
-        $this->entityRouteParams = $params;
+        $this->entityRouteParams = \Jield\Stdlib\Value::array($params);
         return $this;
     }
 

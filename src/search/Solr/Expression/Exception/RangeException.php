@@ -6,6 +6,4 @@ namespace Jield\Search\Solr\Expression\Exception;
 
 use RangeException as BaseRangeException;
 
-class RangeException extends BaseRangeException implements ExceptionInterface
-{
-}
+class RangeException extends BaseRangeException implements ExceptionInterface {}

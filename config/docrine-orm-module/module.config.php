@@ -41,6 +41,10 @@ $result = [
             'orm_default' => [
                 // metadata cache instance to use. The retrieved service name will
                 // be `doctrine.cache.$thisSetting`
+                'types' => [
+                    'object' => \DoctrineModule\Types\SerializedType::class,
+                    'array' => \DoctrineModule\Types\SerializedType::class,
+                ],
                 'metadata_cache'    => 'array',
 
                 // DQL queries parsing cache instance to use. The retrieved service
@@ -213,7 +217,7 @@ $result = [
         'migrations_cmd'           => Service\MigrationsCommandFactory::class,
     ],
 
-    // Laminas\Form\FormElementManager configuration
+    // Jield\Form\FormElementManager configuration
     'form_elements' => [
         'aliases' => [
             'objectselect'        => Element\ObjectSelect::class,

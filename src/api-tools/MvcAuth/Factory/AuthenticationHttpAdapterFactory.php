@@ -15,9 +15,7 @@ final class AuthenticationHttpAdapterFactory
     /**
      * Intentionally empty and private to prevent instantiation
      */
-    private function __construct()
-    {
-    }
+    private function __construct() {}
 
     /**
      * Create an instance of HttpAdapter based on the configuration provided
@@ -27,22 +25,20 @@ final class AuthenticationHttpAdapterFactory
      */
     public static function factory(string $type, array $config, ContainerInterface $container): HttpAdapter
     {
-        if (! $container->has(id: 'authentication')) {
+        if (!$container->has('authentication')) {
             throw new ServiceNotCreatedException(
-                message: 'Cannot create HTTP authentication adapter; missing AuthenticationService'
+                message: 'Cannot create HTTP authentication adapter; missing AuthenticationService',
             );
         }
 
-        if (! isset($config['options']) || ! is_array(value: $config['options'])) {
-            throw new ServiceNotCreatedException(
-                message: 'Cannot create HTTP authentication adapter; missing options'
-            );
+        if (!isset($config['options']) || !is_array(value: $config['options'])) {
+            throw new ServiceNotCreatedException(message: 'Cannot create HTTP authentication adapter; missing options');
         }
 
         return new HttpAdapter(
             httpAuth: HttpAdapterFactory::factory(config: $config['options'], container: $container),
-            authenticationService: $container->get('authentication'),
-            providesBase: $type
+            authenticationService: \Jield\Stdlib\Service::get($container, \Laminas\Authentication\AuthenticationServiceInterface::class, 'authentication'),
+            providesBase: $type,
         );
     }
 }

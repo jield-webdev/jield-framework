@@ -6,13 +6,14 @@ namespace Jield\ApiTools\Rest;
 
 use ArrayAccess;
 use Jield\ApiTools\MvcAuth\Identity\IdentityInterface;
+use Jield\Mvc\Router\RouteMatch;
 use Laminas\EventManager\Event;
 use Laminas\EventManager\Exception\InvalidArgumentException as EventManagerInvalidArgumentException;
 use Laminas\InputFilter\InputFilterInterface;
-use Laminas\Router\RouteMatch;
 use Laminas\Stdlib\Parameters;
 use Laminas\Stdlib\RequestInterface;
 use Override;
+
 use function gettype;
 use function is_array;
 use function is_object;
@@ -23,25 +24,25 @@ use function sprintf;
  */
 class ResourceEvent extends Event
 {
-    protected ?IdentityInterface    $identity    = null;
+    protected ?IdentityInterface $identity = null;
     protected ?InputFilterInterface $inputFilter = null;
-    protected ?Parameters           $queryParams = null;
-    protected ?RequestInterface     $request     = null;
-    protected ?RouteMatch           $routeMatch  = null;
+    protected ?Parameters $queryParams = null;
+    protected ?RequestInterface $request = null;
+    protected ?RouteMatch $routeMatch = null;
 
     /**
      * Overload setParams to inject request object, if passed via params
      *
      * @param mixed $params
-     */
-    /** @phpstan-ignore-next-line  */
+     
+ * @phpstan-ignore-next-line  */
     #[Override]
-    public function setParams(object|ArrayAccess|array $params): void
+    public function setParams($params)
     {
         if (!is_array(value: $params) && !is_object(value: $params)) {
             throw new EventManagerInvalidArgumentException(message: sprintf(
                 'Event parameters must be an array or object; received "%s"',
-                gettype(value: $params)
+                gettype(value: $params),
             ));
         }
 
@@ -51,7 +52,6 @@ class ResourceEvent extends Event
         }
 
         parent::setParams(params: $params);
-        return $this;
     }
 
     public function setIdentity(?IdentityInterface $identity = null): static
@@ -101,7 +101,7 @@ class ResourceEvent extends Event
             return $default;
         }
 
-        return $params->get(name: $name, default: $default);
+        return $params->get($name, default: $default);
     }
 
     public function setRequest(?RequestInterface $request = null): static

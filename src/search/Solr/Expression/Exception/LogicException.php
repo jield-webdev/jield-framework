@@ -6,6 +6,4 @@ namespace Jield\Search\Solr\Expression\Exception;
 
 use LogicException as BaseLogicException;
 
-class LogicException extends BaseLogicException implements ExceptionInterface
-{
-}
+class LogicException extends BaseLogicException implements ExceptionInterface {}

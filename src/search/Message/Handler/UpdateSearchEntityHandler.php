@@ -15,33 +15,30 @@ use Webmozart\Assert\Assert;
 #[AsMessageHandler]
 final class UpdateSearchEntityHandler
 {
-
     public function __construct(
         private readonly ContainerInterface $container,
-        private readonly EntityManager      $entityManager
-    )
-    {
-    }
+        private readonly EntityManager $entityManager,
+    ) {}
 
     public function __invoke(UpdateSearchEntityMessage $updateSearchEntityMessage): int
     {
         $entityClassName = $updateSearchEntityMessage->getEntityClassName();
-        $entityId        = $updateSearchEntityMessage->getEntityId();
-        $searchServices  = $updateSearchEntityMessage->getSearchServices();
+        $entityId = $updateSearchEntityMessage->getEntityId();
+        $searchServices = $updateSearchEntityMessage->getSearchServices();
 
         //Clear the entity manager to always have fresh results
         $this->entityManager->clear();
 
         //Just use the entityManager to get the entity
         /** @var HasSearchInterface $entity */
-        $entity = $this->entityManager->getRepository(className: $entityClassName)->find(id: $entityId);
+        $entity = $this->entityManager->getRepository(className: \Jield\Stdlib\Value::classString($entityClassName))->find(id: $entityId);
 
-        Assert::isInstanceOf(value: $entity, class: HasSearchInterface::class);
 
+        /** @var mixed $searchService */
         foreach ($searchServices as $searchService) {
             //I have to tell the system which search service we have to take (to have the correct connection)
             /** @var AbstractSearchService $searchServiceInstance */
-            $searchServiceInstance = $this->container->get($searchService);
+            $searchServiceInstance = $this->container->get(\Jield\Stdlib\Value::string($searchService));
             $searchServiceInstance->updateEntity(entity: $entity);
         }
 

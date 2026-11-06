@@ -6,8 +6,8 @@ namespace Jield\ApiTools\Hal\Link;
 
 use Jield\ApiTools\Hal\Collection;
 use Jield\ApiTools\Hal\Entity;
-
 use Override;
+
 use function is_array;
 
 class SelfLinkInjector implements SelfLinkInjectorInterface
@@ -16,8 +16,11 @@ class SelfLinkInjector implements SelfLinkInjectorInterface
      * {@inheritDoc}
      */
     #[Override]
-    public function injectSelfLink(LinkCollectionAwareInterface $resource, string $route, string $routeIdentifier = 'id'): void
-    {
+    public function injectSelfLink(
+        LinkCollectionAwareInterface $resource,
+        string $route,
+        string $routeIdentifier = 'id',
+    ): void {
         $links = $resource->getLinks();
         if ($links->has(relation: 'self')) {
             return;
@@ -25,7 +28,9 @@ class SelfLinkInjector implements SelfLinkInjectorInterface
 
         $selfLink = $this->createSelfLink(resource: $resource, route: $route, routeIdentifier: $routeIdentifier);
 
-        $links->add(link: $selfLink, overwrite: true);
+        $links->remove('self');
+
+        $links->idempotentAdd(link: $selfLink);
     }
 
     /**
@@ -35,12 +40,15 @@ class SelfLinkInjector implements SelfLinkInjectorInterface
      * } $route
      * @param string $routeIdentifier
      */
-    private function createSelfLink(Entity|array|Collection|LinkCollectionAwareInterface|null $resource, $route, string $routeIdentifier): Link
-    {
+    private function createSelfLink(
+        Entity|array|Collection|LinkCollectionAwareInterface|null $resource,
+        $route,
+        string $routeIdentifier,
+    ): Link {
         /** @psalm-var array|Collection|Entity|null $resource */
         // build route
-        if (! is_array(value: $route)) {
-            $route = ['name' => (string) $route];
+        if (!is_array(value: $route)) {
+            $route = ['name' => $route];
         }
 
         $routeParams = $this->getRouteParams(resource: $resource, routeIdentifier: $routeIdentifier);
@@ -61,7 +69,7 @@ class SelfLinkInjector implements SelfLinkInjectorInterface
          *  url?: string
          * } $spec */
         $spec = [
-            'rel'   => 'self',
+            'rel' => 'self',
             'route' => $route,
         ];
 
@@ -72,7 +80,7 @@ class SelfLinkInjector implements SelfLinkInjectorInterface
      * @param array|Collection|Entity|null $resource
      * @param string $routeIdentifier
      * @return array|string
-     * @psalm-return array<empty, empty>|array<array-key, mixed>|string
+     * @psalm-return array<array-key, mixed>|string
      */
     private function getRouteParams(Entity|array|Collection|null $resource, string $routeIdentifier): array|string
     {
@@ -82,10 +90,7 @@ class SelfLinkInjector implements SelfLinkInjectorInterface
 
         $routeParams = [];
 
-        if (
-            $resource instanceof Entity
-            && null !== $resource->getId()
-        ) {
+        if ($resource instanceof Entity && null !== $resource->getId()) {
             $routeParams = [
                 $routeIdentifier => $resource->getId(),
             ];
@@ -97,7 +102,7 @@ class SelfLinkInjector implements SelfLinkInjectorInterface
     /**
      * @param array|Collection|Entity|null $resource
      * @return array|string
-     * @psalm-return array<empty, empty>|array<array-key, mixed>|string
+     * @psalm-return array<array-key, mixed>|string
      */
     private function getRouteOptions(Entity|array|Collection|null $resource): array|string
     {

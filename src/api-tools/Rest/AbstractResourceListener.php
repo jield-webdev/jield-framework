@@ -14,6 +14,7 @@ use Laminas\InputFilter\InputFilterInterface;
 use Laminas\Paginator\Paginator;
 use Laminas\Stdlib\Parameters;
 use Override;
+
 use function sprintf;
 
 abstract class AbstractResourceListener implements ListenerAggregateInterface
@@ -140,42 +141,47 @@ abstract class AbstractResourceListener implements ListenerAggregateInterface
         $this->event = $event;
         switch ($event->getName()) {
             case 'create':
+                /** @var mixed $data */
                 $data = $event->getParam(name: 'data', default: []);
-                return $this->create(data: new Parameters(values: (array)$data));
+                return $this->create(data: new Parameters(\Jield\Stdlib\Value::toArray($data)));
             case 'delete':
-                $id = (int)$event->getParam(name: 'id');
+                $id = (int) $event->getParam(name: 'id');
                 return $this->delete(id: $id);
             case 'deleteList':
+                /** @var mixed $data */
                 $data = $event->getParam(name: 'data', default: []);
-                return $this->deleteList(data: new Parameters(values: (array)$data));
+                return $this->deleteList(data: new Parameters(\Jield\Stdlib\Value::toArray($data)));
             case 'fetch':
+                /** @var mixed $id */
                 $id = $event->getParam(name: 'id');
-                return $this->fetch(id: $id);
+                return $this->fetch(id: \Jield\Stdlib\Value::string($id));
             case 'fetchAll':
                 $queryParams = $event->getQueryParams() ?: [];
-                return $this->fetchAll(params: $queryParams);
+                return $this->fetchAll(params: \Jield\Stdlib\Value::instance($queryParams, \Laminas\Stdlib\Parameters::class));
             case 'patch':
-                $id   = (int)$event->getParam(name: 'id');
+                $id = (int) $event->getParam(name: 'id');
+                /** @var mixed $data */
                 $data = $event->getParam(name: 'data', default: []);
-                return $this->patch(id: $id, data: new Parameters(values: (array)$data));
+                return $this->patch(id: $id, data: new Parameters(\Jield\Stdlib\Value::toArray($data)));
             case 'patchList':
+                /** @var mixed $data */
                 $data = $event->getParam(name: 'data', default: []);
-                return $this->patchList(data: new Parameters(values: (array)$data));
+                return $this->patchList(data: new Parameters(\Jield\Stdlib\Value::toArray($data)));
             case 'replaceList':
+                /** @var mixed $data */
                 $data = $event->getParam(name: 'data', default: []);
-                return $this->replaceList(data: new Parameters(values: (array)$data));
+                return $this->replaceList(data: new Parameters(\Jield\Stdlib\Value::toArray($data)));
             case 'update':
-                $id   = (int)$event->getParam(name: 'id');
+                $id = (int) $event->getParam(name: 'id');
+                /** @var mixed $data */
                 $data = $event->getParam(name: 'data', default: []);
-                return $this->update(id: $id, data: new Parameters(values: (array)$data));
+                return $this->update(id: $id, data: new Parameters(\Jield\Stdlib\Value::toArray($data)));
             default:
-                throw new Exception\RuntimeException(
-                    message: sprintf(
-                        '%s has not been setup to handle the event "%s"',
-                        __METHOD__,
-                        $event->getName()
-                    )
-                );
+                throw new Exception\RuntimeException(message: sprintf(
+                    '%s has not been setup to handle the event "%s"',
+                    __METHOD__,
+                    $event->getName(),
+                ));
         }
     }
 

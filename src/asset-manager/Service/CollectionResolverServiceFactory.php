@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\AssetManager\Service;
 
 use Jield\AssetManager\Resolver\CollectionResolver;
@@ -15,13 +17,15 @@ class CollectionResolverServiceFactory implements FactoryInterface
     #[Override]
     public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): CollectionResolver
     {
-        $config      = $container->get('config');
+        /** @var mixed $config */
+        $config = $container->get('config');
         $collections = [];
 
         if (isset($config['asset_manager']['resolver_configs']['collections'])) {
+            /** @var mixed $collections */
             $collections = $config['asset_manager']['resolver_configs']['collections'];
         }
 
-        return new CollectionResolver(collections: $collections);
+        return new CollectionResolver(collections: \Jield\Stdlib\Value::iterable($collections));
     }
 }

@@ -20,15 +20,16 @@ class OptionsListenerFactory
      */
     private function getConfig(ContainerInterface $container): array
     {
-        if (! $container->has(id: 'config')) {
+        if (!$container->has('config')) {
             return [];
         }
 
+        /** @var mixed $config */
         $config = $container->get('config');
-        if (! isset($config['api-tools-rpc'])) {
+        if (!isset($config['api-tools-rpc'])) {
             return [];
         }
 
-        return $config['api-tools-rpc'];
+        return \Jield\Stdlib\Value::array($config['api-tools-rpc']);
     }
 }

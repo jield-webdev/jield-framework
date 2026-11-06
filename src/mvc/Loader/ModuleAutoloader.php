@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\Mvc\Loader;
 
 use GlobIterator;
@@ -8,6 +10,7 @@ use Phar;
 use PharFileInfo;
 use SplFileInfo;
 use Traversable;
+
 use function array_map;
 use function class_exists;
 use function count;
@@ -24,19 +27,19 @@ use function rtrim;
 use function spl_autoload_register;
 use function spl_autoload_unregister;
 use function str_replace;
-use function strpos;
 use function substr;
+
 use const DIRECTORY_SEPARATOR;
 
 class ModuleAutoloader implements SplAutoloader
 {
     protected array $paths = [];
 
-    protected array  $explicitPaths   = [];
-    protected array  $namespacedPaths = [];
-    protected string $pharBasePath    = "";
-    protected array  $pharExtensions  = [];
-    protected array  $moduleClassMap  = [];
+    protected array $explicitPaths = [];
+    protected array $namespacedPaths = [];
+    protected string $pharBasePath = '';
+    protected array $pharExtensions = [];
+    protected array $moduleClassMap = [];
 
     /**
      * Constructor
@@ -48,7 +51,7 @@ class ModuleAutoloader implements SplAutoloader
     public function __construct(?iterable $options = null)
     {
         if (extension_loaded(extension: 'phar')) {
-            $this->pharBasePath   = Phar::running(returnPhar: true);
+            $this->pharBasePath = Phar::running(returnPhar: true);
             $this->pharExtensions = [
                 'phar',
                 'phar.tar',
@@ -85,7 +88,7 @@ class ModuleAutoloader implements SplAutoloader
      * Traversable object.
      *
      * @param iterable $options
-     * @return ModuleAutoloader
+     * @return static
      */
     public function setOptions(iterable $options): static
     {
@@ -107,7 +110,7 @@ class ModuleAutoloader implements SplAutoloader
      * Sets the class map used to speed up the module autoloading.
      *
      * @param array $classmap
-     * @return ModuleAutoloader
+     * @return static
      */
     public function setModuleClassMap(array $classmap): static
     {
@@ -138,32 +141,37 @@ class ModuleAutoloader implements SplAutoloader
 
         $moduleName = substr(string: $class, offset: 0, length: -7);
         if (isset($this->explicitPaths[$moduleName])) {
-            $classLoaded = $this->loadModuleFromDir(dirPath: $this->explicitPaths[$moduleName], class: $class);
+            /** @var mixed $classLoaded */
+            $classLoaded = $this->loadModuleFromDir(dirPath: \Jield\Stdlib\Value::string($this->explicitPaths[$moduleName]), class: $class);
             if ($classLoaded) {
                 return $classLoaded;
             }
 
-            $classLoaded = $this->loadModuleFromPhar(pharPath: $this->explicitPaths[$moduleName], class: $class);
+            /** @var mixed $classLoaded */
+            $classLoaded = $this->loadModuleFromPhar(pharPath: \Jield\Stdlib\Value::string($this->explicitPaths[$moduleName]), class: $class);
             if ($classLoaded) {
                 return $classLoaded;
             }
         }
 
         if (count(value: $this->namespacedPaths) >= 1) {
+            /** @var mixed $path */
             foreach ($this->namespacedPaths as $namespace => $path) {
-                if (false === strpos(haystack: $moduleName, needle: $namespace)) {
+                if (!str_contains(haystack: $moduleName, needle: \Jield\Stdlib\Value::string($namespace))) {
                     continue;
                 }
 
-                $moduleNameBuffer = str_replace(search: $namespace . "\\", replace: "", subject: $moduleName);
-                $path             .= DIRECTORY_SEPARATOR . $moduleNameBuffer . DIRECTORY_SEPARATOR;
+                $moduleNameBuffer = str_replace(search: $namespace . "\\", replace: '', subject: $moduleName);
+                $path = \Jield\Stdlib\Value::stringify($path) . (DIRECTORY_SEPARATOR . $moduleNameBuffer . DIRECTORY_SEPARATOR);
 
-                $classLoaded = $this->loadModuleFromDir(dirPath: $path, class: $class);
+                /** @var mixed $classLoaded */
+                $classLoaded = $this->loadModuleFromDir(dirPath: \Jield\Stdlib\Value::string($path), class: $class);
                 if ($classLoaded) {
                     return $classLoaded;
                 }
 
-                $classLoaded = $this->loadModuleFromPhar(pharPath: $path, class: $class);
+                /** @var mixed $classLoaded */
+                $classLoaded = $this->loadModuleFromPhar(pharPath: \Jield\Stdlib\Value::string($path), class: $class);
                 if ($classLoaded) {
                     return $classLoaded;
                 }
@@ -174,14 +182,18 @@ class ModuleAutoloader implements SplAutoloader
 
         $pharSuffixPattern = null;
         if ($this->pharExtensions) {
-            $pharSuffixPattern = '(' . implode(separator: '|', array: array_map(callback: 'preg_quote', array: $this->pharExtensions)) . ')';
+            $pharSuffixPattern =
+                '('
+                . implode(separator: '|', array: array_map(callback: 'preg_quote', array: $this->pharExtensions))
+                . ')';
         }
 
+        /** @var mixed $path */
         foreach ($this->paths as $path) {
-            $path .= $moduleClassPath;
+            $path = \Jield\Stdlib\Value::stringify($path) . $moduleClassPath;
 
-            if ($path === '.' || str_starts_with($path, './') || str_starts_with($path, '.\\')) {
-                if (!$basePath = $this->pharBasePath) {
+            if ($path === '.' || str_starts_with(\Jield\Stdlib\Value::string($path), './') || str_starts_with(\Jield\Stdlib\Value::string($path), '.\\')) {
+                if (!($basePath = $this->pharBasePath)) {
                     $basePath = realpath(path: '.');
                 }
 
@@ -189,17 +201,18 @@ class ModuleAutoloader implements SplAutoloader
                     $basePath = getcwd();
                 }
 
-                $path = rtrim(string: $basePath, characters: '\/\\') . substr(string: $path, offset: 1);
+                $path = rtrim(string: \Jield\Stdlib\Value::string($basePath), characters: '\/\\') . substr(string: \Jield\Stdlib\Value::string($path), offset: 1);
             }
 
-            $classLoaded = $this->loadModuleFromDir(dirPath: $path, class: $class);
+            /** @var mixed $classLoaded */
+            $classLoaded = $this->loadModuleFromDir(dirPath: \Jield\Stdlib\Value::string($path), class: $class);
             if ($classLoaded) {
                 return $classLoaded;
             }
 
             // No directory with Module.php, searching for phars
             if ($pharSuffixPattern) {
-                foreach (new GlobIterator(pattern: $path . '.*') as $entry) {
+                foreach (new GlobIterator( $path . '.*') as $entry) {
                     if ($entry->isDir()) {
                         continue;
                     }
@@ -208,6 +221,7 @@ class ModuleAutoloader implements SplAutoloader
                         continue;
                     }
 
+                    /** @var mixed $classLoaded */
                     $classLoaded = $this->loadModuleFromPhar(pharPath: $entry->getPathname(), class: $class);
                     if ($classLoaded) {
                         return $classLoaded;
@@ -239,7 +253,7 @@ class ModuleAutoloader implements SplAutoloader
 
         if ($file->isReadable() && $file->isFile()) {
             // Found directory with Module.php in it
-            $absModulePath = $this->pharBasePath ? (string)$file : $file->getRealPath();
+            $absModulePath = $this->pharBasePath ? (string) $file : $file->getRealPath();
             require_once $absModulePath;
             if (class_exists(class: $class)) {
                 $this->moduleClassMap[$class] = $absModulePath;
@@ -261,7 +275,7 @@ class ModuleAutoloader implements SplAutoloader
     protected function loadModuleFromPhar(string $pharPath, string $class): mixed
     {
         $pharPath = static::normalizePath(path: $pharPath, trailingSlash: false);
-        $file     = new SplFileInfo(filename: $pharPath);
+        $file = new SplFileInfo(filename: $pharPath);
         if (!$file->isReadable() || !$file->isFile()) {
             return false;
         }
@@ -269,7 +283,7 @@ class ModuleAutoloader implements SplAutoloader
         $fileRealPath = $file->getRealPath();
 
         // Phase 0: Check for executable phar with Module class in stub
-        if (str_contains($fileRealPath, '.phar')) {
+        if (str_contains(\Jield\Stdlib\Value::string($fileRealPath), '.phar')) {
             // First see if the stub makes the Module class available
             require_once $fileRealPath;
             if (class_exists(class: $class)) {
@@ -280,7 +294,7 @@ class ModuleAutoloader implements SplAutoloader
 
         // Phase 1: Not executable phar, no stub, or stub did not provide Module class; try Module.php directly
         $moduleClassFile = 'phar://' . $fileRealPath . '/Module.php';
-        $moduleFile      = new SplFileInfo(filename: $moduleClassFile);
+        $moduleFile = new SplFileInfo(filename: $moduleClassFile);
         if ($moduleFile->isReadable() && $moduleFile->isFile()) {
             require_once $moduleClassFile;
             if (class_exists(class: $class)) {
@@ -292,9 +306,9 @@ class ModuleAutoloader implements SplAutoloader
         // Phase 2: Check for nested module directory within archive
         // Checks for /path/to/MyModule.tar/MyModule/Module.php
         // (shell-integrated zip/tar utilities wrap directories like this)
-        $pharBaseName    = $this->pharFileToModuleName(pharPath: $fileRealPath);
+        $pharBaseName = $this->pharFileToModuleName(pharPath: \Jield\Stdlib\Value::string($fileRealPath));
         $moduleClassFile = 'phar://' . $fileRealPath . '/' . $pharBaseName . '/Module.php';
-        $moduleFile      = new SplFileInfo(filename: $moduleClassFile);
+        $moduleFile = new SplFileInfo(filename: $moduleClassFile);
         if ($moduleFile->isReadable() && $moduleFile->isFile()) {
             require_once $moduleClassFile;
             if (class_exists(class: $class)) {
@@ -330,25 +344,21 @@ class ModuleAutoloader implements SplAutoloader
      * registerPaths
      *
      * @param Traversable|array $paths
-     * @return ModuleAutoloader
+     * @return static
      * @throws InvalidArgumentException
      */
     public function registerPaths(Traversable|array $paths): static
     {
-        if (!is_array(value: $paths) && !$paths instanceof Traversable) {
-            require_once __DIR__ . '/Exception/InvalidArgumentException.php';
-            throw new \InvalidArgumentException(
-                'Parameter to \\Laminas\\Loader\\ModuleAutoloader\'s '
-                . 'registerPaths method must be an array or '
-                . 'implement the Traversable interface'
-            );
-        }
+        
 
+        /** @var mixed $module
+         * @var mixed $path
+         */
         foreach ($paths as $module => $path) {
             if (is_string(value: $module)) {
-                $this->registerPath(path: $path, moduleName: $module);
+                $this->registerPath(path: \Jield\Stdlib\Value::string($path), moduleName: $module);
             } else {
-                $this->registerPath(path: $path);
+                $this->registerPath(path: \Jield\Stdlib\Value::string($path));
             }
         }
 
@@ -360,14 +370,15 @@ class ModuleAutoloader implements SplAutoloader
      *
      * @param string $path
      * @param bool|string $moduleName
-     * @return ModuleAutoloader
+     * @return static
      * @throws InvalidArgumentException
      */
     public function registerPath(string $path, bool|string $moduleName = false): static
     {
         if ($moduleName) {
-            if (in_array(needle: substr(string: $moduleName, offset: -2), haystack: ['\\*', '\\%'])) {
-                $this->namespacedPaths[substr(string: $moduleName, offset: 0, length: -2)] = static::normalizePath(path: $path);
+            if (in_array(needle: substr(string: \Jield\Stdlib\Value::string($moduleName), offset: -2), haystack: ['\\*', '\\%'], strict: true)) {
+                $this->namespacedPaths[substr(string: \Jield\Stdlib\Value::string($moduleName), offset: 0, length: -2)] =
+                    static::normalizePath(path: $path);
             } else {
                 $this->explicitPaths[$moduleName] = static::normalizePath(path: $path);
             }

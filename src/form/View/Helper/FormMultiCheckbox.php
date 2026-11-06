@@ -20,7 +20,7 @@ use function strtolower;
 
 class FormMultiCheckbox extends FormInput
 {
-    public const string LABEL_APPEND  = 'append';
+    public const string LABEL_APPEND = 'append';
     public const string LABEL_PREPEND = 'prepend';
 
     /**
@@ -28,7 +28,7 @@ class FormMultiCheckbox extends FormInput
      *
      * @var null|array
      */
-    protected ?array $labelAttributes;
+    protected ?array $labelAttributes = null;
 
     /**
      * Where will be label rendered?
@@ -56,21 +56,21 @@ class FormMultiCheckbox extends FormInput
      *
      * @var null|string
      */
-    protected ?string $uncheckedValue;
+    protected ?string $uncheckedValue = null;
 
     /**
      * Form input helper instance
      *
      * @var null|FormInput
      */
-    protected ?FormInput $inputHelper;
+    protected ?FormInput $inputHelper = null;
 
     /**
      * Form label helper instance
      *
      * @var null|FormLabel
      */
-    protected ?FormLabel $labelHelper;
+    protected ?FormLabel $labelHelper = null;
 
     /**
      * Invoke helper as functor
@@ -79,12 +79,12 @@ class FormMultiCheckbox extends FormInput
      *
      * @template T as null|ElementInterface
      * @psalm-param T $element
-     * @psalm-return (T is null ? self : string)
+     * @psalm-return (T is null ? static : string)
      * @return string|FormMultiCheckbox
      */
-    public function __invoke(?ElementInterface $element = null, ?string $labelPosition = null): FormMultiCheckbox|string|static
+    public function __invoke(?ElementInterface $element = null, ?string $labelPosition = null): string|static
     {
-        if (! $element) {
+        if (!$element) {
             return $this;
         }
 
@@ -102,10 +102,10 @@ class FormMultiCheckbox extends FormInput
      */
     public function render(ElementInterface $element): string
     {
-        if (! $element instanceof MultiCheckboxElement) {
+        if (!$element instanceof MultiCheckboxElement) {
             throw new Exception\InvalidArgumentException(message: sprintf(
                 '%s requires that the element is of type Jield\Form\Element\MultiCheckbox',
-                __METHOD__
+                __METHOD__,
             ));
         }
 
@@ -113,12 +113,17 @@ class FormMultiCheckbox extends FormInput
 
         $options = $element->getValueOptions();
 
-        $attributes         = $element->getAttributes();
+        $attributes = $element->getAttributes();
         $attributes['name'] = $name;
         $attributes['type'] = $this->getInputType();
-        $selectedOptions    = (array) $element->getValue();
+        $selectedOptions = \Jield\Stdlib\Value::toArray($element->getValue());
 
-        $rendered = $this->renderOptions(element: $element, options: $options, selectedOptions: $selectedOptions, attributes: $attributes);
+        $rendered = $this->renderOptions(
+            element: $element,
+            options: $options,
+            selectedOptions: $selectedOptions,
+            attributes: $attributes,
+        );
 
         // Render hidden element
         if ($element->useHiddenElement()) {
@@ -135,39 +140,39 @@ class FormMultiCheckbox extends FormInput
         MultiCheckboxElement $element,
         array $options,
         array $selectedOptions,
-        array $attributes
+        array $attributes,
     ): string {
-        $labelHelper           = $this->getLabelHelper();
-        $labelClose            = $labelHelper->closeTag();
-        $labelPosition         = $this->getLabelPosition();
+        $labelHelper = $this->getLabelHelper();
+        $labelClose = $labelHelper->closeTag();
+        $labelPosition = $this->getLabelPosition();
         $globalLabelAttributes = [];
-        $closingBracket        = $this->getInlineClosingBracket();
+        $closingBracket = $this->getInlineClosingBracket();
 
-        if ($element instanceof LabelAwareInterface) {
-            $globalLabelAttributes = $element->getLabelAttributes();
-        }
+        $globalLabelAttributes = $element->getLabelAttributes();
 
         if (empty($globalLabelAttributes)) {
             $globalLabelAttributes = $this->labelAttributes;
         }
 
         $combinedMarkup = [];
-        $count          = 0;
+        $count = 0;
 
+        /** @var mixed $optionSpec */
         foreach ($options as $key => $optionSpec) {
             $count++;
             if ($count > 1 && array_key_exists(key: 'id', array: $attributes)) {
                 unset($attributes['id']);
             }
 
-            $value           = '';
-            $label           = '';
+            $value = '';
+            $label = '';
             $inputAttributes = $attributes;
             $labelAttributes = $globalLabelAttributes;
-            $selected        = isset($inputAttributes['selected'])
+            $selected =
+                isset($inputAttributes['selected'])
                 && $inputAttributes['type'] !== 'radio'
-                && $inputAttributes['selected'];
-            $disabled        = isset($inputAttributes['disabled']) && $inputAttributes['disabled'];
+                && \Jield\Stdlib\Value::truthy($inputAttributes['selected']);
+            $disabled = isset($inputAttributes['disabled']) && \Jield\Stdlib\Value::truthy($inputAttributes['disabled']);
 
             if (is_scalar(value: $optionSpec)) {
                 $optionSpec = [
@@ -177,46 +182,51 @@ class FormMultiCheckbox extends FormInput
             }
 
             if (isset($optionSpec['value'])) {
+                /** @var mixed $value */
                 $value = $optionSpec['value'];
             }
             if (isset($optionSpec['label'])) {
+                /** @var mixed $label */
                 $label = $optionSpec['label'];
             }
             if (isset($optionSpec['selected'])) {
+                /** @var mixed $selected */
                 $selected = $optionSpec['selected'];
             }
             if (isset($optionSpec['disabled'])) {
+                /** @var mixed $disabled */
                 $disabled = $optionSpec['disabled'];
             }
             if (isset($optionSpec['label_attributes'])) {
+                /** @var mixed $labelAttributes */
                 $labelAttributes = isset($labelAttributes)
-                    ? array_merge($labelAttributes, $optionSpec['label_attributes'])
+                    ? array_merge($labelAttributes, \Jield\Stdlib\Value::array($optionSpec['label_attributes']))
                     : $optionSpec['label_attributes'];
             }
             if (isset($optionSpec['attributes'])) {
-                $inputAttributes = array_merge($inputAttributes, $optionSpec['attributes']);
+                $inputAttributes = array_merge($inputAttributes, \Jield\Stdlib\Value::array($optionSpec['attributes']));
             }
 
-            if (in_array(needle: $value, haystack: $selectedOptions)) {
+            if (in_array(needle: $value, haystack: $selectedOptions, strict: true)) {
                 $selected = true;
             }
 
-            $inputAttributes['value']    = $value;
-            $inputAttributes['checked']  = $selected;
+            $inputAttributes['value'] = $value;
+            $inputAttributes['checked'] = $selected;
             $inputAttributes['disabled'] = $disabled;
 
             $input = sprintf(
                 '<input %s%s',
                 $this->createAttributesString(attributes: $inputAttributes),
-                $closingBracket
+                $closingBracket,
             );
 
-            $label = $this->translateLabel(label: $label);
+            $label = $this->translateLabel(label: \Jield\Stdlib\Value::string($label));
             $label = $this->escapeLabel(element: $element, label: $label);
 
             $labelOpen = $labelHelper->openTag(attributesOrElement: $labelAttributes);
-            $template  = $labelOpen . '%s%s' . $labelClose;
-            $markup    = match ($labelPosition) {
+            $template = $labelOpen . '%s%s' . $labelClose;
+            $markup = match ($labelPosition) {
                 self::LABEL_PREPEND => sprintf($template, $label, $input),
                 default => sprintf($template, $input, $label),
             };
@@ -237,21 +247,21 @@ class FormMultiCheckbox extends FormInput
         $uncheckedValue = $element->getUncheckedValue() ?? $this->uncheckedValue;
 
         $hiddenAttributes = [
-            'name'  => $element->getName(),
+            'name' => $element->getName(),
             'value' => $uncheckedValue,
         ];
 
         return sprintf(
             '<input type="hidden" %s%s',
             $this->createAttributesString(attributes: $hiddenAttributes),
-            $closingBracket
+            $closingBracket,
         );
     }
 
     /**
      * Sets the attributes applied to option label.
      *
-     * @return $this
+     * @return static
      */
     public function setLabelAttributes(?array $attributes): static
     {
@@ -273,18 +283,18 @@ class FormMultiCheckbox extends FormInput
      * Set value for labelPosition
      *
      * @throws Exception\InvalidArgumentException
-     * @return $this
+     * @return static
      */
     public function setLabelPosition(string $labelPosition): static
     {
         $labelPosition = strtolower(string: $labelPosition);
-        if (! in_array(needle: $labelPosition, haystack: [self::LABEL_APPEND, self::LABEL_PREPEND])) {
+        if (!in_array(needle: $labelPosition, haystack: [self::LABEL_APPEND, self::LABEL_PREPEND], strict: true)) {
             throw new Exception\InvalidArgumentException(message: sprintf(
                 '%s expects either %s::LABEL_APPEND or %s::LABEL_PREPEND; received "%s"',
                 __METHOD__,
                 self::class,
                 self::class,
-                $labelPosition
+                $labelPosition,
             ));
         }
         $this->labelPosition = $labelPosition;
@@ -303,7 +313,7 @@ class FormMultiCheckbox extends FormInput
     /**
      * Set separator string for checkbox elements
      *
-     * @return $this
+     * @return static
      */
     public function setSeparator(string $separator): static
     {
@@ -323,7 +333,7 @@ class FormMultiCheckbox extends FormInput
      * Sets the option for prefixing the element with a hidden element
      * for the unset value.
      *
-     * @return $this
+     * @return static
      */
     public function setUseHiddenElement(bool $useHiddenElement): static
     {
@@ -343,7 +353,7 @@ class FormMultiCheckbox extends FormInput
     /**
      * Sets the unchecked value used when "UseHiddenElement" is turned on.
      *
-     * @return $this
+     * @return static
      */
     public function setUncheckedValue(?string $value): static
     {
@@ -378,7 +388,7 @@ class FormMultiCheckbox extends FormInput
         if ($name === null || $name === '') {
             throw new Exception\DomainException(message: sprintf(
                 '%s requires that the element has an assigned name; none discovered',
-                __METHOD__
+                __METHOD__,
             ));
         }
         return $name . '[]';
@@ -394,7 +404,7 @@ class FormMultiCheckbox extends FormInput
         }
 
         if (null !== $this->view && method_exists(object_or_class: $this->view, method: 'plugin')) {
-            $this->inputHelper = $this->view->plugin('form_input');
+            $this->inputHelper = $this->getView()->plugin('form_input', \Jield\Form\View\Helper\FormInput::class);
         }
 
         if (null === $this->inputHelper) {
@@ -413,11 +423,11 @@ class FormMultiCheckbox extends FormInput
             return $this->labelHelper;
         }
 
-        if (method_exists(object_or_class: $this->view, method: 'plugin')) {
-            $this->labelHelper = $this->view->plugin('form_label');
+        if (method_exists(object_or_class: \Jield\Stdlib\Value::objectOrString($this->view), method: 'plugin')) {
+            $this->labelHelper = $this->getView()->plugin('form_label', \Jield\Form\View\Helper\FormLabel::class);
         }
 
-        if (! $this->labelHelper instanceof FormLabel) {
+        if (!$this->labelHelper instanceof FormLabel) {
             $this->labelHelper = new FormLabel();
         }
 

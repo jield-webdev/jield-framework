@@ -21,10 +21,13 @@ final class ObjectMultiCheckboxFactory implements FactoryInterface
      *
      * @return ObjectMultiCheckbox
      */
-    public function __invoke(ContainerInterface $container, string $requestedName, array|null $options = null): ObjectMultiCheckbox
-    {
-        $entityManager = $container->get(EntityManager::class);
-        $element       = new ObjectMultiCheckbox();
+    public function __invoke(
+        ContainerInterface $container,
+        string $requestedName,
+        ?array $options = null,
+    ): ObjectMultiCheckbox {
+        $entityManager = \Jield\Stdlib\Service::get($container, EntityManager::class);
+        $element = new ObjectMultiCheckbox();
 
         $element->getProxy()->setObjectManager(objectManager: $entityManager);
 

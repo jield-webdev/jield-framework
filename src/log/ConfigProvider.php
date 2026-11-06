@@ -9,14 +9,15 @@ use Jield\Log\Factory\LoggerFactory;
 use Monolog\Logger;
 use Psr\Log\LoggerInterface;
 
+/** @psalm-import-type MonologConfig from LoggerFactory */
 final class ConfigProvider
 {
-    /** @return array<string, array> */
+    /** @return array{dependencies: array<string, array>, monolog: MonologConfig} */
     public function __invoke(): array
     {
         return [
             'dependencies' => $this->getDependencyConfig(),
-            'monolog'       => $this->getMonologConfig(),
+            'monolog' => $this->getMonologConfig(),
         ];
     }
 
@@ -24,11 +25,11 @@ final class ConfigProvider
     public function getDependencyConfig(): array
     {
         return [
-            'aliases'            => [
+            'aliases' => [
                 LoggerInterface::class => Logger::class,
-                'logger'               => Logger::class,
+                'logger' => Logger::class,
             ],
-            'factories'          => [
+            'factories' => [
                 Logger::class => LoggerFactory::class,
             ],
             'abstract_factories' => [
@@ -37,35 +38,35 @@ final class ConfigProvider
         ];
     }
 
-    /** @return array<string, array> */
+    /** @return MonologConfig */
     public function getMonologConfig(): array
     {
         return [
             'default_logger' => 'app',
-            'loggers'        => [
+            'loggers' => [
                 'app' => [
-                    'name'     => 'app',
+                    'name' => 'app',
                     'handlers' => ['default'],
                 ],
-                'db'  => [
-                    'name'     => 'db',
+                'db' => [
+                    'name' => 'db',
                     'handlers' => ['doctrine'],
                 ],
             ],
-            'handlers'       => [
-                'default'  => [
-                    'type'    => 'stream',
+            'handlers' => [
+                'default' => [
+                    'type' => 'stream',
                     'options' => [
                         'stream' => 'data/log/app.log',
-                        'level'  => 'debug',
+                        'level' => 'debug',
                     ],
                 ],
                 'doctrine' => [
-                    'type'    => 'doctrine_dbal',
+                    'type' => 'doctrine_dbal',
                     'options' => [
                         'connection' => 'doctrine.connection.orm_default',
-                        'table'      => 'application_log',
-                        'level'      => 'error',
+                        'table' => 'application_log',
+                        'level' => 'error',
                     ],
                 ],
             ],

@@ -7,14 +7,13 @@ namespace Jield\Form\Element;
 use DateInterval;
 use DateTime as PhpDateTime;
 use DateTimeInterface;
-use Laminas\Filter\StringTrim;
 use Jield\Form\Element;
 use Jield\Form\Exception\InvalidArgumentException;
+use Laminas\Filter\StringTrim;
 use Laminas\InputFilter\InputProviderInterface;
 use Laminas\Validator\Date as DateValidator;
 use Laminas\Validator\DateStep as DateStepValidator;
-use Laminas\Validator\GreaterThan as GreaterThanValidator;
-use Laminas\Validator\LessThan as LessThanValidator;
+use Laminas\Validator\DateComparison;
 use Laminas\Validator\ValidatorInterface;
 
 use function date;
@@ -38,12 +37,12 @@ abstract class AbstractDateTime extends Element implements InputProviderInterfac
      *
      * @inheritDoc
      */
-    public function setOptions(iterable $options): Element
+    public function setOptions(iterable $options): static
     {
         parent::setOptions(options: $options);
 
         if (isset($this->options['format'])) {
-            $this->setFormat(format: $this->options['format']);
+            $this->setFormat(format: \Jield\Stdlib\Value::string($this->options['format']));
         }
 
         return $this;
@@ -63,8 +62,9 @@ abstract class AbstractDateTime extends Element implements InputProviderInterfac
      */
     public function getValue(bool $returnFormattedValue = true): mixed
     {
+        /** @var mixed $value */
         $value = parent::getValue();
-        if (! $value instanceof DateTimeInterface || ! $returnFormattedValue) {
+        if (!$value instanceof DateTimeInterface || !$returnFormattedValue) {
             return $value;
         }
         $format = $this->getFormat();
@@ -74,7 +74,7 @@ abstract class AbstractDateTime extends Element implements InputProviderInterfac
     /**
      * Set value for format
      *
-     * @return self
+     * @return static
      */
     public function setFormat(string $format): static
     {
@@ -101,52 +101,53 @@ abstract class AbstractDateTime extends Element implements InputProviderInterfac
             return $this->validators;
         }
 
-        $validators   = [];
+        $validators = [];
         $validators[] = $this->getDateValidator();
 
         if (
             isset($this->attributes['min'])
-            && $this->valueIsValidDateTimeFormat(value: (string)$this->attributes['min'])
+            && $this->valueIsValidDateTimeFormat(value: (string) $this->attributes['min'])
         ) {
-            $validators[] = new GreaterThanValidator([
-                'min'       => $this->attributes['min'],
-                'inclusive' => true,
+            $validators[] = new DateComparison([
+                'min' => (string) $this->attributes['min'],
+                'inclusiveMin' => true,
+                'inclusiveMax' => true,
+                'inputFormat' => $this->format,
             ]);
         } elseif (
             isset($this->attributes['min'])
-            && ! $this->valueIsValidDateTimeFormat(value: (string)$this->attributes['min'])
+            && !$this->valueIsValidDateTimeFormat(value: (string) $this->attributes['min'])
         ) {
             throw new InvalidArgumentException(message: sprintf(
                 '%1$s expects "min" to conform to %2$s; received "%3$s"',
                 __METHOD__,
                 $this->format,
-                (string) $this->attributes['min']
+                (string) $this->attributes['min'],
             ));
         }
 
         if (
             isset($this->attributes['max'])
-            && $this->valueIsValidDateTimeFormat(value: (string)$this->attributes['max'])
+            && $this->valueIsValidDateTimeFormat(value: (string) $this->attributes['max'])
         ) {
-            $validators[] = new LessThanValidator([
-                'max'       => $this->attributes['max'],
-                'inclusive' => true,
+            $validators[] = new DateComparison([
+                'max' => (string) $this->attributes['max'],
+                'inclusiveMin' => true,
+                'inclusiveMax' => true,
+                'inputFormat' => $this->format,
             ]);
         } elseif (
             isset($this->attributes['max'])
-            && ! $this->valueIsValidDateTimeFormat(value: (string)$this->attributes['max'])
+            && !$this->valueIsValidDateTimeFormat(value: (string) $this->attributes['max'])
         ) {
             throw new InvalidArgumentException(message: sprintf(
                 '%1$s expects "max" to conform to %2$s; received "%3$s"',
                 __METHOD__,
                 $this->format,
-                (string) $this->attributes['max']
+                (string) $this->attributes['max'],
             ));
         }
-        if (
-            ! isset($this->attributes['step'])
-            || 'any' !== $this->attributes['step']
-        ) {
+        if (!isset($this->attributes['step']) || 'any' !== $this->attributes['step']) {
             $validators[] = $this->getStepValidator();
         }
 
@@ -167,15 +168,15 @@ abstract class AbstractDateTime extends Element implements InputProviderInterfac
      */
     protected function getStepValidator(): ValidatorInterface
     {
-        $format    = $this->getFormat();
+        $format = $this->getFormat();
         $stepValue = $this->attributes['step'] ?? 1; // Minutes
 
         $baseValue = $this->attributes['min'] ?? date(format: $format, timestamp: 0);
 
         return new DateStepValidator(options: [
-            'format'    => $format,
-            'baseValue' => $baseValue,
-            'step'      => new DateInterval(duration: "PT{$stepValue}M"),
+            'format' => $format,
+            'baseValue' => (string) $baseValue,
+            'step' => new DateInterval(duration: "PT{$stepValue}M"),
         ]);
     }
 
@@ -189,8 +190,8 @@ abstract class AbstractDateTime extends Element implements InputProviderInterfac
     public function getInputSpecification(): array
     {
         $spec = [
-            'required'   => true,
-            'filters'    => [
+            'required' => true,
+            'filters' => [
                 ['name' => StringTrim::class],
             ],
             'validators' => $this->getValidators(),
@@ -209,9 +210,6 @@ abstract class AbstractDateTime extends Element implements InputProviderInterfac
      */
     private function valueIsValidDateTimeFormat(string $value): bool
     {
-        return PhpDateTime::createFromFormat(
-            format: $this->format,
-                datetime: $value
-        ) instanceof DateTimeInterface;
+        return PhpDateTime::createFromFormat(format: $this->format, datetime: $value) instanceof DateTimeInterface;
     }
 }

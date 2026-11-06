@@ -44,7 +44,7 @@ class ParameterDataContainer
 
     /**
      * @param string $name
-     * @param mixed|null $default
+     * @param mixed $default
      * @return mixed
      */
     public function getRouteParam(string $name, mixed $default = null): mixed
@@ -90,7 +90,7 @@ class ParameterDataContainer
 
     /**
      * @param string $name
-     * @param mixed|null $default
+     * @param mixed $default
      * @return mixed
      */
     public function getQueryParam(string $name, mixed $default = null): mixed
@@ -136,7 +136,7 @@ class ParameterDataContainer
 
     /**
      * @param string $name
-     * @param mixed|null $default
+     * @param mixed $default
      * @return mixed
      */
     public function getBodyParam(string $name, mixed $default = null): mixed

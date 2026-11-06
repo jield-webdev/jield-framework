@@ -26,7 +26,7 @@ abstract class AbstractListener
 
     /**
      * @param ListenerOptions $options the value to be set
-     * @return AbstractListener
+     * @return static
      */
     public function setOptions(ListenerOptions $options): static
     {
@@ -39,14 +39,16 @@ abstract class AbstractListener
      *
      * @param string $filePath
      * @param array $array
-     * @return AbstractListener
+     * @return static
      */
     protected function writeArrayToFile(string $filePath, array $array): static
     {
         try {
-            $content = "<?php\n" . VarExporter::export(
+            $content =
+                "<?php\n"
+                . VarExporter::export(
                     var: $array,
-                    options: VarExporter::ADD_RETURN | VarExporter::CLOSURE_SNAPSHOT_USES
+                    options: VarExporter::ADD_RETURN | VarExporter::CLOSURE_SNAPSHOT_USES,
                 );
         } catch (ExportException $e) {
             throw ConfigCannotBeCachedException::fromExporterException(exportException: $e);

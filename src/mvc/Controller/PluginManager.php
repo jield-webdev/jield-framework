@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\Mvc\Controller;
 
 use Jield\Mvc\Controller\Plugin\AcceptableViewModelSelector;
@@ -15,6 +17,7 @@ use Laminas\ServiceManager\AbstractPluginManager;
 use Laminas\ServiceManager\Exception\InvalidServiceException;
 use Laminas\ServiceManager\Factory\InvokableFactory;
 use Laminas\Stdlib\DispatchableInterface;
+
 use function get_debug_type;
 use function method_exists;
 use function sprintf;
@@ -24,6 +27,10 @@ use function sprintf;
  *
  * Registers a number of default plugins, and contains an initializer for
  * injecting plugins with the current controller.
+ * @psalm-import-type FactoriesConfiguration from \Laminas\ServiceManager\ServiceManager
+ 
+ *
+ * @extends \Laminas\ServiceManager\AbstractPluginManager<\Jield\Mvc\Controller\Plugin\PluginInterface>
  */
 class PluginManager extends AbstractPluginManager
 {
@@ -35,35 +42,33 @@ class PluginManager extends AbstractPluginManager
     protected string $instanceOf = PluginInterface::class;
 
     /** @var string[] Default aliases */
-    protected array $aliases
-        = [
-            'AcceptableViewModelSelector' => AcceptableViewModelSelector::class,
-            'acceptableViewModelSelector' => AcceptableViewModelSelector::class,
-            'Forward'                     => Forward::class,
-            'forward'                     => Forward::class,
-            'Layout'                      => Layout::class,
-            'layout'                      => Layout::class,
-            'Params'                      => Params::class,
-            'params'                      => Params::class,
-            'Redirect'                    => Redirect::class,
-            'redirect'                    => Redirect::class,
-            'Url'                         => Url::class,
-            'url'                         => Url::class,
-            'CreateHttpNotFoundModel'     => CreateHttpNotFoundModel::class,
-            'createHttpNotFoundModel'     => CreateHttpNotFoundModel::class,
-        ];
+    protected array $aliases = [
+        'AcceptableViewModelSelector' => AcceptableViewModelSelector::class,
+        'acceptableViewModelSelector' => AcceptableViewModelSelector::class,
+        'Forward' => Forward::class,
+        'forward' => Forward::class,
+        'Layout' => Layout::class,
+        'layout' => Layout::class,
+        'Params' => Params::class,
+        'params' => Params::class,
+        'Redirect' => Redirect::class,
+        'redirect' => Redirect::class,
+        'Url' => Url::class,
+        'url' => Url::class,
+        'CreateHttpNotFoundModel' => CreateHttpNotFoundModel::class,
+        'createHttpNotFoundModel' => CreateHttpNotFoundModel::class,
+    ];
 
-    /** @var string[]|callable[] Default factories */
-    protected array $factories
-        = [
-            Forward::class                     => ForwardFactory::class,
-            AcceptableViewModelSelector::class => InvokableFactory::class,
-            Layout::class                      => InvokableFactory::class,
-            Params::class                      => InvokableFactory::class,
-            Redirect::class                    => InvokableFactory::class,
-            Url::class                         => InvokableFactory::class,
-            CreateHttpNotFoundModel::class     => InvokableFactory::class,
-        ];
+    /** @var FactoriesConfiguration Default factories */
+    protected array $factories = [
+        Forward::class => ForwardFactory::class,
+        AcceptableViewModelSelector::class => InvokableFactory::class,
+        Layout::class => InvokableFactory::class,
+        Params::class => InvokableFactory::class,
+        Redirect::class => InvokableFactory::class,
+        Url::class => InvokableFactory::class,
+        CreateHttpNotFoundModel::class => InvokableFactory::class,
+    ];
 
     protected ?DispatchableInterface $controller = null;
 
@@ -79,20 +84,21 @@ class PluginManager extends AbstractPluginManager
      *
      * @param string $id
      * @param null|array $options Options to use when creating the instance.
-     * @return DispatchableInterface
+     * @return PluginInterface
      */
-    public function get($id, ?array $options = null): DispatchableInterface
+    public function get($id, ?array $options = null): mixed
     {
-        $plugin = parent::get($id, $options);
-        $this->injectController(plugin: $plugin);
+        /** @var mixed $plugin */
+        $plugin = $options === null ? parent::get($id) : parent::build($id, $options);
+        $this->injectController(plugin: \Jield\Stdlib\Value::object($plugin));
 
-        return $plugin;
+        return \Jield\Stdlib\Value::instance($plugin, PluginInterface::class);
     }
 
     /**
      * Set controller
      *
-     * @return PluginManager
+     * @return static
      */
     public function setController(DispatchableInterface $controller): static
     {
@@ -142,7 +148,7 @@ class PluginManager extends AbstractPluginManager
             throw new InvalidServiceException(message: sprintf(
                 'Plugin of type "%s" is invalid; must implement %s',
                 get_debug_type(value: $instance),
-                $this->instanceOf
+                $this->instanceOf,
             ));
         }
     }

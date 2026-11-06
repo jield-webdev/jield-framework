@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\Mvc\ResponseSender;
 
 use Laminas\Http\Response;
@@ -9,7 +11,7 @@ class HttpResponseSender extends AbstractResponseSender
     /**
      * Send content
      *
-     * @return HttpResponseSender
+     * @return static
      */
     public function sendContent(SendResponseEvent $event): static
     {
@@ -34,8 +36,8 @@ class HttpResponseSender extends AbstractResponseSender
             return;
         }
 
-        $this->sendHeaders($event)
-            ->sendContent($event);
+        $this->sendHeaders($event);
+        $this->sendContent($event);
         $event->stopPropagation(true);
     }
 }

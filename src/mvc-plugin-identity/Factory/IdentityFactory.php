@@ -17,9 +17,9 @@ class IdentityFactory implements FactoryInterface
         $plugin = new Identity();
 
         if ($container->has(AuthenticationService::class)) {
-            $plugin->setAuthenticationService($container->get(AuthenticationService::class));
+            $plugin->setAuthenticationService(\Jield\Stdlib\Service::get($container, AuthenticationService::class));
         } elseif ($container->has(AuthenticationServiceInterface::class)) {
-            $plugin->setAuthenticationService($container->get(AuthenticationServiceInterface::class));
+            $plugin->setAuthenticationService(\Jield\Stdlib\Service::get($container, AuthenticationServiceInterface::class));
         }
 
         return $plugin;

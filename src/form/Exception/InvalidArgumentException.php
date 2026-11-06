@@ -4,7 +4,4 @@ declare(strict_types=1);
 
 namespace Jield\Form\Exception;
 
-class InvalidArgumentException extends \InvalidArgumentException implements
-    ExceptionInterface
-{
-}
+class InvalidArgumentException extends \InvalidArgumentException implements ExceptionInterface {}

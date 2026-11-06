@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Jield\Form\Element;
 
 use Jield\Form\Element\Number as NumberElement;
-use Laminas\Validator\IsFloat as NumberValidator;
 use Laminas\Validator\NumberComparison;
 use Laminas\Validator\Step as StepValidator;
 use Laminas\Validator\ValidatorInterface;
@@ -14,10 +13,9 @@ use Laminas\Validator\ValidatorInterface;
 class Range extends NumberElement
 {
     /** @var array<string, scalar|null> */
-    protected array $attributes
-        = [
-            'type' => 'range',
-        ];
+    protected array $attributes = [
+        'type' => 'range',
+    ];
 
     /**
      * Get validator
@@ -30,8 +28,7 @@ class Range extends NumberElement
             return $this->validators;
         }
 
-        $validators   = [];
-        $validators[] = new NumberValidator();
+        $validators = [];
 
         $inclusive = true;
         if (!empty($this->attributes['inclusive'])) {
@@ -39,19 +36,16 @@ class Range extends NumberElement
         }
 
         $validators[] = new NumberComparison([
-            'min'          => $this->attributes['min'] ?? 0,
-            'max'          => $this->attributes['max'] ?? 100,
-            'inclusiveMin' => $inclusive,
-            'inclusiveMax' => $inclusive,
+            'min' => \Jield\Stdlib\Value::numeric($this->attributes['min'] ?? 0),
+            'max' => \Jield\Stdlib\Value::numeric($this->attributes['max'] ?? 100),
+            'inclusiveMin' => (bool) $inclusive,
+            'inclusiveMax' => (bool) $inclusive,
         ]);
 
-        if (
-            !isset($this->attributes['step'])
-            || 'any' !== $this->attributes['step']
-        ) {
+        if (!isset($this->attributes['step']) || 'any' !== $this->attributes['step']) {
             $validators[] = new StepValidator(options: [
-                'baseValue' => $this->attributes['min'] ?? 0,
-                'step'      => $this->attributes['step'] ?? 1,
+                'baseValue' => \Jield\Stdlib\Value::numeric($this->attributes['min'] ?? 0),
+                'step' => \Jield\Stdlib\Value::numeric($this->attributes['step'] ?? 1),
             ]);
         }
 

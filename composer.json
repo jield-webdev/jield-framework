@@ -19,16 +19,16 @@
   "minimum-stability": "dev",
   "prefer-stable": true,
   "require": {
-    "php": "~8.4.0 || ~8.5.0",
+    "php": "~8.4.0 || ~8.5.0 || ~8.6.0",
     "psr/container": "^2",
     "doctrine/orm": "^3.6",
     "doctrine/dbal": "^4.4",
     "doctrine/common": "^3.5",
     "twig/twig": "^4",
-    "gedmo/doctrine-extensions": "v3.22.0",
-    "beberlei/doctrineextensions": "v1.5.0",
+    "gedmo/doctrine-extensions": "~v3.22.0",
+    "beberlei/doctrineextensions": "~v1.5.0",
     "laminas/laminas-cache": "^4.3.0",
-    "laminas/laminas-cli": "^1.15.0",
+    "laminas/laminas-cli": "^1.16",
     "laminas/laminas-authentication": "^3",
     "laminas/laminas-cache-storage-adapter-filesystem": "^3.3.0",
     "laminas/laminas-cache-storage-adapter-memory": "^3.3.0",
@@ -36,24 +36,24 @@
     "laminas/laminas-view": "^3.1.0",
     "laminas/laminas-i18n": "^3.0",
     "laminas/laminas-stdlib": "4.0.x-dev as 3.21.0",
-    "laminas/laminas-translator": "2.0.x-dev as 1.4.0",
+    "laminas/laminas-translator": "^2",
     "laminas/laminas-filter": "^3.4.0",
-    "laminas/laminas-config-aggregator": "1.20.x-dev",
+    "laminas/laminas-config-aggregator": "^1.20",
     "laminas/laminas-inputfilter": "^3",
     "laminas/laminas-validator": "^3.16",
     "laminas/laminas-paginator": "^3.1",
     "laminas/laminas-servicemanager": "^4",
     "laminas/laminas-eventmanager": "^3.15",
+    "laminas/laminas-navigation": "^2.4",
     "laminas/laminas-router": "^4",
-    "laminas/laminas-hydrator": "^4.19",
+    "laminas/laminas-hydrator": "^5",
     "laminas/laminas-uri": "^2.15",
     "laminas/laminas-http": "^3.0",
     "laminas/laminas-session": "^3.0",
     "laminas/laminas-serializer": "^4.0",
-    "laminas/laminas-navigation": "^2.24",
     "laminas/laminas-permissions-acl": "^3.0",
     "webimpress/safe-writer": "^2.0",
-    "solarium/solarium": "^6.3.7",
+    "solarium/solarium": "^7",
     "bshaffer/oauth2-server-php": "^1.14.1",
     "assetic/framework": "^3.1.3",
     "netglue/laminas-messenger": "^2.5.0",
@@ -63,21 +63,40 @@
     "mailjet/mailjet-apiv3-php": "^v1.6.6",
     "monolog/monolog": "^3.10",
     "jetbrains/phpstorm-attributes": "^1",
-    "zircote/swagger-php": "^5",
+    "zircote/swagger-php": "^7.3",
     "swagger-api/swagger-ui": "^5.20",
     "twbs/bootstrap": "^5.3.8",
     "gsteel/dot": "^1.9.0",
+    "symfony/http-client": "^8.1",
+    "nyholm/psr7": "^1.8",
+    "ext-dom": "*",
     "ext-igbinary": "*",
     "ext-fileinfo": "*",
     "ext-curl": "*",
     "ext-zlib": "*",
-    "ext-intl": "*"
+    "ext-intl": "*",
+    "codename/parquet": "^0.7",
+    "jield-webdev/azure-blob-storage": "dev-main",
+    "phpoffice/phpspreadsheet": "^5.0",
+    "webmozart/assert": "^2.0",
+    "psr/link": "^2.0",
+    "samsonasik/array-lookup": "^2",
+    "seld/jsonlint": "^1.9",
+    "laminas/laminas-diactoros": "^3.5",
+    "scssphp/scssphp": "^2.0",
+    "doctrine/doctrine-laminas-hydrator": "^4",
+    "laminas/laminas-permissions-rbac": "^3.7 || ^4.0",
+    "tecnickcom/tc-lib-pdf": "^8.83",
+    "firebase/php-jwt": "^6.11 || ^7.0",
+    "doctrine/migrations": "^3.9"
   },
   "require-dev": {
     "phpstan/phpstan": "2.*",
-    "rector/rector": "^2.4.0",
+    "rector/rector": "^2.8.4",
     "roave/security-advisories": "dev-latest",
-    "webmozart/assert": "^2"
+    "phpunit/phpunit": "^13.4",
+    "symfony/dom-crawler": "^8.0",
+    "symfony/css-selector": "^8.0"
   },
   "autoload": {
     "psr-4": {
@@ -95,8 +114,19 @@
       "Jield\\Search\\": "src/search",
       "Jield\\Validator\\": "src/validator",
       "DoctrineModule\\": "src/doctrine-module",
-      "DoctrineORMModule\\": "src/doctrine-orm-module"
-    }
+      "DoctrineORMModule\\": "src/doctrine-orm-module",
+      "Jield\\Export\\": "src/export",
+      "Jield\\Recaptcha\\": "src/recaptcha",
+      "Jield\\GoogleAnalytics\\": "src/google-analytics",
+      "Jield\\ErrorHandler\\": "src/error-handler",
+      "Jield\\Cors\\": "src/cors",
+      "Jield\\Test\\": "src/test",
+      "Jield\\Stdlib\\": "src/stdlib",
+      "Jield\\Pdf\\": "src/pdf"
+    },
+    "files": [
+      "src/error-handler/HeroFunction.php"
+    ]
   },
   "autoload-dev": {
     "psr-4": {
@@ -108,7 +138,8 @@
     "optimize-autoloader": true,
     "allow-plugins": {
       "dealerdirect/phpcodesniffer-composer-installer": true,
-      "composer/package-versions-deprecated": true
+      "composer/package-versions-deprecated": true,
+      "php-http/discovery": true
     }
   },
   "extra": {
@@ -133,6 +164,13 @@
     "cs": "./vendor/bin/phpcs -n -p --standard=PSR2 --extensions=php,twig src",
     "cbf": "./vendor/bin/phpcbf src --standard=PSR2",
     "cs-fix": "./vendor/bin/php-cs-fixer fix -v src",
-    "test": "./vendor/bin/phpunit"
+    "test": "./vendor/bin/phpunit",
+    "pdf-fonts": "@php bin/build-pdf-fonts.php",
+    "post-install-cmd": [
+      "@pdf-fonts"
+    ],
+    "post-update-cmd": [
+      "@pdf-fonts"
+    ]
   }
 }

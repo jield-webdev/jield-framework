@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Jield\ApiTools\MvcAuth\Identity;
 
-use Jield\Permissions\Rbac\Role;
+use Laminas\Permissions\Rbac\Role;
 use Override;
 
 class GuestIdentity extends Role implements IdentityInterface

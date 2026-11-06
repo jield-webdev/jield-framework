@@ -4,15 +4,7 @@ declare(strict_types=1);
 
 namespace Jield\ModuleManager\Feature;
 
-use Laminas\ServiceManager\Config;
-
 interface ServiceProviderInterface
 {
-    /**
-     * Expected to return \Laminas\ServiceManager\Config object or array to
-     * seed such an object.
-     *
-     * @return array|Config
-     */
-    public function getServiceConfig(): array|Config;
+    public function getServiceConfig(): array;
 }

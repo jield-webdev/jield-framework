@@ -8,7 +8,6 @@ use Jield\ApiTools\MvcAuth\Authorization\AclAuthorization;
 use Jield\ApiTools\MvcAuth\Authorization\AclAuthorizationFactory as AclFactory;
 use Laminas\Http\Request;
 use Laminas\ServiceManager\Factory\FactoryInterface;
-use Laminas\ServiceManager\ServiceLocatorInterface;
 use Override;
 use Psr\Container\ContainerInterface;
 
@@ -26,10 +25,10 @@ class AclAuthorizationFactory implements FactoryInterface
     /** @var array */
     protected array $httpMethods = [
         Request::METHOD_DELETE => true,
-        Request::METHOD_GET    => true,
-        Request::METHOD_PATCH  => true,
-        Request::METHOD_POST   => true,
-        Request::METHOD_PUT    => true,
+        Request::METHOD_GET => true,
+        Request::METHOD_PATCH => true,
+        Request::METHOD_POST => true,
+        Request::METHOD_PUT => true,
     ];
 
     /**
@@ -38,7 +37,7 @@ class AclAuthorizationFactory implements FactoryInterface
      * @param string $requestedName
      */
     #[Override]
-    public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): AclAuthorization
+    public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): AclAuthorization
     {
         $config = $this->getConfigFromContainer(container: $container);
         return $this->createAclFromConfig(config: $config);
@@ -54,16 +53,22 @@ class AclAuthorizationFactory implements FactoryInterface
      */
     protected function createAclFromConfig(array $config): AclAuthorization
     {
-        $aclConfig     = [];
+        $aclConfig = [];
         $denyByDefault = false;
 
         if (array_key_exists(key: 'deny_by_default', array: $config)) {
-            $denyByDefault = $aclConfig['deny_by_default'] = (bool) $config['deny_by_default'];
+            $denyByDefault = $aclConfig['deny_by_default'] = \Jield\Stdlib\Value::truthy($config['deny_by_default']);
             unset($config['deny_by_default']);
         }
 
+        /** @var mixed $privileges */
         foreach ($config as $controllerService => $privileges) {
-            $this->createAclConfigFromPrivileges(controllerService: $controllerService, privileges: $privileges, aclConfig: $aclConfig, denyByDefault: $denyByDefault);
+            $this->createAclConfigFromPrivileges(
+                controllerService: \Jield\Stdlib\Value::string($controllerService),
+                privileges: \Jield\Stdlib\Value::array($privileges),
+                aclConfig: $aclConfig,
+                denyByDefault: $denyByDefault,
+            );
         }
 
         return AclFactory::factory(config: $aclConfig);
@@ -82,35 +87,47 @@ class AclAuthorizationFactory implements FactoryInterface
      */
     protected function createAclConfigFromPrivileges(
         string $controllerService,
-        array  $privileges,
-        array  &$aclConfig,
-        bool   $denyByDefault
+        array $privileges,
+        array &$aclConfig,
+        bool $denyByDefault,
     ): void {
         // Normalize the controller service name.
-        // jield-mvc will always pass the name using namespace seprators, but
+        // laminas-mvc will always pass the name using namespace seprators, but
         // the admin may write the name using dash seprators.
         $controllerService = strtr($controllerService, '-', '\\');
         if (isset($privileges['actions'])) {
-            foreach ($privileges['actions'] as $action => $methods) {
-                $action      = lcfirst(string: (string) $action);
+            /** @var mixed $action
+             * @var mixed $methods
+             */
+            foreach (\Jield\Stdlib\Value::iterable($privileges['actions']) as $action => $methods) {
+                $action = lcfirst(string: (string) $action);
                 $aclConfig[] = [
-                    'resource'   => sprintf('%s::%s', $controllerService, $action),
-                    'privileges' => $this->createPrivilegesFromMethods(methods: $methods, denyByDefault: $denyByDefault),
+                    'resource' => sprintf('%s::%s', $controllerService, $action),
+                    'privileges' => $this->createPrivilegesFromMethods(
+                        methods: \Jield\Stdlib\Value::array($methods),
+                        denyByDefault: $denyByDefault,
+                    ),
                 ];
             }
         }
 
         if (isset($privileges['collection'])) {
             $aclConfig[] = [
-                'resource'   => sprintf('%s::collection', $controllerService),
-                'privileges' => $this->createPrivilegesFromMethods(methods: $privileges['collection'], denyByDefault: $denyByDefault),
+                'resource' => sprintf('%s::collection', $controllerService),
+                'privileges' => $this->createPrivilegesFromMethods(
+                    methods: \Jield\Stdlib\Value::array($privileges['collection']),
+                    denyByDefault: $denyByDefault,
+                ),
             ];
         }
 
         if (isset($privileges['entity'])) {
             $aclConfig[] = [
-                'resource'   => sprintf('%s::entity', $controllerService),
-                'privileges' => $this->createPrivilegesFromMethods(methods: $privileges['entity'], denyByDefault: $denyByDefault),
+                'resource' => sprintf('%s::entity', $controllerService),
+                'privileges' => $this->createPrivilegesFromMethods(
+                    methods: \Jield\Stdlib\Value::array($privileges['entity']),
+                    denyByDefault: $denyByDefault,
+                ),
             ];
         }
     }
@@ -126,19 +143,17 @@ class AclAuthorizationFactory implements FactoryInterface
     {
         $privileges = [];
 
-        if (isset($methods['default']) && $methods['default']) {
+        if (isset($methods['default']) && \Jield\Stdlib\Value::truthy($methods['default'])) {
             $privileges = $this->httpMethods;
             unset($methods['default']);
         }
 
+        /** @var mixed $flag */
         foreach ($methods as $method => $flag) {
             // If the flag evaluates true and we're denying by default, OR
             // if the flag evaluates false and we're allowing by default,
             // THEN no rule needs to be added
-            if (
-                ( $denyByDefault && $flag)
-                || (! $denyByDefault && ! $flag)
-            ) {
+            if ($denyByDefault && \Jield\Stdlib\Value::truthy($flag) || !$denyByDefault && !$flag) {
                 if (isset($privileges[$method])) {
                     unset($privileges[$method]);
                 }
@@ -166,16 +181,17 @@ class AclAuthorizationFactory implements FactoryInterface
      */
     private function getConfigFromContainer(ContainerInterface $container): array
     {
-        if (! $container->has(id: 'config')) {
+        if (!$container->has('config')) {
             return [];
         }
 
+        /** @var mixed $config */
         $config = $container->get('config');
 
-        if (! isset($config['api-tools-mvc-auth']['authorization'])) {
+        if (!isset($config['api-tools-mvc-auth']['authorization'])) {
             return [];
         }
 
-        return $config['api-tools-mvc-auth']['authorization'];
+        return \Jield\Stdlib\Value::array($config['api-tools-mvc-auth']['authorization']);
     }
 }

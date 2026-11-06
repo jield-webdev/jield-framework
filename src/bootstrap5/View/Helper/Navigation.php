@@ -20,9 +20,8 @@ final class Navigation
 
     public function __construct(
         private readonly Menu $menuHelper,
-        private readonly ContainerInterface $services
-    ) {
-    }
+        private readonly ContainerInterface $services,
+    ) {}
 
     public function __invoke(AbstractContainer|string|null $container = null): self
     {
@@ -52,13 +51,12 @@ final class Navigation
      *
      * @param array<int, mixed> $arguments
      */
-    public function __call(string $name, array $arguments): string
+    public function __call(string $name, array $arguments): mixed
     {
-        if ($name === 'lbs5menu') {
-            return $this->menu(...$arguments);
-        }
+        $proxy = \Jield\Stdlib\Service::get($this->services, \Laminas\View\HelperPluginManager::class, 'ViewHelperManager')->get('navigation');
+        $proxy($this->resolveContainer($this->container));
 
-        throw new BadMethodCallException(sprintf('Unknown navigation helper method "%s".', $name));
+        return $proxy->{$name === 'lbs5menu' ? 'menu' : $name}(...$arguments);
     }
 
     private function resolveContainer(AbstractContainer|string|null $container): ?AbstractContainer
@@ -69,26 +67,22 @@ final class Navigation
 
         if (is_string($container)) {
             /** @var AbstractContainer $resolved */
-            $resolved = $this->services->get($container);
-            return $resolved;
+            return \Jield\Stdlib\Value::nullableInstance($this->services->get($container), \Laminas\Navigation\AbstractContainer::class);
         }
 
         if ($this->services->has('navigation')) {
             /** @var AbstractContainer $resolved */
-            $resolved = $this->services->get('navigation');
-            return $resolved;
+            return \Jield\Stdlib\Value::nullableInstance($this->services->get('navigation'), \Laminas\Navigation\AbstractContainer::class);
         }
 
         if ($this->services->has(NavigationContainer::class)) {
             /** @var AbstractContainer $resolved */
-            $resolved = $this->services->get(NavigationContainer::class);
-            return $resolved;
+            return \Jield\Stdlib\Service::get($this->services, NavigationContainer::class);
         }
 
         if ($this->services->has('Navigation')) {
             /** @var AbstractContainer $resolved */
-            $resolved = $this->services->get('Navigation');
-            return $resolved;
+            return \Jield\Stdlib\Value::nullableInstance($this->services->get('Navigation'), \Laminas\Navigation\AbstractContainer::class);
         }
 
         return null;

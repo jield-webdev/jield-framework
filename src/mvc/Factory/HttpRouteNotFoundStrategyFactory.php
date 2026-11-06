@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\Mvc\Factory;
 
 // phpcs:ignore
@@ -17,10 +19,13 @@ class HttpRouteNotFoundStrategyFactory implements FactoryInterface
      * @param  null|array $options
      * @return RouteNotFoundStrategy
      */
-    public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): RouteNotFoundStrategy
-    {
+    public function __invoke(
+        ContainerInterface $container,
+        string $requestedName,
+        ?array $options = null,
+    ): RouteNotFoundStrategy {
         $strategy = new RouteNotFoundStrategy();
-        $config   = $this->getConfig($container);
+        $config = $this->getConfig($container);
 
         $this->injectDisplayExceptions($strategy, $config);
         $this->injectDisplayNotFoundReason($strategy, $config);
@@ -34,8 +39,9 @@ class HttpRouteNotFoundStrategyFactory implements FactoryInterface
      */
     private function injectDisplayExceptions(RouteNotFoundStrategy $strategy, array $config): void
     {
+        /** @var mixed $flag */
         $flag = $config['display_exceptions'] ?? false;
-        $strategy->setDisplayExceptions($flag);
+        $strategy->setDisplayExceptions(\Jield\Stdlib\Value::bool($flag));
     }
 
     /**
@@ -43,8 +49,9 @@ class HttpRouteNotFoundStrategyFactory implements FactoryInterface
      */
     private function injectDisplayNotFoundReason(RouteNotFoundStrategy $strategy, array $config): void
     {
+        /** @var mixed $flag */
         $flag = $config['display_not_found_reason'] ?? false;
-        $strategy->setDisplayNotFoundReason($flag);
+        $strategy->setDisplayNotFoundReason(\Jield\Stdlib\Value::bool($flag));
     }
 
     /**
@@ -52,7 +59,8 @@ class HttpRouteNotFoundStrategyFactory implements FactoryInterface
      */
     private function injectNotFoundTemplate(RouteNotFoundStrategy $strategy, array $config): void
     {
+        /** @var mixed $template */
         $template = $config['not_found_template'] ?? '404';
-        $strategy->setNotFoundTemplate($template);
+        $strategy->setNotFoundTemplate(\Jield\Stdlib\Value::string($template));
     }
 }

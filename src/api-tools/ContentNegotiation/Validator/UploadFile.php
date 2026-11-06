@@ -6,60 +6,44 @@ namespace Jield\ApiTools\ContentNegotiation\Validator;
 
 use Laminas\Stdlib\RequestInterface;
 use Laminas\Validator\File\UploadFile as BaseValidator;
-use Override;
-use function count;
-use function method_exists;
+use Laminas\Validator\ValidatorInterface;
 
-
-//@phpstan-ignore-next-line
-class UploadFile extends BaseValidator
+class UploadFile implements ValidatorInterface
 {
-    protected ?RequestInterface $request = null;
+    private readonly BaseValidator $validator;
+    private ?RequestInterface $request = null;
+    /** @var array<string, string> */
+    private array $messages = [];
+
+    public function __construct(?array $options = null)
+    {
+        $this->validator = new BaseValidator($options ?? []);
+    }
 
     public function setRequest(RequestInterface $request): void
     {
         $this->request = $request;
     }
 
-    /**
-     * Overrides isValid()
-     *
-     * If the reason for failure is self::ATTACK, we can assume that
-     * is_uploaded_file() has failed -- which is
-     *
-     * @param mixed $value
-     * @return bool
-     */
-    #[Override]
+    public function getMessages(): array
+    {
+        return $this->messages;
+    }
+
     public function isValid(mixed $value): bool
     {
-        $isPut = $this->request !== null
-            && method_exists(object_or_class: $this->request, method: 'isPut')
-            && $this->request->isPut();
-        $isPatch = $this->request !== null
-            && method_exists(object_or_class: $this->request, method: 'isPatch')
-            && $this->request->isPatch();
-
-        if (null === $this->request || (! $isPut && ! $isPatch)) {
-            // In absence of a request object, an HTTP request, or a PATCH/PUT
-            // operation, just use the parent logic.
-            return parent::isValid(value: $value);
+        $valid = $this->validator->isValid($value);
+        $this->messages = $this->validator->getMessages();
+        if (
+            !$valid
+            && $this->request !== null
+            && method_exists($this->request, 'getMethod')
+            && in_array($this->request->getMethod(), ['PUT', 'PATCH'], true)
+            && array_keys($this->messages) === [BaseValidator::ATTACK]
+        ) {
+            $this->messages = [];
+            return true;
         }
-
-        $result = parent::isValid(value: $value);
-        if ($result !== false) {
-            return $result;
-        }
-
-        if (!isset($this->abstractOptions['messages'][static::ATTACK])) {
-            return false;
-        }
-
-        if (count(value: $this->abstractOptions['messages']) > 1) {
-            return false;
-        }
-
-        unset($this->abstractOptions['messages'][static::ATTACK]);
-        return true;
+        return $valid;
     }
 }

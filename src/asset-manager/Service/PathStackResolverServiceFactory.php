@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\AssetManager\Service;
 
 use Jield\AssetManager\Resolver\PathStackResolver;
@@ -15,15 +17,17 @@ class PathStackResolverServiceFactory implements FactoryInterface
     #[Override]
     public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): PathStackResolver
     {
-        $config            = $container->get('config');
+        /** @var mixed $config */
+        $config = $container->get('config');
         $pathStackResolver = new PathStackResolver();
-        $paths             = [];
+        $paths = [];
 
         if (isset($config['asset_manager']['resolver_configs']['paths'])) {
+            /** @var mixed $paths */
             $paths = $config['asset_manager']['resolver_configs']['paths'];
         }
 
-        $pathStackResolver->addPaths(paths: $paths);
+        $pathStackResolver->addPaths(paths: \Jield\Stdlib\Value::iterable($paths));
 
         return $pathStackResolver;
     }

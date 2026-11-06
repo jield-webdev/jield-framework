@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\Mvc\ResponseSender;
 
 use Laminas\Http\PhpEnvironment\Response;
@@ -18,8 +20,8 @@ class PhpEnvironmentResponseSender extends HttpResponseSender
             return;
         }
 
-        $this->sendHeaders($event)
-            ->sendContent($event);
+        $this->sendHeaders($event);
+        $this->sendContent($event);
         $event->stopPropagation(true);
     }
 }

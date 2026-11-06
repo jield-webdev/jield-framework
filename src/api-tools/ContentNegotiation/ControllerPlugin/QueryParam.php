@@ -14,28 +14,30 @@ class QueryParam extends AbstractPlugin
      * Grabs a param from route match by default.
      *
      * @param string|null $param
-     * @param mixed|null $default
+     * @param mixed $default
      * @return mixed
      */
     public function __invoke(?string $param = null, mixed $default = null): mixed
     {
         $controller = $this->getController();
         if ($controller instanceof AbstractController) {
-            $parameterData = $controller->getEvent()->getParam(name: 'JieldContentNegotiationParameterData');
+            /** @var mixed $parameterData */
+            $parameterData = $controller->getEvent()->getParam(name: 'LaminasContentNegotiationParameterData');
             if ($parameterData instanceof ParameterDataContainer) {
-                return $parameterData->getQueryParam(name: $param, default: $default);
+                return $parameterData->getQueryParam(name: \Jield\Stdlib\Value::string($param), default: $default);
             }
         }
 
-        if (!method_exists(object_or_class: $controller, method: 'getRequest')) {
+        if (!method_exists(object_or_class: \Jield\Stdlib\Value::objectOrString($controller), method: 'getRequest')) {
             return $default;
         }
 
-        $request = $controller->getRequest();
-        if (!method_exists(object_or_class: $request, method: 'getQuery')) {
+        /** @var mixed $request */
+        $request = \Jield\Stdlib\Value::call($controller, 'getRequest');
+        if (!method_exists(object_or_class: \Jield\Stdlib\Value::objectOrString($request), method: 'getQuery')) {
             return $default;
         }
 
-        return $request->getQuery(name: $param, default: $default);
+        return \Jield\Stdlib\Value::call($request, 'getQuery', [$param, $default]);
     }
 }

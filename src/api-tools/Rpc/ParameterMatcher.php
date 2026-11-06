@@ -6,13 +6,13 @@ namespace Jield\ApiTools\Rpc;
 
 use Closure;
 use Exception;
+use Jield\Mvc\Application;
+use Jield\Mvc\ApplicationInterface;
+use Jield\Mvc\MvcEvent;
 use Laminas\Http\PhpEnvironment\Request as PhpEnvironmentRequest;
 use Laminas\Http\PhpEnvironment\Response as PhpEnvironmentResponse;
 use Laminas\Http\Request;
 use Laminas\Http\Response;
-use Jield\Mvc\Application;
-use Jield\Mvc\ApplicationInterface;
-use Jield\Mvc\MvcEvent;
 use Laminas\Stdlib\RequestInterface;
 use Laminas\Stdlib\ResponseInterface;
 use ReflectionException;
@@ -47,12 +47,12 @@ class ParameterMatcher
     public function getMatchedParameters(callable $callable, array $parameters): array
     {
         if (is_string(value: $callable) || $callable instanceof Closure) {
-            $reflection       = new ReflectionFunction(function: $callable);
+            $reflection = new ReflectionFunction(function: $callable);
             $reflMethodParams = $reflection->getParameters();
         } elseif (is_array(value: $callable) && count(value: $callable) === 2) {
-            $object           = $callable[0];
-            $method           = $callable[1];
-            $reflection       = new ReflectionObject(object: $object);
+            $object = $callable[0];
+            $method = $callable[1];
+            $reflection = new ReflectionObject(object: \Jield\Stdlib\Value::object($object));
             $reflMethodParams = $reflection->getMethod(name: $method)->getParameters();
         } else {
             throw new Exception(message: 'Unknown callable');
@@ -62,15 +62,20 @@ class ParameterMatcher
 
         // normalize names to that they can match potential php variables
         $normalParams = [];
+        /** @var mixed $pv */
         foreach ($parameters as $pn => $pv) {
-            $normalParams[str_replace(search: ['-', '_'], replace: '', subject: strtolower(string: $pn))] = $pv;
+            $normalParams[str_replace(search: ['-', '_'], replace: '', subject: strtolower(string: \Jield\Stdlib\Value::string($pn)))] = $pv;
         }
 
         foreach ($reflMethodParams as $reflMethodParam) {
-            $paramName             = $reflMethodParam->getName();
-            $normalMethodParamName = str_replace(search: ['-', '_'], replace: '', subject: strtolower(string: $paramName));
-            $reflectionType        = $reflMethodParam->getType();
-            if ($reflectionType instanceof ReflectionNamedType && ! $reflectionType->isBuiltin()) {
+            $paramName = $reflMethodParam->getName();
+            $normalMethodParamName = str_replace(
+                search: ['-', '_'],
+                replace: '',
+                subject: strtolower(string: $paramName),
+            );
+            $reflectionType = $reflMethodParam->getType();
+            if ($reflectionType instanceof ReflectionNamedType && !$reflectionType->isBuiltin()) {
                 $typehint = $reflectionType->getName();
 
                 if (
@@ -110,10 +115,7 @@ class ParameterMatcher
                     continue;
                 }
 
-                throw new Exception(message: sprintf(
-                    '%s was requested, but could not be auto-bound',
-                    $typehint
-                ));
+                throw new Exception(message: sprintf('%s was requested, but could not be auto-bound', $typehint));
             }
 
             if (isset($normalParams[$normalMethodParamName])) {

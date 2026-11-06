@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\AssetManager\Resolver;
 
 use ArrayAccess;
@@ -19,9 +21,9 @@ use Traversable;
 class PrioritizedPathsResolver implements ResolverInterface, MimeResolverAwareInterface
 {
     /**
-     * @var PriorityQueue|ResolverInterface[]
+     * @var PriorityQueue<string>
      */
-    protected array|PriorityQueue $paths;
+    protected PriorityQueue $paths;
 
     /**
      * Flag indicating whether or not LFI protection for rendering view scripts is enabled
@@ -82,23 +84,25 @@ class PrioritizedPathsResolver implements ResolverInterface, MimeResolverAwareIn
         if (!is_array(value: $path) && !$path instanceof ArrayAccess) {
             throw new Exception\InvalidArgumentException(message: sprintf(
                 'Provided path must be an array or an instance of ArrayAccess, %s given',
-                get_debug_type(value: $path)
+                get_debug_type(value: $path),
             ));
         }
 
-        if (isset($path['priority']) && isset($path['path'])) {
-            $this->paths->insert(data: $this->normalizePath(path: $path['path']), priority: $path['priority']);
+        if (isset($path['priority'], $path['path'])) {
+            $this->paths->insert(data: $this->normalizePath(path: \Jield\Stdlib\Value::string($path['path'])), priority: \Jield\Stdlib\Value::int($path['priority']));
 
             return;
         }
 
-        throw new Exception\InvalidArgumentException(message: 'Provided array must contain both keys "priority" and "path"');
+        throw new Exception\InvalidArgumentException(
+            message: 'Provided array must contain both keys "priority" and "path"',
+        );
     }
 
     /**
      * {}
      */
-    public function getPaths(): PriorityQueue|array
+    public function getPaths(): PriorityQueue
     {
         return $this->paths;
     }
@@ -119,6 +123,7 @@ class PrioritizedPathsResolver implements ResolverInterface, MimeResolverAwareIn
      */
     public function addPaths(iterable $paths): PrioritizedPathsResolver
     {
+        /** @var mixed $path */
         foreach ($paths as $path) {
             $this->addPath(path: $path);
         }
@@ -134,12 +139,7 @@ class PrioritizedPathsResolver implements ResolverInterface, MimeResolverAwareIn
      */
     public function setPaths(iterable $paths): void
     {
-        if (!is_array(value: $paths) && !$paths instanceof Traversable) {
-            throw new Exception\InvalidArgumentException(message: sprintf(
-                'Invalid argument provided for $paths, expecting either an array or Traversable object, "%s" given',
-                get_debug_type(value: $paths)
-            ));
-        }
+        
 
         $this->clearPaths();
         $this->addPaths(paths: $paths);
@@ -186,19 +186,20 @@ class PrioritizedPathsResolver implements ResolverInterface, MimeResolverAwareIn
      * {@inheritDoc}
      */
     #[Override]
-    public function resolve(string $fileName): FileAsset|null
+    public function resolve(string $fileName): ?FileAsset
     {
         if ($this->isLfiProtectionOn() && preg_match(pattern: '#\.\.[\\\/]#', subject: $fileName)) {
             return null;
         }
 
+        /** @var mixed $fileName */
         foreach ($this->getPaths() as $fileName) {
-            $file = new SplFileInfo(filename: $fileName . $fileName);
+            $file = new SplFileInfo(filename: \Jield\Stdlib\Value::stringify($fileName) . \Jield\Stdlib\Value::stringify($fileName));
 
             if ($file->isReadable() && !$file->isDir()) {
                 $filePath = $file->getRealPath();
-                $mimeType = $this->getMimeResolver()->getMimeType(filename: $filePath);
-                $asset    = new FileAsset(source: $filePath);
+                $mimeType = $this->getMimeResolver()->getMimeType(filename: \Jield\Stdlib\Value::string($filePath));
+                $asset = new FileAsset(source: \Jield\Stdlib\Value::string($filePath));
                 $asset->setMimetype(mimetype: $mimeType);
 
                 return $asset;
@@ -212,11 +213,12 @@ class PrioritizedPathsResolver implements ResolverInterface, MimeResolverAwareIn
     {
         $collection = [];
 
+        /** @var mixed $path */
         foreach ($this->getPaths() as $path) {
             $locations = new SplStack();
-            $pathInfo  = new SplFileInfo(filename: $path);
+            $pathInfo = new SplFileInfo(filename: \Jield\Stdlib\Value::string($path));
             $locations->push(value: $pathInfo);
-            $basePath = $this->normalizePath(path: $pathInfo->getRealPath());
+            $basePath = $this->normalizePath(path: \Jield\Stdlib\Value::string($pathInfo->getRealPath()));
 
             while (!$locations->isEmpty()) {
                 /** @var SplFileInfo $pathInfo */
@@ -226,11 +228,12 @@ class PrioritizedPathsResolver implements ResolverInterface, MimeResolverAwareIn
                 }
 
                 if ($pathInfo->isDir()) {
-                    foreach (new DirectoryResource(path: $pathInfo->getRealPath()) as $resource) {
-                        $locations->push(value: new SplFileInfo(filename: $resource));
+                    /** @var mixed $resource */
+                    foreach (new DirectoryResource(path: \Jield\Stdlib\Value::string($pathInfo->getRealPath())) as $resource) {
+                        $locations->push(value: new SplFileInfo(filename: \Jield\Stdlib\Value::string($resource)));
                     }
                 } else {
-                    $collection[] = substr(string: $pathInfo->getRealPath(), offset: strlen(string: $basePath));
+                    $collection[] = substr(string: \Jield\Stdlib\Value::string($pathInfo->getRealPath()), offset: strlen(string: $basePath));
                 }
             }
         }

@@ -47,15 +47,14 @@ final class EntityResolver extends AbstractOptions
      */
     public function setResolvers(array $resolvers): void
     {
+        /** @var mixed $new */
         foreach ($resolvers as $old => $new) {
-            if (! class_exists(class: $new)) {
-                throw new InvalidArgumentException(
-                    message: sprintf(
-                        '%s is resolved to the entity %s, which does not exist',
-                        $old,
-                        $new,
-                    ),
-                );
+            if (!class_exists(class: \Jield\Stdlib\Value::string($new))) {
+                throw new InvalidArgumentException(message: sprintf(
+                    '%s is resolved to the entity %s, which does not exist',
+                    $old,
+                    \Jield\Stdlib\Value::scalar($new),
+                ));
             }
 
             $this->resolvers[$old] = $new;

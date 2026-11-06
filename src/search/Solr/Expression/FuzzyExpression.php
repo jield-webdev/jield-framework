@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Jield\Search\Solr\Expression;
 
+use Jield\Search\Solr\ExpressionInterface;
+
 use JetBrains\PhpStorm\Pure;
 use Jield\Search\Solr\Util;
 use Stringable;
@@ -21,9 +23,10 @@ class FuzzyExpression extends Expression implements Stringable
     /**
      * Create new fuzzy query object
      *
-     * @param string|Expression $expr
+     * @param string|ExpressionInterface $expr
      */
-    #[Pure] public function __construct(Expression|string $expr, ?float $similarity = null)
+    #[Pure]
+    public function __construct(ExpressionInterface|string $expr, ?float $similarity = null)
     {
         parent::__construct(expr: $expr);
 

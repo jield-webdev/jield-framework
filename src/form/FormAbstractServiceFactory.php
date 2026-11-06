@@ -4,12 +4,9 @@ declare(strict_types=1);
 
 namespace Jield\Form;
 
-use Laminas\Filter\FilterPluginManager;
-use Jield\Form\Factory;
 use Laminas\InputFilter\InputFilterInterface;
 use Laminas\InputFilter\InputFilterPluginManager;
 use Laminas\ServiceManager\Factory\AbstractFactoryInterface;
-use Laminas\Validator\ValidatorPluginManager;
 use Psr\Container\ContainerInterface;
 
 use function is_array;
@@ -18,7 +15,7 @@ use function is_string;
 final class FormAbstractServiceFactory implements AbstractFactoryInterface
 {
     /** @var null|array */
-    private ?array $config;
+    private ?array $config = null;
 
     /** @var string Top-level configuration key indicating forms configuration */
     private string $configKey = 'forms';
@@ -32,10 +29,13 @@ final class FormAbstractServiceFactory implements AbstractFactoryInterface
      * @param string $requestedName
      * @param array|null $options
      */
-    public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): FormInterface
-    {
-        $config  = $this->getConfig(container: $container);
-        $config  = $config[$requestedName];
+    public function __invoke(
+        ContainerInterface $container,
+        string $requestedName,
+        ?array $options = null,
+    ): FormInterface {
+        $config = $this->getConfig(container: $container);
+        $config = \Jield\Stdlib\Value::array($config[$requestedName]);
         $factory = $this->getFormFactory(container: $container);
 
         $this->marshalInputFilter(config: $config, container: $container, formFactory: $factory);
@@ -59,9 +59,11 @@ final class FormAbstractServiceFactory implements AbstractFactoryInterface
             return false;
         }
 
-        return isset($config[$requestedName])
+        return (
+            isset($config[$requestedName])
             && is_array(value: $config[$requestedName])
-            && ! empty($config[$requestedName]);
+            && !empty($config[$requestedName])
+        );
     }
 
     /**
@@ -73,16 +75,14 @@ final class FormAbstractServiceFactory implements AbstractFactoryInterface
             return $this->config;
         }
 
-        if (! $container->has(id: 'config')) {
+        if (!$container->has('config')) {
             $this->config = [];
             return $this->config;
         }
 
+        /** @var mixed $config */
         $config = $container->get('config');
-        if (
-            ! isset($config[$this->configKey])
-            || ! is_array(value: $config[$this->configKey])
-        ) {
+        if (!isset($config[$this->configKey]) || !is_array(value: $config[$this->configKey])) {
             $this->config = [];
             return $this->config;
         }
@@ -101,8 +101,8 @@ final class FormAbstractServiceFactory implements AbstractFactoryInterface
         }
 
         $elements = null;
-        if ($container->has(id: FormElementManager::class)) {
-            $elements = $container->get(FormElementManager::class);
+        if ($container->has(FormElementManager::class)) {
+            $elements = \Jield\Stdlib\Service::get($container, FormElementManager::class);
         }
 
         $this->factory = new Factory(formElementManager: $elements);
@@ -120,7 +120,7 @@ final class FormAbstractServiceFactory implements AbstractFactoryInterface
      */
     protected function marshalInputFilter(array &$config, ContainerInterface $container, Factory $formFactory): void
     {
-        if (! isset($config['input_filter'])) {
+        if (!isset($config['input_filter'])) {
             return;
         }
 
@@ -128,27 +128,14 @@ final class FormAbstractServiceFactory implements AbstractFactoryInterface
             return;
         }
 
-        if (
-            is_string(value: $config['input_filter'])
-            && $container->has(id: InputFilterPluginManager::class)
-        ) {
-            $inputFilters = $container->get(InputFilterPluginManager::class);
+        if (is_string(value: $config['input_filter']) && $container->has(InputFilterPluginManager::class)) {
+            $inputFilters = \Jield\Stdlib\Service::get($container, InputFilterPluginManager::class);
             if ($inputFilters->has($config['input_filter'])) {
                 $config['input_filter'] = $inputFilters->get($config['input_filter']);
                 return;
             }
         }
 
-        $inputFilterFactory = $formFactory->getInputFilterFactory();
-
-        $filterChain = $inputFilterFactory->getDefaultFilterChain();
-        $filterChain->setPluginManager(
-            $container->get(FilterPluginManager::class)
-        );
-
-        $validatorChain = $inputFilterFactory->getDefaultValidatorChain();
-        $validatorChain->setPluginManager(
-            $container->get(ValidatorPluginManager::class)
-        );
+        $formFactory->setInputFilterFactory(\Jield\Form\InputFilterFactory::create($container));
     }
 }

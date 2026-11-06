@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Jield\ApiTools\ContentValidation;
 
 use Laminas\ServiceManager\Factory\FactoryInterface;
-use Laminas\ServiceManager\ServiceLocatorInterface;
 use Override;
 use Psr\Container\ContainerInterface;
 
@@ -17,16 +16,21 @@ class ContentValidationListenerFactory implements FactoryInterface
      * @param string $requestedName
      */
     #[Override]
-    public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): ContentValidationListener
-    {
-        $config                  = $container->has(id: 'config') ? $container->get('config') : [];
+    public function __invoke(
+        ContainerInterface $container,
+        $requestedName,
+        ?array $options = null,
+    ): ContentValidationListener {
+        /** @var mixed $config */
+        $config = $container->has('config') ? $container->get('config') : [];
+        /** @var mixed $contentValidationConfig */
         $contentValidationConfig = $config['api-tools-content-validation'] ?? [];
-        $restServices            = $this->getRestServicesFromConfig(config: $config);
+        $restServices = $this->getRestServicesFromConfig(config: \Jield\Stdlib\Value::array($config));
 
         return new ContentValidationListener(
-            config: $contentValidationConfig,
+            config: \Jield\Stdlib\Value::array($contentValidationConfig),
             inputFilterManager: $container->get('InputFilterManager'),
-            restControllers: $restServices
+            restControllers: $restServices,
         );
     }
 
@@ -42,16 +46,19 @@ class ContentValidationListenerFactory implements FactoryInterface
     protected function getRestServicesFromConfig(array $config): array
     {
         $restServices = [];
-        if (! isset($config['api-tools-rest'])) {
+        if (!isset($config['api-tools-rest'])) {
             return $restServices;
         }
 
-        foreach ($config['api-tools-rest'] as $controllerService => $restConfig) {
-            if (! isset($restConfig['route_identifier_name'])) {
+        /** @var mixed $controllerService
+         * @var mixed $restConfig
+         */
+        foreach (\Jield\Stdlib\Value::iterable($config['api-tools-rest']) as $controllerService => $restConfig) {
+            if (!isset($restConfig['route_identifier_name'])) {
                 continue;
             }
 
-            $restServices[$controllerService] = $restConfig['route_identifier_name'];
+            $restServices[\Jield\Stdlib\Value::key($controllerService)] = $restConfig['route_identifier_name'];
         }
 
         return $restServices;

@@ -6,6 +6,9 @@ namespace Jield\ApiTools\Hal;
 
 use Laminas\Stdlib\AbstractOptions;
 
+/**
+ * @extends \Laminas\Stdlib\AbstractOptions<mixed>
+ */
 class RendererOptions extends AbstractOptions
 {
     protected ?string $defaultHydrator = null;

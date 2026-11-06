@@ -5,40 +5,50 @@ declare(strict_types=1);
 namespace Jield\Authorize\Factory;
 
 use Doctrine\Persistence\ObjectManager;
+use Jield\Authorize\Config;
 use Jield\Authorize\Exception\InvalidArgumentException;
 use Jield\Authorize\Provider\Role\ObjectRepositoryProvider;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Psr\Container\ContainerInterface;
-use Jield\Authorize\Config;
 
 /**
  * Factory responsible of instantiating {@see \Jield\Authorize\Provider\Role\ObjectRepositoryProvider}
  */
 class ObjectRepositoryRoleProviderFactory implements FactoryInterface
 {
-    public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): ObjectRepositoryProvider
-    {
-        $config = $container->get(Config::class);
+    public function __invoke(
+        ContainerInterface $container,
+        $requestedName,
+        ?array $options = null,
+    ): ObjectRepositoryProvider {
+        $config = \Jield\Stdlib\Value::array($container->get(Config::class));
 
         if (!isset($config['role_providers'][ObjectRepositoryProvider::class])) {
             throw new InvalidArgumentException(
-                message: 'Config for "Jield\Authorize\Provider\Role\ObjectRepositoryProvider" not set'
+                message: 'Config for "Jield\Authorize\Provider\Role\ObjectRepositoryProvider" not set',
             );
         }
 
+        /** @var mixed $providerConfig */
         $providerConfig = $config['role_providers'][ObjectRepositoryProvider::class];
 
         if (!isset($providerConfig['role_entity_class'])) {
-            throw new InvalidArgumentException(message: 'role_entity_class not set in the bjyauthorize role_providers config.');
+            throw new InvalidArgumentException(
+                message: 'role_entity_class not set in the bjyauthorize role_providers config.',
+            );
         }
 
         if (!isset($providerConfig['object_manager'])) {
-            throw new InvalidArgumentException(message: 'object_manager not set in the bjyauthorize role_providers config.');
+            throw new InvalidArgumentException(
+                message: 'object_manager not set in the bjyauthorize role_providers config.',
+            );
         }
 
         /** @var ObjectManager $objectManager */
-        $objectManager = $container->get($providerConfig['object_manager']);
+        $objectManager = $container->get(\Jield\Stdlib\Value::string($providerConfig['object_manager']));
 
-        return new ObjectRepositoryProvider(objectRepository: $objectManager->getRepository(className: $providerConfig['role_entity_class']));
+        return new ObjectRepositoryProvider(objectRepository: $objectManager->getRepository(
+            className: \Jield\Stdlib\Value::classString($providerConfig['role_entity_class']),
+        ));
     }
 }

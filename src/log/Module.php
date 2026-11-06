@@ -12,6 +12,9 @@ final class Module implements ConfigProviderInterface
     #[Override]
     public function getConfig(): array
     {
-        return new ConfigProvider()();
+        $config = new ConfigProvider()();
+        $config['service_manager'] = $config['dependencies'];
+
+        return $config;
     }
 }

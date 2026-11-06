@@ -39,22 +39,14 @@ class ExpressionBuilder
      */
     public function setDefaultTimezone(DateTimeZone|string $timezone): void
     {
-        if (!is_string(value: $timezone) && !is_object(value: $timezone)) {
-            throw InvalidArgumentException::invalidArgument(
-                position:    1,
-                name:        'timezone',
-                expectation: ['string', DateTimeZone::class],
-                actual:      $timezone
-            );
-        }
-
         $this->defaultTimezone = $timezone;
     }
 
     /**
      * Create phrase expression: "term1 term2"
      */
-    #[Pure] public function phrase(?string $str): ?ExpressionInterface
+    #[Pure]
+    public function phrase(?string $str): ?ExpressionInterface
     {
         if ($this->ignore(expr: $str)) {
             return null;
@@ -63,9 +55,10 @@ class ExpressionBuilder
         return new PhraseExpression(expr: $str);
     }
 
+    /** @psalm-assert-if-false !null $expr */
     private function ignore(mixed $expr): bool
     {
-        return $expr === null || (is_string(value: $expr) && trim(string: $expr) === '');
+        return $expr === null || is_string(value: $expr) && trim(string: $expr) === '';
     }
 
     /**
@@ -73,7 +66,8 @@ class ExpressionBuilder
      *
      * @param string|ExpressionInterface|null $expr
      */
-    #[Pure] public function boost(ExpressionInterface|string|null $expr, ?float $boost): ?ExpressionInterface
+    #[Pure]
+    public function boost(ExpressionInterface|string|null $expr, ?float $boost): ?ExpressionInterface
     {
         if ($this->ignore(expr: $expr) or $this->ignore(expr: $boost)) {
             return null;
@@ -85,11 +79,12 @@ class ExpressionBuilder
     /**
      * Create proximity match expression: "<word1> <word2>"~<proximity>
      *
-     * @param mixed|null $proximity
+     * @param mixed $proximity
      */
     public function prx(ExpressionInterface|string|null $word = null, mixed $proximity = null): ?ExpressionInterface
     {
-        $arguments        = func_get_args();
+        $arguments = func_get_args();
+        /** @var mixed $proximityElement */
         $proximityElement = array_pop(array: $arguments);
 
         $arguments = $this->flatten(collection: $arguments);
@@ -98,18 +93,30 @@ class ExpressionBuilder
             return null;
         }
 
-        return new ProximityExpression(words: $arguments, proximity: $proximityElement);
+        $words = array_map(static function (mixed $word): string {
+            if (!is_scalar($word) && !$word instanceof \Stringable && $word !== null) {
+                throw new InvalidArgumentException('Proximity words must be scalar or stringable.');
+            }
+            return (string) $word;
+        }, $arguments);
+        if (!is_int($proximityElement)) {
+            throw new InvalidArgumentException('Proximity must be an integer.');
+        }
+        return new ProximityExpression(words: $words, proximity: $proximityElement);
     }
 
-    private function flatten($collection): array
+    /** @return list<mixed> */
+    private function flatten(mixed $collection): array
     {
-        $stack  = [$collection];
+        $stack = [$collection];
         $result = [];
 
         while (!empty($stack)) {
+            /** @var mixed $item */
             $item = array_shift(array: $stack);
 
             if (is_iterable(value: $item)) {
+                /** @var mixed $element */
                 foreach ($item as $element) {
                     array_unshift($stack, $element);
                 }
@@ -127,7 +134,8 @@ class ExpressionBuilder
      * @param string|ExpressionInterface|null $expr
      * @param float $similarity Similarity between 0.0 und 1.0
      */
-    #[Pure] public function fzz(ExpressionInterface|string|null $expr, ?float $similarity = null): ?ExpressionInterface
+    #[Pure]
+    public function fzz(ExpressionInterface|string|null $expr, ?float $similarity = null): ?ExpressionInterface
     {
         if ($this->ignore(expr: $expr)) {
             return null;
@@ -139,9 +147,10 @@ class ExpressionBuilder
     /**
      * Range query expression (exclusive start/end): {start TO end}
      */
-    #[Pure] public function btwnRange(
+    #[Pure]
+    public function btwnRange(
         ExpressionInterface|float|int|string|null $start = null,
-        ExpressionInterface|float|int|string|null $end = null
+        ExpressionInterface|float|int|string|null $end = null,
     ): ExpressionInterface {
         return new RangeExpression(start: $start, end: $end, inclusive: false);
     }
@@ -149,19 +158,17 @@ class ExpressionBuilder
     /**
      * Create wildcard expression: <prefix>?, <prefix>*, <prefix>?<suffix> or <prefix>*<suffix>
      *
-     * @param ExpressionInterface|string $prefix
+     * @param ExpressionInterface|string $suffix
      */
-    public function wild(
-        ?string $wildcard = '*',
-        ExpressionInterface|string $suffix = '*'
-    ): ?ExpressionInterface {
-        $wildcard = strtolower(string: (string)$wildcard);
+    public function wild(?string $wildcard = '*', ExpressionInterface|string $suffix = '*'): ?ExpressionInterface
+    {
+        $wildcard = strtolower(string: (string) $wildcard);
         //$wildcard = str_replace(' ', '\ ', $wildcard);
 
         $wildcard = Util::escape(value: $wildcard);
-        $prefix   = '*';
+        $prefix = '*';
 
-        if (($this->ignore(expr: $prefix) && $this->ignore(expr: $suffix)) || $this->ignore(expr: $wildcard)) {
+        if ($wildcard === '') {
             return null;
         }
 
@@ -175,14 +182,17 @@ class ExpressionBuilder
      * @param string|ExpressionInterface|null $expr
      * @return ExpressionInterface|null
      */
-    #[Pure] public function not(ExpressionInterface|string|null $expr): BooleanExpression|ExpressionInterface|null
+    #[Pure]
+    public function not(ExpressionInterface|string|null $expr): BooleanExpression|ExpressionInterface|null
     {
         if ($this->ignore(expr: $expr)) {
             return null;
         }
 
         return new BooleanExpression(
-            operator: BooleanExpression::OPERATOR_PROHIBITED, expr: $expr, useNotNotation: true
+            operator: BooleanExpression::OPERATOR_PROHIBITED,
+            expr: $expr,
+            useNotNotation: true,
         );
     }
 
@@ -195,11 +205,11 @@ class ExpressionBuilder
      *
      * @param string|ExpressionInterface|null $expr
      * @param bool|null $operator @codingStandardsIgnoreLine
-     * @return ExpressionInterface|null
+     * @return ExpressionInterface|string|null
      */
     public function bool(
         ExpressionInterface|string|null $expr,
-        ?bool                           $operator
+        ?bool $operator,
     ): BooleanExpression|ExpressionInterface|string|null { // @codingStandardsIgnoreLine
         if ($operator === null) {
             return $expr;
@@ -218,7 +228,8 @@ class ExpressionBuilder
      * @param string|ExpressionInterface|null $expr
      * @return ExpressionInterface|null
      */
-    #[Pure] public function req(ExpressionInterface|string|null $expr): BooleanExpression|ExpressionInterface|null
+    #[Pure]
+    public function req(ExpressionInterface|string|null $expr): BooleanExpression|ExpressionInterface|null
     {
         if ($this->ignore(expr: $expr)) {
             return null;
@@ -233,7 +244,8 @@ class ExpressionBuilder
      * @param string|ExpressionInterface|null $expr
      * @return ExpressionInterface|null
      */
-    #[Pure] public function prhb(ExpressionInterface|string|null $expr): BooleanExpression|ExpressionInterface|null
+    #[Pure]
+    public function prhb(ExpressionInterface|string|null $expr): BooleanExpression|ExpressionInterface|null
     {
         if ($this->ignore(expr: $expr)) {
             return null;
@@ -245,7 +257,7 @@ class ExpressionBuilder
     /**
      * Create AND grouped expression: (<expr1> AND <expr2> AND <expr3>)
      *
-     * @param ExpressionInterface[]|string[] $args
+     * @param mixed ...$args
      */
     public function andX(...$args): ?ExpressionInterface
     {
@@ -259,16 +271,19 @@ class ExpressionBuilder
     }
 
     /**
-     * @param mixed[] $args
-     * @return mixed[]
+     * @param array<array-key, mixed> $args
+     * @return array{0: array<array-key, mixed>|false, 1: ?string}
      */
     private function parseCompositeArgs(array $args): array
     {
         $args = $this->flatten(collection: $args);
         $type = CompositeExpression::TYPE_SPACE;
 
-        if (CompositeExpression::isValidType(type: end(array: $args))) {
-            $type = array_pop(array: $args);
+        /** @var mixed $last */
+        $last = end(array: $args);
+        if ((is_string($last) || $last === null) && CompositeExpression::isValidType(type: $last)) {
+            array_pop(array: $args);
+            $type = $last;
         }
 
         $args = array_filter(array: $args, callback: $this->permit(...));
@@ -283,7 +298,7 @@ class ExpressionBuilder
     /**
      * Create OR grouped expression: (<expr1> OR <expr2> OR <expr3>)
      *
-     * @param array|ExpressionInterface[]|string[] $args
+     * @param mixed ...$args
      */
     public function orX(...$args): ?ExpressionInterface
     {
@@ -307,10 +322,12 @@ class ExpressionBuilder
             return $expr;
         }
 
-        return $this->field(field: $this->lit(expr: '*'), expr: $this->lit(expr: '*'));
+        return new FieldExpression(field: new Expression('*'), expr: new Expression('*'));
     }
 
-    #[Pure] private function permit(mixed $expr): bool
+    #[Pure]
+    /** @psalm-assert-if-true !null $expr */
+    private function permit(mixed $expr): bool
     {
         return !$this->ignore(expr: $expr);
     }
@@ -319,9 +336,10 @@ class ExpressionBuilder
      * Create field expression: <field>:<expr>
      * of in an array $expr is given: <field>:(<expr1> <expr2> <expr3>...)
      */
-    #[Pure] public function field(
+    #[Pure]
+    public function field(
         ExpressionInterface|string $field,
-        array|ExpressionInterface|string|null|int|bool $expr
+        array|ExpressionInterface|string|int|bool|null $expr,
     ): ?ExpressionInterface {
         if (is_array(value: $expr)) {
             $expr = $this->grp(expr: $expr);
@@ -329,22 +347,32 @@ class ExpressionBuilder
             return null;
         }
 
-        return new FieldExpression(field: $field, expr: $expr);
+        if ($expr === null) {
+            return null;
+        }
+
+        return new FieldExpression(
+            field: $field,
+            expr: is_bool($expr) ? ($expr ? 'true' : 'false') : (is_int($expr) ? (string) $expr : $expr),
+        );
     }
 
     /**
      * Create grouped expression: (<expr1> <expr2> <expr3>)
      *
-     * @param string|ExpressionInterface|null $expr
-     * @param mixed|string $type
+     * @param array<array-key, mixed>|ExpressionInterface|string|null $expr
+     * @param string|null $type
      */
-    #[Pure] public function grp(ExpressionInterface|string|null $expr = null, mixed|string $type = CompositeExpression::TYPE_SPACE): ?ExpressionInterface
-    {
+    #[Pure]
+    public function grp(
+        array|ExpressionInterface|string|null $expr = null,
+        ?string $type = CompositeExpression::TYPE_SPACE,
+    ): ?ExpressionInterface {
         if (empty($expr)) {
             return null;
         }
 
-        return new GroupExpression(expressions: $expr, type: $type);
+        return new GroupExpression(expressions: is_array($expr) ? $expr : [$expr], type: $type);
     }
 
     /**
@@ -352,7 +380,8 @@ class ExpressionBuilder
      *
      * @param string|ExpressionInterface|null $expr
      */
-    #[Pure] public function lit(ExpressionInterface|string|null $expr): ?ExpressionInterface
+    #[Pure]
+    public function lit(ExpressionInterface|string|null $expr): ?ExpressionInterface
     {
         if ($this->ignore(expr: $expr)) {
             return null;
@@ -361,13 +390,14 @@ class ExpressionBuilder
         return new Expression(expr: $expr);
     }
 
-    #[Pure] public function number($field, $expr): ?ExpressionInterface
+    #[Pure]
+    public function number(ExpressionInterface|string $field, mixed $expr): ?ExpressionInterface
     {
         if (!is_numeric(value: $expr)) {
             return null;
         }
 
-        return new FieldExpression(field: $field, expr: $this->eq(expr: $expr));
+        return new FieldExpression(field: $field, expr: new Expression(expr: (string) $expr));
     }
 
     /**
@@ -375,7 +405,8 @@ class ExpressionBuilder
      *
      * @param string|ExpressionInterface|null $expr
      */
-    #[Pure] public function eq(ExpressionInterface|string|null $expr): ?ExpressionInterface
+    #[Pure]
+    public function eq(ExpressionInterface|string|null $expr): ?ExpressionInterface
     {
         if ($this->ignore(expr: $expr)) {
             return null;
@@ -391,9 +422,10 @@ class ExpressionBuilder
     /**
      * Create a date expression for a specific day
      *
-     * @param mixed|null $date
+     * @param mixed $date
      */
-    #[Pure] public function day(mixed $date = null): ?ExpressionInterface
+    #[Pure]
+    public function day(mixed $date = null): ?ExpressionInterface
     {
         if (!$date instanceof DateTime) {
             return null;
@@ -405,10 +437,11 @@ class ExpressionBuilder
     /**
      * Range query expression (inclusive start/end): [start TO end]
      */
-    #[Pure] public function range(
+    #[Pure]
+    public function range(
         ExpressionInterface|float|int|string|null $start = null,
         ExpressionInterface|float|int|string|null $end = null,
-        bool $inclusive = true
+        bool $inclusive = true,
     ): ExpressionInterface {
         return new RangeExpression(start: $start, end: $end, inclusive: $inclusive);
     }
@@ -416,65 +449,69 @@ class ExpressionBuilder
     /**
      * Expression for the start of the given date
      */
-    #[Pure] public function startOfDay(?DateTime $date = null, bool|string $timezone = false): ?ExpressionInterface
+    #[Pure]
+    public function startOfDay(?DateTime $date = null, DateTimeZone|string|false $timezone = false): ?ExpressionInterface
     {
         if ($date === null) {
             return null;
         }
 
         return new DateTimeExpression(
-            date:     $date,
-            format:   DateTimeExpression::FORMAT_START_OF_DAY,
-            timezone: $timezone === false ? $this->defaultTimezone : $timezone
+            date: $date,
+            format: DateTimeExpression::FORMAT_START_OF_DAY,
+            timezone: $timezone === false ? $this->defaultTimezone : $timezone,
         );
     }
 
     /**
      * Expression for the end of the given date
      */
-    #[Pure] public function endOfDay(?DateTime $date = null, bool|string $timezone = false): ?ExpressionInterface
+    #[Pure]
+    public function endOfDay(?DateTime $date = null, DateTimeZone|string|false $timezone = false): ?ExpressionInterface
     {
         if (!$date) {
             return null;
         }
 
         return new DateTimeExpression(
-            date:     $date,
-            format:   DateTimeExpression::FORMAT_END_OF_DAY,
-            timezone: $timezone === false ? $this->defaultTimezone : $timezone
+            date: $date,
+            format: DateTimeExpression::FORMAT_END_OF_DAY,
+            timezone: $timezone === false ? $this->defaultTimezone : $timezone,
         );
     }
 
     /**
      * Create a range between two dates (one side may be unlimited which is indicated by passing null)
      */
-    #[Pure] public function dateRange(
+    #[Pure]
+    public function dateRange(
         ?DateTime $from = null,
         ?DateTime $to = null,
         bool $inclusive = true,
-        bool|string $timezone = 'Europe/Amsterdam'
+        DateTimeZone|string|false $timezone = 'Europe/Amsterdam',
     ): ?ExpressionInterface {
         if ($from === null && $to === null) {
             return null;
         }
 
         return $this->range(
-            start:     $this->lit(expr: $this->date(date: $from, timezone: $timezone)),
-            end:       $this->lit(expr: $this->date(date: $to, timezone: $timezone)),
-            inclusive: $inclusive
+            start: $this->lit(expr: $this->date(date: $from, timezone: $timezone)),
+            end: $this->lit(expr: $this->date(date: $to, timezone: $timezone)),
+            inclusive: $inclusive,
         );
     }
 
-    #[Pure] public function date(?DateTime $date = null, bool|string $timezone = false): ExpressionInterface
+    #[Pure]
+    public function date(?DateTime $date = null, DateTimeZone|string|false $timezone = false): ExpressionInterface
     {
         if ($date === null) {
-            return $this->lit(expr: '*');
+            return new Expression(expr: '*');
         }
 
         return new DateTimeExpression(
-            date:     $date,
-            format:   DateTimeExpression::FORMAT_DEFAULT,
-            timezone: $timezone === false ? $this->defaultTimezone : $timezone
+            date: $date,
+            format: DateTimeExpression::FORMAT_DEFAULT,
+            timezone: $timezone === false ? $this->defaultTimezone : $timezone,
         );
     }
 
@@ -483,9 +520,10 @@ class ExpressionBuilder
      *
      * You can either pass an array of parameters, a single parameter or a ParameterExpression
      *
-     * @param array|string|null $parameters
+     * @param array|ExpressionInterface|string|null $parameters
      */
-    #[Pure] public function func(string $function, null|array|string $parameters = null): ExpressionInterface
+    #[Pure]
+    public function func(string $function, array|ExpressionInterface|string|null $parameters = null): ExpressionInterface
     {
         return new FunctionExpression(function: $function, parameters: $parameters);
     }
@@ -502,37 +540,47 @@ class ExpressionBuilder
 
     /**
      * @param mixed|mixed[] $params
-     * @param true|mixed $shortForm
+     * @param mixed $shortForm
      */
-    public function localParams(string $type, mixed|array $params = [], true|mixed $shortForm = true): ?ExpressionInterface
+    public function localParams(string $type, mixed $params = [], mixed $shortForm = true): ?ExpressionInterface
     {
         $additional = null;
 
         if (!is_bool(value: $shortForm)) {
+            /** @var mixed $additional */
             $additional = $shortForm;
-            $shortForm  = true;
+            $shortForm = true;
         } elseif (!is_array(value: $params)) {
+            /** @var mixed $additional */
             $additional = $params;
-            $params     = [];
+            $params = [];
         }
+
+        if (!is_array($params)) {
+            throw new InvalidArgumentException('Local parameter options must be an array.');
+        }
+
+        $useShortForm = is_bool($shortForm) ? $shortForm : true;
 
         if ($additional !== null) {
             return $this->comp(
-                expr: new LocalParamsExpression(type: $type, params: $params, shortForm: $shortForm),
-                type: $additional
+                expr: [new LocalParamsExpression(type: $type, params: $params, shortForm: $useShortForm), $additional],
+                type: null,
             );
         }
 
-        return new LocalParamsExpression(type: $type, params: $params, shortForm: $shortForm);
+        return new LocalParamsExpression(type: $type, params: $params, shortForm: $useShortForm);
     }
 
     /**
      * Create composite expression: <expr1> <expr2> <expr3>
      *
-     * @param string|ExpressionInterface|null $expr
+     * @param array<array-key, mixed>|ExpressionInterface|string|null $expr
      */
-    public function comp(ExpressionInterface|string|null $expr = null, ?string $type = CompositeExpression::TYPE_SPACE): ?ExpressionInterface
-    {
+    public function comp(
+        array|ExpressionInterface|string|null $expr = null,
+        ?string $type = CompositeExpression::TYPE_SPACE,
+    ): ?ExpressionInterface {
         [$args, $type] = $this->parseCompositeArgs(args: func_get_args());
 
         if (!$args) {
@@ -543,24 +591,26 @@ class ExpressionBuilder
     }
 
     /** @param mixed[] $additionalParams */
-    #[Pure] public function geofilt(
+    #[Pure]
+    public function geofilt(
         string $field,
         ?GeolocationExpression $geolocation = null,
         ?int $distance = null,
-        array $additionalParams = []
+        array $additionalParams = [],
     ): ExpressionInterface {
         return new GeofiltExpression(
-            field:            $field,
-            geolocation:      $geolocation,
-            distance:         $distance,
-            additionalParams: $additionalParams
+            field: $field,
+            geolocation: $geolocation,
+            distance: $distance,
+            additionalParams: $additionalParams,
         );
     }
 
     /**
      * Create a geo location expression: "<latitude>,<longitude>" using the given precision
      */
-    #[Pure] public function latLong(float $latitude, float $longitude, int $precision = 12): ExpressionInterface
+    #[Pure]
+    public function latLong(float $latitude, float $longitude, int $precision = 12): ExpressionInterface
     {
         return new GeolocationExpression(latitude: $latitude, longitude: $longitude, precision: $precision);
     }
@@ -575,7 +625,8 @@ class ExpressionBuilder
         return $this->comp(expr: [$this->shortLocalParams(tag: 'cache', value: false), $expr], type: null);
     }
 
-    #[Pure] private function shortLocalParams(ExpressionInterface|string $tag, mixed $value): LocalParamsExpression
+    #[Pure]
+    private function shortLocalParams(string $tag, mixed $value): LocalParamsExpression
     {
         return new LocalParamsExpression(type: $tag, params: [$tag => $value], shortForm: true);
     }
@@ -610,7 +661,7 @@ class ExpressionBuilder
      */
     public function searchQuery(string $searchQuery): ?ExpressionInterface
     {
-        if ($this->ignore(expr: $searchQuery)) {
+        if (trim($searchQuery) === '') {
             return new Expression(expr: '*');
         }
 
@@ -621,9 +672,12 @@ class ExpressionBuilder
         }
 
         // If the entire query is already quoted and doesn't contain any other quotes, treat it as a phrase
-        if (strlen(string: $searchQuery) >= 2 && $searchQuery[0] === '"' && $searchQuery[strlen(
-                string: $searchQuery
-            ) - 1] === '"' && substr_count(haystack: $searchQuery, needle: '"') === 2) {
+        if (
+            strlen(string: $searchQuery) >= 2
+            && $searchQuery[0] === '"'
+            && $searchQuery[strlen(string: $searchQuery) - 1] === '"'
+            && substr_count(haystack: $searchQuery, needle: '"') === 2
+        ) {
             $content = substr(string: $searchQuery, offset: 1, length: -1);
             if (empty(trim(string: $content))) {
                 return null;
@@ -636,23 +690,31 @@ class ExpressionBuilder
 
         // First, handle quoted phrases (including unclosed quotes)
         $pattern = '/"([^"]*)"?/';
+        $matches = [];
         preg_match_all(pattern: $pattern, subject: $searchQuery, matches: $matches);
 
         // Add each quoted phrase as a SearchQueryPhraseExpression
         foreach ($matches[1] as $phrase) {
-            if (!empty(trim(string: $phrase))) {
-                $expressions[] = new SearchQueryPhraseExpression(expr: $phrase);
+            if (empty(trim(string: $phrase))) {
+                continue;
             }
+
+            $expressions[] = new SearchQueryPhraseExpression(expr: $phrase);
         }
 
         // Remove all quoted phrases from the search query
         $remainingText = preg_replace(pattern: $pattern, replacement: '', subject: $searchQuery);
 
         // Handle remaining non-quoted words
-        $words = preg_split(pattern: '/\s+/', subject: trim(string: $remainingText), limit: -1, flags: PREG_SPLIT_NO_EMPTY);
-        foreach ($words as $word) {
+        $words = preg_split(
+            pattern: '/\s+/',
+            subject: trim(string: $remainingText ?? ''),
+            limit: -1,
+            flags: PREG_SPLIT_NO_EMPTY,
+        );
+        foreach ($words ?: [] as $word) {
             // Escape special characters according to SOLR rules
-            $escapedWord   = Util::escape(value: $word);
+            $escapedWord = Util::escape(value: $word);
             $expressions[] = new Expression(expr: $escapedWord);
         }
 
@@ -673,19 +735,21 @@ class ExpressionBuilder
     /**
      * Add words from a string to the expressions array
      *
-     * @param array $expressions Array to add the resulting expressions to
+     * @param list<ExpressionInterface> $expressions Array to add the resulting expressions to
      * @param string $text The text to process
      */
-    private function addWordsToExpressions(array &$expressions, string $text): void
+    private function _addWordsToExpressions(array &$expressions, string $text): void
     {
         $words = preg_split(pattern: '/\s+/', subject: trim(string: $text), limit: -1, flags: PREG_SPLIT_NO_EMPTY);
 
-        foreach ($words as $word) {
-            if (!empty($word)) {
-                // Escape special characters according to SOLR rules
-                $escapedWord   = Util::escape(value: $word);
-                $expressions[] = new Expression(expr: $escapedWord);
+        foreach ($words ?: [] as $word) {
+            if (empty($word)) {
+                continue;
             }
+
+            // Escape special characters according to SOLR rules
+            $escapedWord = Util::escape(value: $word);
+            $expressions[] = new Expression(expr: $escapedWord);
         }
     }
 
@@ -693,19 +757,17 @@ class ExpressionBuilder
      * Create an advanced search query expression with field-specific search, wildcard options, and boosting
      *
      * @param string $searchQuery The search query string
-     * @param array $fields Array of fields to search on, with optional boosting values as keys
-     * @param bool $useWildcards Whether to use wildcards for non-phrase terms
-     * @param array $boostFields Array of fields to boost with boost values
+     * @param list<string> $fields Fields to search on
+     * @param array<string, float> $boostFields Field boosting values
      * @return ExpressionInterface|null The resulting expression
      */
     public function advancedSearchQuery(
         ?string $searchQuery,
         array $fields = [],
-        array $boostFields = []
+        array $boostFields = [],
     ): ?ExpressionInterface {
         // First, get the base search query expression
         $baseExpression = $this->searchQuery(searchQuery: $searchQuery ?? '*');
-
 
         if ($baseExpression === null) {
             return null;
@@ -733,7 +795,7 @@ class ExpressionBuilder
             $fieldExpression = $this->processExpressionForField(
                 expression: $baseExpression,
                 field: $field,
-                boost: $fieldBoost
+                boost: $fieldBoost,
             );
 
             if ($fieldExpression !== null) {
@@ -760,14 +822,13 @@ class ExpressionBuilder
      *
      * @param ExpressionInterface $expression The expression to process
      * @param string $field The field to search on
-     * @param bool $useWildcards Whether to use wildcards
      * @param float|null $boost The boost value to apply
      * @return ExpressionInterface|null The processed expression
      */
     private function processExpressionForField(
         ExpressionInterface $expression,
         string $field,
-        ?float $boost = null
+        ?float $boost = null,
     ): ?ExpressionInterface {
         // Handle different expression types
         if ($expression instanceof GroupExpression) {
@@ -775,19 +836,18 @@ class ExpressionBuilder
             $subExpressions = [];
 
             // Get the expressions from the group
-            $groupExprStr = (string)$expression;
-            $groupType    = (str_contains(
-                haystack: $groupExprStr,
-                needle: ' OR '
-            ) ? CompositeExpression::TYPE_OR : CompositeExpression::TYPE_AND);
+            $groupExprStr = (string) $expression;
+            $groupType = str_contains(haystack: $groupExprStr, needle: ' OR ')
+                ? CompositeExpression::TYPE_OR
+                : CompositeExpression::TYPE_AND;
 
             // Extract expressions from the group
+            $matches = [];
             if (preg_match(pattern: '/^\((.*)\)$/', subject: $groupExprStr, matches: $matches)) {
                 $content = $matches[1];
 
                 // Split by the group type
-                $separator = $groupType === CompositeExpression::TYPE_OR ? ' OR ' :
-                    ($groupType === CompositeExpression::TYPE_AND ? ' AND ' : ' ');
+                $separator = $groupType === CompositeExpression::TYPE_OR ? ' OR ' : ' AND ';
 
                 $parts = explode(separator: $separator, string: $content);
 
@@ -797,7 +857,10 @@ class ExpressionBuilder
                     }
 
                     // Create appropriate expression based on the part
-                    if (strpos(haystack: $part, needle: '"') === 0 && strrpos(haystack: $part, needle: '"') === strlen(string: $part) - 1) {
+                    if (
+                        str_starts_with(haystack: $part, needle: '"')
+                        && strrpos(haystack: $part, needle: '"') === (strlen(string: $part) - 1)
+                    ) {
                         // It's a phrase
                         $subExpr = new SearchQueryPhraseExpression(expr: substr(string: $part, offset: 1, length: -1));
                     } else {
@@ -806,9 +869,8 @@ class ExpressionBuilder
                     }
 
                     // Apply wildcards if needed for non-phrase expressions
-                    if (!($subExpr instanceof SearchQueryPhraseExpression)) {
-                        $exprStr = (string)$subExpr;
-
+                    if (!$subExpr instanceof SearchQueryPhraseExpression) {
+                        $exprStr = (string) $subExpr;
 
                         $subExpr = new WildcardExpression(wildcard: $exprStr, prefix: '*', suffix: '*');
                     }
@@ -837,13 +899,13 @@ class ExpressionBuilder
         if ($expression instanceof SearchQueryPhraseExpression) {
             // For phrase expressions, create a field expression with the phrase
             $fieldExpression = new FieldExpression(field: $field, expr: $expression);
-            // Apply boost if specified
 
+            // Apply boost if specified
         } else {
             // For regular expressions, apply wildcards if needed
             // Create a wildcard expression
-            $exprStr         = (string)$expression;
-            $wildcardExpr    = new WildcardExpression(wildcard: $exprStr, prefix: '*', suffix: '*');
+            $exprStr = (string) $expression;
+            $wildcardExpr = new WildcardExpression(wildcard: $exprStr, prefix: '*', suffix: '*');
             $fieldExpression = new FieldExpression(field: $field, expr: $wildcardExpr);
         }
         if ($boost !== null) {

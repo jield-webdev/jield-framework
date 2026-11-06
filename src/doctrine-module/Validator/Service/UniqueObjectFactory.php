@@ -14,15 +14,15 @@ final class UniqueObjectFactory extends AbstractValidatorFactory
     /**
      * {@inheritDoc}
      */
-    public function __invoke(ContainerInterface $container, $requestedName, array|null $options = null): UniqueObject
+    public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): UniqueObject
     {
-        $useContext = isset($options['use_context']) ? (bool) $options['use_context'] : false;
+        $useContext = isset($options['use_context']) ? \Jield\Stdlib\Value::truthy($options['use_context']) : false;
 
-        return new UniqueObject(options: $this->merge(previousOptions: $options, newOptions: [
-            'object_manager'    => $this->getObjectManager(container: $container, options: $options),
-            'use_context'       => $useContext,
+        return new UniqueObject(options: $this->merge(previousOptions: \Jield\Stdlib\Value::array($options), newOptions: [
+            'object_manager' => $this->getObjectManager(container: $container, options: $options),
+            'use_context' => $useContext,
             'object_repository' => $this->getRepository(container: $container, options: $options),
-            'fields'            => $this->getFields(options: $options),
+            'fields' => $this->getFields(options: \Jield\Stdlib\Value::array($options)),
         ]));
     }
 }

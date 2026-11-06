@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\Mvc\Factory;
 
 use Laminas\ServiceManager\Exception\ServiceNotCreatedException;
@@ -19,17 +21,18 @@ class ViewFeedStrategyFactory implements FactoryInterface
      * @param  string $requestedName
      * @param  null|array $options
      */
-    public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null)
+    public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): mixed
     {
-        if (!class_exists(\Laminas\View\Strategy\FeedStrategy::class)) {
+        $strategyClass = 'Laminas\\View\\Strategy\\FeedStrategy';
+        if (!class_exists($strategyClass)) {
             throw new ServiceNotCreatedException(
                 'Laminas\\View\\Strategy\\FeedStrategy is not available in laminas-view v3; '
-                . 'install laminas/laminas-mvc or provide a compatible strategy.'
+                . 'install laminas/laminas-mvc or provide a compatible strategy.',
             );
         }
 
-        $renderer      = $container->get('ViewFeedRenderer');
-        $strategyClass = \Laminas\View\Strategy\FeedStrategy::class;
-        return new $strategyClass($renderer);
+        /** @var mixed $renderer */
+        $renderer = $container->get('ViewFeedRenderer');
+        return \Jield\Stdlib\Value::instantiate($strategyClass, [$renderer]);
     }
 }

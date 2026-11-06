@@ -13,8 +13,9 @@ use Symfony\Component\Console\Output\OutputInterface;
 #[AsCommand(name: 'search:sync-index', description: 'Sync the search engine index')]
 final class SyncIndex extends Command
 {
-    public function __construct(private readonly ConsoleService $consoleService)
-    {
+    public function __construct(
+        private readonly ConsoleService $consoleService,
+    ) {
         parent::__construct();
     }
 

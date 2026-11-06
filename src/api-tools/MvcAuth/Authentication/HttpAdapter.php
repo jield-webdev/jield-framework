@@ -6,11 +6,12 @@ namespace Jield\ApiTools\MvcAuth\Authentication;
 
 use Jield\ApiTools\MvcAuth\Identity;
 use Jield\ApiTools\MvcAuth\MvcAuthEvent;
-use Jield\Authentication\Adapter\Http as HttpAuth;
-use Jield\Authentication\AuthenticationServiceInterface;
+use Laminas\Authentication\Adapter\Http as HttpAuth;
+use Laminas\Authentication\AuthenticationServiceInterface;
 use Laminas\Http\Request;
 use Laminas\Http\Response;
 use Override;
+
 use function array_shift;
 use function in_array;
 use function is_array;
@@ -33,11 +34,10 @@ class HttpAdapter extends AbstractAdapter
      * @param string|null $providesBase
      */
     public function __construct(
-        private readonly HttpAuth                       $httpAuth,
+        private readonly HttpAuth $httpAuth,
         private readonly AuthenticationServiceInterface $authenticationService,
-        ?string                                         $providesBase = null
-    )
-    {
+        ?string $providesBase = null,
+    ) {
         if (is_string(value: $providesBase) && ($providesBase !== '' && $providesBase !== '0')) {
             $this->providesBase = $providesBase;
         }
@@ -57,7 +57,7 @@ class HttpAdapter extends AbstractAdapter
     public function provides(): array
     {
         $providesBase = $this->providesBase ? $this->providesBase . '-' : '';
-        $provides     = [];
+        $provides = [];
 
         if (null !== $this->httpAuth->getBasicResolver()) {
             $provides[] = $providesBase . 'basic';
@@ -96,8 +96,11 @@ class HttpAdapter extends AbstractAdapter
      * Attempt to authenticate the current request.
      */
     #[Override]
-    public function authenticate(Request $request, Response $response, MvcAuthEvent $mvcAuthEvent): Identity\IdentityInterface
-    {
+    public function authenticate(
+        Request $request,
+        Response $response,
+        MvcAuthEvent $mvcAuthEvent,
+    ): Identity\IdentityInterface {
         if (!$request->getHeader(name: 'Authorization', default: false)) {
             // No credentials were present at all, so we just return a guest identity.
             return new Identity\GuestIdentity();
@@ -106,8 +109,8 @@ class HttpAdapter extends AbstractAdapter
         $this->httpAuth->setRequest(request: $request);
         $this->httpAuth->setResponse(response: $response);
 
-        if (method_exists(object_or_class: $this->authenticationService, method: 'setAdapter')) {
-            $this->authenticationService->setAdapter(adapter: $this->httpAuth);
+        if (method_exists($this->authenticationService, 'setAdapter')) {
+            $this->authenticationService->setAdapter($this->httpAuth);
         }
         $result = $this->authenticationService->authenticate();
         $mvcAuthEvent->setAuthenticationResult(result: $result);
@@ -116,6 +119,7 @@ class HttpAdapter extends AbstractAdapter
             return new Identity\GuestIdentity();
         }
 
+        /** @var mixed $resultIdentity */
         $resultIdentity = $result->getIdentity();
 
         // Pass fully discovered identity to AuthenticatedIdentity instance
@@ -124,10 +128,11 @@ class HttpAdapter extends AbstractAdapter
         // But determine the name separately
         $name = $resultIdentity;
         if (is_array(value: $resultIdentity)) {
-            $name = $resultIdentity['username'] ?? (string)array_shift(array: $resultIdentity);
+            /** @var mixed $name */
+            $name = $resultIdentity['username'] ?? (string) array_shift(array: $resultIdentity);
         }
 
-        $identity->setName(name: $name);
+        $identity->setName(name: \Jield\Stdlib\Value::string($name));
 
         return $identity;
     }

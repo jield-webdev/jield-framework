@@ -36,12 +36,12 @@ class FormElementErrors extends AbstractHelper
      *
      * @template T as null|ElementInterface
      * @psalm-param T $element
-     * @psalm-return (T is null ? self : string)
+     * @psalm-return (T is null ? static : string)
      * @return string|FormElementErrors
      */
-    public function __invoke(?ElementInterface $element = null, array $attributes = []): FormElementErrors|string|static
+    public function __invoke(?ElementInterface $element = null, array $attributes = []): string|static
     {
-        if (! $element) {
+        if (!$element) {
             return $this;
         }
 
@@ -60,32 +60,32 @@ class FormElementErrors extends AbstractHelper
     public function render(ElementInterface $element, array $attributes = []): string
     {
         $messages = $element->getMessages();
-        if (! $messages) {
+        if (!$messages) {
             return '';
         }
 
         // Flatten message array
         $messages = $this->flattenMessages(messages: $messages);
-        if (! $messages) {
+        if (!$messages) {
             return '';
         }
 
         // Prepare attributes for opening tag
         $attributes = array_merge($this->attributes, $attributes);
         $attributes = $this->createAttributesString(attributes: $attributes);
-        if (! empty($attributes)) {
+        if (!empty($attributes)) {
             $attributes = ' ' . $attributes;
         }
 
-        $count   = count(value: $messages);
+        $count = count(value: $messages);
         $escaper = $this->getEscapeHtmlHelper();
         for ($i = 0; $i < $count; $i += 1) {
             $messages[$i] = $escaper(value: $messages[$i]);
         }
 
         // Generate markup
-        $markup  = sprintf($this->getMessageOpenFormat(), $attributes);
-        $markup .= implode(separator: $this->getMessageSeparatorString(), array: $messages);
+        $markup = sprintf($this->getMessageOpenFormat(), $attributes);
+        $markup .= implode(separator: $this->getMessageSeparatorString(), array: \Jield\Stdlib\Value::scalars($messages));
         $markup .= $this->getMessageCloseString();
 
         return $markup;
@@ -95,7 +95,7 @@ class FormElementErrors extends AbstractHelper
      * Set the attributes that will go on the message open format
      *
      * @param  array $attributes key value pairs of attributes
-     * @return $this
+     * @return static
      */
     public function setAttributes(array $attributes): static
     {
@@ -114,7 +114,7 @@ class FormElementErrors extends AbstractHelper
     /**
      * Set the string used to close message representation
      *
-     * @return $this
+     * @return static
      */
     public function setMessageCloseString(string $messageCloseString): static
     {
@@ -133,7 +133,7 @@ class FormElementErrors extends AbstractHelper
     /**
      * Set the formatted string used to open message representation
      *
-     * @return $this
+     * @return static
      */
     public function setMessageOpenFormat(string $messageOpenFormat): static
     {
@@ -152,7 +152,7 @@ class FormElementErrors extends AbstractHelper
     /**
      * Set the string used to separate messages
      *
-     * @return $this
+     * @return static
      */
     public function setMessageSeparatorString(string $messageSeparatorString): static
     {
@@ -171,7 +171,7 @@ class FormElementErrors extends AbstractHelper
     /**
      * Set the flag detailing whether or not to translate error messages.
      *
-     * @return $this
+     * @return static
      */
     public function setTranslateMessages(bool $flag): static
     {
@@ -197,11 +197,11 @@ class FormElementErrors extends AbstractHelper
 
     private function flattenMessagesWithTranslator(array $messages): array
     {
-        $translator      = $this->getTranslator();
-        $textDomain      = $this->getTranslatorTextDomain();
+        $translator = $this->getTranslator();
+        $textDomain = $this->getTranslatorTextDomain();
         $messagesToPrint = [];
         $messageCallback = static function ($item) use (&$messagesToPrint, $translator, $textDomain): void {
-            $messagesToPrint[] = $translator->translate($item, $textDomain);
+            $messagesToPrint[] = \Jield\Stdlib\Value::present($translator)->translate(\Jield\Stdlib\Value::string($item), $textDomain);
         };
         array_walk_recursive(array: $messages, callback: $messageCallback);
         return $messagesToPrint;

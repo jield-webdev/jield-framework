@@ -34,15 +34,12 @@ class Collection extends Fieldset implements CollectionInterface
      */
     public const string DEFAULT_TEMPLATE_PLACEHOLDER = '__index__';
 
-    /** @var array|ArrayAccess */
-    protected ?object $object;
-
     /**
      * Element used in the collection
      *
      * @var null|ElementInterface
      */
-    protected ?ElementInterface $targetElement;
+    protected ?ElementInterface $targetElement = null;
 
     /**
      * Initial count of target element
@@ -91,7 +88,7 @@ class Collection extends Fieldset implements CollectionInterface
      *
      * @var null|ElementInterface|FieldsetInterface
      */
-    protected ElementInterface|null|FieldsetInterface $templateElement;
+    protected ElementInterface|FieldsetInterface|null $templateElement = null;
 
     /**
      * The index of the last child element or fieldset
@@ -116,7 +113,7 @@ class Collection extends Fieldset implements CollectionInterface
      * - should_create_template: if set to true, a template is generated (inside a <span>)
      * - template_placeholder: placeholder used in the data template
      *
-     * @return $this
+     * @return static
      */
     public function setOptions(iterable $options): static
     {
@@ -127,27 +124,27 @@ class Collection extends Fieldset implements CollectionInterface
         }
 
         if (isset($this->options['count'])) {
-            $this->setCount(count: $this->options['count']);
+            $this->setCount(count: \Jield\Stdlib\Value::int($this->options['count']));
         }
 
         if (isset($this->options['allow_add'])) {
-            $this->setAllowAdd(allowAdd: $this->options['allow_add']);
+            $this->setAllowAdd(allowAdd: \Jield\Stdlib\Value::bool($this->options['allow_add']));
         }
 
         if (isset($this->options['allow_remove'])) {
-            $this->setAllowRemove(allowRemove: $this->options['allow_remove']);
+            $this->setAllowRemove(allowRemove: \Jield\Stdlib\Value::bool($this->options['allow_remove']));
         }
 
         if (isset($this->options['should_create_template'])) {
-            $this->setShouldCreateTemplate(shouldCreateTemplate: $this->options['should_create_template']);
+            $this->setShouldCreateTemplate(shouldCreateTemplate: \Jield\Stdlib\Value::bool($this->options['should_create_template']));
         }
 
         if (isset($this->options['template_placeholder'])) {
-            $this->setTemplatePlaceholder(templatePlaceholder: $this->options['template_placeholder']);
+            $this->setTemplatePlaceholder(templatePlaceholder: \Jield\Stdlib\Value::string($this->options['template_placeholder']));
         }
 
         if (isset($this->options['create_new_objects'])) {
-            $this->setCreateNewObjects(createNewObjects: $this->options['create_new_objects']);
+            $this->setCreateNewObjects(createNewObjects: \Jield\Stdlib\Value::bool($this->options['create_new_objects']));
         }
 
         return $this;
@@ -168,14 +165,14 @@ class Collection extends Fieldset implements CollectionInterface
      * In this case the "object" is a collection of objects
      *
      * @param mixed $object
-     * @return self
+     * @return static
      * @throws Exception\InvalidArgumentException
      */
     public function setObject(mixed $object): static
     {
         if ($object instanceof Traversable) {
             $object = iterator_to_array(iterator: $object);
-        } elseif (! is_array(value: $object)) {
+        } elseif (!is_array(value: $object)) {
             throw new Exception\InvalidArgumentException(message: sprintf(
                 '%s expects an array or Traversable object argument; received "%s"',
                 __METHOD__,
@@ -184,7 +181,7 @@ class Collection extends Fieldset implements CollectionInterface
         }
 
         $this->object = $object;
-        $this->count  = max(count(value: $object), $this->count);
+        $this->count = max(count(value: $object), $this->count);
 
         return $this;
     }
@@ -201,11 +198,11 @@ class Collection extends Fieldset implements CollectionInterface
             $data = ArrayUtils::iteratorToArray(iterator: $data);
         }
 
-        if (! $this->allowRemove && count(value: $data) < $this->count) {
+        if (!$this->allowRemove && count(value: \Jield\Stdlib\Value::countable($data)) < $this->count) {
             throw new Exception\DomainException(message: sprintf(
                 'There are fewer elements than specified in the collection (%s). Either set the allow_remove option '
                 . 'to true, or re-submit the form.',
-                static::class
+                static::class,
             ));
         }
 
@@ -216,10 +213,10 @@ class Collection extends Fieldset implements CollectionInterface
                 continue;
             }
 
-            if (! $this->allowRemove) {
+            if (!$this->allowRemove) {
                 throw new Exception\DomainException(message: sprintf(
                     'Elements have been removed from the collection (%s) but the allow_remove option is not true.',
-                    static::class
+                    static::class,
                 ));
             }
 
@@ -227,9 +224,12 @@ class Collection extends Fieldset implements CollectionInterface
         }
 
         foreach ($toRemove as $name) {
-            $this->remove(elementOrFieldset: (string) $name);
+            $this->remove(elementOrFieldset:  $name);
         }
 
+        /** @var mixed $key
+         * @var mixed $value
+         */
         foreach ($data as $key => $value) {
             $elementOrFieldset = null;
             if ($this->has(elementOrFieldset: (string) $key)) {
@@ -243,16 +243,16 @@ class Collection extends Fieldset implements CollectionInterface
             }
 
             if ($elementOrFieldset instanceof FieldsetInterface) {
-                $elementOrFieldset->populateValues(data: $value);
+                $elementOrFieldset->populateValues(data: \Jield\Stdlib\Value::iterable($value));
                 continue;
             }
 
             if ($elementOrFieldset !== null) {
-                $elementOrFieldset->setAttribute(key: 'value', value: $value);
+                $elementOrFieldset->setAttribute(key: 'value', value: \Jield\Stdlib\Value::plainScalar(\Jield\Stdlib\Value::scalar($value)));
             }
         }
 
-        if (! $this->createNewObjects()) {
+        if (!$this->createNewObjects()) {
             $this->replaceTemplateObjects();
         }
     }
@@ -273,11 +273,12 @@ class Collection extends Fieldset implements CollectionInterface
     public function bindValues(array $values = [], ?array $validationGroup = null): mixed
     {
         $collection = [];
+        /** @var mixed $value */
         foreach ($values as $name => $value) {
             $element = $this->get(elementOrFieldset: (string) $name);
 
             if ($element instanceof FieldsetInterface) {
-                $collection[] = $element->bindValues($value, $validationGroup);
+                $collection[] = $element->bindValues(\Jield\Stdlib\Value::array($value), $validationGroup);
             } else {
                 $collection[] = $value;
             }
@@ -289,7 +290,7 @@ class Collection extends Fieldset implements CollectionInterface
     /**
      * Set the initial count of target element
      *
-     * @return self
+     * @return static
      */
     public function setCount(int $count): static
     {
@@ -309,27 +310,20 @@ class Collection extends Fieldset implements CollectionInterface
      * Set the target element
      *
      * @param Traversable|array|ElementInterface $elementOrFieldset
-     * @return self
+     * @return static
      * @throws Exception\InvalidArgumentException
      */
     public function setTargetElement(Traversable|ElementInterface|array $elementOrFieldset): static
     {
         if (
             is_array(value: $elementOrFieldset)
-            || ($elementOrFieldset instanceof Traversable && ! $elementOrFieldset instanceof ElementInterface)
+            || $elementOrFieldset instanceof Traversable && !$elementOrFieldset instanceof ElementInterface
         ) {
-            $factory           = $this->getFormFactory();
+            $factory = $this->getFormFactory();
             $elementOrFieldset = $factory->create(spec: $elementOrFieldset);
         }
 
-        if (! $elementOrFieldset instanceof ElementInterface) {
-            throw new Exception\InvalidArgumentException(message: sprintf(
-                '%s requires that $elementOrFieldset be an object implementing %s; received "%s"',
-                __METHOD__,
-                __NAMESPACE__ . '\ElementInterface',
-                get_debug_type(value: $elementOrFieldset),
-            ));
-        }
+        
 
         $this->targetElement = $elementOrFieldset;
 
@@ -345,7 +339,7 @@ class Collection extends Fieldset implements CollectionInterface
     }
 
     /**
-     * @return self
+     * @return static
      */
     public function setAllowAdd(bool $allowAdd): static
     {
@@ -362,7 +356,7 @@ class Collection extends Fieldset implements CollectionInterface
     }
 
     /**
-     * @return self
+     * @return static
      */
     public function setAllowRemove(bool $allowRemove): static
     {
@@ -379,7 +373,7 @@ class Collection extends Fieldset implements CollectionInterface
      * If set to true, a template prototype is automatically added to the form
      * to ease the creation of dynamic elements through JavaScript
      *
-     * @return self
+     * @return static
      */
     public function setShouldCreateTemplate(bool $shouldCreateTemplate): static
     {
@@ -399,7 +393,7 @@ class Collection extends Fieldset implements CollectionInterface
     /**
      * Set the placeholder used in the template generated to help create new elements in JavaScript
      *
-     * @return self
+     * @return static
      */
     public function setTemplatePlaceholder(string $templatePlaceholder): static
     {
@@ -417,7 +411,7 @@ class Collection extends Fieldset implements CollectionInterface
     }
 
     /**
-     * @return self
+     * @return static
      */
     public function setCreateNewObjects(bool $createNewObjects): static
     {
@@ -449,8 +443,8 @@ class Collection extends Fieldset implements CollectionInterface
      */
     public function prepareElement(FormInterface $form): void
     {
-        if ((true === $this->shouldCreateChildrenOnPrepareElement) && $this->targetElement !== null && $this->count > 0) {
-            while ($this->count > $this->lastChildIndex + 1) {
+        if (true === $this->shouldCreateChildrenOnPrepareElement && $this->targetElement !== null && $this->count > 0) {
+            while ($this->count > ($this->lastChildIndex + 1)) {
                 $this->addNewTargetElementInstance(name: (string) ++$this->lastChildIndex);
             }
         }
@@ -480,30 +474,31 @@ class Collection extends Fieldset implements CollectionInterface
     {
         if ($this->object instanceof Traversable) {
             $this->object = ArrayUtils::iteratorToArray(iterator: $this->object, recursive: false);
-        } elseif (! is_array(value: $this->object)) {
+        } elseif (!is_array(value: $this->object)) {
             return [];
         }
 
         $values = [];
 
-        foreach ($this->object as $key => $value) {
+        /** @var mixed $value */
+        foreach (get_object_vars(\Jield\Stdlib\Value::object($this->object)) as $key => $value) {
             // If a hydrator is provided, our work here is done
             if ($this->hydrator) {
-                $values[$key] = $this->hydrator->extract(object: $value);
+                $values[$key] = $this->hydrator->extract(object: \Jield\Stdlib\Value::object($value));
                 continue;
             }
 
             // If the target element is a fieldset that can accept the provided value
             // we should clone it, inject the value and extract the data
             if ($this->targetElement instanceof FieldsetInterface) {
-                if (! $this->targetElement->allowObjectBinding(object: $value)) {
+                if (!$this->targetElement->allowObjectBinding(object: \Jield\Stdlib\Value::object($value))) {
                     continue;
                 }
                 $targetElement = clone $this->targetElement;
                 assert(assertion: $targetElement instanceof Fieldset);
                 $targetElement->setObject(object: $value);
                 $values[$key] = $targetElement->extract();
-                if (! $this->createNewObjects() && $this->has(elementOrFieldset: (string) $key)) {
+                if (!$this->createNewObjects() && $this->has(elementOrFieldset: (string) $key)) {
                     $fieldset = $this->get(elementOrFieldset: (string) $key);
                     assert(assertion: $fieldset instanceof FieldsetInterface);
                     $fieldset->setObject(object: $value);
@@ -514,7 +509,7 @@ class Collection extends Fieldset implements CollectionInterface
             // If the target element is a non-fieldset element, just use the value
             if ($this->targetElement instanceof ElementInterface) {
                 $values[$key] = $value;
-                if (! $this->createNewObjects() && $this->has(elementOrFieldset: (string) $key)) {
+                if (!$this->createNewObjects() && $this->has(elementOrFieldset: (string) $key)) {
                     $this->get(elementOrFieldset: (string) $key)->setValue(value: $value);
                 }
                 continue;
@@ -530,9 +525,13 @@ class Collection extends Fieldset implements CollectionInterface
     protected function createNewTargetElementInstance(): ElementInterface
     {
         assert(assertion: $this->targetElement !== null);
-        if (($this->targetElement instanceof InputFilterProviderFieldset) && null !== ($type = $this->targetElement->getOption(option: 'target_type'))) {
+        /** @var mixed $type */
+        if (
+            $this->targetElement instanceof InputFilterProviderFieldset
+            && null !== ($type = $this->targetElement->getOption(option: 'target_type'))
+        ) {
             assert(assertion: is_string(value: $type) && class_exists(class: $type));
-            $this->targetElement->setObject(object: new $type());
+            $this->targetElement->setObject(object: \Jield\Stdlib\Value::instantiate($type));
         }
         return clone $this->targetElement;
     }
@@ -551,11 +550,11 @@ class Collection extends Fieldset implements CollectionInterface
 
         $this->add(elementOrFieldset: $elementOrFieldset);
 
-        if (! $this->allowAdd && $this->count() > $this->count) {
+        if (!$this->allowAdd && $this->count() > $this->count) {
             throw new Exception\DomainException(message: sprintf(
                 'There are more elements than specified in the collection (%s). Either set the allow_add option '
                 . 'to true, or re-submit the form.',
-                static::class
+                static::class,
             ));
         }
 
@@ -569,7 +568,7 @@ class Collection extends Fieldset implements CollectionInterface
      */
     protected function createTemplateElement(): FieldsetInterface|ElementInterface|null
     {
-        if (! $this->shouldCreateTemplate) {
+        if (!$this->shouldCreateTemplate) {
             return null;
         }
 
@@ -591,7 +590,7 @@ class Collection extends Fieldset implements CollectionInterface
     {
         $fieldsets = $this->getFieldsets();
 
-        if (! count(value: $fieldsets) || ! $this->object) {
+        if (!count(value: $fieldsets) || !$this->object) {
             return;
         }
 

@@ -11,16 +11,17 @@ class AuthenticationServiceFactory
 {
     public function __invoke(ContainerInterface $container): AuthenticationService
     {
+        /** @var mixed $config */
         $config = $container->get('config');
 
-        if ($container->has(id: \Jield\Authentication\AuthenticationService::class)) {
+        if ($container->has(\Laminas\Authentication\AuthenticationService::class)) {
             return new AuthenticationService(
-                authenticationService: $container->get(\Jield\Authentication\AuthenticationService::class),
-                config: $config
+                authenticationService: \Jield\Stdlib\Service::get($container, \Laminas\Authentication\AuthenticationService::class),
+                config: \Jield\Stdlib\Value::array($config),
             );
         }
 
-        return new AuthenticationService(authenticationService: null, config: $config);
+        return new AuthenticationService(authenticationService: null, config: \Jield\Stdlib\Value::array($config));
     }
 
     /**

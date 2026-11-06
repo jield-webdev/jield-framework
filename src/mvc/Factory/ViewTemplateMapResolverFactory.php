@@ -1,10 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\Mvc\Factory;
 
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Laminas\View\Resolver as ViewResolver;
 use Psr\Container\ContainerInterface;
+
 use function is_array;
 
 class ViewTemplateMapResolverFactory implements FactoryInterface
@@ -19,13 +22,19 @@ class ViewTemplateMapResolverFactory implements FactoryInterface
      * @param null|array $options
      * @return ViewResolver\TemplateMapResolver
      */
-    public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): ViewResolver\TemplateMapResolver
-    {
+    public function __invoke(
+        ContainerInterface $container,
+        string $requestedName,
+        ?array $options = null,
+    ): ViewResolver\TemplateMapResolver {
+        /** @var mixed $config */
         $config = $container->get('config');
-        $map    = [];
+        $map = [];
         if (is_array($config) && isset($config['view_manager'])) {
+            /** @var mixed $config */
             $config = $config['view_manager'];
             if (is_array($config) && isset($config['template_map'])) {
+                /** @var mixed $map */
                 $map = $config['template_map'];
             }
         }

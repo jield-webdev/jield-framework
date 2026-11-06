@@ -6,6 +6,4 @@ namespace Jield\Search\Solr\Expression\Exception;
 
 use OverflowException as BaseOverflowException;
 
-class OverflowException extends BaseOverflowException implements ExceptionInterface
-{
-}
+class OverflowException extends BaseOverflowException implements ExceptionInterface {}

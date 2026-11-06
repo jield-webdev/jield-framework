@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Jield\Authorize\Factory;
 
+use Jield\Authorize\Config;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Psr\Container\ContainerInterface;
-use Jield\Authorize\Config;
 
 class IdentityProviderServiceFactory implements FactoryInterface
 {
@@ -17,6 +17,6 @@ class IdentityProviderServiceFactory implements FactoryInterface
      */
     public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): mixed
     {
-        return $container->get($container->get(Config::class)['identity_provider']);
+        return $container->get(\Jield\Stdlib\Value::string(\Jield\Stdlib\Value::array($container->get(Config::class))['identity_provider']));
     }
 }

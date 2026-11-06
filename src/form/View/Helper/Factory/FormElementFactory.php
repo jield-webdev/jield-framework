@@ -13,6 +13,6 @@ final class FormElementFactory implements FactoryInterface
 {
     public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): FormElement
     {
-        return new FormElement($container->get(HelperPluginManagerInterface::class));
+        return new FormElement(\Jield\Stdlib\Service::get($container, HelperPluginManagerInterface::class));
     }
 }

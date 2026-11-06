@@ -15,20 +15,20 @@ class FormNumber extends FormInput
      * @var array
      */
     protected array $validTagAttributes = [
-        'name'         => true,
+        'name' => true,
         'autocomplete' => true,
-        'autofocus'    => true,
-        'disabled'     => true,
-        'form'         => true,
-        'list'         => true,
-        'max'          => true,
-        'min'          => true,
-        'step'         => true,
-        'placeholder'  => true,
-        'readonly'     => true,
-        'required'     => true,
-        'type'         => true,
-        'value'        => true,
+        'autofocus' => true,
+        'disabled' => true,
+        'form' => true,
+        'list' => true,
+        'max' => true,
+        'min' => true,
+        'step' => true,
+        'placeholder' => true,
+        'readonly' => true,
+        'required' => true,
+        'type' => true,
+        'value' => true,
     ];
 
     /**

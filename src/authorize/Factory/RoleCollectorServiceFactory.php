@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Jield\Authorize\Factory;
 
+use Jield\Authorize\Collector\RoleCollector;
 use Jield\Authorize\Provider\Identity\ProviderInterface;
-use Jield\Collector\RoleCollector;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Psr\Container\ContainerInterface;
 
 /**
- * Factory responsible of instantiating {@see \Jield\Collector\RoleCollector}
+ * Factory responsible of instantiating {@see \Jield\Authorize\Collector\RoleCollector}
  */
 class RoleCollectorServiceFactory implements FactoryInterface
 {
@@ -21,8 +21,8 @@ class RoleCollectorServiceFactory implements FactoryInterface
      */
     public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): RoleCollector
     {
-        /** @var ProviderInterface $identityProvider */
-        $identityProvider = $container->get(ProviderInterface::class);
+        
+        $identityProvider = \Jield\Stdlib\Service::get($container, ProviderInterface::class);
 
         return new RoleCollector(identityProvider: $identityProvider);
     }

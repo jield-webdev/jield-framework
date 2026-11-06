@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace DoctrineORMModule;
 
-use Laminas\EventManager\EventInterface;
 use Jield\ModuleManager\Feature\ConfigProviderInterface;
 use Jield\ModuleManager\Feature\ControllerProviderInterface;
 use Jield\ModuleManager\Feature\DependencyIndicatorInterface;
 use Jield\ModuleManager\Feature\InitProviderInterface;
 use Jield\ModuleManager\ModuleManagerInterface;
+use Laminas\EventManager\EventInterface;
 
 /**
  * Base module for Doctrine ORM.
@@ -23,21 +23,18 @@ final class Module implements
     public function init(ModuleManagerInterface $manager): void
     {
         // Initialize the console
-        $manager
+        \Jield\Stdlib\Value::present($manager
             ->getEventManager()
-            ->getSharedManager()
+            ->getSharedManager())
             ->attach(
                 'doctrine',
                 'loadCli.post',
                 listener: static function (EventInterface $event): void {
-                    $event
-                        ->getParam(name: 'ServiceManager')
-                        ->get(CliConfigurator::class)
-                        ->configure($event->getTarget());
+                    \Jield\Stdlib\Value::call(\Jield\Stdlib\Value::call($event
+                        ->getParam(name: 'ServiceManager'), 'get', [CliConfigurator::class]), 'configure', [$event->getTarget()]);
                 },
                 priority: 1,
             );
-
     }
 
     /**
@@ -47,7 +44,9 @@ final class Module implements
      */
     public function getConfig(): array
     {
-        return include __DIR__ . '/../../config/docrine-orm-module/module.config.php';
+        /** @var array<array-key, mixed> $config */
+        $config = include __DIR__ . '/../../config/docrine-orm-module/module.config.php';
+        return $config;
     }
 
     /**
@@ -57,7 +56,9 @@ final class Module implements
      */
     public function getControllerConfig(): array
     {
-        return include __DIR__ . '/../../config/docrine-orm-module/controllers.config.php';
+        /** @var array<array-key, mixed> $config */
+        $config = include __DIR__ . '/../../config/docrine-orm-module/controllers.config.php';
+        return $config;
     }
 
     /**

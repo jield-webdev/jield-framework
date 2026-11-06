@@ -9,26 +9,29 @@ use Jield\Twig\ModuleOptions;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Laminas\View\Resolver\TemplateMapResolver;
 use Psr\Container\ContainerInterface;
+
 use function pathinfo;
+
 use const PATHINFO_EXTENSION;
 
 class MapLoaderFactory implements FactoryInterface
 {
     public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): MapLoader
     {
-        if (null === $options) {
-            /** @var ModuleOptions $options */
-            $options = $container->get(ModuleOptions::class);
-        }
+        $moduleOptions = $options === null
+            ? \Jield\Stdlib\Service::get($container, ModuleOptions::class)
+            : new ModuleOptions(\Jield\Stdlib\Value::stringKeyedArray($options));
 
-        /** @var TemplateMapResolver $laminasTemplateMap */
-        $laminasTemplateMap = $container->get('ViewTemplateMapResolver');
+        
+        $laminasTemplateMap = \Jield\Stdlib\Service::get($container, \Laminas\View\Resolver\TemplateMapResolver::class, 'ViewTemplateMapResolver');
 
         $templateMap = new MapLoader();
         foreach ($laminasTemplateMap as $name => $path) {
-            if ($options->getSuffix() === pathinfo(path: (string)$path, flags: PATHINFO_EXTENSION)) {
-                $templateMap->add(name: $name, path: (string)$path);
+            if ($moduleOptions->getSuffix() !== pathinfo(path: $path, flags: PATHINFO_EXTENSION)) {
+                continue;
             }
+
+            $templateMap->add(name: $name, path: $path);
         }
 
         return $templateMap;

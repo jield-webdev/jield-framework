@@ -1,0 +1,627 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Jield\Mvc\Navigation;
+
+use Laminas\Navigation\Page\AbstractPage;
+use Jield\Stdlib\Value;
+
+use Laminas\Navigation\Exception;
+use Laminas\Permissions\Acl\Resource\ResourceInterface;
+use Jield\Mvc\Router\RouteMatch;
+use Laminas\Router\RouteStackInterface;
+
+use function array_intersect_assoc;
+use function array_merge;
+use function assert;
+use function count;
+use function get_debug_type;
+use function is_string;
+use function sprintf;
+use function strlen;
+
+/**
+ * Represents a page that is defined using controller, action, route
+ * name and route params to assemble the href
+ *
+ * The two constants defined were originally provided via the laminas-mvc class
+ * ModuleRouteListener; to remove the requirement on that component, they are
+ * reproduced here.
+ *
+ * Adapted from laminas-navigation for laminas-router 4 URL objects.
+ */
+class MvcPage extends AbstractPage
+{
+    public const MODULE_NAMESPACE    = '__NAMESPACE__';
+    public const ORIGINAL_CONTROLLER = '__CONTROLLER__';
+
+    /**
+     * Action name to use when assembling URL
+     *
+     * @var string|null
+     */
+    protected $action;
+
+    /**
+     * Controller name to use when assembling URL
+     *
+     * @var string|null
+     */
+    protected $controller;
+
+    /**
+     * URL query part to use when assembling URL
+     *
+     * @var array<string, mixed>|string|null
+     */
+    protected $query;
+
+    /**
+     * Params to use when assembling URL
+     *
+     * @see getHref()
+     *
+     * @var array<string, mixed>
+     */
+    protected $params = [];
+
+    /**
+     * RouteInterface name to use when assembling URL
+     *
+     * @see getHref()
+     *
+     * @var string|null
+     */
+    protected $route;
+
+    /**
+     * Cached href
+     *
+     * The use of this variable minimizes execution time when getHref() is
+     * called more than once during the lifetime of a request. If a property
+     * is updated, the cache is invalidated.
+     *
+     * @var string|null
+     */
+    protected $hrefCache;
+
+    /**
+     * RouteInterface matches; used for routing parameters and testing validity
+     *
+     * @var RouteMatch|null
+     */
+    protected $routeMatch;
+
+    /**
+     * If true and set routeMatch than getHref will use routeMatch params
+     * to assemble uri
+     *
+     * @var bool
+     */
+    protected $useRouteMatch = false;
+
+    /**
+     * Router for assembling URLs
+     *
+     * @see getHref()
+     *
+     * @var RouteStackInterface|null
+     */
+    protected $router;
+
+    /**
+     * Default router to be used if router is not given.
+     *
+     * @see getHref()
+     *
+     * @var RouteStackInterface|null
+     */
+    protected static $defaultRouter;
+
+    /**
+     * Default route name
+     *
+     * @var string|null
+     */
+    protected static $defaultRoute;
+
+    // Accessors:
+
+    /**
+     * Returns whether page should be considered active or not
+     *
+     * This method will compare the page properties against the route matches
+     * composed in the object.
+     *
+     * @param  bool $recursive  [optional] whether page should be considered
+     *                          active if any child pages are active. Default is
+     *                          false.
+     * @return bool             whether page should be considered active or not
+     */
+    public function isActive($recursive = false)
+    {
+        if (! $this->active) {
+            $reqParams = [];
+            if ($this->routeMatch instanceof RouteMatch) {
+                $reqParams = $this->routeMatch->getParams();
+
+                if (isset($reqParams[self::ORIGINAL_CONTROLLER])) {
+                    /** @psalm-suppress MixedAssignment */
+                    $reqParams['controller'] = $reqParams[self::ORIGINAL_CONTROLLER];
+                }
+
+                $pageParams = $this->params;
+                if (null !== $this->controller) {
+                    $pageParams['controller'] = $this->controller;
+                }
+                if (null !== $this->action) {
+                    $pageParams['action'] = $this->action;
+                }
+
+                if (null !== $this->getRoute()) {
+                    if (
+                        Value::present($this->routeMatch)->getMatchedRouteName() === $this->getRoute()
+                        && (count(array_intersect_assoc($reqParams, $pageParams)) === count($pageParams))
+                    ) {
+                        $this->active = true;
+                        return $this->active;
+                    } else {
+                        return parent::isActive($recursive);
+                    }
+                }
+            }
+
+            $pageParams = $this->params;
+
+            if (null !== $this->controller) {
+                $pageParams['controller'] = $this->controller;
+            } else {
+                /**
+                 * @todo In Laminas1, this was configurable and pulled from the front controller
+                 */
+                $pageParams['controller'] = 'index';
+            }
+
+            if (null !== $this->action) {
+                $pageParams['action'] = $this->action;
+            } else {
+                /**
+                 * @todo In Laminas1, this was configurable and pulled from the front controller
+                 */
+                $pageParams['action'] = 'index';
+            }
+
+            if (count(array_intersect_assoc($reqParams, $pageParams)) === count($pageParams)) {
+                $this->active = true;
+                return true;
+            }
+        }
+
+        return parent::isActive($recursive);
+    }
+
+    /**
+     * Returns href for this page
+     *
+     * This method uses {@link RouteStackInterface} to assemble
+     * the href based on the page's properties.
+     *
+     * @see RouteStackInterface
+     *
+     * @return string  page href
+     * @throws Exception\DomainException If no router is set.
+     */
+    public function getHref()
+    {
+        if ($this->hrefCache !== null) {
+            return $this->hrefCache;
+        }
+
+        $router = $this->router;
+        if (null === $router) {
+            $router = static::$defaultRouter;
+        }
+
+        if (! $router instanceof RouteStackInterface) {
+            throw new Exception\DomainException(
+                __METHOD__
+                . ' cannot execute as no Laminas\Router\RouteStackInterface instance is composed'
+            );
+        }
+
+        if ($this->useRouteMatch() && $this->getRouteMatch()) {
+            $rmParams = Value::present($this->getRouteMatch())->getParams();
+
+            if (isset($rmParams[self::ORIGINAL_CONTROLLER])) {
+                /** @psalm-suppress MixedAssignment */
+                $rmParams['controller'] = $rmParams[self::ORIGINAL_CONTROLLER];
+                unset($rmParams[self::ORIGINAL_CONTROLLER]);
+            }
+
+            if (isset($rmParams[self::MODULE_NAMESPACE])) {
+                unset($rmParams[self::MODULE_NAMESPACE]);
+            }
+
+            $params = array_merge($rmParams, $this->getParams());
+        } else {
+            $params = $this->getParams();
+        }
+
+        if (($param = $this->getController()) !== null) {
+            $params['controller'] = $param;
+        }
+
+        if (($param = $this->getAction()) !== null) {
+            $params['action'] = $param;
+        }
+
+        $name = match (true) {
+            $this->getRoute() !== null || static::getDefaultRoute() !== null
+                => $this->getRoute() ?? static::getDefaultRoute(),
+            $this->getRouteMatch() !== null
+                => Value::present($this->getRouteMatch())->getMatchedRouteName(),
+            default => throw new Exception\DomainException('No route name could be found'),
+        };
+
+        $options = ['name' => $name];
+
+        // Add the fragment identifier if it is set
+        $fragment = $this->getFragment();
+        if (null !== $fragment) {
+            $options['fragment'] = $fragment;
+        }
+
+        if (null !== ($query = $this->getQuery())) {
+            $options['query'] = $query;
+        }
+
+        $url = $router->assemble(Value::routeParams($params), $options)->toString();
+
+        return $this->hrefCache = $url;
+    }
+
+    /**
+     * Sets action name to use when assembling URL
+     *
+     * @see getHref()
+     *
+     * @param  mixed $action             action name
+     * @return MvcPage   fluent interface, returns self
+     * @throws Exception\InvalidArgumentException  If invalid $action is given.
+     */
+    public function setAction($action)
+    {
+        /** @psalm-suppress DocblockTypeContradiction */
+        if (null !== $action && ! is_string($action)) {
+            throw new Exception\InvalidArgumentException(
+                'Invalid argument: $action must be a string or null'
+            );
+        }
+
+        $this->action    = $action;
+        $this->hrefCache = null;
+        return $this;
+    }
+
+    /**
+     * Returns action name to use when assembling URL
+     *
+     * @see getHref()
+     *
+     * @return string|null  action name
+     */
+    public function getAction()
+    {
+        return $this->action;
+    }
+
+    /**
+     * Sets controller name to use when assembling URL
+     *
+     * @see getHref()
+     *
+     * @param  mixed $controller    controller name
+     * @return $this   fluent interface, returns self
+     * @throws Exception\InvalidArgumentException  If invalid controller name is given.
+     */
+    public function setController($controller)
+    {
+        /** @psalm-suppress DocblockTypeContradiction */
+        if (null !== $controller && ! is_string($controller)) {
+            throw new Exception\InvalidArgumentException(
+                'Invalid argument: $controller must be a string or null'
+            );
+        }
+
+        $this->controller = $controller;
+        $this->hrefCache  = null;
+        return $this;
+    }
+
+    /**
+     * Returns controller name to use when assembling URL
+     *
+     * @see getHref()
+     *
+     * @return string|null  controller name or null
+     */
+    public function getController()
+    {
+        return $this->controller;
+    }
+
+    /**
+     * Sets URL query part to use when assembling URL
+     *
+     * @see getHref()
+     *
+     * @param  array<string, mixed>|string|null $query    URL query part
+     * @return self   fluent interface, returns self
+     */
+    public function setQuery($query)
+    {
+        $this->query     = $query;
+        $this->hrefCache = null;
+        return $this;
+    }
+
+    /**
+     * Returns URL query part to use when assembling URL
+     *
+     * @see getHref()
+     *
+     * @return array|string|null  URL query part (as an array or string) or null
+     */
+    public function getQuery()
+    {
+        return $this->query;
+    }
+
+    /**
+     * Sets params to use when assembling URL
+     *
+     * @see getHref()
+     *
+     * @param  array<string, mixed>|null $params [optional] page params. Default is null
+     *                                          which sets no params.
+     * @return MvcPage  fluent interface, returns self
+     */
+    public function setParams(?array $params = null)
+    {
+        $this->params    = $params ?? [];
+        $this->hrefCache = null;
+        return $this;
+    }
+
+    /**
+     * Returns params to use when assembling URL
+     *
+     * @see getHref()
+     *
+     * @return array<string, mixed>  page params
+     */
+    public function getParams()
+    {
+        return $this->params;
+    }
+
+    /**
+     * Sets route name to use when assembling URL
+     *
+     * @see getHref()
+     *
+     * @psalm-suppress PossiblyUnusedMethod
+     * @param  mixed $route Route name to use when assembling URL.
+     * @return $this Fluent interface, returns self.
+     * @throws Exception\InvalidArgumentException If invalid $route is given.
+     */
+    public function setRoute($route)
+    {
+        /** @psalm-suppress DocblockTypeContradiction */
+        if (null !== $route && (! is_string($route) || strlen($route) < 1)) {
+            throw new Exception\InvalidArgumentException(
+                'Invalid argument: $route must be a non-empty string or null'
+            );
+        }
+
+        $this->route     = $route;
+        $this->hrefCache = null;
+        return $this;
+    }
+
+    /**
+     * Returns route name to use when assembling URL
+     *
+     * @see getHref()
+     *
+     * @return string|null  route name
+     */
+    public function getRoute()
+    {
+        return $this->route;
+    }
+
+    /**
+     * Get the route match.
+     *
+     * @return RouteMatch|null
+     */
+    public function getRouteMatch()
+    {
+        return $this->routeMatch;
+    }
+
+    /**
+     * Set route match object from which parameters will be retrieved
+     *
+     * @param  mixed $matches
+     * @return $this fluent interface, returns self
+     * @throws Exception\InvalidArgumentException If invalid route match is given.
+     */
+    public function setRouteMatch($matches)
+    {
+        if (! $matches instanceof RouteMatch) {
+            throw new Exception\InvalidArgumentException(sprintf(
+                'RouteMatch passed to %s must be a %s instance; received %s',
+                __METHOD__,
+                RouteMatch::class,
+                get_debug_type($matches)
+            ));
+        }
+        $this->routeMatch = $matches;
+        return $this;
+    }
+
+    /**
+     * Get the useRouteMatch flag
+     *
+     * @return bool
+     */
+    public function useRouteMatch()
+    {
+        return $this->useRouteMatch;
+    }
+
+    /**
+     * Set whether the page should use route match params for assembling link uri
+     *
+     * @see getHref()
+     *
+     * @param bool $useRouteMatch [optional]
+     * @return MvcPage
+     */
+    public function setUseRouteMatch($useRouteMatch = true)
+    {
+        /** @psalm-suppress RedundantCastGivenDocblockType */
+        $this->useRouteMatch = (bool) $useRouteMatch;
+        $this->hrefCache     = null;
+        return $this;
+    }
+
+    /**
+     * Get the router.
+     *
+     * @return RouteStackInterface|null
+     */
+    public function getRouter()
+    {
+        return $this->router;
+    }
+
+    /**
+     * Sets router for assembling URLs
+     *
+     * @see getHref()
+     *
+     * @param  mixed $router Router
+     * @return MvcPage Fluent interface, returns self
+     */
+    public function setRouter($router)
+    {
+        /** @psalm-suppress DocblockTypeContradiction */
+        if (! $router instanceof RouteStackInterface) {
+            throw new Exception\InvalidArgumentException(sprintf(
+                'Router passed to %s must be a %s instance; received %s',
+                __METHOD__,
+                RouteStackInterface::class,
+                get_debug_type($router)
+            ));
+        }
+        $this->router = $router;
+        return $this;
+    }
+
+    /**
+     * Sets the default router for assembling URLs.
+     *
+     * @see getHref()
+     *
+     * @param  RouteStackInterface|null $router Router
+     * @return void
+     */
+    public static function setDefaultRouter($router)
+    {
+        static::$defaultRouter = $router;
+    }
+
+    /**
+     * Gets the default router for assembling URLs.
+     *
+     * @return RouteStackInterface|null
+     */
+    public static function getDefaultRouter()
+    {
+        return static::$defaultRouter;
+    }
+
+    /**
+     * Set default route name
+     *
+     * @param string|null $route
+     * @return void
+     */
+    public static function setDefaultRoute($route)
+    {
+        static::$defaultRoute = $route;
+    }
+
+    /**
+     * Get default route name
+     *
+     * @return string|null
+     */
+    public static function getDefaultRoute()
+    {
+        return static::$defaultRoute;
+    }
+
+    // Public methods:
+
+    /**
+     * Returns an array representation of the page
+     *
+     * @see ResourceInterface
+     *
+     * @return array
+     * @psalm-return array{
+     *     label: string|null,
+     *     fragment: string|null,
+     *     id: string|null,
+     *     class: string|null,
+     *     title: string|null,
+     *     target: string|null,
+     *     rel: array|null,
+     *     rev: array|null,
+     *     order: int|null,
+     *     resource: ResourceInterface|string|null,
+     *     privilege: string|null,
+     *     permission: mixed|null,
+     *     active: bool,
+     *     visible: bool,
+     *     pages: list<array>,
+     *     type: string,
+     *     action: string|null,
+     *     controller: string|null,
+     *     params: array,
+     *     route: string|null,
+     *     router: RouteStackInterface|null,
+     *     route_match: RouteMatch|null,
+     *     ...<string, mixed>
+     * }
+     */
+    public function toArray()
+    {
+        return array_merge(
+            parent::toArray(),
+            [
+                'action'      => $this->getAction(),
+                'controller'  => $this->getController(),
+                'params'      => $this->getParams(),
+                'route'       => $this->getRoute(),
+                'router'      => $this->getRouter(),
+                'route_match' => $this->getRouteMatch(),
+            ]
+        );
+    }
+}

@@ -12,7 +12,6 @@ use function is_array;
 use function is_string;
 use function sprintf;
 
-/** @final */
 class FormFile extends FormInput
 {
     /**
@@ -21,14 +20,14 @@ class FormFile extends FormInput
      * @var array
      */
     protected array $validTagAttributes = [
-        'name'      => true,
-        'accept'    => true,
+        'name' => true,
+        'accept' => true,
         'autofocus' => true,
-        'disabled'  => true,
-        'form'      => true,
-        'multiple'  => true,
-        'required'  => true,
-        'type'      => true,
+        'disabled' => true,
+        'form' => true,
+        'multiple' => true,
+        'required' => true,
+        'type' => true,
     ];
 
     /**
@@ -42,19 +41,20 @@ class FormFile extends FormInput
         if ($name === null || $name === '') {
             throw new Exception\DomainException(message: sprintf(
                 '%s requires that the element has an assigned name; none discovered',
-                __METHOD__
+                __METHOD__,
             ));
         }
 
-        $attributes         = $element->getAttributes();
+        $attributes = $element->getAttributes();
         $attributes['type'] = $this->getType(element: $element);
         $attributes['name'] = $name;
         if (array_key_exists(key: 'multiple', array: $attributes) && $attributes['multiple']) {
             $attributes['name'] .= '[]';
         }
 
+        /** @var mixed $value */
         $value = $element->getValue();
-        if (is_array(value: $value) && isset($value['name']) && ! is_array(value: $value['name'])) {
+        if (is_array(value: $value) && isset($value['name']) && !is_array(value: $value['name'])) {
             $attributes['value'] = $value['name'];
         } elseif (is_string(value: $value)) {
             $attributes['value'] = $value;
@@ -63,7 +63,7 @@ class FormFile extends FormInput
         return sprintf(
             '<input %s%s',
             $this->createAttributesString(attributes: $attributes),
-            $this->getInlineClosingBracket()
+            $this->getInlineClosingBracket(),
         );
     }
 

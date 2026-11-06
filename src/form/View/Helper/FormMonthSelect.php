@@ -22,16 +22,15 @@ class FormMonthSelect extends AbstractFormDateSelect
      *
      * @template T as null|ElementInterface
      * @psalm-param T $element
-     * @psalm-return (T is null ? self : string)
+     * @psalm-return (T is null ? static : string)
      * @return string|self
      */
     public function __invoke(
         ?ElementInterface $element = null,
         int $dateType = IntlDateFormatter::LONG,
-        ?string $locale = null
-    ): string|FormMonthSelect|static
-    {
-        if (! $element) {
+        ?string $locale = null,
+    ): string|static {
+        if (!$element) {
             return $this;
         }
 
@@ -52,10 +51,10 @@ class FormMonthSelect extends AbstractFormDateSelect
      */
     public function render(ElementInterface $element): string
     {
-        if (! $element instanceof MonthSelectElement) {
+        if (!$element instanceof MonthSelectElement) {
             throw new Exception\InvalidArgumentException(message: sprintf(
                 '%s requires that the element is of type Jield\Form\Element\MonthSelect',
-                __METHOD__
+                __METHOD__,
             ));
         }
 
@@ -63,37 +62,38 @@ class FormMonthSelect extends AbstractFormDateSelect
         if ($name === null || $name === '') {
             throw new Exception\DomainException(message: sprintf(
                 '%s requires that the element has an assigned name; none discovered',
-                __METHOD__
+                __METHOD__,
             ));
         }
 
         $selectHelper = $this->getSelectElementHelper();
-        $pattern      = $this->parsePattern(renderDelimiters: $element->shouldRenderDelimiters());
+        $pattern = $this->parsePattern(renderDelimiters: $element->shouldRenderDelimiters());
 
         // The pattern always contains "day" part and the first separator, so we have to remove it
         unset($pattern['day']);
         unset($pattern[0]);
 
-        $monthsOptions = $this->getMonthsOptions(pattern: $pattern['month']);
-        $yearOptions   = $this->getYearsOptions(minYear: $element->getMinYear(), maxYear: $element->getMaxYear());
+        $monthsOptions = $this->getMonthsOptions(pattern: \Jield\Stdlib\Value::string($pattern['month']));
+        $yearOptions = $this->getYearsOptions(minYear: $element->getMinYear(), maxYear: $element->getMaxYear());
 
         $monthElement = $element->getMonthElement()->setValueOptions(options: $monthsOptions);
-        $yearElement  = $element->getYearElement()->setValueOptions(options: $yearOptions);
+        $yearElement = $element->getYearElement()->setValueOptions(options: $yearOptions);
 
         if ($element->shouldCreateEmptyOption()) {
             $monthElement->setEmptyOption(emptyOption: '');
             $yearElement->setEmptyOption(emptyOption: '');
         }
 
-        $data                    = [];
+        $data = [];
         $data[$pattern['month']] = $selectHelper->render(element: $monthElement);
-        $data[$pattern['year']]  = $selectHelper->render(element: $yearElement);
+        $data[\Jield\Stdlib\Value::key($pattern['year'])] = $selectHelper->render(element: $yearElement);
 
         $markup = '';
+        /** @var mixed $value */
         foreach ($pattern as $key => $value) {
             // Delimiter
             if (is_numeric(value: $key)) {
-                $markup .= $value;
+                $markup .= \Jield\Stdlib\Value::stringify($value);
             } else {
                 $markup .= $data[$value];
             }

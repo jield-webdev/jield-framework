@@ -26,10 +26,8 @@ class ProximityExpression extends Expression implements Stringable
         /**
          * Maximum distance between the two words
          */
-        private readonly int $proximity
-    )
-    {
-    }
+        private readonly int $proximity,
+    ) {}
 
     public function __toString(): string
     {

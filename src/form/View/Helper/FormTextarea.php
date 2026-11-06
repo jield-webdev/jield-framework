@@ -9,7 +9,6 @@ use Jield\Form\Exception;
 
 use function sprintf;
 
-/** @final */
 class FormTextarea extends AbstractHelper
 {
     /**
@@ -19,20 +18,20 @@ class FormTextarea extends AbstractHelper
      */
     protected array $validTagAttributes = [
         'autocomplete' => true,
-        'autofocus'    => true,
-        'cols'         => true,
-        'dirname'      => true,
-        'disabled'     => true,
-        'form'         => true,
-        'inputmode'    => true,
-        'maxlength'    => true,
-        'minlength'    => true,
-        'name'         => true,
-        'placeholder'  => true,
-        'readonly'     => true,
-        'required'     => true,
-        'rows'         => true,
-        'wrap'         => true,
+        'autofocus' => true,
+        'cols' => true,
+        'dirname' => true,
+        'disabled' => true,
+        'form' => true,
+        'inputmode' => true,
+        'maxlength' => true,
+        'minlength' => true,
+        'name' => true,
+        'placeholder' => true,
+        'readonly' => true,
+        'required' => true,
+        'rows' => true,
+        'wrap' => true,
     ];
 
     /**
@@ -42,12 +41,12 @@ class FormTextarea extends AbstractHelper
      *
      * @template T as null|ElementInterface
      * @psalm-param T $element
-     * @psalm-return (T is null ? self : string)
+     * @psalm-return (T is null ? static : string)
      * @return string|FormTextarea
      */
-    public function __invoke(?ElementInterface $element = null): FormTextarea|string|static
+    public function __invoke(?ElementInterface $element = null): string|static
     {
-        if (! $element) {
+        if (!$element) {
             return $this;
         }
 
@@ -65,19 +64,19 @@ class FormTextarea extends AbstractHelper
         if ($name === null || $name === '') {
             throw new Exception\DomainException(message: sprintf(
                 '%s requires that the element has an assigned name; none discovered',
-                __METHOD__
+                __METHOD__,
             ));
         }
 
-        $attributes         = $element->getAttributes();
+        $attributes = $element->getAttributes();
         $attributes['name'] = $name;
-        $content            = (string) $element->getValue();
-        $escapeHtml         = $this->getEscapeHtmlHelper();
+        $content = (string) $element->getValue();
+        $escapeHtml = $this->getEscapeHtmlHelper();
 
         return sprintf(
             '<textarea %s>%s</textarea>',
             $this->createAttributesString(attributes: $attributes),
-            $escapeHtml(value: $content)
+            \Jield\Stdlib\Value::scalar($escapeHtml(value: $content)),
         );
     }
 }

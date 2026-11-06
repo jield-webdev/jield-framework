@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\Authorize\Role;
 
 use Laminas\Permissions\Acl\Role\RoleInterface;
@@ -22,11 +24,11 @@ class UserAsRole implements RoleInterface
     {
         if (null === $this->userAsRole) {
             throw new \RuntimeException(
-                message: 'You are trying to get the logged in user, but no user is set, are you logged in and did you check the isLoggedIn()'
+                message: 'You are trying to get the logged in user, but no user is set, are you logged in and did you check the isLoggedIn()',
             );
         }
 
-        return $this->userAsRole;
+        return \Jield\Stdlib\Value::instance($this->userAsRole, \Jield\Authorize\Role\UserAsRoleInterface::class);
     }
 
     public function __toString()

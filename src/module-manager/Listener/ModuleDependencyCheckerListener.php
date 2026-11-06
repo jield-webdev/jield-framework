@@ -21,18 +21,21 @@ class ModuleDependencyCheckerListener
     {
         $module = $e->getModule();
 
-        if ($module instanceof DependencyIndicatorInterface || method_exists(object_or_class: $module, method: 'getModuleDependencies')) {
-            $dependencies = $module->getModuleDependencies();
+        if (
+            $module instanceof DependencyIndicatorInterface
+            || method_exists(object_or_class: \Jield\Stdlib\Value::objectOrString($module), method: 'getModuleDependencies')
+        ) {
+            /** @var mixed $dependencies */
+            $dependencies = \Jield\Stdlib\Value::call(\Jield\Stdlib\Value::present($module), 'getModuleDependencies');
 
-            foreach ($dependencies as $dependencyModule) {
-                if (! isset($this->loaded[$dependencyModule])) {
-                    throw new Exception\MissingDependencyModuleException(
-                        message: sprintf(
-                            'Module "%s" depends on module "%s", which was not initialized before it',
-                            $e->getModuleName(),
-                            $dependencyModule
-                        )
-                    );
+            /** @var mixed $dependencyModule */
+            foreach (\Jield\Stdlib\Value::iterable($dependencies) as $dependencyModule) {
+                if (!isset($this->loaded[$dependencyModule])) {
+                    throw new Exception\MissingDependencyModuleException(message: sprintf(
+                        'Module "%s" depends on module "%s", which was not initialized before it',
+                        $e->getModuleName(),
+                        \Jield\Stdlib\Value::scalar($dependencyModule),
+                    ));
                 }
             }
         }

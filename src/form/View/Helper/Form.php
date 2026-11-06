@@ -6,8 +6,8 @@ namespace Jield\Form\View\Helper;
 
 use Jield\Form\FieldsetInterface;
 use Jield\Form\FormInterface;
+use Jield\Mvc\View\Renderer\PhpRenderer;
 use Laminas\View\Helper\Doctype;
-use Laminas\View\Renderer\PhpRenderer;
 
 use function array_key_exists;
 use function array_merge;
@@ -29,13 +29,13 @@ class Form extends AbstractHelper
      */
     protected array $validTagAttributes = [
         'accept-charset' => true,
-        'action'         => true,
-        'autocomplete'   => true,
-        'enctype'        => true,
-        'method'         => true,
-        'name'           => true,
-        'novalidate'     => true,
-        'target'         => true,
+        'action' => true,
+        'autocomplete' => true,
+        'enctype' => true,
+        'method' => true,
+        'name' => true,
+        'novalidate' => true,
+        'target' => true,
     ];
 
     /**
@@ -43,12 +43,12 @@ class Form extends AbstractHelper
      *
      * @template T as null|FormInterface
      * @psalm-param T $form
-     * @psalm-return (T is null ? self : string)
+     * @psalm-return (T is null ? static : string)
      * @return Form|string
      */
-    public function __invoke(?FormInterface $form = null): Form|string|static
+    public function __invoke(?FormInterface $form = null): string|static
     {
-        if (! $form) {
+        if (!$form) {
             return $this;
         }
 
@@ -70,9 +70,9 @@ class Form extends AbstractHelper
         assert(assertion: $renderer instanceof PhpRenderer);
         foreach ($form as $element) {
             if ($element instanceof FieldsetInterface) {
-                $formContent .= $renderer->formCollection($element);
+                $formContent .= \Jield\Stdlib\Value::stringify(\Jield\Stdlib\Value::call($renderer, 'formCollection', [$element]));
             } else {
-                $formContent .= $renderer->formRow($element);
+                $formContent .= \Jield\Stdlib\Value::stringify(\Jield\Stdlib\Value::call($renderer, 'formRow', [$element]));
             }
         }
 
@@ -84,10 +84,10 @@ class Form extends AbstractHelper
      */
     public function openTag(?FormInterface $form = null): string
     {
-        $doctype    = $this->getDoctype();
+        $doctype = $this->getDoctype();
         $attributes = [];
 
-        if (! (Doctype::HTML5 === $doctype || Doctype::XHTML5 === $doctype)) {
+        if (!(Doctype::HTML5 === $doctype || Doctype::XHTML5 === $doctype)) {
             $attributes = [
                 'action' => '',
                 'method' => 'get',
@@ -96,7 +96,10 @@ class Form extends AbstractHelper
 
         if ($form instanceof FormInterface) {
             $formAttributes = $form->getAttributes();
-            if (! array_key_exists(key: 'id', array: $formAttributes) && array_key_exists(key: 'name', array: $formAttributes)) {
+            if (
+                !array_key_exists(key: 'id', array: $formAttributes)
+                && array_key_exists(key: 'name', array: $formAttributes)
+            ) {
                 $formAttributes['id'] = $formAttributes['name'];
             }
             $attributes = array_merge($attributes, $formAttributes);

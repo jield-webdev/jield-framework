@@ -7,6 +7,7 @@ namespace Jield\Mvc\Plugin\FlashMessenger\View\Helper;
 use Jield\Mvc\Plugin\FlashMessenger\FlashMessenger as PluginFlashMessenger;
 use Laminas\View\Exception\InvalidArgumentException;
 use Laminas\View\Helper\EscapeHtml;
+
 use function array_walk_recursive;
 use function assert;
 use function call_user_func_array;
@@ -36,21 +37,20 @@ use function sprintf;
  * @method bool hasCurrentErrorMessages()
  * @method bool hasCurrentWarningMessages()
  */
-class FlashMessenger
+class FlashMessenger extends \Jield\Mvc\View\Helper\AbstractTranslatorHelper
 {
     /**
      * Default attributes for the open format tag
      *
      * @var array<string, string>
      */
-    protected array $classMessages
-        = [
-            'info'    => PluginFlashMessenger::NAMESPACE_INFO,
-            'error'   => PluginFlashMessenger::NAMESPACE_ERROR,
-            'success' => PluginFlashMessenger::NAMESPACE_SUCCESS,
-            'default' => PluginFlashMessenger::NAMESPACE_DEFAULT,
-            'warning' => PluginFlashMessenger::NAMESPACE_WARNING,
-        ];
+    protected array $classMessages = [
+        'info' => PluginFlashMessenger::NAMESPACE_INFO,
+        'error' => PluginFlashMessenger::NAMESPACE_ERROR,
+        'success' => PluginFlashMessenger::NAMESPACE_SUCCESS,
+        'default' => PluginFlashMessenger::NAMESPACE_DEFAULT,
+        'warning' => PluginFlashMessenger::NAMESPACE_WARNING,
+    ];
 
     protected string $messageCloseString = '</li></ul>';
     /** @var string */
@@ -70,14 +70,14 @@ class FlashMessenger
      *
      * @var EscapeHtml|null
      */
-    protected ?EscapeHtml $escapeHtmlHelper;
+    protected ?EscapeHtml $escapeHtmlHelper = null;
 
     /**
      * Flash messenger plugin
      *
      * @var PluginFlashMessenger|null
      */
-    protected ?PluginFlashMessenger $pluginFlashMessenger;
+    protected ?PluginFlashMessenger $pluginFlashMessenger = null;
 
     /**
      * All namespaces of FlashMessenger
@@ -138,16 +138,7 @@ class FlashMessenger
      */
     public function setPluginFlashMessenger(PluginFlashMessenger $pluginFlashMessenger)
     {
-        if (
-            !$pluginFlashMessenger instanceof PluginFlashMessenger
-        ) {
-            throw new InvalidArgumentException(sprintf(
-                '%s expects a %s instance; received %s',
-                __METHOD__,
-                PluginFlashMessenger::class,
-                is_object($pluginFlashMessenger) ? $pluginFlashMessenger::class : gettype($pluginFlashMessenger)
-            ));
-        }
+        
 
         $this->pluginFlashMessenger = $pluginFlashMessenger;
         return $this;
@@ -163,7 +154,7 @@ class FlashMessenger
     public function __call(string $method, array $argv)
     {
         $flashMessenger = $this->getPluginFlashMessenger();
-        return call_user_func_array([$flashMessenger, $method], $argv);
+        return call_user_func_array(\Jield\Stdlib\Value::callback([$flashMessenger, $method]), $argv);
     }
 
     /**
@@ -177,7 +168,7 @@ class FlashMessenger
     public function render(string $namespace = 'default', array $classes = [], ?bool $autoEscape = null)
     {
         $flashMessenger = $this->getPluginFlashMessenger();
-        $messages       = $flashMessenger->getMessagesFromNamespace($namespace);
+        $messages = $flashMessenger->getMessagesFromNamespace($namespace);
         return $this->renderMessages($namespace, $messages, $classes, $autoEscape);
     }
 
@@ -192,11 +183,10 @@ class FlashMessenger
      */
     protected function renderMessages(
         string $namespace = 'default',
-        array  $messages = [],
-        array  $classes = [],
-        ?bool  $autoEscape = null
-    )
-    {
+        array $messages = [],
+        array $classes = [],
+        ?bool $autoEscape = null,
+    ) {
         if (empty($messages)) {
             return '';
         }
@@ -209,28 +199,31 @@ class FlashMessenger
         $autoEscape ??= $this->autoEscape;
 
         // Flatten message array
-        $escapeHtml           = $this->getEscapeHtmlHelper();
-        $messagesToPrint      = [];
-        $translator           = $this->getTranslator();
+        $escapeHtml = $this->getEscapeHtmlHelper();
+        $messagesToPrint = [];
+        /** @var mixed $translator */
+        $translator = $this->getTranslator();
+        /** @var mixed $translatorTextDomain */
         $translatorTextDomain = $this->getTranslatorTextDomain();
-        array_walk_recursive(
-            $messages,
-            function ($item) use (&$messagesToPrint, $escapeHtml, $autoEscape, $translator, $translatorTextDomain) {
-                if ($translator !== null) {
-                    $item = $translator->translate(
-                        $item,
-                        $translatorTextDomain
-                    );
-                }
-
-                if ($autoEscape) {
-                    $messagesToPrint[] = $escapeHtml($item);
-                    return;
-                }
-
-                $messagesToPrint[] = $item;
+        array_walk_recursive($messages, static function ($item) use (
+            &$messagesToPrint,
+            $escapeHtml,
+            $autoEscape,
+            $translator,
+            $translatorTextDomain,
+        ): void {
+            if ($translator !== null) {
+                /** @var mixed $item */
+                $item = \Jield\Stdlib\Value::call($translator, 'translate', [$item, $translatorTextDomain]);
             }
-        );
+
+            if ($autoEscape) {
+                $messagesToPrint[] = $escapeHtml($item);
+                return;
+            }
+
+            $messagesToPrint[] = $item;
+        });
 
         if (empty($messagesToPrint)) {
             return '';
@@ -240,7 +233,7 @@ class FlashMessenger
         $markup = sprintf($this->getMessageOpenFormat($namespace), ' class="' . implode(' ', $classes) . '"');
         $markup .= implode(
             sprintf($this->getMessageSeparatorString($namespace), ' class="' . implode(' ', $classes) . '"'),
-            $messagesToPrint
+            \Jield\Stdlib\Value::scalars($messagesToPrint),
         );
         $markup .= $this->getMessageCloseString($namespace);
         return $markup;
@@ -272,16 +265,18 @@ class FlashMessenger
             return $this->escapeHtmlHelper;
         }
 
+        /** @var mixed $view */
         $view = $this->getView();
 
-        if ($view && method_exists($view, 'plugin')) {
-            $plugin = $view->plugin('escapehtml');
+        if (\Jield\Stdlib\Value::truthy($view) && method_exists(\Jield\Stdlib\Value::objectOrString($view), 'plugin')) {
+            /** @var mixed $plugin */
+            $plugin = \Jield\Stdlib\Value::call($view, 'plugin', ['escapehtml']);
             assert($plugin instanceof EscapeHtml);
             $this->escapeHtmlHelper = $plugin;
         }
 
         if (!$this->escapeHtmlHelper instanceof EscapeHtml) {
-            $this->escapeHtmlHelper = new EscapeHtml();
+            $this->escapeHtmlHelper = new EscapeHtml(new \Laminas\Escaper\Escaper());
         }
 
         return $this->escapeHtmlHelper;
@@ -294,8 +289,8 @@ class FlashMessenger
      */
     public function getMessageOpenFormat(?string $namespaceName = null)
     {
-        $namespaceName = $namespaceName ?? $this->getDefaultNamespaceName();
-        $namespace     = $this->getNamespace($namespaceName);
+        $namespaceName ??= $this->getDefaultNamespaceName();
+        $namespace = $this->getNamespace($namespaceName);
         if ($namespace === null) {
             return $this->messageOpenFormat;
         }
@@ -311,8 +306,8 @@ class FlashMessenger
      */
     public function setMessageOpenFormat(string $messageOpenFormat, ?string $namespaceName = null)
     {
-        $namespaceName = $namespaceName ?? $this->getDefaultNamespaceName();
-        $namespace     = $this->getNamespace($namespaceName);
+        $namespaceName ??= $this->getDefaultNamespaceName();
+        $namespace = $this->getNamespace($namespaceName);
         if ($namespace === null) {
             $this->messageOpenFormat = $messageOpenFormat;
         } else {
@@ -336,8 +331,8 @@ class FlashMessenger
      */
     public function getMessageSeparatorString(?string $namespaceName = null)
     {
-        $namespaceName = $namespaceName ?? $this->getDefaultNamespaceName();
-        $namespace     = $this->getNamespace($namespaceName);
+        $namespaceName ??= $this->getDefaultNamespaceName();
+        $namespace = $this->getNamespace($namespaceName);
         if ($namespace === null) {
             return $this->messageSeparatorString;
         }
@@ -353,8 +348,8 @@ class FlashMessenger
      */
     public function setMessageSeparatorString(string $messageSeparatorString, ?string $namespaceName = null)
     {
-        $namespaceName = $namespaceName ?? $this->getDefaultNamespaceName();
-        $namespace     = $this->getNamespace($namespaceName);
+        $namespaceName ??= $this->getDefaultNamespaceName();
+        $namespace = $this->getNamespace($namespaceName);
         if ($namespace === null) {
             $this->messageSeparatorString = $messageSeparatorString;
         } else {
@@ -370,8 +365,8 @@ class FlashMessenger
      */
     public function getMessageCloseString(?string $namespaceName = null)
     {
-        $namespaceName = $namespaceName ?? $this->getDefaultNamespaceName();
-        $namespace     = $this->getNamespace($namespaceName);
+        $namespaceName ??= $this->getDefaultNamespaceName();
+        $namespace = $this->getNamespace($namespaceName);
         if ($namespace === null) {
             return $this->messageCloseString;
         }
@@ -387,8 +382,8 @@ class FlashMessenger
      */
     public function setMessageCloseString(string $messageCloseString, ?string $namespaceName = null)
     {
-        $namespaceName = $namespaceName ?? $this->getDefaultNamespaceName();
-        $namespace     = $this->getNamespace($namespaceName);
+        $namespaceName ??= $this->getDefaultNamespaceName();
+        $namespace = $this->getNamespace($namespaceName);
         if ($namespace === null) {
             $this->messageCloseString = $messageCloseString;
         } else {
@@ -408,8 +403,8 @@ class FlashMessenger
     public function renderCurrent(string $namespace = 'default', array $classes = [], ?bool $autoEscape = null)
     {
         $flashMessenger = $this->getPluginFlashMessenger();
-        $messages       = $flashMessenger->getCurrentMessagesFromNamespace($namespace);
-        return $this->renderMessages($namespace, $messages, $classes, $autoEscape);
+        $messages = $flashMessenger->getCurrentMessagesFromNamespace($namespace);
+        return $this->renderMessages($namespace, $messages, \Jield\Stdlib\Value::strings($classes), $autoEscape);
     }
 
     /**
@@ -430,7 +425,7 @@ class FlashMessenger
      */
     public function setAutoEscape(bool $autoEscape = true)
     {
-        $this->autoEscape = (bool)$autoEscape;
+        $this->autoEscape = $autoEscape;
         return $this;
     }
 }

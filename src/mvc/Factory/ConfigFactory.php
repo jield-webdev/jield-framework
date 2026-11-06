@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\Mvc\Factory;
 
 // phpcs:ignore
@@ -17,9 +19,9 @@ class ConfigFactory implements FactoryInterface
      */
     public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): array
     {
-        $moduleManager = $container->get('ModuleManager');
+        $moduleManager = \Jield\Stdlib\Service::get($container, \Jield\ModuleManager\ModuleManager::class, 'ModuleManager');
         $moduleManager->loadModules();
         $moduleParams = $moduleManager->getEvent()->getParams();
-        return $moduleParams['configListener']->getMergedConfig(false);
+        return \Jield\Stdlib\Value::array(\Jield\Stdlib\Value::call($moduleParams['configListener'], 'getMergedConfig', [false]));
     }
 }

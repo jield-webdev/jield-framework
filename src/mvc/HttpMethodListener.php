@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\Mvc;
 
 use Laminas\EventManager\AbstractListenerAggregate;
@@ -37,7 +39,7 @@ class HttpMethodListener extends AbstractListenerAggregate
     {
         $this->setEnabled($enabled);
 
-        if (! empty($allowedMethods)) {
+        if (!empty($allowedMethods)) {
             $this->setAllowedMethods($allowedMethods);
         }
     }
@@ -47,15 +49,11 @@ class HttpMethodListener extends AbstractListenerAggregate
      */
     public function attach(EventManagerInterface $events, $priority = 1): void
     {
-        if (! $this->isEnabled()) {
+        if (!$this->isEnabled()) {
             return;
         }
 
-        $this->listeners[] = $events->attach(
-            MvcEvent::EVENT_ROUTE,
-            [$this, 'onRoute'],
-            10000
-        );
+        $this->listeners[] = $events->attach(MvcEvent::EVENT_ROUTE, [$this, 'onRoute'], 10_000);
     }
 
     /**
@@ -63,16 +61,16 @@ class HttpMethodListener extends AbstractListenerAggregate
      */
     public function onRoute(MvcEvent $e)
     {
-        $request  = $e->getRequest();
+        $request = $e->getRequest();
         $response = $e->getResponse();
 
-        if (! $request instanceof HttpRequest || ! $response instanceof HttpResponse) {
+        if (!$request instanceof HttpRequest || !$response instanceof HttpResponse) {
             return;
         }
 
         $method = $request->getMethod();
 
-        if (in_array($method, $this->getAllowedMethods())) {
+        if (in_array($method, $this->getAllowedMethods(), strict: true)) {
             return;
         }
 
@@ -91,8 +89,9 @@ class HttpMethodListener extends AbstractListenerAggregate
 
     public function setAllowedMethods(array $allowedMethods): void
     {
+        /** @var mixed $value */
         foreach ($allowedMethods as &$value) {
-            $value = strtoupper($value);
+            $value = strtoupper(\Jield\Stdlib\Value::string($value));
         }
         $this->allowedMethods = $allowedMethods;
     }
@@ -110,6 +109,6 @@ class HttpMethodListener extends AbstractListenerAggregate
      */
     public function setEnabled($enabled): void
     {
-        $this->enabled = (bool) $enabled;
+        $this->enabled = $enabled;
     }
 }

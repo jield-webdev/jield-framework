@@ -7,10 +7,11 @@ namespace Jield\ApiTools\MvcAuth\Authentication;
 use Jield\ApiTools\MvcAuth\Identity;
 use Jield\ApiTools\MvcAuth\Identity\AuthenticatedIdentity;
 use Jield\ApiTools\MvcAuth\MvcAuthEvent;
+use Jield\Mvc\Router\RouteMatch;
 use Laminas\Http\Request as HttpRequest;
 use Laminas\Http\Response;
 use Laminas\Http\Response as HttpResponse;
-use Laminas\Router\RouteMatch;
+
 use function array_merge;
 use function array_unique;
 use function count;
@@ -45,7 +46,7 @@ class DefaultAuthenticationListener
      */
     public function attach(AdapterInterface $adapter): void
     {
-        $this->adapters[]          = $adapter;
+        $this->adapters[] = $adapter;
         $this->authenticationTypes = array_unique(array: array_merge($this->authenticationTypes, $adapter->provides()));
     }
 
@@ -58,12 +59,7 @@ class DefaultAuthenticationListener
      */
     public function addAuthenticationTypes(array $types): void
     {
-        $this->authenticationTypes = array_unique(
-            array: array_merge(
-                $this->authenticationTypes,
-                $types
-            )
-        );
+        $this->authenticationTypes = array_unique(array: array_merge($this->authenticationTypes, $types));
     }
 
     /**
@@ -80,14 +76,11 @@ class DefaultAuthenticationListener
     public function __invoke(MvcAuthEvent $mvcAuthEvent): mixed
     {
         $mvcEvent = $mvcAuthEvent->getMvcEvent();
-        $request  = $mvcEvent->getRequest();
+        $request = $mvcEvent->getRequest();
         /** @var Response $response */
         $response = $mvcEvent->getResponse();
 
-        if (
-            !$request instanceof HttpRequest
-            || $request->isOptions()
-        ) {
+        if (!$request instanceof HttpRequest || $request->isOptions()) {
             return null;
         }
 
@@ -111,7 +104,12 @@ class DefaultAuthenticationListener
         }
 
         // Authenticate against first matching adapter
-        $identity = $this->authenticate(type: $type, request: $request, response: $response, mvcAuthEvent: $mvcAuthEvent);
+        $identity = $this->authenticate(
+            type: $type,
+            request: $request,
+            response: $response,
+            mvcAuthEvent: $mvcAuthEvent,
+        );
 
         // If the adapter returns a response instance, return it directly.
         if ($identity instanceof HttpResponse) {
@@ -133,22 +131,24 @@ class DefaultAuthenticationListener
      */
     private function getTypeFromMap(?RouteMatch $routeMatch = null): false|string
     {
-        if (!$routeMatch instanceof \Laminas\Router\RouteMatch) {
+        if (!$routeMatch instanceof \Jield\Mvc\Router\RouteMatch) {
             return false;
         }
 
+        /** @var mixed $controller */
         $controller = $routeMatch->getParam(name: 'controller', default: false);
         if (false === $controller) {
             return false;
         }
 
+        /** @var mixed $type */
         foreach ($this->authMap as $api => $type) {
-            $api = rtrim(string: $api, characters: '\\') . '\\';
-            if (strlen(string: $api) > strlen(string: (string)$controller)) {
+            $api = rtrim(string: \Jield\Stdlib\Value::string($api), characters: '\\') . '\\';
+            if (strlen(string: $api) > strlen(string: (string) $controller)) {
                 continue;
             }
 
-            if (str_starts_with(haystack: (string)$controller, needle: $api)) {
+            if (str_starts_with(haystack: (string) $controller, needle: $api)) {
                 return $type;
             }
         }
@@ -188,8 +188,12 @@ class DefaultAuthenticationListener
     /**
      * Invoke the adapter matching the given $type in order to peform authentication
      */
-    private function authenticate(string $type, HttpRequest $request, HttpResponse $response, MvcAuthEvent $mvcAuthEvent): false|\Laminas\Http\PhpEnvironment\Response|Identity\IdentityInterface
-    {
+    private function authenticate(
+        string $type,
+        HttpRequest $request,
+        HttpResponse $response,
+        MvcAuthEvent $mvcAuthEvent,
+    ): false|\Laminas\Http\PhpEnvironment\Response|Identity\IdentityInterface {
         foreach ($this->adapters as $adapter) {
             if (!$adapter->matches(type: $type)) {
                 continue;

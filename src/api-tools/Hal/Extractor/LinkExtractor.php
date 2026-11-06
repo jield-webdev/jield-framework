@@ -7,8 +7,8 @@ namespace Jield\ApiTools\Hal\Extractor;
 use Jield\ApiTools\ApiProblem\Exception\DomainException;
 use Jield\ApiTools\Hal\Link\Link;
 use Jield\ApiTools\Hal\Link\LinkUrlBuilder;
-
 use Override;
+
 use function sprintf;
 
 class LinkExtractor implements LinkExtractorInterface
@@ -27,33 +27,33 @@ class LinkExtractor implements LinkExtractorInterface
     #[Override]
     public function extract(Link $link): array
     {
-        if (! $link->isComplete()) {
+        if (!$link->isComplete()) {
             throw new DomainException(message: sprintf(
                 'Link from resource provided to %s was incomplete; must contain a URL or a route',
-                __METHOD__
+                __METHOD__,
             ));
         }
 
         $representation = $link->getAttributes();
 
-        if ($link->hasUrl()) {
+        if ($link->getHref() !== '') {
             $representation['href'] = $link->getHref();
 
             return $representation;
         }
 
         $reuseMatchedParams = true;
-        $options            = $link->getRouteOptions();
+        $options = $link->getRouteOptions();
         if (isset($options['reuse_matched_params'])) {
-            $reuseMatchedParams = (bool) $options['reuse_matched_params'];
+            $reuseMatchedParams = \Jield\Stdlib\Value::truthy($options['reuse_matched_params']);
             unset($options['reuse_matched_params']);
         }
 
         $representation['href'] = $this->linkUrlBuilder->buildLinkUrl(
-            route: $link->getRoute(),
+            route: \Jield\Stdlib\Value::string($link->getRoute()),
             params: $link->getRouteParams(),
             options: $options,
-            reUseMatchedParams: $reuseMatchedParams
+            reUseMatchedParams: $reuseMatchedParams,
         );
 
         return $representation;

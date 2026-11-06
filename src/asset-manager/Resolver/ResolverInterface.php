@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\AssetManager\Resolver;
 
 use Assetic\Contracts\Asset\AssetInterface;

@@ -25,7 +25,7 @@ trait LabelAwareTrait
     /**
      * Set the attributes to use with the label
      *
-     * @return $this
+     * @return static
      */
     public function setLabelAttributes(array $labelAttributes): static
     {
@@ -46,13 +46,16 @@ trait LabelAwareTrait
      *
      * Implementation will decide if this will overwrite or merge.
      *
-     * @return $this
+     * @return static
      * @throws Exception\InvalidArgumentException
      */
     public function setLabelOptions(iterable $arrayOrTraversable): static
     {
+        /** @var mixed $key
+         * @var mixed $value
+         */
         foreach ($arrayOrTraversable as $key => $value) {
-            $this->setLabelOption(key: $key, value: $value);
+            $this->setLabelOption(key: \Jield\Stdlib\Value::string($key), value: $value);
         }
         return $this;
     }
@@ -68,7 +71,7 @@ trait LabelAwareTrait
     /**
      * Clear all label options
      *
-     * @return $this
+     * @return static
      */
     public function clearLabelOptions(): static
     {
@@ -79,10 +82,11 @@ trait LabelAwareTrait
     /**
      * Remove many attributes at once
      *
-     * @return $this
+     * @return static
      */
     public function removeLabelOptions(array $keys): static
     {
+        /** @var mixed $key */
         foreach ($keys as $key) {
             unset($this->labelOptions[$key]);
         }
@@ -93,7 +97,7 @@ trait LabelAwareTrait
     /**
      * Set a single label optionn
      *
-     * @return $this
+     * @return static
      */
     public function setLabelOption(string $key, mixed $value): static
     {
@@ -108,7 +112,7 @@ trait LabelAwareTrait
      */
     public function getLabelOption(string $key): mixed
     {
-        if (! array_key_exists(key: $key, array: $this->labelOptions)) {
+        if (!array_key_exists(key: $key, array: $this->labelOptions)) {
             return null;
         }
         return $this->labelOptions[$key];
@@ -117,7 +121,7 @@ trait LabelAwareTrait
     /**
      * Remove a single label option
      *
-     * @return $this
+     * @return static
      */
     public function removeLabelOption(string $key): static
     {

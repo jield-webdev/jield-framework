@@ -27,15 +27,17 @@ class Selectable implements AdapterInterface
      *
      * @param DoctrineSelectable<TKey,T> $selectable
      */
-    public function __construct(protected DoctrineSelectable $selectable, Criteria|null $criteria = null)
-    {
+    public function __construct(
+        protected DoctrineSelectable $selectable,
+        ?Criteria $criteria = null,
+    ) {
         $this->criteria = $criteria instanceof \Doctrine\Common\Collections\Criteria ? clone $criteria : new Criteria();
     }
 
     /**
      * {@inheritDoc}
      *
-     * @return iterable<TKey,T>
+     * @return array<TKey,T>
      */
     public function getItems($offset, $itemCountPerPage): array
     {

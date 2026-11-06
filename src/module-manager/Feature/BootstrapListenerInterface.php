@@ -8,10 +8,5 @@ use Laminas\EventManager\EventInterface;
 
 interface BootstrapListenerInterface
 {
-    /**
-     * Listen to the bootstrap event
-     *
-     * @return void
-     */
     public function onBootstrap(EventInterface $e): void;
 }

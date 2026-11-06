@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace Jield\Bootstrap5\Form\View\Helper;
 
-use Jield\Search\ValueObject\FacetField;
 use Jield\Form\ElementInterface;
 use Jield\Form\Fieldset;
 use Jield\Form\Form;
+use Jield\Search\ValueObject\FacetField;
+
 use function implode;
 use function sprintf;
 
@@ -24,10 +25,9 @@ class FilterColumnElement extends FormElement
 
     public function __invoke(
         ?ElementInterface $element = null,
-                          $type = self::TYPE_HORIZONTAL,
-        bool              $formElementOnly = false
-    ): FilterColumnElement|string|FormElement|static
-    {
+        $type = self::TYPE_HORIZONTAL,
+        bool $formElementOnly = false,
+    ): string|static {
         $this->appendScript();
 
         if ($element instanceof Form) {
@@ -39,16 +39,15 @@ class FilterColumnElement extends FormElement
 
     protected function getContainer(string $containerName)
     {
-        return $this->view->plugin($containerName);
+        return $this->getView()->plugin($containerName);
     }
 
     private function appendScript(): void
     {
-        $this->getContainer(containerName: self::HEADSCRIPT)->appendFile(
-            'assets/js/jield-bootstrap5/filter-column.js',
-            'text/javascript'
-        );
-        $this->getContainer(containerName: self::HEADLINK)->appendStylesheet('assets/css/jield-bootstrap5/filter-column.css');
+        \Jield\Stdlib\Value::call($this->getContainer(
+            containerName: self::HEADSCRIPT,
+        ), 'appendFile', ['assets/js/jield-bootstrap5/filter-column.js', ['type' => 'text/javascript'] + []]);
+        \Jield\Stdlib\Value::call($this->getContainer(containerName: self::HEADLINK), 'appendStylesheet', ['assets/css/jield-bootstrap5/filter-column.css']);
     }
 
     private function renderFacets(Form $form): string
@@ -59,12 +58,15 @@ class FilterColumnElement extends FormElement
 
         $facets = [];
         /** @var Fieldset $facet */
-        foreach ($form->get(elementOrFieldset: 'facet')->getFieldsets() as $facet) {
+        foreach (\Jield\Stdlib\Value::instance($form->get(elementOrFieldset: 'facet'), \Jield\Form\FieldsetInterface::class)->getFieldsets() as $facet) {
             $facets[] = '<div class="simple-load-more">';
             $facets[] = sprintf('<strong>%s</strong>', $facet->get(elementOrFieldset: 'values')->getLabel());
 
             if ($facet->has(elementOrFieldset: 'yesNo')) {
-                $facet->get(elementOrFieldset: 'yesNo')->setAttribute(key: 'class', value: 'form-check-search form-check-yes-no');
+                $facet->get(elementOrFieldset: 'yesNo')->setAttribute(
+                    key: 'class',
+                    value: 'form-check-search form-check-yes-no',
+                );
                 $facet->get(elementOrFieldset: 'yesNo')->setLabel(label: 'Include');
                 if ($facet->get(elementOrFieldset: 'yesNo')->getValue() === 'no') {
                     $facet->get(elementOrFieldset: 'yesNo')->setLabel(label: 'Exclude');
@@ -73,7 +75,10 @@ class FilterColumnElement extends FormElement
             }
 
             if ($facet->has(elementOrFieldset: 'andOr')) {
-                $facet->get(elementOrFieldset: 'andOr')->setAttribute(key: 'class', value: 'form-check-search form-check-and-or');
+                $facet->get(elementOrFieldset: 'andOr')->setAttribute(
+                    key: 'class',
+                    value: 'form-check-search form-check-and-or',
+                );
                 $facet->get(elementOrFieldset: 'andOr')->setLabel(label: 'Or');
                 if ($facet->get(elementOrFieldset: 'andOr')->getValue() === 'and') {
                     $facet->get(elementOrFieldset: 'andOr')->setLabel(label: 'And');
@@ -98,50 +103,54 @@ class FilterColumnElement extends FormElement
                 if ($element->getOption(option: 'type') === FacetField::TYPE_SLIDER) {
                     //Get the helper
                     /** @var FormMultiCheckbox $formMultiCheckbox */
-                    $formMultiCheckbox = $this->getView()?->plugin('lbs5formmultislider');
+                    $formMultiCheckbox = $this->getView()->plugin('lbs5formmultislider');
 
                     return $formMultiCheckbox->render(element: $element);
                 }
 
                 //Get the helper
                 /** @var FormMultiCheckbox $formMultiCheckbox */
-                $formMultiCheckbox = $this->getView()?->plugin('lbs5formmulticheckbox');
+                $formMultiCheckbox = $this->getView()->plugin('lbs5formmulticheckbox');
                 $formMultiCheckbox->setTemplate(
-                    template: '<div class="form-check form-check-search" data-other="%s">%s%s%s%s</div>'
+                    template: '<div class="form-check form-check-search" data-other="%s">%s%s%s%s</div>',
                 );
 
                 //Reset the options so the checked one is always on top
-                $sortedValueOptions  = [];
-                $currentValueOptions = $element->getValueOptions();
+                $sortedValueOptions = [];
+                /** @var mixed $currentValueOptions */
+                $currentValueOptions = \Jield\Stdlib\Value::instance($element, \Jield\Form\Element\MultiCheckbox::class)->getValueOptions();
 
-                foreach ((array)($element->getValue() ?? []) as $value) {
+                /** @var mixed $value */
+                foreach ((array) ($element->getValue() ?? []) as $value) {
                     //We can only unset the value if it is in the value options
-                    if (array_key_exists(key: $value, array: $currentValueOptions)) {
-                        $sortedValueOptions[$value] = $currentValueOptions[$value];
-                        unset($currentValueOptions[$value]);
+                    if (!array_key_exists(key: \Jield\Stdlib\Value::plainScalar($value), array: \Jield\Stdlib\Value::array($currentValueOptions))) {
+                        continue;
                     }
+
+                    $sortedValueOptions[\Jield\Stdlib\Value::key($value)] = $currentValueOptions[$value];
+                    unset($currentValueOptions[$value]);
                 }
 
-                $element->setValueOptions(options: $sortedValueOptions + $currentValueOptions);
+                \Jield\Stdlib\Value::instance($element, \Jield\Form\Element\MultiCheckbox::class)->setValueOptions(options: $sortedValueOptions + \Jield\Stdlib\Value::array($currentValueOptions));
 
                 return $formMultiCheckbox->render(element: $element);
             case 'checkbox':
                 //Get the helper
                 /** @var FormCheckbox $formMultiCheckbox */
-                $formMultiCheckbox = $this->getView()?->plugin('lbs5formcheckbox');
+                $formMultiCheckbox = $this->getView()->plugin('lbs5formcheckbox');
 
                 return $formMultiCheckbox->render(element: $element);
             case 'radio':
                 //Get the helper
                 /** @var FormMultiCheckbox $formMultiCheckbox */
-                $formMultiCheckbox = $this->getView()?->plugin('lbs5formradio');
+                $formMultiCheckbox = $this->getView()->plugin('lbs5formradio');
                 $formMultiCheckbox->setTemplate(
-                    template: '<div class="form-check form-check-search %s">%s%s%s%s</div>'
+                    template: '<div class="form-check form-check-search %s">%s%s%s%s</div>',
                 );
 
                 return $formMultiCheckbox->render(element: $element);
             default:
-                return $this->renderHelper(name: $type, element: $element);
+                return $this->renderHelper(name: \Jield\Stdlib\Value::string($type), element: $element);
         }
     }
 }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\ApiTools;
 
 use Jield\ApiTools\ApiProblem\Factory\ApiProblemListenerFactory;
@@ -60,6 +62,7 @@ use Jield\ApiTools\MvcAuth\Factory\AclAuthorizationFactory;
 use Jield\ApiTools\MvcAuth\Factory\AuthenticationAdapterDelegatorFactory;
 use Jield\ApiTools\MvcAuth\Factory\AuthenticationServiceFactory;
 use Jield\ApiTools\MvcAuth\Factory\DefaultAuthenticationListenerFactory;
+use Jield\ApiTools\MvcAuth\Factory\DefaultAuthHttpAdapterFactory;
 use Jield\ApiTools\MvcAuth\Factory\DefaultAuthorizationListenerFactory;
 use Jield\ApiTools\MvcAuth\Factory\DefaultResourceResolverListenerFactory;
 use Jield\ApiTools\MvcAuth\Factory\FileResolverFactory;
@@ -79,7 +82,8 @@ use Jield\ApiTools\Versioning\ContentTypeListener;
 use Jield\ApiTools\Versioning\Factory\AcceptListenerFactory;
 use Jield\ApiTools\Versioning\Factory\ContentTypeListenerFactory;
 use Jield\ApiTools\Versioning\VersionListener;
-use Laminas\ConfigAggregator\ConfigAggregator;
+use Laminas\Authentication\Adapter\Http;
+use Laminas\Authentication\Storage\NonPersistent;
 use Laminas\Filter\File\RenameUpload;
 use Laminas\InputFilter\InputFilterAbstractServiceFactory;
 use Laminas\ServiceManager\Factory\InvokableFactory;
@@ -89,62 +93,41 @@ final class ConfigProvider
 {
     public function __invoke(): array
     {
-        $baseConfig = $this->getBaseConfig();
-
-        return new ConfigAggregator(providers: [
-            fn(): array => $baseConfig,
-            fn(): array => new ListenerConfigProvider($baseConfig)(),
-            SettingsProvider::class,
-        ])->getMergedConfig();
-    }
-
-    private function getBaseConfig(): array
-    {
         return [
-            'api-tools'          => $this->getApiToolsConfig(),
-            'service_manager'    => $this->getServiceMangerConfig(),
+            'service_manager' => $this->getServiceMangerConfig(),
             'controller_plugins' => $this->getControllerPluginConfig(),
-            'controllers'        => $this->getControllerConfig(),
-            'filters'            => $this->getFiltersConfig(),
-            'validators'         => $this->getValidatorsConfig(),
-            'input_filters'      => $this->getInputFiltersConfig(),
-            'view_helpers'       => $this->getViewHelpersConfig(),
-        ];
-    }
-
-    private function getApiToolsConfig(): array
-    {
-        return [
-            ListenerConfigProvider::LISTENER_PATHS_KEY => [
-                ListenerConfigProvider::DEFAULT_LISTENER_PATH,
-            ],
+            'controllers' => $this->getControllerConfig(),
+            'filters' => $this->getFiltersConfig(),
+            'validators' => $this->getValidatorsConfig(),
+            'input_filters' => $this->getInputFiltersConfig(),
+            'view_helpers' => $this->getViewHelpersConfig(),
         ];
     }
 
     public function getControllerPluginConfig(): array
     {
         return [
-            'aliases'   => [
-                'routeParam'     => RouteParam::class,
-                'queryParam'     => QueryParam::class,
-                'bodyParam'      => BodyParam::class,
-                'routeParams'    => RouteParams::class,
-                'queryParams'    => QueryParams::class,
-                'bodyParams'     => BodyParams::class,
+            'aliases' => [
+                'routeParam' => RouteParam::class,
+                'queryParam' => QueryParam::class,
+                'bodyParam' => BodyParam::class,
+                'routeParams' => RouteParams::class,
+                'queryParams' => QueryParams::class,
+                'bodyParams' => BodyParams::class,
                 'getInputFilter' => InputFilterPlugin::class,
-                'Hal'            => Hal::class,
-                'getIdentity'    => IdentityPlugin::class,
+                'Hal' => Hal::class,
+                'getIdentity' => IdentityPlugin::class,
             ],
             'factories' => [
-                RouteParam::class        => InvokableFactory::class,
-                QueryParam::class        => InvokableFactory::class,
-                BodyParam::class         => InvokableFactory::class,
-                RouteParams::class       => InvokableFactory::class,
-                QueryParams::class       => InvokableFactory::class,
-                BodyParams::class        => InvokableFactory::class,
+                RouteParam::class => InvokableFactory::class,
+                QueryParam::class => InvokableFactory::class,
+                BodyParam::class => InvokableFactory::class,
+                RouteParams::class => InvokableFactory::class,
+                QueryParams::class => InvokableFactory::class,
+                BodyParams::class => InvokableFactory::class,
                 InputFilterPlugin::class => InvokableFactory::class,
-                Hal::class               => HalControllerPluginFactory::class,
-                IdentityPlugin::class    => InvokableFactory::class,
+                Hal::class => HalControllerPluginFactory::class,
+                IdentityPlugin::class => InvokableFactory::class,
             ],
         ];
     }
@@ -181,12 +164,11 @@ final class ConfigProvider
     public function getServiceMangerConfig(): array
     {
         return [
-            'aliases'    => [
-                'authentication'                        => 'Jield\ApiTools\MvcAuth\Authentication',
-                'authorization'                         => AuthorizationInterface::class,
-                AuthorizationInterface::class           => AclAuthorization::class,
+            'aliases' => [
+                'authentication' => 'Jield\ApiTools\MvcAuth\Authentication',
+                'authorization' => AuthorizationInterface::class,
+                AuthorizationInterface::class => AclAuthorization::class,
                 'Jield\ApiTools\OAuth2\Provider\UserId' => AuthenticationService::class,
-
             ],
             'delegators' => [
                 DefaultAuthenticationListener::class => [
@@ -196,54 +178,69 @@ final class ConfigProvider
             'invokables' => [
                 RestParametersListener::class => RestParametersListener::class,
             ],
-            'factories'  => [
-                \Jield\ApiTools\Rest\Listener\OptionsListener::class => \Jield\ApiTools\Rest\Factory\OptionsListenerFactory::class,
-                OptionsListener::class                               => OptionsListenerFactory::class,
+            'factories' => [
+                \Jield\ApiTools\OAuth2\EntraJwksProvider::class =>
+                    \Jield\ApiTools\OAuth2\Factory\EntraJwksProviderFactory::class,
+                \Jield\ApiTools\OAuth2\EntraOnBehalfOfClient::class =>
+                    \Jield\ApiTools\OAuth2\Factory\EntraOnBehalfOfClientFactory::class,
+                \Jield\ApiTools\OAuth2\EntraTokenValidator::class =>
+                    \Jield\ApiTools\OAuth2\Factory\EntraTokenValidatorFactory::class,
+                \Jield\ApiTools\OAuth2\TokenExchange::class =>
+                    \Jield\ApiTools\OAuth2\Factory\TokenExchangeFactory::class,
 
-                PdoAdapter::class            => PdoAdapterFactory::class,
-                AuthenticationService::class => \Jield\ApiTools\OAuth2\Provider\UserId\AuthenticationServiceFactory::class,
+                \Jield\ApiTools\Rest\Listener\OptionsListener::class =>
+                    \Jield\ApiTools\Rest\Factory\OptionsListenerFactory::class,
+                OptionsListener::class => OptionsListenerFactory::class,
+
+                PdoAdapter::class => PdoAdapterFactory::class,
+                AuthenticationService::class =>
+                    \Jield\ApiTools\OAuth2\Provider\UserId\AuthenticationServiceFactory::class,
                 //                'Jield\ApiTools\OAuth2\Service\OAuth2Server'                        => \Jield\ApiTools\OAuth2\Factory\OAuth2ServerFactory::class,
 
                 MvcAuth\UnauthenticatedListener::class => InvokableFactory::class,
-                MvcAuth\UnauthorizedListener::class    => InvokableFactory::class,
+                MvcAuth\UnauthorizedListener::class => InvokableFactory::class,
 
-                ApiProblemListener::class             => ApiProblemListenerFactory::class,
-                RenderErrorListener::class            => RenderErrorListenerFactory::class,
+                ApiProblemListener::class => ApiProblemListenerFactory::class,
+                RenderErrorListener::class => RenderErrorListenerFactory::class,
                 SendApiProblemResponseListener::class => SendApiProblemResponseListenerFactory::class,
-                ApiProblemRenderer::class             => ApiProblemRendererFactory::class,
-                ApiProblemStrategy::class             => ApiProblemStrategyFactory::class,
+                ApiProblemRenderer::class => ApiProblemRendererFactory::class,
+                ApiProblemStrategy::class => ApiProblemStrategyFactory::class,
 
-                \Jield\ApiTools\ContentNegotiation\ContentTypeListener::class => \Laminas\ServiceManager\Factory\InvokableFactory::class,
-                \Jield\ApiTools\ContentNegotiation\AcceptListener::class      => \Jield\ApiTools\ContentNegotiation\Factory\AcceptListenerFactory::class,
-                AcceptFilterListener::class                                   => AcceptFilterListenerFactory::class,
-                ContentTypeFilterListener::class                              => ContentTypeFilterListenerFactory::class,
-                ContentNegotiationOptions::class                              => ContentNegotiationOptionsFactory::class,
-                HttpMethodOverrideListener::class                             => HttpMethodOverrideListenerFactory::class,
+                \Jield\ApiTools\ContentNegotiation\ContentTypeListener::class =>
+                    \Laminas\ServiceManager\Factory\InvokableFactory::class,
+                \Jield\ApiTools\ContentNegotiation\AcceptListener::class =>
+                    \Jield\ApiTools\ContentNegotiation\Factory\AcceptListenerFactory::class,
+                AcceptFilterListener::class => AcceptFilterListenerFactory::class,
+                ContentTypeFilterListener::class => ContentTypeFilterListenerFactory::class,
+                ContentNegotiationOptions::class => ContentNegotiationOptionsFactory::class,
+                HttpMethodOverrideListener::class => HttpMethodOverrideListenerFactory::class,
 
                 ContentValidationListener::class => ContentValidationListenerFactory::class,
 
-                LinkExtractor::class           => LinkExtractorFactory::class,
+                LinkExtractor::class => LinkExtractorFactory::class,
                 LinkCollectionExtractor::class => LinkCollectionExtractorFactory::class,
                 'Jield\ApiTools\Hal\HalConfig' => HalConfigFactory::class,
-                HalJsonRenderer::class         => HalJsonRendererFactory::class,
-                HalJsonStrategy::class         => HalJsonStrategyFactory::class,
-                LinkUrlBuilder::class          => LinkUrlBuilderFactory::class,
-                MetadataMap::class             => MetadataMapFactory::class,
-                RendererOptions::class         => RendererOptionsFactory::class,
+                HalJsonRenderer::class => HalJsonRendererFactory::class,
+                HalJsonStrategy::class => HalJsonStrategyFactory::class,
+                LinkUrlBuilder::class => LinkUrlBuilderFactory::class,
+                MetadataMap::class => MetadataMapFactory::class,
+                RendererOptions::class => RendererOptionsFactory::class,
 
-                'Jield\ApiTools\MvcAuth\Authentication'      => AuthenticationServiceFactory::class,
-                'Jield\ApiTools\MvcAuth\FileResolver'        => FileResolverFactory::class,
-                DefaultAuthenticationListener::class         => DefaultAuthenticationListenerFactory::class,
-                AclAuthorization::class                      => AclAuthorizationFactory::class,
-                DefaultAuthorizationListener::class          => DefaultAuthorizationListenerFactory::class,
-                DefaultResourceResolverListener::class       => DefaultResourceResolverListenerFactory::class,
+                'Jield\ApiTools\MvcAuth\Authentication' => AuthenticationServiceFactory::class,
+                'Jield\ApiTools\MvcAuth\FileResolver' => FileResolverFactory::class,
+                DefaultAuthenticationListener::class => DefaultAuthenticationListenerFactory::class,
+                Http::class => DefaultAuthHttpAdapterFactory::class,
+                AclAuthorization::class => AclAuthorizationFactory::class,
+                DefaultAuthorizationListener::class => DefaultAuthorizationListenerFactory::class,
+                DefaultResourceResolverListener::class => DefaultResourceResolverListenerFactory::class,
                 'Jield\ApiTools\OAuth2\Service\OAuth2Server' => NamedOAuth2ServerFactory::class,
-                DefaultAuthenticationPostListener::class     => InvokableFactory::class,
-                DefaultAuthorizationPostListener::class      => InvokableFactory::class,
+                NonPersistent::class => InvokableFactory::class,
+                DefaultAuthenticationPostListener::class => InvokableFactory::class,
+                DefaultAuthorizationPostListener::class => InvokableFactory::class,
 
-                AcceptListener::class      => AcceptListenerFactory::class,
+                AcceptListener::class => AcceptListenerFactory::class,
                 ContentTypeListener::class => ContentTypeListenerFactory::class,
-                VersionListener::class     => InvokableFactory::class,
+                VersionListener::class => InvokableFactory::class,
             ],
         ];
     }
@@ -260,7 +257,7 @@ final class ConfigProvider
     private function getControllerConfig(): array
     {
         return [
-            'factories'          => [
+            'factories' => [
                 \Jield\ApiTools\OAuth2\Controller\AuthController::class => AuthControllerFactory::class,
             ],
             'abstract_factories' => [

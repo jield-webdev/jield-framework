@@ -7,19 +7,13 @@ namespace Jield\Form\View;
 use IntlDateFormatter;
 use Jield\Form\ElementInterface;
 use Jield\Form\FormInterface;
-use Jield\Form\View\Helper\Captcha\Dumb;
-use Jield\Form\View\Helper\Captcha\Figlet;
-use Jield\Form\View\Helper\Captcha\Image;
-use Jield\Form\View\Helper\Captcha\ReCaptcha;
 use Jield\Form\View\Helper\Form;
 use Jield\Form\View\Helper\FormButton;
-use Jield\Form\View\Helper\FormCaptcha;
 use Jield\Form\View\Helper\FormCheckbox;
 use Jield\Form\View\Helper\FormCollection;
 use Jield\Form\View\Helper\FormColor;
 use Jield\Form\View\Helper\FormDate;
 use Jield\Form\View\Helper\FormDateSelect;
-use Jield\Form\View\Helper\FormDateTime;
 use Jield\Form\View\Helper\FormDateTimeLocal;
 use Jield\Form\View\Helper\FormDateTimeSelect;
 use Jield\Form\View\Helper\FormElement;
@@ -62,20 +56,14 @@ use Jield\Form\View\Helper\FormWeek;
  * the jield-form component. However, multiple helper traits from different
  * Jield components can be chained afterwards.
  *
- * @example @var \Laminas\View\Renderer\PhpRenderer|\Jield\Form\View\HelperTrait $this
+ * @example @var \Jield\Mvc\View\Renderer\PhpRenderer|\Jield\Form\View\HelperTrait $this
  *
  * @method string|Form form(FormInterface|null $form = null)
  * @method string|FormButton formButton(ElementInterface|null $element = null, string|null $buttonContent = null)
- * @method string|FormCaptcha formCaptcha(ElementInterface|null $element = null)
- * @method string|Dumb formCaptchaDumb(ElementInterface|null $element = null)
- * @method string|Figlet formCaptchaFiglet(ElementInterface|null $element = null)
- * @method string|Image formCaptchaImage(ElementInterface|null $element = null)
- * @method string|ReCaptcha formCaptchaRecaptcha(ElementInterface|null $element = null)
  * @method string|FormCheckbox formCheckbox(ElementInterface|null $element = null)
  * @method string|FormCollection formCollection(ElementInterface|null $element = null, bool $wrap = true)
  * @method string|FormColor formColor(ElementInterface|null $element = null)
  * @method string|FormDate formDate(ElementInterface|null $element = null)
- * @method string|FormDateTime formDateTime(ElementInterface|null $element = null)
  * @method string|FormDateTimeLocal formDateTimeLocal(ElementInterface|null $element = null)
  * @method string|FormDateTimeSelect formDateTimeSelect(ElementInterface|null $element = null, int $dateType = IntlDateFormatter::LONG, int|null|string $timeType = IntlDateFormatter::LONG, string|null $locale = null)
  * @method string|FormDateSelect formDateSelect(ElementInterface $element = null, $dateType = IntlDateFormatter::LONG, $locale = null)
@@ -109,7 +97,6 @@ use Jield\Form\View\Helper\FormWeek;
  * @method string|FormUrl formUrl(ElementInterface|null $element = null)
  * @method string|FormWeek formWeek(ElementInterface|null $element = null)
  */
-trait HelperTrait
-{
-}
+trait HelperTrait {}
+
 // @codingStandardsIgnoreEnd

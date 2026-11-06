@@ -1,0 +1,349 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Jield\ModuleManager\Loader;
+
+use Traversable;
+
+use function dirname;
+use function file_exists;
+use function in_array;
+use function is_array;
+use function preg_match;
+use function rtrim;
+use function spl_autoload_register;
+use function str_replace;
+use function stream_resolve_include_path;
+use function strlen;
+use function substr;
+
+use const DIRECTORY_SEPARATOR;
+
+// Grab SplAutoloader interface
+require_once __DIR__ . '/SplAutoloader.php';
+
+/**
+ * PSR-0 compliant autoloader
+ *
+ * Allows autoloading both namespaced and vendor-prefixed classes. Class
+ * lookups are performed on the filesystem. If a class file for the referenced
+ * class is not found, a PHP warning will be raised by include().
+ */
+class StandardAutoloader implements SplAutoloader
+{
+    public const NS_SEPARATOR = '\\';
+    public const PREFIX_SEPARATOR = '_';
+    public const LOAD_NS = 'namespaces';
+    public const LOAD_PREFIX = 'prefixes';
+    public const ACT_AS_FALLBACK = 'fallback_autoloader';
+    /** @deprecated Use AUTOREGISTER_LAMINAS instead */
+    public const AUTOREGISTER_ZF = 'autoregister_laminas';
+    public const AUTOREGISTER_LAMINAS = 'autoregister_laminas';
+
+    /** @var array Namespace/directory pairs to search; Laminas library added by default */
+    protected $namespaces = [];
+
+    /** @var array Prefix/directory pairs to search */
+    protected $prefixes = [];
+
+    /** @var bool Whether or not the autoloader should also act as a fallback autoloader */
+    protected $fallbackAutoloaderFlag = false;
+
+    /**
+     * Constructor
+     *
+     * @param null|array|Traversable $options
+     */
+    public function __construct($options = null)
+    {
+        if (null !== $options) {
+            $this->setOptions($options);
+        }
+    }
+
+    /**
+     * Configure autoloader
+     *
+     * Allows specifying both "namespace" and "prefix" pairs, using the
+     * following structure:
+     * <code>
+     * array(
+     *     'namespaces' => array(
+     *         'Laminas'     => '/path/to/Laminas/library',
+     *         'Doctrine' => '/path/to/Doctrine/library',
+     *     ),
+     *     'prefixes' => array(
+     *         'Phly_'     => '/path/to/Phly/library',
+     *     ),
+     *     'fallback_autoloader' => true,
+     * )
+     * </code>
+     *
+     * @param mixed $options
+     * @throws Exception\InvalidArgumentException
+     * @return StandardAutoloader
+     */
+    public function setOptions($options)
+    {
+        if (!is_array($options) && !$options instanceof Traversable) {
+            require_once __DIR__ . '/Exception/InvalidArgumentException.php';
+            throw new Exception\InvalidArgumentException('Options must be either an array or Traversable');
+        }
+
+        /** @var mixed $type
+         * @var mixed $pairs
+         */
+        foreach ($options as $type => $pairs) {
+            switch ($type) {
+                case self::AUTOREGISTER_LAMINAS:
+                    if ($pairs) {
+                        $this->registerNamespace('Laminas', dirname(__DIR__));
+                    }
+                    break;
+                case self::LOAD_NS:
+                    if (is_array($pairs) || $pairs instanceof Traversable) {
+                        $this->registerNamespaces(\Jield\Stdlib\Value::array($pairs));
+                    }
+                    break;
+                case self::LOAD_PREFIX:
+                    if (is_array($pairs) || $pairs instanceof Traversable) {
+                        $this->registerPrefixes(\Jield\Stdlib\Value::array($pairs));
+                    }
+                    break;
+                case self::ACT_AS_FALLBACK:
+                    $this->setFallbackAutoloader(\Jield\Stdlib\Value::bool($pairs));
+                    break;
+                default:
+                    // ignore
+            }
+        }
+        return $this;
+    }
+
+    /**
+     * Set flag indicating fallback autoloader status
+     *
+     * @param  bool $flag
+     * @return StandardAutoloader
+     */
+    public function setFallbackAutoloader($flag)
+    {
+        $this->fallbackAutoloaderFlag = $flag;
+        return $this;
+    }
+
+    /**
+     * Is this autoloader acting as a fallback autoloader?
+     *
+     * @return bool
+     */
+    public function isFallbackAutoloader()
+    {
+        return $this->fallbackAutoloaderFlag;
+    }
+
+    /**
+     * Register a namespace/directory pair
+     *
+     * @param  string $namespace
+     * @param  string $directory
+     * @return StandardAutoloader
+     */
+    public function registerNamespace($namespace, $directory)
+    {
+        $namespace = rtrim($namespace, self::NS_SEPARATOR) . self::NS_SEPARATOR;
+        $this->namespaces[$namespace] = $this->normalizeDirectory($directory);
+        return $this;
+    }
+
+    /**
+     * Register many namespace/directory pairs at once
+     *
+     * @param  mixed $namespaces
+     * @throws Exception\InvalidArgumentException
+     * @return StandardAutoloader
+     */
+    public function registerNamespaces($namespaces)
+    {
+        if (!is_array($namespaces) && !$namespaces instanceof Traversable) {
+            require_once __DIR__ . '/Exception/InvalidArgumentException.php';
+            throw new Exception\InvalidArgumentException('Namespace pairs must be either an array or Traversable');
+        }
+
+        /** @var mixed $directory
+         * @var mixed $namespace
+         */
+        foreach ($namespaces as $namespace => $directory) {
+            $this->registerNamespace(\Jield\Stdlib\Value::string($namespace), \Jield\Stdlib\Value::string($directory));
+        }
+        return $this;
+    }
+
+    /**
+     * Register a prefix/directory pair
+     *
+     * @param  string $prefix
+     * @param  string $directory
+     * @return StandardAutoloader
+     */
+    public function registerPrefix($prefix, $directory)
+    {
+        $prefix = rtrim($prefix, self::PREFIX_SEPARATOR) . self::PREFIX_SEPARATOR;
+        $this->prefixes[$prefix] = $this->normalizeDirectory($directory);
+        return $this;
+    }
+
+    /**
+     * Register many namespace/directory pairs at once
+     *
+     * @param  mixed $prefixes
+     * @throws Exception\InvalidArgumentException
+     * @return StandardAutoloader
+     */
+    public function registerPrefixes($prefixes)
+    {
+        if (!is_array($prefixes) && !$prefixes instanceof Traversable) {
+            require_once __DIR__ . '/Exception/InvalidArgumentException.php';
+            throw new Exception\InvalidArgumentException('Prefix pairs must be either an array or Traversable');
+        }
+
+        /** @var mixed $directory
+         * @var mixed $prefix
+         */
+        foreach ($prefixes as $prefix => $directory) {
+            $this->registerPrefix(\Jield\Stdlib\Value::string($prefix), \Jield\Stdlib\Value::string($directory));
+        }
+        return $this;
+    }
+
+    /**
+     * Defined by Autoloadable; autoload a class
+     *
+     * @param  string $class
+     * @return false|string
+     */
+    public function autoload($class)
+    {
+        $isFallback = $this->isFallbackAutoloader();
+        if (str_contains($class, self::NS_SEPARATOR)) {
+            if ($this->loadClass($class, self::LOAD_NS)) {
+                return $class;
+            } elseif ($isFallback) {
+                return $this->loadClass($class, self::ACT_AS_FALLBACK);
+            }
+            return false;
+        }
+        if (str_contains($class, self::PREFIX_SEPARATOR)) {
+            if ($this->loadClass($class, self::LOAD_PREFIX)) {
+                return $class;
+            } elseif ($isFallback) {
+                return $this->loadClass($class, self::ACT_AS_FALLBACK);
+            }
+            return false;
+        }
+        if ($isFallback) {
+            return $this->loadClass($class, self::ACT_AS_FALLBACK);
+        }
+        return false;
+    }
+
+    /**
+     * Register the autoloader with spl_autoload
+     *
+     * @return void
+     */
+    public function register()
+    {
+        spl_autoload_register([$this, 'autoload']);
+    }
+
+    /**
+     * Transform the class name to a filename
+     *
+     * @param  string $class
+     * @param  string $directory
+     * @return string
+     */
+    protected function transformClassNameToFilename($class, $directory)
+    {
+        // $class may contain a namespace portion, in  which case we need
+        // to preserve any underscores in that portion.
+        $matches = [];
+        preg_match('/(?P<namespace>.+\\\)?(?P<class>[^\\\]+$)/', $class, $matches);
+
+        $class = $matches['class'] ?? '';
+        $namespace = $matches['namespace'] ?? '';
+
+        return (
+            $directory
+            . str_replace(self::NS_SEPARATOR, '/', $namespace)
+            . str_replace(self::PREFIX_SEPARATOR, '/', $class)
+            . '.php'
+        );
+    }
+
+    /**
+     * Load a class, based on its type (namespaced or prefixed)
+     *
+     * @param  string $class
+     * @param  string $type
+     * @return false|string
+     * @throws Exception\InvalidArgumentException
+     */
+    protected function loadClass($class, $type)
+    {
+        if (!in_array($type, [self::LOAD_NS, self::LOAD_PREFIX, self::ACT_AS_FALLBACK], strict: true)) {
+            require_once __DIR__ . '/Exception/InvalidArgumentException.php';
+            throw new Exception\InvalidArgumentException();
+        }
+
+        // Fallback autoloading
+        if ($type === self::ACT_AS_FALLBACK) {
+            // create filename
+            $filename = $this->transformClassNameToFilename($class, '');
+            $resolvedName = stream_resolve_include_path($filename);
+            if ($resolvedName !== false) {
+                include $resolvedName;
+                return $class;
+            }
+            return false;
+        }
+
+        // Namespace and/or prefix autoloading
+        /** @var mixed $path */
+        foreach ($this->$type as $leader => $path) {
+            if (!str_starts_with($class, \Jield\Stdlib\Value::string($leader))) {
+                continue;
+            }
+
+            // Trim off leader (namespace or prefix)
+            $trimmedClass = substr($class, strlen(\Jield\Stdlib\Value::string($leader)));
+
+            // create filename
+            $filename = $this->transformClassNameToFilename($trimmedClass, \Jield\Stdlib\Value::string($path));
+            if (file_exists($filename)) {
+                include $filename;
+                return $class;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Normalize the directory to include a trailing directory separator
+     *
+     * @param  string $directory
+     * @return string
+     */
+    protected function normalizeDirectory($directory)
+    {
+        $last = $directory[strlen($directory) - 1];
+        if (in_array($last, ['/', '\\'], strict: true)) {
+            $directory[strlen($directory) - 1] = DIRECTORY_SEPARATOR;
+            return $directory;
+        }
+        $directory .= DIRECTORY_SEPARATOR;
+        return $directory;
+    }
+}

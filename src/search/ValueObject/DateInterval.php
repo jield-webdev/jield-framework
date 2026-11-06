@@ -14,14 +14,14 @@ final class DateInterval
     public function __construct(
         private ?DateTime $startDate = null,
         private ?DateTime $endDate = null,
-    ) {
-    }
+    ) {}
 
-    #[Pure] public static function fromValue(string $value): DateInterval
+    #[Pure]
+    public static function fromValue(string $value): DateInterval
     {
         $dateArray = explode(separator: ' - ', string: $value);
 
-        $startDate = DateTime::createFromFormat(format: self::DATE_FORMAT, datetime: $dateArray[0] ?? '');
+        $startDate = DateTime::createFromFormat(format: self::DATE_FORMAT, datetime: $dateArray[0]);
         $endDate = DateTime::createFromFormat(format: self::DATE_FORMAT, datetime: $dateArray[1] ?? '');
 
         return new self(
@@ -36,7 +36,11 @@ final class DateInterval
             return '';
         }
 
-        return $this->startDate?->format(format: self::DATE_FORMAT) . ' - ' . $this->endDate?->format(format: self::DATE_FORMAT);
+        return (
+            (string) ($this->startDate?->format(format: self::DATE_FORMAT))
+            . ' - '
+            . (string) ($this->endDate?->format(format: self::DATE_FORMAT))
+        );
     }
 
     public function getStartDate(): ?DateTime
@@ -53,5 +57,4 @@ final class DateInterval
     {
         return $this->startDate !== null && $this->endDate !== null;
     }
-
 }

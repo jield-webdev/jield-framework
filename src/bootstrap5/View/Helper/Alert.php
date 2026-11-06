@@ -26,13 +26,7 @@ final class Alert
         }
         $class = trim(string: $class);
 
-        return sprintf(
-            $this->format,
-            $class,
-            $dismissibleClass,
-            $closeButton,
-            $alert
-        );
+        return sprintf($this->format, $class, $dismissibleClass, $closeButton, $alert);
     }
 
     public function danger(string $alert, bool $isDismissible = false): string
@@ -70,7 +64,7 @@ final class Alert
         return $this->render(alert: $alert, class: 'dark', isDismissible: $isDismissible);
     }
 
-    public function __invoke(?string $alert = null, string $class = 'info', bool $isDismissible = false): string|static
+    public function __invoke(?string $alert = null, string $class = 'info', bool $isDismissible = false): static|string
     {
         if (null !== $alert) {
             return $this->render(alert: $alert, class: $class, isDismissible: $isDismissible);

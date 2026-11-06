@@ -33,7 +33,7 @@ class File extends Element implements InputProviderInterface, ElementPrepareAwar
     public function getInputSpecification(): array
     {
         $spec = [
-            'type'     => FileInput::class,
+            'type' => FileInput::class,
             'required' => false,
         ];
 

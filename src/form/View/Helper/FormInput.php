@@ -19,36 +19,36 @@ class FormInput extends AbstractHelper
      * @var array
      */
     protected array $validTagAttributes = [
-        'name'           => true,
-        'accept'         => true,
-        'alt'            => true,
-        'autocomplete'   => true,
-        'autofocus'      => true,
-        'checked'        => true,
-        'dirname'        => true,
-        'disabled'       => true,
-        'form'           => true,
-        'formaction'     => true,
-        'formenctype'    => true,
-        'formmethod'     => true,
+        'name' => true,
+        'accept' => true,
+        'alt' => true,
+        'autocomplete' => true,
+        'autofocus' => true,
+        'checked' => true,
+        'dirname' => true,
+        'disabled' => true,
+        'form' => true,
+        'formaction' => true,
+        'formenctype' => true,
+        'formmethod' => true,
         'formnovalidate' => true,
-        'formtarget'     => true,
-        'height'         => true,
-        'list'           => true,
-        'max'            => true,
-        'maxlength'      => true,
-        'min'            => true,
-        'multiple'       => true,
-        'pattern'        => true,
-        'placeholder'    => true,
-        'readonly'       => true,
-        'required'       => true,
-        'size'           => true,
-        'src'            => true,
-        'step'           => true,
-        'type'           => true,
-        'value'          => true,
-        'width'          => true,
+        'formtarget' => true,
+        'height' => true,
+        'list' => true,
+        'max' => true,
+        'maxlength' => true,
+        'min' => true,
+        'multiple' => true,
+        'pattern' => true,
+        'placeholder' => true,
+        'readonly' => true,
+        'required' => true,
+        'size' => true,
+        'src' => true,
+        'step' => true,
+        'type' => true,
+        'value' => true,
+        'width' => true,
     ];
 
     /**
@@ -57,30 +57,30 @@ class FormInput extends AbstractHelper
      * @var array
      */
     protected array $validTypes = [
-        'text'           => true,
-        'button'         => true,
-        'checkbox'       => true,
-        'file'           => true,
-        'hidden'         => true,
-        'image'          => true,
-        'password'       => true,
-        'radio'          => true,
-        'reset'          => true,
-        'select'         => true,
-        'submit'         => true,
-        'color'          => true,
-        'date'           => true,
-        'datetime'       => true,
+        'text' => true,
+        'button' => true,
+        'checkbox' => true,
+        'file' => true,
+        'hidden' => true,
+        'image' => true,
+        'password' => true,
+        'radio' => true,
+        'reset' => true,
+        'select' => true,
+        'submit' => true,
+        'color' => true,
+        'date' => true,
+        'datetime' => true,
         'datetime-local' => true,
-        'email'          => true,
-        'month'          => true,
-        'number'         => true,
-        'range'          => true,
-        'search'         => true,
-        'tel'            => true,
-        'time'           => true,
-        'url'            => true,
-        'week'           => true,
+        'email' => true,
+        'month' => true,
+        'number' => true,
+        'range' => true,
+        'search' => true,
+        'tel' => true,
+        'time' => true,
+        'url' => true,
+        'week' => true,
     ];
 
     /**
@@ -90,12 +90,12 @@ class FormInput extends AbstractHelper
      *
      * @template T as null|ElementInterface
      * @psalm-param T $element
-     * @psalm-return (T is null ? self : string)
+     * @psalm-return (T is null ? static : string)
      * @return string|FormInput
      */
-    public function __invoke(?ElementInterface $element = null): FormInput|string|static
+    public function __invoke(?ElementInterface $element = null): string|static
     {
-        if (! $element) {
+        if (!$element) {
             return $this;
         }
 
@@ -113,14 +113,14 @@ class FormInput extends AbstractHelper
         if ($name === null || $name === '') {
             throw new Exception\DomainException(message: sprintf(
                 '%s requires that the element has an assigned name; none discovered',
-                __METHOD__
+                __METHOD__,
             ));
         }
 
-        $attributes          = $element->getAttributes();
-        $attributes['name']  = $name;
-        $type                = $this->getType(element: $element);
-        $attributes['type']  = $type;
+        $attributes = $element->getAttributes();
+        $attributes['name'] = $name;
+        $type = $this->getType(element: $element);
+        $attributes['type'] = $type;
         $attributes['value'] = $element->getValue();
         if ('password' === $type) {
             $attributes['value'] = '';
@@ -129,7 +129,7 @@ class FormInput extends AbstractHelper
         return sprintf(
             '<input %s%s',
             $this->createAttributesString(attributes: $attributes),
-            $this->getInlineClosingBracket()
+            $this->getInlineClosingBracket(),
         );
     }
 
@@ -139,12 +139,12 @@ class FormInput extends AbstractHelper
     protected function getType(ElementInterface $element): string
     {
         $type = $element->getAttribute(key: 'type');
-        if (! is_string(value: $type) || $type === '') {
+        if (!is_string(value: $type) || $type === '') {
             return 'text';
         }
 
         $type = strtolower(string: $type);
-        if (! isset($this->validTypes[$type])) {
+        if (!isset($this->validTypes[$type])) {
             return 'text';
         }
 

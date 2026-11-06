@@ -11,6 +11,7 @@ use Laminas\Paginator\Paginator;
 use Laminas\Stdlib\ArrayUtils;
 use Override;
 use Traversable;
+
 use function count;
 use function is_array;
 
@@ -46,11 +47,11 @@ class PaginationInjector implements PaginationInjectorInterface
     {
         /** @var Paginator $collection */
         $collection = $halCollection->getCollection();
-        $page       = $halCollection->getPage();
-        $pageSize   = $halCollection->getPageSize();
+        $page = $halCollection->getPage();
+        $pageSize = $halCollection->getPageSize();
 
         $collection->setItemCountPerPage(itemCountPerPage: $pageSize);
-        $collection->setCurrentPageNumber(pageNumber: $page);
+        $collection->setCurrentPageNumber(pageNumber: \Jield\Stdlib\Value::positiveInt($page));
     }
 
     private function injectLinks(Collection $halCollection): void
@@ -66,20 +67,21 @@ class PaginationInjector implements PaginationInjectorInterface
     {
         $page = $halCollection->getPage();
         $link = $this->createPaginationLink(relation: 'self', halCollection: $halCollection, page: $page);
-        $halCollection->getLinks()->add(link: $link, overwrite: true);
+        $halCollection->getLinks()->remove('self');
+        $halCollection->getLinks()->idempotentAdd(link: $link);
     }
 
     private function injectFirstLink(Collection $halCollection): void
     {
         $link = $this->createPaginationLink(relation: 'first', halCollection: $halCollection);
-        $halCollection->getLinks()->add(link: $link);
+        $halCollection->getLinks()->idempotentAdd(link: $link);
     }
 
     private function injectLastLink(Collection $halCollection): void
     {
         $page = $this->countCollection(collection: $halCollection->getCollection());
         $link = $this->createPaginationLink(relation: 'last', halCollection: $halCollection, page: $page);
-        $halCollection->getLinks()->add(link: $link);
+        $halCollection->getLinks()->idempotentAdd(link: $link);
     }
 
     private function injectPrevLink(Collection $halCollection): void
@@ -89,19 +91,19 @@ class PaginationInjector implements PaginationInjectorInterface
 
         if ($prev) {
             $link = $this->createPaginationLink(relation: 'prev', halCollection: $halCollection, page: $prev);
-            $halCollection->getLinks()->add(link: $link);
+            $halCollection->getLinks()->idempotentAdd(link: $link);
         }
     }
 
     private function injectNextLink(Collection $halCollection): void
     {
-        $page      = $halCollection->getPage();
+        $page = $halCollection->getPage();
         $pageCount = $this->countCollection(collection: $halCollection->getCollection());
-        $next      = $page < $pageCount ? $page + 1 : false;
+        $next = $page < $pageCount ? $page + 1 : false;
 
         if ($next) {
             $link = $this->createPaginationLink(relation: 'next', halCollection: $halCollection, page: $next);
-            $halCollection->getLinks()->add(link: $link);
+            $halCollection->getLinks()->idempotentAdd(link: $link);
         }
     }
 
@@ -111,16 +113,13 @@ class PaginationInjector implements PaginationInjectorInterface
      */
     private function createPaginationLink(string $relation, Collection $halCollection, int $page = 1): Link
     {
-        $options = ArrayUtils::merge(
-            a: $halCollection->getCollectionRouteOptions(),
-            b: ['query' => ['page' => $page]]
-        );
+        $options = ArrayUtils::merge(a: $halCollection->getCollectionRouteOptions(), b: ['query' => ['page' => $page]]);
 
         return Link::factory(spec: [
-            'rel'   => $relation,
+            'rel' => $relation,
             'route' => [
-                'name'    => $halCollection->getCollectionRoute(),
-                'params'  => $halCollection->getCollectionRouteParams(),
+                'name' => $halCollection->getCollectionRoute(),
+                'params' => $halCollection->getCollectionRouteParams(),
                 'options' => $options,
             ],
         ]);
@@ -131,8 +130,8 @@ class PaginationInjector implements PaginationInjectorInterface
     {
         return match (true) {
             $collection instanceof Countable => $collection->count(),
-            is_array(value: $collection)     => count(value: $collection),
-            default                          => 1,
+            is_array(value: $collection) => count(value: $collection),
+            default => 1,
         };
     }
 }

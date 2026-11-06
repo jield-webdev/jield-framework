@@ -6,6 +6,4 @@ namespace Jield\Search\Solr\Expression\Exception;
 
 use OutOfBoundsException as BaseOutOfBoundsException;
 
-class OutOfBoundsException extends BaseOutOfBoundsException implements ExceptionInterface
-{
-}
+class OutOfBoundsException extends BaseOutOfBoundsException implements ExceptionInterface {}

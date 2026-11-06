@@ -6,6 +6,4 @@ namespace Jield\ModuleManager\Listener\Exception;
 
 use Jield\ModuleManager\Exception;
 
-class InvalidArgumentException extends Exception\InvalidArgumentException implements ExceptionInterface
-{
-}
+class InvalidArgumentException extends Exception\InvalidArgumentException implements ExceptionInterface {}

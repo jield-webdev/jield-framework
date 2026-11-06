@@ -9,6 +9,7 @@ use Laminas\ServiceManager\Exception\ServiceNotCreatedException;
 use Laminas\ServiceManager\Factory\AbstractFactoryInterface;
 use Override;
 use Psr\Container\ContainerInterface;
+
 use function class_exists;
 use function explode;
 use function is_callable;
@@ -31,22 +32,24 @@ class RpcControllerFactory implements AbstractFactoryInterface
      * @param string $requestedName
      */
     #[Override]
-    public function canCreate(ContainerInterface $container, string $requestedName): bool
+    public function canCreate(ContainerInterface $container, $requestedName): bool
     {
         // Prevent circular lookup
         if ($requestedName === $this->lastRequestedControllerService) {
             return false;
         }
 
-        if (!$container->has(id: 'config')) {
+        if (!$container->has('config')) {
             return false;
         }
 
+        /** @var mixed $config */
         $config = $container->get('config');
         if (!isset($config['api-tools-rpc'][$requestedName])) {
             return false;
         }
 
+        /** @var mixed $config */
         $config = $config['api-tools-rpc'][$requestedName];
         return isset($config['callable']);
     }
@@ -59,26 +62,25 @@ class RpcControllerFactory implements AbstractFactoryInterface
      *     associated with the controller is not callable.
      */
     #[Override]
-    public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): RpcController
+    public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): RpcController
     {
-        $config   = $container->get('config');
-        $callable = $config['api-tools-rpc'][$requestedName]['callable'];
+        /** @var mixed $config */
+        $config = $container->get('config');
+        /** @var mixed $callable */
+        $callable = \Jield\Stdlib\Value::path($config, ['api-tools-rpc', $requestedName, 'callable']);
 
         if (!is_string(value: $callable) && !is_callable(value: $callable)) {
             throw new ServiceNotCreatedException(
-                message: 'Unable to create a controller from the configured api-tools-rpc callable'
+                message: 'Unable to create a controller from the configured api-tools-rpc callable',
             );
         }
 
-        if (
-            is_string(value: $callable)
-            && str_contains(haystack: $callable, needle: '::')
-        ) {
+        if (is_string(value: $callable) && str_contains(haystack: $callable, needle: '::')) {
             $callable = $this->marshalCallable(string: $callable, container: $container);
         }
 
         $controller = new RpcController();
-        $controller->setWrappedCallable(wrappedCallable: $callable);
+        $controller->setWrappedCallable(wrappedCallable: \Jield\Stdlib\Value::callback($callable));
         return $controller;
     }
 
@@ -91,17 +93,14 @@ class RpcControllerFactory implements AbstractFactoryInterface
     private function marshalCallable(mixed $string, ContainerInterface $container): callable|array
     {
         $callable = false;
-        [$class, $method] = explode(separator: '::', string: (string)$string, limit: 2);
+        [$class, $method] = explode(separator: '::', string: (string) $string, limit: 2);
 
-        if (
-            $container->has(id: 'ControllerManager')
-            && $this->lastRequestedControllerService !== $class
-        ) {
+        if ($container->has('ControllerManager') && $this->lastRequestedControllerService !== $class) {
             $this->lastRequestedControllerService = $class;
-            $callable                             = $this->marshalCallableFromContainer(
+            $callable = $this->marshalCallableFromContainer(
                 class: $class,
                 method: $method,
-                container: $container->get('ControllerManager')
+                container: \Jield\Stdlib\Service::get($container, \Jield\Mvc\Controller\ControllerManager::class, 'ControllerManager'),
             );
         }
 
@@ -118,20 +117,23 @@ class RpcControllerFactory implements AbstractFactoryInterface
         if (!class_exists(class: $class)) {
             throw new ServiceNotCreatedException(message: sprintf(
                 'Cannot create callback %s as class %s does not exist',
-                $string,
-                $class
+                \Jield\Stdlib\Value::scalar($string),
+                $class,
             ));
         }
 
-        return [new $class(), $method];
+        return [\Jield\Stdlib\Value::instantiate($class), $method];
     }
 
     /**
      * Attempt to marshal a callable from a container.
      */
-    private function marshalCallableFromContainer(string $class, string $method, ContainerInterface $container): callable|false|array
-    {
-        if (!$container->has(id: $class)) {
+    private function marshalCallableFromContainer(
+        string $class,
+        string $method,
+        ContainerInterface $container,
+    ): callable|false|array {
+        if (!$container->has($class)) {
             return false;
         }
 

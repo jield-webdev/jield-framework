@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\Search;
 
 use Jield\Search\Command\ListCores;
@@ -34,18 +36,18 @@ final class ConfigProvider
     {
         return [
             ConfigAbstractFactory::class => $this->getConfigAbstractFactory(),
-            'service_manager'            => $this->getServiceMangerConfig(),
-            'jield-cli'                => $this->getCommandConfig(),
-            'view_manager'               => $this->getViewManagerConfig(),
-            'controller_plugins'         => $this->getControllerPluginConfig(),
-            'symfony'                    => $this->getSymfonyConfig(),
+            'service_manager' => $this->getServiceMangerConfig(),
+            'laminas-cli' => $this->getCommandConfig(),
+            'view_manager' => $this->getViewManagerConfig(),
+            'controller_plugins' => $this->getControllerPluginConfig(),
+            'symfony' => $this->getSymfonyConfig(),
         ];
     }
 
     public function getControllerPluginConfig(): array
     {
         return [
-            'aliases'   => [
+            'aliases' => [
                 'getFilter' => GetFilter::class,
             ],
             'factories' => [
@@ -58,8 +60,9 @@ final class ConfigProvider
     {
         return [
             'template_map' => [
-                'search/partial/show-filter' => __DIR__ . '/../view/search/partial/show-filter.twig',
-            ]
+                'search/partial/show-filter' =>
+                    __DIR__ . '/../../resources/search/view/search/partial/show-filter.twig',
+            ],
         ];
     }
 
@@ -68,10 +71,10 @@ final class ConfigProvider
         return [
             'commands' => [
                 'search:update-index' => UpdateIndex::class,
-                'search:sync-index'   => SyncIndex::class,
-                'search:test-index'   => TestIndex::class,
-                'search:list-cores'   => ListCores::class,
-            ]
+                'search:sync-index' => SyncIndex::class,
+                'search:test-index' => TestIndex::class,
+                'search:list-cores' => ListCores::class,
+            ],
         ];
     }
 
@@ -79,22 +82,31 @@ final class ConfigProvider
     {
         return [
             'factories' => [
-                UpdateSearchEntityHandler:: class             => UpdateSearchHandlerFactory::class,
-                UpdateSearchEntitiesHandler:: class           => UpdateSearchHandlerFactory::class,
-                UpdateSearchIndexHandler:: class              => UpdateSearchHandlerFactory::class,
-                UpdateIndex::class                            => ConfigAbstractFactory::class,
-                SyncIndex::class                              => ConfigAbstractFactory::class,
-                TestIndex::class                              => ConfigAbstractFactory::class,
-                ListCores::class                              => ConfigAbstractFactory::class,
-                SearchUpdateService::class                    => SearchUpdateServiceFactory::class,
-                ConsoleService::class                         => ConsoleServiceFactory::class,
-                'Jield\Search\Command\Bus'                    => [MessageBusStaticFactory::class, 'Jield\Search\Command\Bus'],
-                'Jield\Search\Command\Bus\Name\Middleware'    => [BusNameStampMiddlewareStaticFactory::class, 'Jield\Search\Command\Bus'],
-                'Jield\Search\Command\Bus\Sender\Middleware'  => [MessageSenderMiddlewareStaticFactory::class, 'Jield\Search\Command\Bus'],
-                'Jield\Search\Command\Bus\Handler\Middleware' => [MessageHandlerMiddlewareStaticFactory::class, 'Jield\Search\Command\Bus'],
-                'Jield\Search\Transport\Doctrine'             => [TransportFactory::class, 'Jield\Search\Transport\Doctrine'],
-                'my_default_failure_transport'                => [TransportFactory::class, 'my_default_failure_transport'],
-                'command_failures'                            => [TransportFactory::class, 'command_failures'],
+                UpdateSearchEntityHandler::class => UpdateSearchHandlerFactory::class,
+                UpdateSearchEntitiesHandler::class => UpdateSearchHandlerFactory::class,
+                UpdateSearchIndexHandler::class => UpdateSearchHandlerFactory::class,
+                UpdateIndex::class => ConfigAbstractFactory::class,
+                SyncIndex::class => ConfigAbstractFactory::class,
+                TestIndex::class => ConfigAbstractFactory::class,
+                ListCores::class => ConfigAbstractFactory::class,
+                SearchUpdateService::class => SearchUpdateServiceFactory::class,
+                ConsoleService::class => ConsoleServiceFactory::class,
+                'Jield\Search\Command\Bus' => [MessageBusStaticFactory::class, 'Jield\Search\Command\Bus'],
+                'Jield\Search\Command\Bus\Name\Middleware' => [
+                    BusNameStampMiddlewareStaticFactory::class,
+                    'Jield\Search\Command\Bus',
+                ],
+                'Jield\Search\Command\Bus\Sender\Middleware' => [
+                    MessageSenderMiddlewareStaticFactory::class,
+                    'Jield\Search\Command\Bus',
+                ],
+                'Jield\Search\Command\Bus\Handler\Middleware' => [
+                    MessageHandlerMiddlewareStaticFactory::class,
+                    'Jield\Search\Command\Bus',
+                ],
+                'Jield\Search\Transport\Doctrine' => [TransportFactory::class, 'Jield\Search\Transport\Doctrine'],
+                'my_default_failure_transport' => [TransportFactory::class, 'my_default_failure_transport'],
+                'command_failures' => [TransportFactory::class, 'command_failures'],
             ],
         ];
     }
@@ -105,13 +117,13 @@ final class ConfigProvider
             UpdateIndex::class => [
                 ConsoleService::class,
             ],
-            SyncIndex::class   => [
+            SyncIndex::class => [
                 ConsoleService::class,
             ],
-            TestIndex::class   => [
+            TestIndex::class => [
                 ConsoleService::class,
             ],
-            ListCores::class   => [
+            ListCores::class => [
                 ConsoleService::class,
             ],
         ];
@@ -122,20 +134,20 @@ final class ConfigProvider
         return [
             'messenger' => [
                 'failure_transport' => 'my_default_failure_transport',
-                'transports'        => [
+                'transports' => [
                     'Jield\Search\Transport\Doctrine' => [
-                        'dsn'        => 'doctrine://doctrine.entitymanager.orm_default',
-                        'options'    => [
+                        'dsn' => 'doctrine://doctrine.entitymanager.orm_default',
+                        'options' => [
                             'table_name' => 'admin_messages',
                             'queue_name' => 'Jield\Search\Transport\Doctrine',
                         ],
                         'serializer' => SymfonySerializer::class,
                     ],
-                    'my_default_failure_transport'    => [
+                    'my_default_failure_transport' => [
                         'dsn' => 'in-memory:///',
                     ],
                 ],
-                'buses'             => [
+                'buses' => [
                     'Jield\Search\Command\Bus' => [
                         'allows_zero_handlers' => false, // Means that it's an error if no handlers are defined for a given message
 
@@ -144,7 +156,7 @@ final class ConfigProvider
                          *
                          * Below is a minimal configuration to handle messages
                          */
-                        'middleware'           => [
+                        'middleware' => [
                             'Jield\Search\Command\Bus\Name\Middleware', // Add the name to the envelope (make sure this is the first middleware)
                             'Jield\Search\Command\Bus\Sender\Middleware', // Sends messages via a transport if configured.
                             'Jield\Search\Command\Bus\Handler\Middleware', // Executes the handlers configured for the message
@@ -157,11 +169,11 @@ final class ConfigProvider
                          * Both locators operate on the basis that handlers are available in the container.
                          *
                          */
-                        'handler_locator'      => OneToOneFqcnContainerHandlerLocator::class,
-                        'handlers'             => [
+                        'handler_locator' => OneToOneFqcnContainerHandlerLocator::class,
+                        'handlers' => [
                             UpdateSearchEntitiesMessage::class => UpdateSearchEntitiesHandler::class,
-                            UpdateSearchEntityMessage::class   => UpdateSearchEntityHandler::class,
-                            UpdateSearchIndexMessage::class    => UpdateSearchIndexHandler::class,
+                            UpdateSearchEntityMessage::class => UpdateSearchEntityHandler::class,
+                            UpdateSearchIndexMessage::class => UpdateSearchIndexHandler::class,
                         ],
 
                         /**
@@ -176,14 +188,13 @@ final class ConfigProvider
                          *
                          * Route specific messages to specific transports by using the message name as the key.
                          */
-                        'routes'               => [
+                        'routes' => [
                             UpdateSearchEntitiesMessage::class => ['Jield\Search\Transport\Doctrine'],
-                            UpdateSearchEntityMessage::class   => ['Jield\Search\Transport\Doctrine'],
-                            UpdateSearchIndexMessage::class    => ['Jield\Search\Transport\Doctrine'],
+                            UpdateSearchEntityMessage::class => ['Jield\Search\Transport\Doctrine'],
+                            UpdateSearchIndexMessage::class => ['Jield\Search\Transport\Doctrine'],
                         ],
                     ],
                 ],
-
             ],
         ];
     }

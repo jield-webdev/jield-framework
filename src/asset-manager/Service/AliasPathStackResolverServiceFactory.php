@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\AssetManager\Service;
 
 use Jield\AssetManager\Resolver\AliasPathStackResolver;
@@ -13,15 +15,20 @@ class AliasPathStackResolverServiceFactory implements FactoryInterface
      * @inheritDoc
      */
     #[Override]
-    public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): AliasPathStackResolver
-    {
-        $config  = $container->get('config');
+    public function __invoke(
+        ContainerInterface $container,
+        $requestedName,
+        ?array $options = null,
+    ): AliasPathStackResolver {
+        /** @var mixed $config */
+        $config = $container->get('config');
         $aliases = [];
 
         if (isset($config['asset_manager']['resolver_configs']['aliases'])) {
+            /** @var mixed $aliases */
             $aliases = $config['asset_manager']['resolver_configs']['aliases'];
         }
 
-        return new AliasPathStackResolver(aliases: $aliases);
+        return new AliasPathStackResolver(aliases: \Jield\Stdlib\Value::array($aliases));
     }
 }

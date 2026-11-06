@@ -4,117 +4,30 @@ declare(strict_types=1);
 
 namespace DoctrineORMModule;
 
-use Doctrine\Migrations\Tools\Console\Command\VersionCommand;
-use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\ORM\Tools\Console\Helper\EntityManagerHelper;
-use Laminas\Stdlib\ArrayUtils;
+use Doctrine\ORM\Tools\Console\ConsoleRunner;
+use Doctrine\ORM\Tools\Console\EntityManagerProvider\SingleManagerProvider;
 use Psr\Container\ContainerInterface;
 use Symfony\Component\Console\Application;
-use Symfony\Component\Console\Helper\Helper;
-use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Input\InputOption;
-use function class_exists;
 
+/** Registers the ORM 3 / DBAL 4 commands with an entity-manager provider. */
 class CliConfigurator
 {
-    private string $defaultObjectManagerName = 'doctrine.entitymanager.orm_default';
-
-    /** @var string[] */
-    private array $commands
-        = [
-            'doctrine.dbal_cmd.runsql',
-            'doctrine.dbal_cmd.reserved_words',
-            'doctrine.orm_cmd.clear_cache_metadata',
-            'doctrine.orm_cmd.clear_cache_result',
-            'doctrine.orm_cmd.clear_cache_query',
-            'doctrine.orm_cmd.schema_tool_create',
-            'doctrine.orm_cmd.schema_tool_update',
-            'doctrine.orm_cmd.schema_tool_drop',
-            'doctrine.orm_cmd.generate_proxies',
-            'doctrine.orm_cmd.run_dql',
-            'doctrine.orm_cmd.validate_schema',
-            'doctrine.orm_cmd.info',
-        ];
-
-    /** @var string[] */
-    private array $migrationCommands
-        = [
-            'doctrine.migrations_cmd.current',
-            'doctrine.migrations_cmd.diff',
-            'doctrine.migrations_cmd.dumpschema',
-            'doctrine.migrations_cmd.execute',
-            'doctrine.migrations_cmd.generate',
-            'doctrine.migrations_cmd.latest',
-            'doctrine.migrations_cmd.list',
-            'doctrine.migrations_cmd.migrate',
-            'doctrine.migrations_cmd.rollup',
-            'doctrine.migrations_cmd.status',
-            'doctrine.migrations_cmd.syncmetadatastorage',
-            'doctrine.migrations_cmd.version',
-            'doctrine.migrations_cmd.uptodate',
-        ];
-
-    public function __construct(private ContainerInterface $container)
-    {
-    }
+    public function __construct(private ContainerInterface $container) {}
 
     public function configure(Application $cli): void
     {
-        $commands = $this->getAvailableCommands();
-        foreach ($commands as $commandName) {
-            $command = $this->container->get($commandName);
-            $command->getDefinition()->addOption($this->createObjectManagerInputOption());
-
-            $cli->add($command);
-        }
-
-        $objectManager = $this->container->get($this->getObjectManagerName());
-
-        $helpers = $this->getHelpers(objectManager: $objectManager);
-        foreach ($helpers as $name => $instance) {
-            $cli->getHelperSet()->set(helper: $instance, alias: $name);
-        }
-    }
-
-    /** @return array<string,Helper> */
-    private function getHelpers(EntityManagerInterface $objectManager): array
-    {
-        return [
-            'dialog' => new QuestionHelper(),
-            'em'     => new EntityManagerHelper($objectManager),
-        ];
-    }
-
-    private function createObjectManagerInputOption(): InputOption
-    {
-        return new InputOption(
-            name: 'object-manager',
-            shortcut: null,
-            mode: InputOption::VALUE_OPTIONAL,
-            description: 'The name of the object manager to use.',
-            default: $this->defaultObjectManagerName,
-        );
-    }
-
-    private function getObjectManagerName(): string
-    {
         $arguments = new ArgvInput();
-
-        if (!$arguments->hasParameterOption(values: '--object-manager')) {
-            return $this->defaultObjectManagerName;
+        /** @var mixed $managerName */
+        $managerName = $arguments->getParameterOption('--object-manager', 'doctrine.entitymanager.orm_default');
+        $provider = new SingleManagerProvider(\Jield\Stdlib\Value::instance($this->container->get(\Jield\Stdlib\Value::string($managerName)), \Doctrine\ORM\EntityManagerInterface::class), \Jield\Stdlib\Value::string($managerName));
+        ConsoleRunner::addCommands($cli, $provider);
+        foreach ($cli->all() as $command) {
+            $command->getDefinition()->addOption(new InputOption(
+                'object-manager', null, InputOption::VALUE_OPTIONAL,
+                'The container service name of the entity manager.', $managerName,
+            ));
         }
-
-        return $arguments->getParameterOption(values: '--object-manager');
-    }
-
-    /** @return string[] */
-    private function getAvailableCommands(): array
-    {
-        if (class_exists(class: VersionCommand::class)) {
-            return ArrayUtils::merge(a: $this->commands, b: $this->migrationCommands);
-        }
-
-        return $this->commands;
     }
 }

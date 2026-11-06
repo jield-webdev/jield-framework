@@ -8,6 +8,7 @@ use Laminas\ServiceManager\Factory\FactoryInterface;
 use Laminas\Stdlib\AbstractOptions;
 use Psr\Container\ContainerInterface;
 use RuntimeException;
+
 use function sprintf;
 
 /**
@@ -20,13 +21,13 @@ abstract class AbstractFactory implements FactoryInterface
     /**
      * Would normally be set to orm | odm
      */
-    protected string|null $mappingType = null;
+    protected ?string $mappingType = null;
 
-    protected AbstractOptions|null $options = null;
+    protected ?AbstractOptions $options = null;
 
-    public function __construct(protected string $name)
-    {
-    }
+    public function __construct(
+        protected string $name,
+    ) {}
 
     public function getName(): string
     {
@@ -46,35 +47,37 @@ abstract class AbstractFactory implements FactoryInterface
      *
      * @throws \RuntimeException
      */
-    public function getOptions(ContainerInterface $container, string $key, string|null $name = null): AbstractOptions
+    public function getOptions(ContainerInterface $container, string $key, ?string $name = null): AbstractOptions
     {
         if ($name === null) {
             $name = $this->getName();
         }
 
-        $options     = $container->get('config');
-        $options     = $options['doctrine'];
+        /** @var mixed $options */
+        $options = $container->get('config');
+        /** @var mixed $options */
+        $options = \Jield\Stdlib\Value::accessible($options)['doctrine'];
 
         $mappingType = $this->getMappingType();
         if ($mappingType !== '' && $mappingType !== '0') {
-            $options = $options[$mappingType];
+            /** @var mixed $options */
+            $options = \Jield\Stdlib\Value::accessible($options)[$mappingType];
         }
 
+        /** @var mixed $options */
         $options = $options[$key][$name] ?? null;
 
         if ($options === null) {
-            throw new RuntimeException(
-                message: sprintf(
-                    'Options with name "%s" could not be found in "doctrine.%s".',
-                    $name,
-                    $key,
-                ),
-            );
+            throw new RuntimeException(message: sprintf(
+                'Options with name "%s" could not be found in "doctrine.%s".',
+                $name,
+                $key,
+            ));
         }
 
         $optionsClass = $this->getOptionsClass();
 
-        return new $optionsClass($options);
+        return \Jield\Stdlib\Value::instance(\Jield\Stdlib\Value::instantiate($optionsClass, [$options]), \Laminas\Stdlib\AbstractOptions::class);
     }
 
     /**

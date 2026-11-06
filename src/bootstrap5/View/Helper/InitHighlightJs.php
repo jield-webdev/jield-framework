@@ -13,9 +13,8 @@ final class InitHighlightJs
     public function __construct(
         private readonly HeadScript $headScript,
         private readonly HeadLink $headLink,
-        private readonly InlineScript $inlineScript
-    ) {
-    }
+        private readonly InlineScript $inlineScript,
+    ) {}
 
     public function __invoke(): static
     {

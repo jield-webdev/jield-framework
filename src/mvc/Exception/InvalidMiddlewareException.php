@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\Mvc\Exception;
 
 use function sprintf;
@@ -17,8 +19,7 @@ class InvalidMiddlewareException extends RuntimeException
      */
     public static function fromMiddlewareName($middlewareName): InvalidMiddlewareException
     {
-        $middlewareName           = (string) $middlewareName;
-        $instance                 = new self(sprintf('Cannot dispatch middleware %s', $middlewareName));
+        $instance = new self(sprintf('Cannot dispatch middleware %s', $middlewareName));
         $instance->middlewareName = $middlewareName;
         return $instance;
     }

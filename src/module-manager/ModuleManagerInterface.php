@@ -8,6 +8,8 @@ use Laminas\EventManager\EventManagerAwareInterface;
 
 interface ModuleManagerInterface extends EventManagerAwareInterface
 {
+    public function getEvent(): ModuleEvent;
+
     /**
      * Load the provided modules.
      *

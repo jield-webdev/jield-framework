@@ -1,8 +1,9 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\Mvc\Factory;
 
-use Jield\Mvc\Service\ResolverInterface;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Laminas\View\Helper\ViewModel as ViewModelHelper;
 use Laminas\View\HelperPluginManager;
@@ -25,26 +26,29 @@ class ViewResolverFactory implements FactoryInterface
      * @param null|array $options
      * @return ViewResolver\AggregateResolver
      */
-    public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): ViewResolver\AggregateResolver
-    {
+    public function __invoke(
+        ContainerInterface $container,
+        string $requestedName,
+        ?array $options = null,
+    ): ViewResolver\AggregateResolver {
         $resolver = new ViewResolver\AggregateResolver();
 
-        /** @var TemplateMapResolver $mapResolver */
-        $mapResolver = $container->get('ViewTemplateMapResolver');
-        /** @var TemplatePathStack $pathResolver */
-        $pathResolver = $container->get('ViewTemplatePathStack');
+        
+        $mapResolver = \Jield\Stdlib\Service::get($container, \Laminas\View\Resolver\TemplateMapResolver::class, 'ViewTemplateMapResolver');
+        
+        $pathResolver = \Jield\Stdlib\Service::get($container, \Laminas\View\Resolver\TemplatePathStack::class, 'ViewTemplatePathStack');
         /** @var PrefixPathStackResolver $prefixPathStackResolver */
         $prefixPathStackResolver = $container->get('ViewPrefixPathStackResolver');
-        $pluginManager           = $container->get(HelperPluginManager::class);
-        $viewModelHelper         = $pluginManager->get(ViewModelHelper::class);
+        $pluginManager = \Jield\Stdlib\Service::get($container, HelperPluginManager::class);
+        $viewModelHelper = $pluginManager->get(ViewModelHelper::class);
 
         $resolver
             ->attach($mapResolver)
             ->attach($pathResolver)
             ->attach($prefixPathStackResolver)
-            ->attach(new ViewResolver\RelativeFallbackResolver($mapResolver, $viewModelHelper))
-            ->attach(new ViewResolver\RelativeFallbackResolver($pathResolver, $viewModelHelper))
-            ->attach(new ViewResolver\RelativeFallbackResolver($prefixPathStackResolver, $viewModelHelper));
+            ->attach(new ViewResolver\RelativeFallbackResolver($mapResolver, \Jield\Stdlib\Value::instance($viewModelHelper, \Laminas\View\Helper\ViewModel::class)))
+            ->attach(new ViewResolver\RelativeFallbackResolver($pathResolver, \Jield\Stdlib\Value::instance($viewModelHelper, \Laminas\View\Helper\ViewModel::class)))
+            ->attach(new ViewResolver\RelativeFallbackResolver($prefixPathStackResolver, \Jield\Stdlib\Value::instance($viewModelHelper, \Laminas\View\Helper\ViewModel::class)));
 
         return $resolver;
     }

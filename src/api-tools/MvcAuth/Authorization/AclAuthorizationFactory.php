@@ -21,7 +21,7 @@ abstract class AclAuthorizationFactory
         // Determine whether we are whitelisting or blacklisting
         $denyByDefault = false;
         if (array_key_exists(key: 'deny_by_default', array: $config)) {
-            $denyByDefault = (bool) $config['deny_by_default'];
+            $denyByDefault = \Jield\Stdlib\Value::truthy($config['deny_by_default']);
             unset($config['deny_by_default']);
         }
 
@@ -50,8 +50,9 @@ abstract class AclAuthorizationFactory
      */
     private static function injectGrants(AclAuthorization $acl, string $grantType, array $rules): AclAuthorization
     {
+        /** @var mixed $set */
         foreach ($rules as $set) {
-            if (! is_array(value: $set) || ! isset($set['resource'])) {
+            if (!is_array(value: $set) || !isset($set['resource'])) {
                 continue;
             }
 
@@ -69,10 +70,12 @@ abstract class AclAuthorizationFactory
     private static function injectGrant(AclAuthorization $acl, string $grantType, array $ruleSet): void
     {
         // Add new resource to ACL
+        /** @var mixed $resource */
         $resource = $ruleSet['resource'];
-        $acl->addResource($ruleSet['resource']);
+        $acl->addResource(\Jield\Stdlib\Value::instanceOrString($ruleSet['resource'], \Laminas\Permissions\Acl\Resource\ResourceInterface::class));
 
         // Deny guest specified privileges to resource
+        /** @var mixed $privileges */
         $privileges = $ruleSet['privileges'] ?? null;
 
         // null privileges means no permissions were setup; nothing to do
@@ -80,6 +83,6 @@ abstract class AclAuthorizationFactory
             return;
         }
 
-        $acl->$grantType('guest', $resource, $privileges);
+        \Jield\Stdlib\Value::call($acl, $grantType, ['guest', $resource, $privileges]);
     }
 }

@@ -19,20 +19,27 @@ class NamedOAuth2ServerFactory
 {
     public function __invoke(ContainerInterface $container): callable
     {
+        /** @var mixed $config */
         $config = $container->get('config');
 
-        $oauth2Config  = $config['api-tools-oauth2'] ?? [];
+        /** @var mixed $oauth2Config */
+        $oauth2Config = $config['api-tools-oauth2'] ?? [];
+        /** @var mixed $mvcAuthConfig */
         $mvcAuthConfig = $config['api-tools-mvc-auth']['authentication']['adapters'] ?? [];
 
-        $servers = (object) ['application' => null, 'api' => []];
-        return function ($type = null) use ($oauth2Config, $mvcAuthConfig, $container, $servers) {
+        $servers = new class {
+            public ?\OAuth2\Server $application = null;
+            /** @var array<array-key, \OAuth2\Server> */
+            public array $api = [];
+        };
+        return static function ($type = null) use ($oauth2Config, $mvcAuthConfig, $container, $servers) {
             // Empty type == legacy configuration.
             if (empty($type)) {
                 if (null !== $servers->application) {
                     return $servers->application;
                 }
 
-                $factory                     = new OAuth2ServerInstanceFactory(config: $oauth2Config, services: $container);
+                $factory = new OAuth2ServerInstanceFactory(config: \Jield\Stdlib\Value::array($oauth2Config), services: $container);
                 return $servers->application = $factory();
             }
 
@@ -40,8 +47,11 @@ class NamedOAuth2ServerFactory
                 return $servers->api[$type];
             }
 
-            foreach ($mvcAuthConfig as $adapterConfig) {
-                if (! isset($adapterConfig['storage']['route'])) {
+            /**
+             * @var mixed $adapterConfig
+             */
+            foreach (\Jield\Stdlib\Value::iterable($mvcAuthConfig) as $adapterConfig) {
+                if (!isset($adapterConfig['storage']['route'])) {
                     // Not a api-tools-oauth2 config
                     continue;
                 }
@@ -51,9 +61,9 @@ class NamedOAuth2ServerFactory
                 }
 
                 // Found!
-                return $servers->api[$type] = OAuth2ServerFactory::factory(
+                return $servers->api[\Jield\Stdlib\Value::key($type)] = OAuth2ServerFactory::factory(
                     config: $adapterConfig['storage'],
-                    container: $container
+                    container: $container,
                 );
             }
 
@@ -64,7 +74,7 @@ class NamedOAuth2ServerFactory
                 return $servers->application;
             }
 
-            $factory                     = new OAuth2ServerInstanceFactory(config: $oauth2Config, services: $container);
+            $factory = new OAuth2ServerInstanceFactory(config: \Jield\Stdlib\Value::array($oauth2Config), services: $container);
             return $servers->application = $factory();
         };
     }

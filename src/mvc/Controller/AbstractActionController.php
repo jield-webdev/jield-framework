@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\Mvc\Controller;
 
 use Jield\Mvc\Exception;
 use Jield\Mvc\Exception\DomainException;
 use Jield\Mvc\MvcEvent;
-use Laminas\View\Model\ViewModel;
+use Jield\Mvc\View\Model\ViewModel;
 
 use function method_exists;
 
@@ -24,7 +26,7 @@ abstract class AbstractActionController extends AbstractController
      *
      * @return ViewModel
      */
-    public function indexAction(): ViewModel
+    public function indexAction(): mixed
     {
         return new ViewModel([
             'content' => 'Placeholder page',
@@ -38,12 +40,13 @@ abstract class AbstractActionController extends AbstractController
      */
     public function notFoundAction(): ViewModel
     {
-        $event      = $this->getEvent();
+        $event = $this->getEvent();
         $routeMatch = $event->getRouteMatch();
-        $routeMatch->setParam('action', 'not-found');
+        \Jield\Stdlib\Value::present($routeMatch)->setParam('action', 'not-found');
 
+        /** @var mixed $helper */
         $helper = $this->plugin('createHttpNotFoundModel');
-        return $helper($event->getResponse());
+        return \Jield\Stdlib\Value::instance($helper($event->getResponse()), \Jield\Mvc\View\Model\ViewModel::class);
     }
 
     /**
@@ -55,7 +58,7 @@ abstract class AbstractActionController extends AbstractController
     public function onDispatch(MvcEvent $e): mixed
     {
         $routeMatch = $e->getRouteMatch();
-        if (! $routeMatch) {
+        if (!$routeMatch) {
             /**
              * @todo Determine requirements for when route match is missing.
              *       Potentially allow pulling directly from request metadata?
@@ -63,14 +66,16 @@ abstract class AbstractActionController extends AbstractController
             throw new DomainException('Missing route matches; unsure how to retrieve action');
         }
 
+        /** @var mixed $action */
         $action = $routeMatch->getParam('action', 'not-found');
-        $method = static::getMethodFromAction($action);
+        $method = static::getMethodFromAction(\Jield\Stdlib\Value::string($action));
 
-        if (! method_exists($this, $method)) {
+        if (!method_exists($this, $method)) {
             $method = 'notFoundAction';
         }
 
-        $actionResponse = $this->$method();
+        /** @var mixed $actionResponse */
+        $actionResponse = \Jield\Stdlib\Value::call($this, $method, [], scope: self::class);
 
         $e->setResult($actionResponse);
 

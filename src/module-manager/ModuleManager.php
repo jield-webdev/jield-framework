@@ -8,6 +8,7 @@ use Laminas\EventManager\EventManager;
 use Laminas\EventManager\EventManagerInterface;
 use Override;
 use Traversable;
+
 use function is_array;
 use function is_object;
 use function sprintf;
@@ -18,9 +19,9 @@ class ModuleManager implements ModuleManagerInterface
 
     protected array $loadedModules = [];
 
-    protected EventManagerInterface $events;
+    protected ?EventManagerInterface $events = null;
 
-    protected ModuleEvent $event;
+    protected ?ModuleEvent $event = null;
 
     protected int $loadFinished;
 
@@ -52,8 +53,9 @@ class ModuleManager implements ModuleManagerInterface
             return;
         }
 
+        /** @var mixed $moduleName */
         foreach ($this->getModules() as $moduleName) {
-            $this->loadModule(moduleName: $moduleName);
+            $this->loadModule(moduleName: \Jield\Stdlib\Value::string($moduleName));
         }
 
         $this->modulesAreLoaded = true;
@@ -64,7 +66,7 @@ class ModuleManager implements ModuleManagerInterface
      *
      * @triggers loadModules
      * @triggers loadModules.post
-     * @return   ModuleManager
+     * @return static
      */
     #[Override]
     public function loadModules(): static
@@ -74,7 +76,7 @@ class ModuleManager implements ModuleManagerInterface
         }
 
         $events = $this->getEventManager();
-        $event  = $this->getEvent();
+        $event = $this->getEvent();
         $event->setName(name: ModuleEvent::EVENT_LOAD_MODULES);
 
         $events->triggerEvent(event: $event);
@@ -126,8 +128,9 @@ class ModuleManager implements ModuleManagerInterface
 
         $this->loadFinished++;
 
+        /** @var mixed $module */
         $module = $this->loadModuleByName(event: $event);
-        $event->setModule(module: $module);
+        $event->setModule(module: \Jield\Stdlib\Value::object($module));
         $event->setName(name: ModuleEvent::EVENT_LOAD_MODULE);
 
         $this->loadedModules[$moduleName] = $module;
@@ -147,15 +150,17 @@ class ModuleManager implements ModuleManagerInterface
     protected function loadModuleByName(ModuleEvent $event): mixed
     {
         $event->setName(name: ModuleEvent::EVENT_LOAD_MODULE_RESOLVE);
-        $result = $this->getEventManager()->triggerEventUntil(callback: static fn($r): bool => is_object(value: $r), event: $event);
+        $result = $this->getEventManager()->triggerEventUntil(callback: static fn($r): bool => is_object(
+            value: $r,
+        ), event: $event);
 
+        /** @var mixed $module */
         $module = $result->last();
-
 
         if (!is_object(value: $module)) {
             throw new Exception\RuntimeException(message: sprintf(
                 'Module (%s) could not be initialized.',
-                $event->getModuleName()
+                $event->getModuleName(),
             ));
         }
 
@@ -197,14 +202,14 @@ class ModuleManager implements ModuleManagerInterface
     #[Override]
     public function getModules(): array
     {
-        return $this->modules;
+        return is_array($this->modules) ? $this->modules : iterator_to_array($this->modules);
     }
 
     /**
      * Set an array or Traversable of module names that this module manager should load.
      *
      * @param mixed $modules array or Traversable of module names
-     * @return ModuleManager
+     * @return static
      * @throws Exception\InvalidArgumentException
      */
     #[Override]
@@ -213,13 +218,11 @@ class ModuleManager implements ModuleManagerInterface
         if (is_array(value: $modules) || $modules instanceof Traversable) {
             $this->modules = $modules;
         } else {
-            throw new Exception\InvalidArgumentException(
-                message: sprintf(
-                    'Parameter to %s\'s %s method must be an array or implement the Traversable interface',
-                    self::class,
-                    __METHOD__
-                )
-            );
+            throw new Exception\InvalidArgumentException(message: sprintf(
+                'Parameter to %s\'s %s method must be an array or implement the Traversable interface',
+                self::class,
+                __METHOD__,
+            ));
         }
         return $this;
     }
@@ -240,7 +243,7 @@ class ModuleManager implements ModuleManagerInterface
     /**
      * Set the module event
      *
-     * @return ModuleManager
+     * @return static
      */
     public function setEvent(ModuleEvent $event): static
     {

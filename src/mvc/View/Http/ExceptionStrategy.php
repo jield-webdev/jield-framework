@@ -1,14 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\Mvc\View\Http;
 
+use Jield\Mvc\Application;
+use Jield\Mvc\MvcEvent;
+use Jield\Mvc\View\Model\ViewModel;
 use Laminas\EventManager\AbstractListenerAggregate;
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\Http\Response as HttpResponse;
-use Jield\Mvc\Application;
-use Jield\Mvc\MvcEvent;
 use Laminas\Stdlib\ResponseInterface as Response;
-use Laminas\View\Model\ViewModel;
 
 class ExceptionStrategy extends AbstractListenerAggregate
 {
@@ -39,11 +41,11 @@ class ExceptionStrategy extends AbstractListenerAggregate
      * Flag: display exceptions in error pages?
      *
      * @param  bool $displayExceptions
-     * @return ExceptionStrategy
+     * @return static
      */
     public function setDisplayExceptions($displayExceptions): static
     {
-        $this->displayExceptions = (bool) $displayExceptions;
+        $this->displayExceptions = $displayExceptions;
         return $this;
     }
 
@@ -61,11 +63,11 @@ class ExceptionStrategy extends AbstractListenerAggregate
      * Set the exception template
      *
      * @param  string $exceptionTemplate
-     * @return ExceptionStrategy
+     * @return static
      */
     public function setExceptionTemplate($exceptionTemplate): static
     {
-        $this->exceptionTemplate = (string) $exceptionTemplate;
+        $this->exceptionTemplate = $exceptionTemplate;
         return $this;
     }
 
@@ -98,6 +100,7 @@ class ExceptionStrategy extends AbstractListenerAggregate
         }
 
         // Do nothing if the result is a response object
+        /** @var mixed $result */
         $result = $e->getResult();
         if ($result instanceof Response) {
             return;
@@ -113,24 +116,18 @@ class ExceptionStrategy extends AbstractListenerAggregate
             case Application::ERROR_EXCEPTION:
             default:
                 $model = new ViewModel([
-                    'message'            => 'An error occurred during execution; please try again later.',
-                    'exception'          => $e->getParam('exception'),
+                    'message' => 'An error occurred during execution; please try again later.',
+                    'exception' => $e->getParam('exception'),
                     'display_exceptions' => $this->displayExceptions(),
                 ]);
-                $model->setTemplate($this->getExceptionTemplate());
+                $model->setTemplate(\Jield\Stdlib\Value::nonEmptyString($this->getExceptionTemplate()));
                 $e->setResult($model);
 
                 $response = $e->getResponse();
-                if (! $response) {
-                    $response = new HttpResponse();
-                    $response->setStatusCode(500);
-                    $e->setResponse($response);
-                } else {
-                    $statusCode = $response->getStatusCode();
-                    if ($statusCode === 200) {
-                        $response->setStatusCode(500);
-                    }
-                }
+                $statusCode = \Jield\Stdlib\Value::instance($response, \Laminas\Http\Response::class)->getStatusCode();
+if ($statusCode === 200) {
+    \Jield\Stdlib\Value::instance($response, \Laminas\Http\Response::class)->setStatusCode(500);
+}
 
                 break;
         }

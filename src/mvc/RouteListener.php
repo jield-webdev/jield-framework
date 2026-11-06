@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\Mvc;
 
+use Jield\Mvc\Router\RouteMatch;
 use Laminas\EventManager\AbstractListenerAggregate;
 use Laminas\EventManager\EventManagerInterface;
-use Laminas\Router\RouteMatch;
 
 class RouteListener extends AbstractListenerAggregate
 {
@@ -27,13 +29,25 @@ class RouteListener extends AbstractListenerAggregate
      *
      * Seeds the event with the route match on completion.
      *
-     * @return null|RouteMatch
+     * @return mixed
      */
-    public function onRoute(MvcEvent $event): ?RouteMatch
+    public function onRoute(MvcEvent $event): mixed
     {
-        $request    = $event->getRequest();
-        $router     = $event->getRouter();
-        $routeMatch = $router->match($request);
+        $request = \Jield\Stdlib\Value::instance($event->getRequest(), \Laminas\Http\PhpEnvironment\Request::class);
+        $router = $event->getRouter();
+        $routingRequest = new \Nyholm\Psr7\ServerRequest(
+            \Jield\Stdlib\Value::string(\Jield\Stdlib\Value::instance($request, \Laminas\Http\Request::class)->getMethod()),
+            \Jield\Stdlib\Value::instance($request, \Laminas\Http\Request::class)->getUriString(),
+            \Jield\Stdlib\Value::array(\Jield\Stdlib\Value::instance($request, \Laminas\Http\AbstractMessage::class)->getHeaders()->toArray()),
+            $request->getContent(),
+            \Jield\Stdlib\Value::string($request->getVersion()),
+            \Jield\Stdlib\Value::array(\Jield\Stdlib\Value::call($request->getServer(), 'toArray')),
+        );
+        $matched = $router->match($routingRequest);
+        $routeMatch = $matched === null ? null : new RouteMatch($matched->getParams());
+        if ($routeMatch !== null) {
+            $routeMatch->setMatchedRouteName(\Jield\Stdlib\Value::present($matched)->getMatchedRouteName());
+        }
 
         if ($routeMatch instanceof RouteMatch) {
             $event->setRouteMatch($routeMatch);
@@ -43,10 +57,11 @@ class RouteListener extends AbstractListenerAggregate
         $event->setName(MvcEvent::EVENT_DISPATCH_ERROR);
         $event->setError(Application::ERROR_ROUTER_NO_MATCH);
 
-        $target  = $event->getTarget();
-        $results = $target->getEventManager()->triggerEvent($event);
-        if (! empty($results)) {
-            return $results->last();
+        $target = $event->getTarget();
+        /** @var mixed $results */
+        $results = \Jield\Stdlib\Value::call(\Jield\Stdlib\Value::call(\Jield\Stdlib\Value::present(\Jield\Stdlib\Value::object($target)), 'getEventManager'), 'triggerEvent', [$event]);
+        if (!empty($results)) {
+            return \Jield\Stdlib\Value::call($results, 'last');
         }
 
         return $event->getParams();

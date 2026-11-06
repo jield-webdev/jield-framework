@@ -67,7 +67,7 @@ class MonthSelect extends Element implements InputProviderInterface, ElementPrep
     protected bool $renderDelimiters = true;
 
     /** @var null|ValidatorInterface */
-    protected ?ValidatorInterface $validator;
+    protected ?ValidatorInterface $validator = null;
 
     /**
      * Constructor. Add two selects elements
@@ -77,11 +77,11 @@ class MonthSelect extends Element implements InputProviderInterface, ElementPrep
      */
     public function __construct(int|string|null $name = null, iterable $options = [])
     {
-        $this->minYear = ((int) date(format: 'Y')) - 100;
+        $this->minYear = (int) date(format: 'Y') - 100;
         $this->maxYear = (int) date(format: 'Y');
 
         $this->monthElement = new Select(name: 'month');
-        $this->yearElement  = new Select(name: 'year');
+        $this->yearElement = new Select(name: 'year');
 
         parent::__construct(name: $name, options: $options);
     }
@@ -98,32 +98,32 @@ class MonthSelect extends Element implements InputProviderInterface, ElementPrep
      *
      * @inheritDoc
      */
-    public function setOptions(iterable $options): Element
+    public function setOptions(iterable $options): static
     {
         parent::setOptions(options: $options);
 
         if (isset($this->options['month_attributes'])) {
-            $this->setMonthAttributes(monthAttributes: $this->options['month_attributes']);
+            $this->setMonthAttributes(monthAttributes: \Jield\Stdlib\Value::scalarMap($this->options['month_attributes']));
         }
 
         if (isset($this->options['year_attributes'])) {
-            $this->setYearAttributes(yearAttributes: $this->options['year_attributes']);
+            $this->setYearAttributes(yearAttributes: \Jield\Stdlib\Value::scalarMap($this->options['year_attributes']));
         }
 
         if (isset($this->options['min_year'])) {
-            $this->setMinYear(minYear: $this->options['min_year']);
+            $this->setMinYear(minYear: \Jield\Stdlib\Value::int($this->options['min_year']));
         }
 
         if (isset($this->options['max_year'])) {
-            $this->setMaxYear(maxYear: $this->options['max_year']);
+            $this->setMaxYear(maxYear: \Jield\Stdlib\Value::int($this->options['max_year']));
         }
 
         if (isset($this->options['create_empty_option'])) {
-            $this->setShouldCreateEmptyOption(createEmptyOption: $this->options['create_empty_option']);
+            $this->setShouldCreateEmptyOption(createEmptyOption: \Jield\Stdlib\Value::bool($this->options['create_empty_option']));
         }
 
         if (isset($this->options['render_delimiters'])) {
-            $this->setShouldRenderDelimiters(renderDelimiters: $this->options['render_delimiters']);
+            $this->setShouldRenderDelimiters(renderDelimiters: \Jield\Stdlib\Value::bool($this->options['render_delimiters']));
         }
 
         return $this;
@@ -153,7 +153,7 @@ class MonthSelect extends Element implements InputProviderInterface, ElementPrep
      * Set the month attributes
      *
      * @param array<string, scalar|null> $monthAttributes
-     * @return self
+     * @return static
      */
     public function setMonthAttributes(array $monthAttributes): static
     {
@@ -175,7 +175,7 @@ class MonthSelect extends Element implements InputProviderInterface, ElementPrep
      * Set the year attributes
      *
      * @param array<string, scalar|null> $yearAttributes
-     * @return self
+     * @return static
      */
     public function setYearAttributes(array $yearAttributes): static
     {
@@ -194,7 +194,7 @@ class MonthSelect extends Element implements InputProviderInterface, ElementPrep
     }
 
     /**
-     * @return self
+     * @return static
      */
     public function setMinYear(int $minYear): static
     {
@@ -208,7 +208,7 @@ class MonthSelect extends Element implements InputProviderInterface, ElementPrep
     }
 
     /**
-     * @return self
+     * @return static
      */
     public function setMaxYear(int $maxYear): static
     {
@@ -222,7 +222,7 @@ class MonthSelect extends Element implements InputProviderInterface, ElementPrep
     }
 
     /**
-     * @return self
+     * @return static
      */
     public function setShouldCreateEmptyOption(bool $createEmptyOption): static
     {
@@ -236,7 +236,7 @@ class MonthSelect extends Element implements InputProviderInterface, ElementPrep
     }
 
     /**
-     * @return self
+     * @return static
      */
     public function setShouldRenderDelimiters(bool $renderDelimiters): static
     {
@@ -251,9 +251,9 @@ class MonthSelect extends Element implements InputProviderInterface, ElementPrep
 
     /**
      * @inheritDoc
-     * @param PhpDateTime|iterable|string|null|mixed $value
+     * @param mixed $value
      */
-    public function setValue($value): \Jield\Form\ElementInterface|MonthSelect|static
+    public function setValue($value): static
     {
         if (is_string(value: $value)) {
             try {
@@ -262,18 +262,18 @@ class MonthSelect extends Element implements InputProviderInterface, ElementPrep
                 throw new InvalidArgumentException(
                     message: 'Value should be a parsable string or an instance of \DateTime',
                     code: 0,
-                    previous: $exception
+                    previous: $exception,
                 );
             }
         }
 
-        if (null === $value && ! $this->shouldCreateEmptyOption()) {
+        if (null === $value && !$this->shouldCreateEmptyOption()) {
             $value = new PhpDateTime();
         }
 
         if ($value instanceof DateTimeInterface) {
             $value = [
-                'year'  => $value->format(format: 'Y'),
+                'year' => $value->format(format: 'Y'),
                 'month' => $value->format(format: 'm'),
             ];
         }
@@ -291,14 +291,16 @@ class MonthSelect extends Element implements InputProviderInterface, ElementPrep
 
     public function getValue(): ?string
     {
-        $year  = $this->getYearElement()->getValue();
+        /** @var mixed $year */
+        $year = $this->getYearElement()->getValue();
+        /** @var mixed $month */
         $month = $this->getMonthElement()->getValue();
 
         if ($this->shouldCreateEmptyOption() && null === $year && null === $month) {
             return null;
         }
 
-        return sprintf('%04d-%02d', $year, $month);
+        return sprintf('%04d-%02d', \Jield\Stdlib\Value::scalar($year), \Jield\Stdlib\Value::scalar($month));
     }
 
     /**
@@ -307,8 +309,8 @@ class MonthSelect extends Element implements InputProviderInterface, ElementPrep
     public function prepareElement(FormInterface $form): void
     {
         $name = $this->getName();
-        $this->monthElement->setName(name: $name . '[month]');
-        $this->yearElement->setName(name: $name . '[year]');
+        $this->monthElement->setName(name: (string) ($name) . '[month]');
+        $this->yearElement->setName(name: (string) ($name) . '[year]');
     }
 
     /**
@@ -325,8 +327,8 @@ class MonthSelect extends Element implements InputProviderInterface, ElementPrep
     public function getInputSpecification(): array
     {
         $spec = [
-            'required'   => false,
-            'filters'    => [
+            'required' => false,
+            'filters' => [
                 ['name' => 'MonthSelect'],
             ],
             'validators' => [
@@ -348,6 +350,6 @@ class MonthSelect extends Element implements InputProviderInterface, ElementPrep
     public function __clone()
     {
         $this->monthElement = clone $this->monthElement;
-        $this->yearElement  = clone $this->yearElement;
+        $this->yearElement = clone $this->yearElement;
     }
 }

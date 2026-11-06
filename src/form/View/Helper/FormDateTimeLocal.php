@@ -6,7 +6,6 @@ namespace Jield\Form\View\Helper;
 
 use Jield\Form\ElementInterface;
 
-/** @final */
 class FormDateTimeLocal extends AbstractFormDateTime
 {
     /**

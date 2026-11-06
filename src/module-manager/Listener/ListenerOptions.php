@@ -7,52 +7,38 @@ namespace Jield\ModuleManager\Listener;
 use Laminas\Stdlib\AbstractOptions;
 use Traversable;
 
-use function func_get_args;
 use function gettype;
 use function is_array;
 use function rtrim;
 use function sprintf;
 
+/**
+ * @extends \Laminas\Stdlib\AbstractOptions<mixed>
+ */
 class ListenerOptions extends AbstractOptions
 {
-    /** @var array */
     protected array $modulePaths = [];
 
-    /** @var array */
     protected array $configGlobPaths = [];
 
-    /** @var array */
     protected array $configStaticPaths = [];
 
-    /** @var array */
     protected array $extraConfig = [];
 
-    /** @var bool */
     protected bool $configCacheEnabled = false;
 
-    /** @var string */
     protected string $configCacheKey;
 
-    /** @var string|null */
-    protected ?string $cacheDir;
+    protected ?string $cacheDir = null;
 
-    /** @var bool */
     protected bool $checkDependencies = true;
 
-    /** @var bool */
     protected bool $moduleMapCacheEnabled = false;
 
-    /** @var string */
     protected string $moduleMapCacheKey;
 
-    /** @var bool */
     protected bool $useModuleLoader = true;
 
-    /**
-     * Get an array of paths where modules reside
-     *
-     * @return array
-     */
     public function getModulePaths(): array
     {
         return $this->modulePaths;
@@ -62,25 +48,14 @@ class ListenerOptions extends AbstractOptions
      * Set an array of paths where modules reside
      *
      * @param Traversable|array $modulePaths
-     * @return ListenerOptions Provides fluent interface
-     *@throws Exception\InvalidArgumentException
+     * @return static
+     * @throws Exception\InvalidArgumentException
      */
     public function setModulePaths(Traversable|array $modulePaths): static
     {
-        if (! is_array(value: $modulePaths) && ! $modulePaths instanceof Traversable) {
-            throw new Exception\InvalidArgumentException(
-                message: sprintf(
-                    'Argument passed to %s::%s() must be an array, '
-                    . 'implement the Traversable interface, or be an '
-                    . 'instance of Jield\Config\Config. %s given.',
-                    self::class,
-                    __METHOD__,
-                    gettype(value: $modulePaths)
-                )
-            );
-        }
+        
 
-        $this->modulePaths = $modulePaths;
+        $this->modulePaths = is_array($modulePaths) ? $modulePaths : iterator_to_array($modulePaths);
         return $this;
     }
 
@@ -108,25 +83,14 @@ class ListenerOptions extends AbstractOptions
      * Set the glob patterns to use for loading additional config files
      *
      * @param Traversable|array $configGlobPaths
-     * @return ListenerOptions Provides fluent interface
-     *@throws Exception\InvalidArgumentException
+     * @return static
+     * @throws Exception\InvalidArgumentException
      */
     public function setConfigGlobPaths(Traversable|array $configGlobPaths): static
     {
-        if (! is_array(value: $configGlobPaths) && ! $configGlobPaths instanceof Traversable) {
-            throw new Exception\InvalidArgumentException(
-                message: sprintf(
-                    'Argument passed to %s::%s() must be an array, '
-                    . 'implement the Traversable interface, or be an '
-                    . 'instance of Jield\Config\Config. %s given.',
-                    self::class,
-                    __METHOD__,
-                    gettype(value: $configGlobPaths)
-                )
-            );
-        }
+        
 
-        $this->configGlobPaths = $configGlobPaths;
+        $this->configGlobPaths = is_array($configGlobPaths) ? $configGlobPaths : iterator_to_array($configGlobPaths);
         return $this;
     }
 
@@ -134,25 +98,14 @@ class ListenerOptions extends AbstractOptions
      * Set the static paths to use for loading additional config files
      *
      * @param Traversable|array $configStaticPaths
-     * @return ListenerOptions Provides fluent interface
-     *@throws Exception\InvalidArgumentException
+     * @return static
+     * @throws Exception\InvalidArgumentException
      */
     public function setConfigStaticPaths(Traversable|array $configStaticPaths): static
     {
-        if (! is_array(value: $configStaticPaths) && ! $configStaticPaths instanceof Traversable) {
-            throw new Exception\InvalidArgumentException(
-                message: sprintf(
-                    'Argument passed to %s::%s() must be an array, '
-                    . 'implement the Traversable interface, or be an '
-                    . 'instance of Jield\Config\Config. %s given.',
-                    self::class,
-                    __METHOD__,
-                    gettype(value: $configStaticPaths)
-                )
-            );
-        }
+        
 
-        $this->configStaticPaths = $configStaticPaths;
+        $this->configStaticPaths = is_array($configStaticPaths) ? $configStaticPaths : iterator_to_array($configStaticPaths);
         return $this;
     }
 
@@ -171,25 +124,14 @@ class ListenerOptions extends AbstractOptions
      * for unit testing purposes.
      *
      * @param Traversable|array $extraConfig
-     * @return ListenerOptions Provides fluent interface
-     *@throws Exception\InvalidArgumentException
+     * @return static
+     * @throws Exception\InvalidArgumentException
      */
     public function setExtraConfig(Traversable|array $extraConfig): static
     {
-        if (! is_array(value: $extraConfig) && ! $extraConfig instanceof Traversable) {
-            throw new Exception\InvalidArgumentException(
-                message: sprintf(
-                    'Argument passed to %s::%s() must be an array, '
-                    . 'implement the Traversable interface, or be an '
-                    . 'instance of Jield\Config\Config. %s given.',
-                    self::class,
-                    __METHOD__,
-                    gettype(value: $extraConfig)
-                )
-            );
-        }
+        
 
-        $this->extraConfig = $extraConfig;
+        $this->extraConfig = is_array($extraConfig) ? $extraConfig : iterator_to_array($extraConfig);
         return $this;
     }
 
@@ -207,7 +149,7 @@ class ListenerOptions extends AbstractOptions
      * Set if the config cache should be enabled or not
      *
      * @param bool $enabled
-     * @return ListenerOptions
+     * @return static
      */
     public function setConfigCacheEnabled(bool $enabled): static
     {
@@ -229,7 +171,7 @@ class ListenerOptions extends AbstractOptions
      * Set key used to create the cache file name
      *
      * @param string $configCacheKey the value to be set
-     * @return ListenerOptions
+     * @return static
      */
     public function setConfigCacheKey(string $configCacheKey): static
     {
@@ -248,10 +190,10 @@ class ListenerOptions extends AbstractOptions
     public function getConfigCacheFile(): string
     {
         if ($this->getConfigCacheKey()) {
-            return $this->getCacheDir() . '/module-config-cache.' . $this->getConfigCacheKey() . '.php';
+            return (string) ($this->getCacheDir()) . '/module-config-cache.' . $this->getConfigCacheKey() . '.php';
         }
 
-        return $this->getCacheDir() . '/module-config-cache.php';
+        return (string) ($this->getCacheDir()) . '/module-config-cache.php';
     }
 
     /**
@@ -268,7 +210,7 @@ class ListenerOptions extends AbstractOptions
      * Set the path where cache files can be stored
      *
      * @param string|null $cacheDir the value to be set
-     * @return ListenerOptions
+     * @return static
      */
     public function setCacheDir(?string $cacheDir): static
     {
@@ -291,7 +233,7 @@ class ListenerOptions extends AbstractOptions
      * Set if the module class map cache should be enabled or not
      *
      * @param bool $enabled
-     * @return ListenerOptions
+     * @return static
      */
     public function setModuleMapCacheEnabled(bool $enabled): static
     {
@@ -313,7 +255,7 @@ class ListenerOptions extends AbstractOptions
      * Set key used to create the cache file name
      *
      * @param string $moduleMapCacheKey the value to be set
-     * @return ListenerOptions
+     * @return static
      */
     public function setModuleMapCacheKey(string $moduleMapCacheKey): static
     {
@@ -329,10 +271,10 @@ class ListenerOptions extends AbstractOptions
     public function getModuleMapCacheFile(): string
     {
         if ($this->getModuleMapCacheKey()) {
-            return $this->getCacheDir() . '/module-classmap-cache.' . $this->getModuleMapCacheKey() . '.php';
+            return (string) ($this->getCacheDir()) . '/module-classmap-cache.' . $this->getModuleMapCacheKey() . '.php';
         }
 
-        return $this->getCacheDir() . '/module-classmap-cache.php';
+        return (string) ($this->getCacheDir()) . '/module-classmap-cache.php';
     }
 
     /**
@@ -349,7 +291,7 @@ class ListenerOptions extends AbstractOptions
      * Set whether to check dependencies during module loading or not
      *
      * @param bool $checkDependencies the value to be set
-     * @return ListenerOptions
+     * @return static
      */
     public function setCheckDependencies(bool $checkDependencies): static
     {
@@ -377,7 +319,7 @@ class ListenerOptions extends AbstractOptions
      * If disabled, the AutoloaderProvider feature will be disabled as well
      *
      * @param bool $flag
-     * @return ListenerOptions
+     * @return static
      */
     public function setuseModuleLoader(bool $flag): static
     {
@@ -394,19 +336,6 @@ class ListenerOptions extends AbstractOptions
     public static function normalizePath(string $path): string
     {
         $path = rtrim(string: $path, characters: '/');
-        $path = rtrim(string: $path, characters: '\\');
-        return $path;
-    }
-
-    /** @deprecated Use self::useModuleLoader instead */
-    public function useZendLoader(): bool
-    {
-        return $this->useLaminasLoader(...func_get_args());
-    }
-
-    /** @deprecated Use self::setuseModuleLoader instead */
-    public function setUseZendLoader(bool $flag): ListenerOptions
-    {
-        return $this->setuseModuleLoader(...func_get_args());
+        return rtrim(string: $path, characters: '\\');
     }
 }

@@ -19,10 +19,13 @@ class BoostExpression extends Expression implements Stringable
     /**
      * @param string|ExpressionInterface|null $expr
      */
-    #[Pure] public function __construct(private readonly float $boost, ExpressionInterface|string|null $expr)
-    {
+    #[Pure]
+    public function __construct(
+        private readonly float $boost,
+        ExpressionInterface|string|null $expr,
+    ) {
         $expr = Util::escape(value: $expr);
-//        $expr = trim($expr);
+        //        $expr = trim($expr);
 
         parent::__construct(expr: $expr);
     }

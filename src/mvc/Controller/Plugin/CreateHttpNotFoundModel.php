@@ -1,9 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\Mvc\Controller\Plugin;
 
+use Jield\Mvc\View\Model\ViewModel;
 use Laminas\Http\Response;
-use Laminas\View\Model\ViewModel;
 
 class CreateHttpNotFoundModel extends AbstractPlugin
 {

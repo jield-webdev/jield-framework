@@ -24,9 +24,9 @@ class DoctrinePaginator implements AdapterInterface, JsonSerializable
      *
      * @param Paginator<T> $paginator
      */
-    public function __construct(protected Paginator $paginator)
-    {
-    }
+    public function __construct(
+        protected Paginator $paginator,
+    ) {}
 
     /** @param Paginator<T> $paginator */
     public function setPaginator(Paginator $paginator): self
@@ -53,9 +53,9 @@ class DoctrinePaginator implements AdapterInterface, JsonSerializable
     public function getItems($offset, $itemCountPerPage): ArrayIterator
     {
         $this->paginator
-             ->getQuery()
-             ->setFirstResult(firstResult: $offset)
-             ->setMaxResults(maxResults: $itemCountPerPage);
+            ->getQuery()
+            ->setFirstResult(firstResult: \Jield\Stdlib\Value::int($offset))
+            ->setMaxResults(maxResults: $itemCountPerPage);
 
         return $this->paginator->getIterator();
     }

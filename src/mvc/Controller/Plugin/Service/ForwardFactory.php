@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\Mvc\Controller\Plugin\Service;
 
 // phpcs:ignore
-use Psr\Container\ContainerInterface;
 use Jield\Mvc\Controller\Plugin\Forward;
 use Laminas\ServiceManager\Exception\ServiceNotCreatedException;
 use Laminas\ServiceManager\Factory\FactoryInterface;
+use Psr\Container\ContainerInterface;
 
 use function sprintf;
 
@@ -20,14 +22,14 @@ class ForwardFactory implements FactoryInterface
      */
     public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): Forward
     {
-        if (! $container->has('ControllerManager')) {
+        if (!$container->has('ControllerManager')) {
             throw new ServiceNotCreatedException(sprintf(
                 '%s requires that the application service manager contains a "%s" service; none found',
                 self::class,
-                'ControllerManager'
+                'ControllerManager',
             ));
         }
-        $controllers = $container->get('ControllerManager');
+        $controllers = \Jield\Stdlib\Service::get($container, \Jield\Mvc\Controller\ControllerManager::class, 'ControllerManager');
 
         return new Forward($controllers);
     }

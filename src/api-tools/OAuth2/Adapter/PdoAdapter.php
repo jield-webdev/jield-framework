@@ -6,6 +6,7 @@ namespace Jield\ApiTools\OAuth2\Adapter;
 
 use OAuth2\Storage\Pdo as OAuth2Pdo;
 use Override;
+
 use function sprintf;
 
 /**
@@ -18,21 +19,25 @@ class PdoAdapter extends OAuth2Pdo
 
     public function __construct($connection, $config = [])
     {
-        parent::__construct(connection: $connection, config: $config);
+        parent::__construct(connection: $connection, config: \Jield\Stdlib\Value::array($config));
         if (isset($config['bcrypt_cost'])) {
-            $this->bcryptCost = $config['bcrypt_cost'];
+            $this->bcryptCost = \Jield\Stdlib\Value::int($config['bcrypt_cost']);
         }
     }
 
     #[Override]
-    public function checkClientCredentials($clientId, $clientSecret = null): bool
+    public function checkClientCredentials($client_id, #[\SensitiveParameter] $client_secret = null): bool
     {
         $stmt = $this->db->prepare(query: sprintf(
             'SELECT * from %s where client_id = :client_id',
-            $this->config['client_table']
+            \Jield\Stdlib\Value::scalar($this->config['client_table']),
         ));
-        $stmt->execute(params: ['client_id' => $clientId]);
+        if ($stmt === false) {
+            throw new \RuntimeException('Unable to prepare the OAuth client query.');
+        }
+        $stmt->execute(params: ['client_id' => $client_id]);
 
+        /** @var mixed $result */
         $result = $stmt->fetch();
 
         // Do not bother verifying if the secret is missing or empty.
@@ -41,41 +46,54 @@ class PdoAdapter extends OAuth2Pdo
         }
 
         // bcrypt verify
-        return password_verify(password: (string)$clientSecret, hash: (string)$result['client_secret']);
+        return password_verify(password: (string) $client_secret, hash: (string) $result['client_secret']);
     }
 
     #[Override]
     public function setClientDetails(
-        $clientId,
-        $clientSecret = null,
-        $redirectUri = null,
-        $grantTypes = null,
-        $scopeOrUserId = null,
-        $userId = null
-    ): bool
-    {
+        $client_id,
+        #[\SensitiveParameter]
+        $client_secret = null,
+        $redirect_uri = null,
+        $grant_types = null,
+        $scope = null,
+        $user_id = null,
+    ): bool {
         if (func_num_args() > 5) {
-            $scope = $scopeOrUserId;
+            $scope = $scope;
         } else {
-            $userId = $scopeOrUserId;
-            $scope  = null;
+            $user_id = $scope;
+            $scope = null;
         }
 
-        if (!empty($clientSecret)) {
-            $clientSecret = password_hash(password: $clientSecret, algo: PASSWORD_BCRYPT, options: ['cost' => $this->bcryptCost]);
+        if (!empty($client_secret)) {
+            $client_secret = password_hash(password: $client_secret, algo: PASSWORD_BCRYPT, options: [
+                'cost' => $this->bcryptCost,
+            ]);
         }
 
-        return parent::setClientDetails(client_id: $clientId, client_secret: $clientSecret, redirect_uri: $redirectUri, grant_types: $grantTypes, scope: $scope, user_id: $userId);
+        return parent::setClientDetails(
+            client_id: $client_id,
+            client_secret: $client_secret,
+            redirect_uri: $redirect_uri,
+            grant_types: $grant_types,
+            scope: $scope,
+            user_id: $user_id,
+        );
     }
 
-    protected function checkPassword($user, $password): bool
+    protected function checkPassword($user, #[\SensitiveParameter] $password): bool
     {
-        return password_verify(password: $password, hash: $user['password']);
+        return password_verify($password, \Jield\Stdlib\Value::string($user['password']));
     }
 
     public function getUser($username): array|bool
     {
-        $userInfo = parent::getUser(username: $username);
+        $userInfo = parent::getUser($username);
+
+        if (!$userInfo) {
+            return false;
+        }
 
         //Save the ID in the user_id field
         $userInfo['user_id'] = $userInfo['id'];

@@ -18,15 +18,15 @@ class Expression implements ExpressionInterface, Stringable
     /**
      * Create new expression object
      *
-     * @param string|Expression $expr
+     * @param string|ExpressionInterface $expr
      */
-    public function __construct(protected Expression|string $expr)
-    {
-    }
+    public function __construct(
+        protected ExpressionInterface|string $expr,
+    ) {}
 
     public function isEqual(string $expr): bool
     {
-        return $expr === (string)$this;
+        return $expr === (string) $this;
     }
 
     public function __toString(): string

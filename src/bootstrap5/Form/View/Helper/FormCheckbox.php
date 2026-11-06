@@ -22,20 +22,20 @@ final class FormCheckbox extends Helper\FormCheckbox
 
     public function __construct(HelperPluginManager $viewHelperManager, TranslatorInterface $translator)
     {
-        $this->formLabel = $viewHelperManager->get(id: 'formlabel');
+        $this->formLabel = \Jield\Stdlib\Service::get($viewHelperManager, \Jield\Form\View\Helper\FormLabel::class, 'formlabel');
 
         $this->translator = $translator;
     }
 
     public function render(ElementInterface $element): string
     {
-        $element->setAttribute(key: 'class', value: 'form-check-input ' . $element->getAttribute(key: 'class'));
+        $element->setAttribute(key: 'class', value: 'form-check-input ' . (string) ($element->getAttribute(key: 'class')));
 
         if (count(value: $element->getMessages()) > 0) {
             $element->setAttribute(key: 'class', value: 'form-check-input is-invalid');
         }
 
-        $id = md5(string: $element->getName());
+        $id = md5(string: \Jield\Stdlib\Value::string($element->getName()));
         $element->setAttribute(key: 'id', value: $id);
 
         $renderedElement = parent::render(element: $element);
@@ -50,9 +50,9 @@ final class FormCheckbox extends Helper\FormCheckbox
         $label = $element->getAttribute(key: 'label') ?? $element->getLabel();
 
         if (null !== ($translator = $this->formLabel->getTranslator())) {
-            $label = $translator->translate($label);
+            $label = $translator->translate(\Jield\Stdlib\Value::string($label));
         }
 
-        return $label;
+        return $label === null ? null : (string) $label;
     }
 }

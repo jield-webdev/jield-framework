@@ -9,16 +9,12 @@ use Twig\Environment;
 
 class TwigResolver implements ResolverInterface
 {
-    public function __construct(protected Environment $environment)
-    {
-    }
+    public function __construct(
+        protected Environment $environment,
+    ) {}
 
     public function resolve(string $name): string|false
     {
-        if ($name === '') {
-            return false;
-        }
-
         if ($this->environment->getLoader()->exists($name)) {
             return $name;
         }

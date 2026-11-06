@@ -7,16 +7,17 @@ namespace Jield\ApiTools\ApiProblem\Listener;
 use Jield\ApiTools\ApiProblem\ApiProblem;
 use Jield\ApiTools\ApiProblem\ApiProblemResponse;
 use Jield\ApiTools\ApiProblem\View\ApiProblemModel;
+use Jield\Mvc\MvcEvent;
 use Laminas\EventManager\AbstractListenerAggregate;
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\Http\Header\Accept as AcceptHeader;
-use Laminas\Http\Response as HttpResponse;
 use Laminas\Http\Request as HttpRequest;
-use Jield\Mvc\MvcEvent;
+use Laminas\Http\Response as HttpResponse;
 use Laminas\Stdlib\DispatchableInterface;
 use Laminas\View\Model\ModelInterface;
 use Override;
 use Throwable;
+
 use function in_array;
 use function is_array;
 use function is_string;
@@ -31,16 +32,15 @@ use function is_string;
  */
 class ApiProblemListener extends AbstractListenerAggregate
 {
-    protected array $acceptFilters
-        = [
-            'application/json',
-            'application/*+json',
-        ];
+    protected array $acceptFilters = [
+        'application/json',
+        'application/*+json',
+    ];
 
     /**
      * Set the accept filter, if one is passed
      */
-    public function __construct(null|array|string $filters = null)
+    public function __construct(array|string|null $filters = null)
     {
         if ($filters !== '' && $filters !== '0' && $filters !== []) {
             if (is_string(value: $filters)) {
@@ -59,15 +59,23 @@ class ApiProblemListener extends AbstractListenerAggregate
     #[Override]
     public function attach(EventManagerInterface $events, $priority = 1): void
     {
-        $this->listeners[] = $events->attach(eventName: MvcEvent::EVENT_RENDER, listener: $this->onRender(...), priority: 1000);
-        $this->listeners[] = $events->attach(eventName: MvcEvent::EVENT_DISPATCH_ERROR, listener: $this->onDispatchError(...), priority: 100);
+        $this->listeners[] = $events->attach(
+            eventName: MvcEvent::EVENT_RENDER,
+            listener: $this->onRender(...),
+            priority: 1000,
+        );
+        $this->listeners[] = $events->attach(
+            eventName: MvcEvent::EVENT_DISPATCH_ERROR,
+            listener: $this->onDispatchError(...),
+            priority: 100,
+        );
 
         $sharedEvents = $events->getSharedManager();
-        $sharedEvents->attach(
+        \Jield\Stdlib\Value::present($sharedEvents)->attach(
             DispatchableInterface::class,
             MvcEvent::EVENT_DISPATCH,
             listener: $this->onDispatch(...),
-            priority: 100
+            priority: 100,
         );
     }
 
@@ -83,14 +91,16 @@ class ApiProblemListener extends AbstractListenerAggregate
 
         // Next, do we have a view model in the result?
         // If not, nothing more to do.
+        /** @var mixed $model */
         $model = $e->getResult();
         if (!$model instanceof ModelInterface || $model instanceof ApiProblemModel) {
             return;
         }
 
         // Marshal the information we need for the API-Problem response
-        $response  = $e->getResponse();
-        $status    = $response instanceof HttpResponse ? $response->getStatusCode() : 500;
+        $response = $e->getResponse();
+        $status = $response instanceof HttpResponse ? $response->getStatusCode() : 500;
+        /** @var mixed $exception */
         $exception = $model->getVariable(name: 'exception');
 
         if ($exception instanceof Throwable) {
@@ -114,24 +124,27 @@ class ApiProblemListener extends AbstractListenerAggregate
      */
     public function onDispatch(MvcEvent $e): void
     {
-        $app      = $e->getApplication();
-        $services = $app->getServiceManager();
-        $config   = $services->get('config');
+        $app = $e->getApplication();
+        $services = \Jield\Stdlib\Value::present($app)->getServiceManager();
+        /** @var mixed $config */
+        $config = $services->get('config');
 
         if (!isset($config['api-tools-api-problem']['render_error_controllers'])) {
             return;
         }
 
-        $controller  = $e->getRouteMatch()->getParam(name: 'controller');
+        /** @var mixed $controller */
+        $controller = \Jield\Stdlib\Value::present($e->getRouteMatch())->getParam(name: 'controller');
+        /** @var mixed $controllers */
         $controllers = $config['api-tools-api-problem']['render_error_controllers'];
-        if (!in_array(needle: $controller, haystack: $controllers)) {
+        if (!in_array(needle: $controller, haystack: \Jield\Stdlib\Value::array($controllers), strict: true)) {
             // The current controller is not in our list of controllers to handle
             return;
         }
 
         // Attach the ApiProblem render.error listener
-        $events = $app->getEventManager();
-        $services->get('Jield\ApiTools\ApiProblem\RenderErrorListener')->attach($events);
+        $events = \Jield\Stdlib\Value::present($app)->getEventManager();
+        \Jield\Stdlib\Value::call($services->get('Jield\ApiTools\ApiProblem\RenderErrorListener'), 'attach', [$events]);
     }
 
     /**
@@ -148,6 +161,7 @@ class ApiProblemListener extends AbstractListenerAggregate
         }
 
         // Marshall an ApiProblem and view model based on the exception
+        /** @var mixed $exception */
         $exception = $e->getParam(name: 'exception');
         if (!$exception instanceof Throwable) {
             // If it's not an exception, do not know what to do.
@@ -155,7 +169,10 @@ class ApiProblemListener extends AbstractListenerAggregate
         }
 
         $e->stopPropagation();
-        $response = new ApiProblemResponse(apiProblem: new ApiProblem(status: $exception->getCode(), detail: $exception));
+        $response = new ApiProblemResponse(apiProblem: new ApiProblem(
+            status: $exception->getCode(),
+            detail: $exception,
+        ));
         $e->setResponse(response: $response);
 
         return $response;
@@ -179,13 +196,13 @@ class ApiProblemListener extends AbstractListenerAggregate
         }
 
         $headers = $request->getHeaders();
-        if (!$headers->has(name: 'Accept')) {
+        if (!\Jield\Stdlib\Value::instance($headers, \Laminas\Http\Headers::class)->has('Accept')) {
             return false;
         }
 
         // ... that matches certain criteria
-        $accept = $headers->get(name: 'Accept');
-        return $this->matchAcceptCriteria(accept: $accept);
+        $accept = \Jield\Stdlib\Value::instance($headers, \Laminas\Http\Headers::class)->get('Accept');
+        return $this->matchAcceptCriteria(accept: \Jield\Stdlib\Value::instance($accept, \Laminas\Http\Header\Accept::class));
     }
 
     /**
@@ -198,8 +215,9 @@ class ApiProblemListener extends AbstractListenerAggregate
      */
     protected function matchAcceptCriteria(AcceptHeader $accept): bool
     {
+        /** @var mixed $type */
         foreach ($this->acceptFilters as $type) {
-            $match = $accept->match(matchAgainst: $type);
+            $match = $accept->match(matchAgainst: \Jield\Stdlib\Value::arrayOrString($type));
             if ($match && $match->getTypeString() !== '*/*') {
                 return true;
             }

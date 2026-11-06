@@ -25,11 +25,11 @@ final class EventManagerFactory extends AbstractFactory
     /**
      * {@inheritDoc}
      */
-    public function __invoke(ContainerInterface $container, string $requestedName, array|null $options = null): EventManager
+    public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): EventManager
     {
         $options = $this->getOptions(container: $container, key: 'eventmanager');
 
-        if (! $options instanceof EventManagerOptions) {
+        if (!$options instanceof EventManagerOptions) {
             throw new RuntimeException(message: sprintf(
                 'Invalid options received, expected %s, got %s.',
                 EventManagerOptions::class,
@@ -39,14 +39,17 @@ final class EventManagerFactory extends AbstractFactory
 
         $eventManager = new EventManager();
 
+        /** @var mixed $subscriberName */
         foreach ($options->getSubscribers() as $subscriberName) {
+            /** @var mixed $subscriber */
             $subscriber = $subscriberName;
 
             if (is_string(value: $subscriber)) {
-                if ($container->has(id: $subscriber)) {
+                if ($container->has($subscriber)) {
+                    /** @var mixed $subscriber */
                     $subscriber = $container->get($subscriber);
                 } elseif (class_exists(class: $subscriber)) {
-                    $subscriber = new $subscriber();
+                    $subscriber = \Jield\Stdlib\Value::instantiate($subscriber);
                 }
             }
 
@@ -55,15 +58,14 @@ final class EventManagerFactory extends AbstractFactory
                 continue;
             }
 
+            /** @var mixed $subscriberType */
             $subscriberType = is_object(value: $subscriberName) ? $subscriberName::class : $subscriberName;
 
-            throw new InvalidArgumentException(
-                message: sprintf(
-                    'Invalid event subscriber "%s" given, must be a service name, '
-                    . 'class name or an instance implementing Doctrine\Common\EventSubscriber',
-                    is_string(value: $subscriberType) ? $subscriberType : gettype(value: $subscriberType),
-                ),
-            );
+            throw new InvalidArgumentException(message: sprintf(
+                'Invalid event subscriber "%s" given, must be a service name, '
+                . 'class name or an instance implementing Doctrine\Common\EventSubscriber',
+                is_string(value: $subscriberType) ? $subscriberType : gettype(value: $subscriberType),
+            ));
         }
 
         return $eventManager;

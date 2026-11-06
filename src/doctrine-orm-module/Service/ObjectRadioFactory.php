@@ -11,10 +11,13 @@ use Psr\Container\ContainerInterface;
 
 final class ObjectRadioFactory implements FactoryInterface
 {
-    public function __invoke(ContainerInterface $container, string $requestedName, array|null $options = null): \DoctrineModule\Form\Element\ObjectRadio
-    {
-        $entityManager = $container->get(EntityManager::class);
-        $element       = new ObjectRadio();
+    public function __invoke(
+        ContainerInterface $container,
+        string $requestedName,
+        ?array $options = null,
+    ): \DoctrineModule\Form\Element\ObjectRadio {
+        $entityManager = \Jield\Stdlib\Service::get($container, EntityManager::class);
+        $element = new ObjectRadio();
 
         $element->getProxy()->setObjectManager(objectManager: $entityManager);
 

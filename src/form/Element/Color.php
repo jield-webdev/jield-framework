@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Jield\Form\Element;
 
+use Jield\Form\Element;
 use Laminas\Filter\StringToLower;
 use Laminas\Filter\StringTrim;
-use Jield\Form\Element;
 use Laminas\InputFilter\InputProviderInterface;
 use Laminas\Validator\Regex as RegexValidator;
 use Laminas\Validator\ValidatorInterface;
@@ -20,7 +20,7 @@ class Color extends Element implements InputProviderInterface
     ];
 
     /** @var null|ValidatorInterface */
-    protected ?ValidatorInterface $validator;
+    protected ?ValidatorInterface $validator = null;
 
     /**
      * Get validator
@@ -43,8 +43,8 @@ class Color extends Element implements InputProviderInterface
     public function getInputSpecification(): array
     {
         $spec = [
-            'required'   => true,
-            'filters'    => [
+            'required' => true,
+            'filters' => [
                 ['name' => StringTrim::class],
                 ['name' => StringToLower::class],
             ],

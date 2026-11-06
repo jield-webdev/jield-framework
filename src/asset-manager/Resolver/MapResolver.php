@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\AssetManager\Resolver;
 
 use Jield\AssetManager\Asset\AssetInterface;
@@ -58,38 +60,33 @@ class MapResolver implements ResolverInterface, MimeResolverAwareInterface
      */
     public function setMap(iterable $map): void
     {
-        if (!is_array(value: $map) && !$map instanceof Traversable) {
-            throw new Exception\InvalidArgumentException(message: sprintf(
-                '%s: expects an array or Traversable, received "%s"',
-                __METHOD__,
-                (get_debug_type(value: $map))
-            ));
-        }
+        
 
         if ($map instanceof Traversable) {
             $map = ArrayUtils::iteratorToArray(iterator: $map);
         }
 
-        $this->map = $map;
+        $this->map = \Jield\Stdlib\Value::array($map);
     }
 
     /**
      * {@inheritDoc}
      */
     #[Override]
-    public function resolve(string $fileName): AssetInterface|null
+    public function resolve(string $fileName): ?AssetInterface
     {
         if (!isset($this->map[$fileName])) {
             return null;
         }
 
-        $file     = $this->map[$fileName];
-        $mimeType = $this->getMimeResolver()->getMimeType(filename: $file);
+        /** @var mixed $file */
+        $file = $this->map[$fileName];
+        $mimeType = $this->getMimeResolver()->getMimeType(filename: \Jield\Stdlib\Value::string($file));
 
         if (false === filter_var(value: $file, filter: FILTER_VALIDATE_URL)) {
-            $asset = new FileAsset(source: $file);
+            $asset = new FileAsset(source: \Jield\Stdlib\Value::string($file));
         } else {
-            $asset = new HttpAsset(sourceUrl: $file);
+            $asset = new HttpAsset(sourceUrl: \Jield\Stdlib\Value::string($file));
         }
 
         $asset->setMimetype(mimetype: $mimeType);

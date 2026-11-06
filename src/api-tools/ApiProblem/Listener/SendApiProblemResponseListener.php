@@ -15,8 +15,11 @@ use Override;
  */
 class SendApiProblemResponseListener extends HttpResponseSender
 {
-    protected ?HttpResponse $applicationResponse = null;
-    protected bool          $displayExceptions   = false;
+    /** @var HttpResponse */
+    protected HttpResponse $applicationResponse;
+
+    /** @var bool */
+    protected bool $displayExceptions = false;
 
     public function setApplicationResponse(HttpResponse $response): static
     {
@@ -83,9 +86,7 @@ class SendApiProblemResponseListener extends HttpResponseSender
             return $this;
         }
 
-        if ($this->applicationResponse instanceof HttpResponse) {
-            $this->mergeHeaders(applicationResponse: $this->applicationResponse, apiProblemResponse: $response);
-        }
+        $this->mergeHeaders(applicationResponse: $this->applicationResponse, apiProblemResponse: $response);
 
         return parent::sendHeaders(event: $event);
     }
@@ -102,9 +103,10 @@ class SendApiProblemResponseListener extends HttpResponseSender
             return;
         }
 
-        $this->sendHeaders(event: $event)
-            ->sendContent(event: $event);
+        $this->sendHeaders(event: $event)->sendContent(event: $event);
         $event->stopPropagation(flag: true);
+
+        return;
     }
 
     /**
@@ -114,11 +116,11 @@ class SendApiProblemResponseListener extends HttpResponseSender
     {
         $apiProblemHeaders = $apiProblemResponse->getHeaders();
         foreach ($applicationResponse->getHeaders() as $header) {
-            if ($apiProblemHeaders->has(name: $header->getFieldName())) {
+            if ($apiProblemHeaders->has($header->getFieldName())) {
                 continue;
             }
 
-            $apiProblemHeaders->addHeader(header: $header);
+            $apiProblemHeaders->addHeader(header: \Jield\Stdlib\Value::instance($header, \Laminas\Http\Header\HeaderInterface::class));
         }
     }
 }

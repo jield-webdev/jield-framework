@@ -11,37 +11,39 @@ use Traversable;
 use function array_map;
 use function is_array;
 
+/** @psalm-import-type ValueOptions from \Jield\Form\Element\Select */
 class ObjectSelect extends SelectElement
 {
     use GetProxy;
 
     /**
-     * @param array $options
+     * @param iterable $options
      *
-     * @return SelectElement
+     * @return static
      */
     #[\Override]
-    public function setOptions(iterable $options): SelectElement
+    public function setOptions(iterable $options): static
     {
-        $this->getProxy()->setOptions(options: $options);
+        $this->getProxy()->setOptions(options: \Jield\Stdlib\Value::array($options));
 
         return parent::setOptions(options: $options);
     }
 
-    /** @return \Jield\Form\Element */
+    /** @return $this */
     #[\Override]
-    public function setOption(string $key, mixed $value): \Jield\Form\Element
+    public function setOption(string $key, mixed $value): static
     {
         $this->getProxy()->setOptions(options: [$key => $value]);
 
-        return parent::setOption(key: $key, value: $value);
+        parent::setOption(key: $key, value: $value);
+        return $this;
     }
 
     /**
      * {@inheritDoc}
      */
     #[\Override]
-    public function setValue($value): \Jield\Form\ElementInterface|ObjectSelect
+    public function setValue($value): static
     {
         $multiple = $this->getAttribute(key: 'multiple');
 
@@ -50,11 +52,11 @@ class ObjectSelect extends SelectElement
                 $value = ArrayUtils::iteratorToArray(iterator: $value);
             } elseif ($value === null) {
                 return parent::setValue(value: []);
-            } elseif (! is_array(value: $value)) {
-                $value = (array) $value;
+            } elseif (!is_array(value: $value)) {
+                $value = \Jield\Stdlib\Value::toArray($value);
             }
 
-            return parent::setValue(value: array_map(callback: [$this->getProxy(), 'getValue'], array: $value));
+            return parent::setValue(value: array_map(callback: [$this->getProxy(), 'getValue'], array: \Jield\Stdlib\Value::array($value)));
         }
 
         return parent::setValue(value: $this->getProxy()->getValue(value: $value));
@@ -72,9 +74,10 @@ class ObjectSelect extends SelectElement
             return $this->valueOptions;
         }
 
+        /** @var ValueOptions $proxyValueOptions */
         $proxyValueOptions = $this->getProxy()->getValueOptions();
 
-        if (! empty($proxyValueOptions)) {
+        if (!empty($proxyValueOptions)) {
             $this->setValueOptions(options: $proxyValueOptions);
         }
 

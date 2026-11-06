@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\Search\Enum;
 
 enum FacetFieldVisibilityEnum: string

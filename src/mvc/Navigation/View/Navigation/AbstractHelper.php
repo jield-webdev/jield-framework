@@ -1,0 +1,894 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Jield\Mvc\Navigation\View\Navigation;
+
+use Laminas\Navigation;
+use Laminas\Navigation\AbstractContainer;
+use Laminas\Navigation\Page\AbstractPage;
+use Jield\Mvc\Navigation\View\Navigation\Listener\AclListener;
+use Laminas\EventManager\EventManager;
+use Laminas\EventManager\EventManagerAwareInterface;
+use Laminas\EventManager\EventManagerInterface;
+use Laminas\EventManager\SharedEventManager;
+use Laminas\Permissions\Acl;
+use Laminas\Permissions\Acl\AclInterface;
+use Laminas\Translator\TranslatorInterface;
+use Laminas\View;
+use Laminas\View\Exception;
+use Psr\Container\ContainerInterface;
+use RecursiveIteratorIterator;
+use ReflectionClass;
+use function assert;
+use function call_user_func_array;
+use function gettype;
+use function in_array;
+use function is_int;
+use function is_object;
+use function is_string;
+use function sprintf;
+use function str_repeat;
+use function strlen;
+use function strrpos;
+use function strtolower;
+use function substr;
+use function trigger_error;
+use function trim;
+use const E_USER_ERROR;
+
+// phpcs:ignore
+
+/**
+ * Base class for navigational helpers.
+ *
+ * Duck-types against Laminas\I18n\Translator\TranslatorAwareInterface.
+ */
+abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper implements
+    EventManagerAwareInterface,
+    HelperInterface
+{
+    /** @var EventManagerInterface */
+    protected ?EventManagerInterface $events = null;
+
+    /**
+     * AbstractContainer to operate on by default
+     *
+     * @var AbstractContainer
+     */
+    protected ?AbstractContainer $container = null;
+
+    /**
+     * The minimum depth a page must have to be included when rendering
+     *
+     * @var int
+     */
+    protected ?int $minDepth = null;
+
+    /**
+     * The maximum depth a page can have to be included when rendering
+     *
+     * @var int
+     */
+    protected ?int $maxDepth = null;
+
+    /**
+     * Indentation string
+     *
+     * @var string
+     */
+    protected string $indent = '';
+
+    /**
+     * ACL to use when iterating pages
+     *
+     * @var AclInterface|null
+     */
+    protected ?AclInterface $acl = null;
+
+    /**
+     * Whether invisible items should be rendered by this helper
+     *
+     * @var bool
+     */
+    protected bool $renderInvisible = false;
+
+    /**
+     * ACL role to use when iterating pages
+     *
+     * @var string|Acl\Role\RoleInterface|null
+     */
+    protected Acl\Role\RoleInterface|string|null $role = null;
+
+    /** @var ContainerInterface|null */
+    protected ?ContainerInterface $serviceLocator = null;
+
+    /**
+     * Whether ACL should be used for filtering out pages
+     *
+     * @var bool
+     */
+    protected bool $useAcl = true;
+
+    /**
+     * Default ACL to use when iterating pages if not explicitly set in the
+     * instance by calling {@link setAcl()}
+     *
+     * @var AclInterface
+     */
+    protected static ?AclInterface $defaultAcl = null;
+
+    /**
+     * Default ACL role to use when iterating pages if not explicitly set in the
+     * instance by calling {@link setRole()}
+     *
+     * @var string|Acl\Role\RoleInterface|null
+     */
+    protected static Acl\Role\RoleInterface|string|null $defaultRole = null;
+
+    /**
+     * Magic overload: Proxy calls to the navigation container
+     *
+     * @param string $method method name in container
+     * @param array $arguments rguments to pass
+     * @return mixed
+     * @throws Navigation\Exception\ExceptionInterface
+     */
+    public function __call(string $method, array $arguments = [])
+    {
+        return call_user_func_array(
+            \Jield\Stdlib\Value::callback([$this->getContainer(), $method]),
+            $arguments
+        );
+    }
+
+    /**
+     * Magic overload: Proxy to {@link render()}.
+     *
+     * This method will trigger an E_USER_ERROR if rendering the helper causes
+     * an exception to be thrown.
+     *
+     * Implements {@link HelperInterface::__toString()}.
+     *
+     * @return string
+     */
+    public function __toString()
+    {
+        try {
+            return $this->render();
+        } catch (\Exception $e) {
+            $msg = $e::class . ': ' . $e->getMessage();
+            trigger_error($msg, E_USER_ERROR);
+            return '';
+        }
+    }
+
+    /**
+     * Finds the deepest active page in the given container
+     *
+     * @param AbstractContainer $container container to search
+     * @param int|null $minDepth [optional] minimum depth
+     *                                          required for page to be
+     *                                          valid. Default is to use
+     *                                          {@link getMinDepth()}. A
+     *                                          null value means no minimum
+     *                                          depth required.
+     * @param int|null $maxDepth [optional] maximum depth
+     *                                          a page can have to be
+     *                                          valid. Default is to use
+     *                                          {@link getMaxDepth()}. A
+     *                                          null value means no maximum
+     *                                          depth required.
+     * @return array{page: AbstractPage, depth: int}|array{} An associative array with
+     *                                          the values 'depth' and
+     *                                          'page', or an empty array
+     *                                          if not found
+     */
+    public function findActive(AbstractContainer $container, ?int $minDepth = null, ?int $maxDepth = -1): array
+    {
+        $this->parseContainer($container);
+        if (!is_int($minDepth)) {
+            $minDepth = $this->getMinDepth();
+        }
+        if ((!is_int($maxDepth) || $maxDepth < 0) && null !== $maxDepth) {
+            $maxDepth = $this->getMaxDepth();
+        }
+
+        $found      = null;
+        $foundDepth = -1;
+        $iterator   = new RecursiveIteratorIterator(
+            $container,
+            RecursiveIteratorIterator::CHILD_FIRST
+        );
+
+        
+        foreach ($iterator as $page) {
+            $currDepth = $iterator->getDepth();
+            if ($currDepth < ($minDepth ?? 0) || !$this->accept($page)) {
+                // page is not accepted
+                continue;
+            }
+
+            if ($page->isActive(false) && $currDepth > $foundDepth) {
+                // found an active page at a deeper level than before
+                $found      = $page;
+                $foundDepth = $currDepth;
+            }
+        }
+
+        if (is_int($maxDepth) && $foundDepth > $maxDepth) {
+            while ($foundDepth > $maxDepth) {
+                if (--$foundDepth < ($minDepth ?? 0)) {
+                    $found = null;
+                    break;
+                }
+
+                $found = \Jield\Stdlib\Value::present($found)->getParent();
+                if (!$found instanceof AbstractPage) {
+                    $found = null;
+                    break;
+                }
+            }
+        }
+
+        if ($found) {
+            return ['page' => $found, 'depth' => $foundDepth];
+        }
+
+        return [];
+    }
+
+    /**
+     * Verifies container and eventually fetches it from service locator if it is a string
+     *
+     * @param string|AbstractContainer|null $container
+     * @return void
+     * @param-out AbstractContainer|null $container
+     * @throws Exception\InvalidArgumentException
+     */
+    protected function parseContainer(AbstractContainer|string|null &$container = null): void
+    {
+        if (null === $container) {
+            return;
+        }
+
+        if (is_string($container)) {
+            $services = $this->getServiceLocator();
+            if (!$services) {
+                throw new Exception\InvalidArgumentException(sprintf(
+                    'Attempted to set container with alias "%s" but no ServiceLocator was set',
+                    $container
+                ));
+            }
+
+            // Fallback
+            if (in_array($container, ['default', 'navigation'], true)) {
+                // Uses class name
+                if ($services->has(Navigation\Navigation::class)) {
+                    $container = \Jield\Stdlib\Service::get($services, Navigation\Navigation::class);
+                    return;
+                }
+
+                // Uses old service name
+                if ($services->has('navigation')) {
+                    /** @var mixed $container */
+                    $container = \Jield\Stdlib\Service::get($services, AbstractContainer::class, 'navigation');
+                    return;
+                }
+            }
+
+            /**
+             * Load the navigation container from the root service locator
+             * @var mixed $container
+             */
+            $container = \Jield\Stdlib\Service::get($services, AbstractContainer::class, $container);
+            return;
+        }
+
+        
+    }
+
+    // Iterator filter methods:
+
+    /**
+     * Determines whether a page should be accepted when iterating
+     *
+     * Default listener may be 'overridden' by attaching listener to 'isAllowed'
+     * method. Listener must be 'short circuited' if overriding default ACL
+     * listener.
+     *
+     * Rules:
+     * - If a page is not visible it is not accepted, unless RenderInvisible has
+     *   been set to true
+     * - If $useAcl is true (default is true):
+     *      - Page is accepted if listener returns true, otherwise false
+     * - If page is accepted and $recursive is true, the page
+     *   will not be accepted if it is the descendant of a non-accepted page
+     *
+     * @param AbstractPage $page page to check
+     * @param bool $recursive [optional] if true, page will not be
+     *                                      accepted if it is the descendant of
+     *                                      a page that is not accepted. Default
+     *                                      is true
+     * @return  bool                        Whether page should be accepted
+     */
+    public function accept(AbstractPage $page, bool $recursive = true): bool
+    {
+        $accept = true;
+
+        if (!$page->isVisible(false) && !$this->getRenderInvisible()) {
+            $accept = false;
+        } elseif ($this->getUseAcl()) {
+            $acl    = $this->getAcl();
+            $role   = $this->getRole();
+            $params = ['acl' => $acl, 'page' => $page, 'role' => $role];
+            $accept = $this->isAllowed($params);
+        }
+
+        if ($accept && $recursive) {
+            $parent = $page->getParent();
+
+            if ($parent instanceof AbstractPage) {
+                $accept = $this->accept($parent, true);
+            }
+        }
+
+        return $accept;
+    }
+
+    /**
+     * Determines whether a page should be allowed given certain parameters
+     *
+     * @param array $params
+     * @return  bool
+     */
+    protected function isAllowed(array $params): bool
+    {
+        $events  = $this->getEventManager();
+        $results = $events->trigger(__FUNCTION__, $this, $params);
+        return \Jield\Stdlib\Value::bool($results->last());
+    }
+
+    // Util methods:
+
+    /**
+     * Retrieve whitespace representation of $indent
+     *
+     * @param int|string $indent
+     * @return string
+     */
+    protected function getWhitespace(int|string $indent): string
+    {
+        if (is_int($indent)) {
+            $indent = str_repeat(' ', \Jield\Stdlib\Value::nonNegativeInt($indent));
+        }
+
+        return $indent;
+    }
+
+    /**
+     * Converts an associative array to a string of tag attributes.
+     *
+     * Overloads {@link View\Helper\AbstractHtmlElement::htmlAttribs()}.
+     *
+     * @param array $attribs an array where each key-value pair is converted
+     *                         to an attribute name and value
+     * @return string
+     */
+    protected function htmlAttribs(array $attribs): string
+    {
+        // filter out null values and empty string values
+        /** @var mixed $value */
+        foreach ($attribs as $key => $value) {
+            if ($value === null || (is_string($value) && !strlen($value))) {
+                unset($attribs[$key]);
+            }
+        }
+
+        /** @var mixed $attributes */
+        $attributes = $this->getView()->plugin('htmlAttributes');
+        $rendered = (string) $attributes($attribs);
+        return $rendered === '' ? '' : ' ' . ltrim($rendered);
+    }
+
+    /**
+     * Returns an HTML string containing an 'a' element for the given page
+     *
+     * @param AbstractPage $page page to generate HTML for
+     * @return string              HTML string (<a href="…">Label</a>)
+     */
+    public function htmlify(AbstractPage $page): string
+    {
+        $label = $this->translate($page->getLabel(), $page->getTextDomain());
+        $title = $this->translate($page->getTitle(), $page->getTextDomain());
+
+        // get attribs for anchor element
+        $attribs = [
+            'id'     => $page->getId(),
+            'title'  => $title,
+            'class'  => $page->getClass(),
+            'href'   => $page->getHref(),
+            'target' => $page->getTarget(),
+        ];
+
+        if ($page->isActive()) {
+            $attribs['aria-current'] = 'page';
+        }
+
+        
+        $escaper = $this->getView()->plugin('escapeHtml', \Laminas\View\Helper\EscapeHtml::class);
+        /** @var mixed $label */
+        $label   = $escaper($label);
+
+        return '<a' . $this->htmlAttribs($attribs) . '>' . \Jield\Stdlib\Value::stringify($label) . '</a>';
+    }
+
+    /**
+     * Translate a message (for label, title, …)
+     *
+     * @param string $message ID of the message to translate
+     * @param string|null $textDomain Text domain (category name for the translations)
+     * @return string             Translated message
+     */
+    protected function translate(?string $message, ?string $textDomain = null): string
+    {
+        if ($message === null || $message === '') {
+            return $message ?? '';
+        }
+
+        if (!$this->isTranslatorEnabled() || !$this->hasTranslator()) {
+            return $message;
+        }
+
+        $translator = $this->getTranslator();
+        assert($translator instanceof TranslatorInterface);
+        $textDomain = $textDomain ?: $this->getTranslatorTextDomain();
+
+        return $translator->translate($message, $textDomain);
+    }
+
+    /**
+     * Normalize an ID
+     *
+     * Overrides {@link View\Helper\AbstractHtmlElement::normalizeId()}.
+     *
+     * @param string $value
+     * @return string
+     */
+    protected function normalizeId(string $value): string
+    {
+        $prefix = static::class;
+        $prefix = strtolower(trim(substr($prefix, \Jield\Stdlib\Value::int(strrpos($prefix, '\\'))), '\\'));
+
+        return $prefix . '-' . $value;
+    }
+
+    /**
+     * Sets ACL to use when iterating pages
+     *
+     * Implements {@link HelperInterface::setAcl()}.
+     *
+     * @param AclInterface $acl ACL object.
+     * @return static
+     */
+    public function setAcl(?AclInterface $acl = null): static
+    {
+        $this->acl = $acl;
+        return $this;
+    }
+
+    /**
+     * Returns ACL or null if it isn't set using {@link setAcl()} or
+     * {@link setDefaultAcl()}
+     *
+     * Implements {@link HelperInterface::getAcl()}.
+     *
+     * @return AclInterface|null  ACL object or null
+     */
+    public function getAcl(): ?AclInterface
+    {
+        if ($this->acl === null && static::$defaultAcl !== null) {
+            return static::$defaultAcl;
+        }
+
+        return $this->acl;
+    }
+
+    /**
+     * Checks if the helper has an ACL instance
+     *
+     * Implements {@link HelperInterface::hasAcl()}.
+     *
+     * @return bool
+     */
+    public function hasAcl(): bool
+    {
+        if (
+            $this->acl instanceof Acl\Acl
+            || static::$defaultAcl instanceof Acl\Acl
+        ) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Set the event manager.
+     *
+     * @return void
+     */
+    public function setEventManager(EventManagerInterface $eventManager): void
+    {
+        $eventManager->setIdentifiers([
+            self::class,
+            static::class,
+        ]);
+
+        $this->events = $eventManager;
+
+        if ($eventManager->getSharedManager()) {
+            $this->setDefaultListeners();
+        }
+
+        
+    }
+
+    /**
+     * Get the event manager, if present.
+     *
+     * Internally, the helper will lazy-load an EM instance the first time it
+     * requires one, but ideally it should be injected during instantiation.
+     *
+     * @return EventManagerInterface
+     */
+    public function getEventManager(): EventManagerInterface
+    {
+        return $this->events ?? $this->createEventManager();
+    }
+
+    /**
+     * Sets navigation container the helper operates on by default
+     * Implements {@link HelperInterface::setContainer()}.
+     *
+     * @param string|AbstractContainer|null $container Default is null, meaning container will be reset.
+     * @return static
+     */
+    public function setContainer(Navigation\AbstractContainer|string|null $container = null): static
+    {
+        $this->parseContainer($container);
+        $this->container = $container;
+
+        return $this;
+    }
+
+    /**
+     * Returns the navigation container helper operates on by default
+     * Implements {@link HelperInterface::getContainer()}.
+     * If no container is set, a new container will be instantiated and
+     * stored in the helper.
+     *
+     * @return AbstractContainer  navigation container
+     */
+    public function getContainer(): Navigation\Navigation|AbstractContainer
+    {
+        if (null === $this->container) {
+            $this->container = new Navigation\Navigation();
+        }
+
+        return $this->container;
+    }
+
+    /**
+     * Checks if the helper has a container
+     *
+     * Implements {@link HelperInterface::hasContainer()}.
+     *
+     * @return bool
+     */
+    public function hasContainer(): bool
+    {
+        return null !== $this->container;
+    }
+
+    /**
+     * Set the indentation string for using in {@link render()}, optionally a
+     * number of spaces to indent with
+     *
+     * @param int|string $indent
+     * @return static
+     */
+    public function setIndent(int|string $indent): static
+    {
+        $this->indent = $this->getWhitespace($indent);
+        return $this;
+    }
+
+    /**
+     * Returns indentation
+     *
+     * @return string
+     */
+    public function getIndent(): string
+    {
+        return $this->indent;
+    }
+
+    /**
+     * Sets the maximum depth a page can have to be included when rendering
+     *
+     * @param int|numeric-string|null $maxDepth Default is null, which sets no maximum depth.
+     * @return static
+     */
+    public function setMaxDepth(int|string|null $maxDepth = null): static
+    {
+        if (null === $maxDepth || is_int($maxDepth)) {
+            $this->maxDepth = $maxDepth;
+        } else {
+            $this->maxDepth = (int)$maxDepth;
+        }
+
+        return $this;
+    }
+
+    /**
+     * Returns maximum depth a page can have to be included when rendering
+     *
+     * @return int|null
+     */
+    public function getMaxDepth(): ?int
+    {
+        return $this->maxDepth;
+    }
+
+    /**
+     * Sets the minimum depth a page must have to be included when rendering
+     *
+     * @param int|numeric-string|null $minDepth Default is null, which sets no minimum depth.
+     * @return static
+     */
+    public function setMinDepth(int|string|null $minDepth = null): static
+    {
+        if (null === $minDepth || is_int($minDepth)) {
+            $this->minDepth = $minDepth;
+        } else {
+            $this->minDepth = (int)$minDepth;
+        }
+
+        return $this;
+    }
+
+    /**
+     * Returns minimum depth a page must have to be included when rendering
+     *
+     * @return int|null
+     */
+    public function getMinDepth(): ?int
+    {
+        if (!is_int($this->minDepth) || $this->minDepth < 0) {
+            return 0;
+        }
+
+        return $this->minDepth;
+    }
+
+    /**
+     * Render invisible items?
+     *
+     * @param bool $renderInvisible
+     * @return static
+     */
+    public function setRenderInvisible(bool $renderInvisible = true): static
+    {
+        $this->renderInvisible = $renderInvisible;
+        return $this;
+    }
+
+    /**
+     * Return renderInvisible flag
+     *
+     * @return bool
+     */
+    public function getRenderInvisible(): bool
+    {
+        return $this->renderInvisible;
+    }
+
+    /**
+     * Sets ACL role(s) to use when iterating pages
+     *
+     * Implements {@link HelperInterface::setRole()}.
+     *
+     * @param mixed $role [optional] role to set. Expects a string, an
+     *                     instance of type {@link Acl\Role\RoleInterface}, or null. Default
+     *                     is null, which will set no role.
+     * @return static
+     * @throws Exception\InvalidArgumentException
+     */
+    public function setRole(mixed $role = null): static
+    {
+        if (
+            null === $role || is_string($role) ||
+            $role instanceof Acl\Role\RoleInterface
+        ) {
+            $this->role = $role;
+        } else {
+            throw new Exception\InvalidArgumentException(sprintf(
+                '$role must be a string, null, or an instance of '
+                . 'Laminas\Permissions\Role\RoleInterface; %s given',
+                is_object($role) ? $role::class : gettype($role)
+            ));
+        }
+
+        return $this;
+    }
+
+    /**
+     * Returns ACL role to use when iterating pages, or null if it isn't set
+     * using {@link setRole()} or {@link setDefaultRole()}
+     *
+     * Implements {@link HelperInterface::getRole()}.
+     *
+     * @return string|Acl\Role\RoleInterface|null
+     */
+    public function getRole(): string|Acl\Role\RoleInterface|null
+    {
+        if ($this->role === null && static::$defaultRole !== null) {
+            return static::$defaultRole;
+        }
+
+        return $this->role;
+    }
+
+    /**
+     * Checks if the helper has an ACL role
+     *
+     * Implements {@link HelperInterface::hasRole()}.
+     *
+     * @return bool
+     */
+    public function hasRole(): bool
+    {
+        if (
+            $this->role instanceof Acl\Role\RoleInterface
+            || is_string($this->role)
+            || static::$defaultRole instanceof Acl\Role\RoleInterface
+            || is_string(static::$defaultRole)
+        ) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Set the service locator.
+     *
+     * Used internally to pull named navigation containers to render.
+     *
+     * @return static
+     */
+    public function setServiceLocator(ContainerInterface $serviceLocator): static
+    {
+        $this->serviceLocator = $serviceLocator;
+        return $this;
+    }
+
+    /**
+     * Get the service locator.
+     *
+     * Used internally to pull named navigation containers to render.
+     *
+     * @return ContainerInterface|null
+     */
+    public function getServiceLocator(): ?ContainerInterface
+    {
+        return $this->serviceLocator;
+    }
+
+    /**
+     * Sets whether ACL should be used
+     *
+     * Implements {@link HelperInterface::setUseAcl()}.
+     *
+     * @param bool $useAcl
+     * @return static
+     */
+    public function setUseAcl(bool $useAcl = true): static
+    {
+        $this->useAcl = $useAcl;
+        return $this;
+    }
+
+    /**
+     * Returns whether ACL should be used
+     *
+     * Implements {@link HelperInterface::getUseAcl()}.
+     *
+     * @return bool
+     */
+    public function getUseAcl(): bool
+    {
+        return $this->useAcl;
+    }
+
+    // Static methods:
+
+    /**
+     * Sets default ACL to use if another ACL is not explicitly set
+     *
+     * @param AclInterface $acl [optional] ACL object. Default is null, which
+     *                      sets no ACL object.
+     * @return void
+     */
+    public static function setDefaultAcl(?AclInterface $acl = null): void
+    {
+        static::$defaultAcl = $acl;
+    }
+
+    /**
+     * Sets default ACL role(s) to use when iterating pages if not explicitly
+     * set later with {@link setRole()}
+     *
+     * @param mixed $role [optional] role to set. Expects null, string, or an
+     *                     instance of {@link Acl\Role\RoleInterface}. Default is null, which
+     *                     sets no default role.
+     * @return void
+     * @throws Exception\InvalidArgumentException If role is invalid.
+     */
+    public static function setDefaultRole(mixed $role = null): void
+    {
+        if (
+            null === $role
+            || is_string($role)
+            || $role instanceof Acl\Role\RoleInterface
+        ) {
+            static::$defaultRole = $role;
+        } else {
+            throw new Exception\InvalidArgumentException(sprintf(
+                '$role must be null|string|Laminas\Permissions\Role\RoleInterface; received "%s"',
+                is_object($role) ? $role::class : gettype($role)
+            ));
+        }
+    }
+
+    /**
+     * Attaches default ACL listeners, if ACLs are in use
+     *
+     * @return void
+     */
+    protected function setDefaultListeners(): void
+    {
+        if (!$this->getUseAcl()) {
+            return;
+        }
+
+        $events = $this->getEventManager();
+
+        if (!$events->getSharedManager()) {
+            return;
+        }
+
+        \Jield\Stdlib\Value::present($events->getSharedManager())->attach(
+            self::class,
+            'isAllowed',
+            [AclListener::class, 'accept']
+        );
+    }
+
+    /**
+     * Create and return an event manager instance.
+     *
+     * Ensures that the returned event manager has a shared manager
+     * composed.
+     *
+     * @return EventManager
+     */
+    private function createEventManager(): EventManager
+    {
+        $events = new EventManager(new SharedEventManager());
+
+        $this->setEventManager($events);
+        return $events;
+    }
+}

@@ -17,13 +17,18 @@ interface ServiceListenerInterface extends ListenerAggregateInterface
      * - $moduleInterface is the interface indicating a configuration provider for it.
      * - $method is used for duck-typing configuration providers.
      *
-     * @param string $serviceManager Service name for service/plugin manager
+     * @param ServiceManager|string $serviceManager Service name for service/plugin manager
      * @param string $key Configuration key
      * @param string $moduleInterface FQCN as string
      * @param string $method Method name
      * @return ServiceListenerInterface
      */
-    public function addServiceManager(ServiceManager|string $serviceManager, string $key, string $moduleInterface, string $method): ServiceListenerInterface;
+    public function addServiceManager(
+        ServiceManager|string $serviceManager,
+        string $key,
+        string $moduleInterface,
+        string $method,
+    ): ServiceListenerInterface;
 
     /**
      * @param array $configuration

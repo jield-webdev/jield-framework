@@ -11,11 +11,11 @@ use Jield\ApiTools\ApiProblem\View\ApiProblemRenderer;
 use Jield\ApiTools\Hal\Collection;
 use Jield\ApiTools\Hal\Entity;
 use Jield\ApiTools\Hal\Plugin\Hal;
+use Jield\Mvc\MvcEvent as ViewEvent;
+use Jield\Mvc\View\Renderer\JsonRenderer;
 use Laminas\View\HelperPluginManager;
 use Laminas\View\Model\ModelInterface;
-use function json_encode;
-use const JSON_PARTIAL_OUTPUT_ON_ERROR;
-use const JSON_UNESCAPED_SLASHES;
+use Override;
 
 /**
  * Handles rendering of the following:
@@ -24,15 +24,15 @@ use const JSON_UNESCAPED_SLASHES;
  * - HAL collections
  * - HAL resources
  */
-class HalJsonRenderer
+class HalJsonRenderer extends JsonRenderer
 {
     protected ?HelperPluginManager $helpers = null;
 
-    protected string $lastContentType = 'application/json';
+    protected ?ViewEvent $viewEvent = null;
 
-    public function __construct(protected ApiProblemRenderer $apiProblemRenderer)
-    {
-    }
+    public function __construct(
+        protected ApiProblemRenderer $apiProblemRenderer,
+    ) {}
 
     /**
      * Set helper plugin manager instance.
@@ -45,22 +45,30 @@ class HalJsonRenderer
         $this->helpers = $helpers;
     }
 
+    public function setViewEvent(ViewEvent $event): static
+    {
+        $this->viewEvent = $event;
+        return $this;
+    }
+
     /**
      * Lazy-loads a helper plugin manager if none available.
      */
     public function getHelperPluginManager(): ?HelperPluginManager
     {
-        if (!$this->helpers instanceof HelperPluginManager) {
-            $this->setHelperPluginManager(helpers: $helpers = new HelperPluginManager());
-            return $helpers;
+        if ($this->helpers === null) {
+            throw new \LogicException('The HAL helper plugin manager must be injected before rendering.');
         }
 
         return $this->helpers;
     }
 
-    public function getLastContentType(): string
+    /**
+     * @return ViewEvent|null
+     */
+    public function getViewEvent(): ?ViewEvent
     {
-        return $this->lastContentType;
+        return $this->viewEvent;
     }
 
     /**
@@ -73,46 +81,43 @@ class HalJsonRenderer
      * If not, it passes control to the parent to render.
      *
      * @param mixed $nameOrModel
-     * @param ArrayAccess|array|null $values
+     * @param iterable<non-empty-string, mixed>|null $values
      * @return string
      */
-    public function render(mixed $nameOrModel, ArrayAccess|array|null $values = null): string
+    #[Override]
+    public function render($nameOrModel, $values = null): string
     {
         if (!$nameOrModel instanceof HalJsonModel) {
-            if ($nameOrModel instanceof ModelInterface) {
-                return $this->encodePayload(payload: $nameOrModel->getVariables());
-            }
-
-            return $this->encodePayload(payload: $nameOrModel);
+            /** @psalm-var ModelInterface|string $nameOrModel */
+            return parent::render(templateNameOrModel: $nameOrModel, variables: $values);
         }
 
         if ($nameOrModel->isEntity()) {
             /** @psalm-var Hal $helper */
-            $helper = $this->getHelperPluginManager()->get(name: 'Hal');
+            $helper = \Jield\Stdlib\Value::present($this->getHelperPluginManager())->get('Hal');
             /** @psalm-var Entity $entity */
-            $entity  = $nameOrModel->getPayload();
+            $entity = $nameOrModel->getPayload();
             $payload = $helper->renderEntity(halEntity: $entity);
-            $this->lastContentType = 'application/hal+json';
-            return $this->encodePayload(payload: $payload);
+            /** @psalm-suppress InvalidArgument */
+            return parent::render(templateNameOrModel: $payload);
         }
 
         if ($nameOrModel->isCollection()) {
             /** @var Hal $helper */
-            $helper = $this->getHelperPluginManager()->get(name: 'Hal');
+            $helper = \Jield\Stdlib\Value::present($this->getHelperPluginManager())->get('Hal');
             /** @var Collection $collection */
             $collection = $nameOrModel->getPayload();
-            $payload    = $helper->renderCollection(halCollection: $collection);
+            $payload = $helper->renderCollection(halCollection: $collection);
 
             if ($payload instanceof ApiProblem) {
                 return $this->renderApiProblem(problem: $payload);
             }
 
-            $this->lastContentType = 'application/hal+json';
-            return $this->encodePayload(payload: $payload);
+            /** @psalm-suppress InvalidArgument to be discussed */
+            return parent::render(templateNameOrModel: $payload);
         }
 
-        $this->lastContentType = 'application/json';
-        return $this->encodePayload(payload: $nameOrModel);
+        return parent::render(templateNameOrModel: $nameOrModel, variables: $values);
     }
 
     /**
@@ -127,16 +132,12 @@ class HalJsonRenderer
      */
     protected function renderApiProblem(ApiProblem $problem): string
     {
-        $this->lastContentType = ApiProblem::CONTENT_TYPE;
         $model = new ApiProblemModel(problem: $problem);
-        return $this->apiProblemRenderer->render(nameOrModel: $model);
-    }
+        $event = $this->getViewEvent();
+        if ($event instanceof ViewEvent) {
+            $event->setResult($model);
+        }
 
-    private function encodePayload(mixed $payload): string
-    {
-        return json_encode(
-            value: $payload,
-            flags: JSON_UNESCAPED_SLASHES | JSON_PARTIAL_OUTPUT_ON_ERROR
-        );
+        return $this->apiProblemRenderer->render($model);
     }
 }

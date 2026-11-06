@@ -7,6 +7,7 @@ namespace DoctrineModule\ServiceFactory;
 use Laminas\ServiceManager\Exception\ServiceNotFoundException;
 use Laminas\ServiceManager\Factory\AbstractFactoryInterface;
 use Psr\Container\ContainerInterface;
+
 use function preg_match;
 
 /**
@@ -26,7 +27,7 @@ final class AbstractDoctrineServiceFactory implements AbstractFactoryInterface
     /**
      * {@inheritDoc}
      */
-    public function __invoke(ContainerInterface $container, $requestedName, array|null $options = null): mixed
+    public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): mixed
     {
         $mappings = $this->getFactoryMapping(serviceLocator: $container, name: $requestedName);
 
@@ -34,8 +35,9 @@ final class AbstractDoctrineServiceFactory implements AbstractFactoryInterface
             throw new ServiceNotFoundException();
         }
 
+        /** @var mixed $factoryClass */
         $factoryClass = $mappings['factoryClass'];
-        return new $factoryClass($mappings['serviceName'])->__invoke($container, $requestedName);
+        return \Jield\Stdlib\Value::call(\Jield\Stdlib\Value::instantiate($factoryClass, [$mappings['serviceName']]), '__invoke', [$container, $requestedName]);
     }
 
     /** @return array|bool */
@@ -43,32 +45,31 @@ final class AbstractDoctrineServiceFactory implements AbstractFactoryInterface
     {
         $matches = [];
 
-        if (
-            !preg_match(
-                pattern: '/^doctrine\.((?<mappingType>orm|odm)\.|)(?<serviceType>[a-z0-9_]+)\.(?<serviceName>[a-z0-9_]+)$/',
-                subject: $name,
-                matches: $matches,
-            )
-        ) {
+        if (!preg_match(
+            pattern: '/^doctrine\.((?<mappingType>orm|odm)\.|)(?<serviceType>[a-z0-9_]+)\.(?<serviceName>[a-z0-9_]+)$/',
+            subject: $name,
+            matches: $matches,
+        )) {
             return false;
         }
 
-        $config      = $serviceLocator->get('config');
+        /** @var mixed $config */
+        $config = $serviceLocator->get('config');
         $mappingType = $matches['mappingType'];
         $serviceType = $matches['serviceType'];
         $serviceName = $matches['serviceName'];
 
         if ($mappingType === '') {
             if (
-                !isset($config['doctrine_factories'][$serviceType]) ||
-                !isset($config['doctrine'][$serviceType][$serviceName])
+                !isset($config['doctrine_factories'][$serviceType])
+                || !isset($config['doctrine'][$serviceType][$serviceName])
             ) {
                 return false;
             }
 
             return [
-                'serviceType'  => $serviceType,
-                'serviceName'  => $serviceName,
+                'serviceType' => $serviceType,
+                'serviceName' => $serviceName,
                 'factoryClass' => $config['doctrine_factories'][$serviceType],
             ];
         }
@@ -83,8 +84,8 @@ final class AbstractDoctrineServiceFactory implements AbstractFactoryInterface
         }
 
         return [
-            'serviceType'  => $serviceType,
-            'serviceName'  => $serviceName,
+            'serviceType' => $serviceType,
+            'serviceName' => $serviceName,
             'factoryClass' => $config['doctrine_factories'][$mappingType][$serviceType],
         ];
     }

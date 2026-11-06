@@ -14,36 +14,34 @@ final class FacetField
     public const int TYPE_CHECKBOX_MIN = 3;
 
     public function __construct(
-        private readonly string                   $field,
-        private readonly string                   $name,
-        private readonly int                      $type = self::TYPE_CHECKBOX,
-        private readonly int                      $minCount = 1,
-        private string                            $sort = 'index', //or count
-        private readonly bool                     $reverse = false,
-        private readonly bool                     $hasYesNo = false,
-        private readonly bool                     $hasAndOr = false,
-        private readonly ?string                  $defaultValue = null,
-        private readonly int                      $limit = 100,
-        private readonly FacetFieldVisibilityEnum $visibility = FacetFieldVisibilityEnum::FILTER_COLUMN
-    )
-    {
-    }
+        private readonly string $field,
+        private readonly string $name,
+        private readonly int $type = self::TYPE_CHECKBOX,
+        private readonly int $minCount = 1,
+        private string $sort = 'index', //or count
+        private readonly bool $reverse = false,
+        private readonly bool $hasYesNo = false,
+        private readonly bool $hasAndOr = false,
+        private readonly ?string $defaultValue = null,
+        private readonly int $limit = 100,
+        private readonly FacetFieldVisibilityEnum $visibility = FacetFieldVisibilityEnum::FILTER_COLUMN,
+    ) {}
 
     #[Pure]
     public static function fromArray(array $params): FacetField
     {
         return new self(
-            field: $params['field'] ?? '',
-            name: $params['name'] ?? '',
-            type: $params['name'] ?? self::TYPE_CHECKBOX,
-            minCount: $params['minCount'] ?? 0,
-            sort: $params['sort'] ?? 'index',
-            reverse: $params['reverse'] ?? false,
-            hasYesNo: $params['hasYesNo'] ?? false,
-            hasAndOr: $params['hasAndOr'] ?? false,
-            defaultValue: $params['defaultValue'] ?? false,
-            limit: $params['limit'] ?? 100,
-            visibility: $params['visibility'] ?? FacetFieldVisibilityEnum::FILTER_COLUMN
+            field: \Jield\Stdlib\Value::string($params['field'] ?? ''),
+            name: \Jield\Stdlib\Value::string($params['name'] ?? ''),
+            type: \Jield\Stdlib\Value::int($params['name'] ?? self::TYPE_CHECKBOX),
+            minCount: \Jield\Stdlib\Value::int($params['minCount'] ?? 0),
+            sort: \Jield\Stdlib\Value::string($params['sort'] ?? 'index'),
+            reverse: \Jield\Stdlib\Value::bool($params['reverse'] ?? false),
+            hasYesNo: \Jield\Stdlib\Value::bool($params['hasYesNo'] ?? false),
+            hasAndOr: \Jield\Stdlib\Value::bool($params['hasAndOr'] ?? false),
+            defaultValue: \Jield\Stdlib\Value::nullableString($params['defaultValue'] ?? false),
+            limit: \Jield\Stdlib\Value::int($params['limit'] ?? 100),
+            visibility: \Jield\Stdlib\Value::instance($params['visibility'] ?? FacetFieldVisibilityEnum::FILTER_COLUMN, \Jield\Search\Enum\FacetFieldVisibilityEnum::class),
         );
     }
 

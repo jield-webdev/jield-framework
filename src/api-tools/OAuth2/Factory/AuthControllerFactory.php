@@ -16,16 +16,16 @@ class AuthControllerFactory implements FactoryInterface
      * @param string $requestedName
      */
     #[Override]
-    public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): AuthController
+    public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): AuthController
     {
         $authController = new AuthController(
             serverFactory: $this->getOAuth2ServerFactory(container: $container),
-            userIdProvider: $container->get('Jield\ApiTools\OAuth2\Provider\UserId')
+            userIdProvider: \Jield\Stdlib\Value::instance($container->get('Jield\ApiTools\OAuth2\Provider\UserId'), \Jield\ApiTools\OAuth2\Provider\UserId\UserIdProviderInterface::class),
         );
 
-        $authController->setApiProblemErrorResponse(
-            apiProblemErrorResponse: $this->marshalApiProblemErrorResponse(container: $container)
-        );
+        $authController->setApiProblemErrorResponse(apiProblemErrorResponse: $this->marshalApiProblemErrorResponse(
+            container: $container,
+        ));
 
         return $authController;
     }
@@ -38,12 +38,13 @@ class AuthControllerFactory implements FactoryInterface
      */
     private function getOAuth2ServerFactory(ContainerInterface $container): callable
     {
+        /** @var mixed $oauth2ServerFactory */
         $oauth2ServerFactory = $container->get('Jield\ApiTools\OAuth2\Service\OAuth2Server');
         if (!$oauth2ServerFactory instanceof OAuth2Server) {
-            return $oauth2ServerFactory;
+            return \Jield\Stdlib\Value::callback($oauth2ServerFactory);
         }
 
-        return fn() => $oauth2ServerFactory;
+        return static fn() => $oauth2ServerFactory;
     }
 
     /**
@@ -51,13 +52,16 @@ class AuthControllerFactory implements FactoryInterface
      */
     private function marshalApiProblemErrorResponse(ContainerInterface $container): bool
     {
-        if (!$container->has(id: 'config')) {
+        if (!$container->has('config')) {
             return false;
         }
 
+        /** @var mixed $config */
         $config = $container->get('config');
 
-        return isset($config['api-tools-oauth2']['api_problem_error_response'])
-            && $config['api-tools-oauth2']['api_problem_error_response'] === true;
+        return (
+            isset($config['api-tools-oauth2']['api_problem_error_response'])
+            && $config['api-tools-oauth2']['api_problem_error_response'] === true
+        );
     }
 }

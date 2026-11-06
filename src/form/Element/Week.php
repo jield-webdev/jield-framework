@@ -6,8 +6,7 @@ namespace Jield\Form\Element;
 
 use DateInterval;
 use Laminas\Validator\DateStep as DateStepValidator;
-use Laminas\Validator\GreaterThan as GreaterThanValidator;
-use Laminas\Validator\LessThan as LessThanValidator;
+use Jield\Validator\WeekComparison;
 use Laminas\Validator\Regex as RegexValidator;
 use Laminas\Validator\ValidatorInterface;
 
@@ -37,9 +36,9 @@ class Week extends AbstractDateTime
         $baseValue = $this->attributes['min'] ?? '1970-W01';
 
         return new DateStepValidator(options: [
-            'format'    => 'Y-\WW',
-            'baseValue' => $baseValue,
-            'step'      => new DateInterval(duration: "P{$stepValue}W"),
+            'format' => 'Y-\WW',
+            'baseValue' => (string) $baseValue,
+            'step' => new DateInterval(duration: "P{$stepValue}W"),
         ]);
     }
 
@@ -53,24 +52,15 @@ class Week extends AbstractDateTime
         if ($this->validators) {
             return $this->validators;
         }
-        $validators   = [];
+        $validators = [];
         $validators[] = $this->getDateValidator();
-        if (isset($this->attributes['min'])) {
-            $validators[] = new GreaterThanValidator([
-                'min'       => $this->attributes['min'],
-                'inclusive' => true,
-            ]);
+        if (isset($this->attributes['min']) || isset($this->attributes['max'])) {
+            $validators[] = new WeekComparison(
+                isset($this->attributes['min']) ? (string) $this->attributes['min'] : null,
+                isset($this->attributes['max']) ? (string) $this->attributes['max'] : null,
+            );
         }
-        if (isset($this->attributes['max'])) {
-            $validators[] = new LessThanValidator([
-                'max'       => $this->attributes['max'],
-                'inclusive' => true,
-            ]);
-        }
-        if (
-            ! isset($this->attributes['step'])
-            || 'any' !== $this->attributes['step']
-        ) {
+        if (!isset($this->attributes['step']) || 'any' !== $this->attributes['step']) {
             $validators[] = $this->getStepValidator();
         }
         $this->validators = $validators;

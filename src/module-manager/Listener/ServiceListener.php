@@ -11,6 +11,7 @@ use Laminas\ServiceManager\ServiceManager;
 use Laminas\Stdlib\ArrayUtils;
 use Override;
 use Traversable;
+
 use function class_exists;
 use function gettype;
 use function is_array;
@@ -20,6 +21,7 @@ use function method_exists;
 use function spl_object_hash;
 use function sprintf;
 
+/** @psalm-import-type ServiceManagerConfiguration from \Laminas\ServiceManager\ServiceManager */
 class ServiceListener implements ServiceListenerInterface
 {
     protected array $listeners = [];
@@ -39,9 +41,8 @@ class ServiceListener implements ServiceListenerInterface
          * Default service manager used to fulfill other SMs that need to be lazy loaded
          */
         protected ServiceManager $defaultServiceManager,
-        ?array                   $configuration = null
-    )
-    {
+        ?array $configuration = null,
+    ) {
         if ($configuration !== null) {
             $this->setDefaultServiceConfig(configuration: $configuration);
         }
@@ -49,7 +50,7 @@ class ServiceListener implements ServiceListenerInterface
 
     /**
      * @param array $configuration
-     * @return ServiceListener
+     * @return static
      */
     #[Override]
     public function setDefaultServiceConfig(array $configuration): static
@@ -60,28 +61,23 @@ class ServiceListener implements ServiceListenerInterface
 
     /** {@inheritDoc} */
     #[Override]
-    public function addServiceManager(ServiceManager|string $serviceManager, string $key, string $moduleInterface, string $method): ServiceListenerInterface|static
-    {
-        if (is_string(value: $serviceManager)) {
-            $smKey = $serviceManager;
-        } elseif ($serviceManager instanceof ServiceManager) {
-            $smKey = spl_object_hash(object: $serviceManager);
-        } else {
-            throw new Exception\RuntimeException(message: sprintf(
-                'Invalid service manager provided, expected ServiceManager or string, %s provided',
-                is_object(value: $serviceManager) ? $serviceManager::class : gettype(value: $serviceManager)
-            ));
-        }
+    public function addServiceManager(
+        ServiceManager|string $serviceManager,
+        string $key,
+        string $moduleInterface,
+        string $method,
+    ): static {
+        $smKey = is_string($serviceManager) ? $serviceManager : spl_object_hash($serviceManager);
 
         $this->serviceManagers[$smKey] = [
-            'service_manager'        => $serviceManager,
-            'config_key'             => $key,
+            'service_manager' => $serviceManager,
+            'config_key' => $key,
             'module_class_interface' => $moduleInterface,
-            'module_class_method'    => $method,
-            'configuration'          => [],
+            'module_class_method' => $method,
+            'configuration' => [],
         ];
 
-        if ($key === 'service_manager' && $this->defaultServiceConfig) {
+        if ($key === 'service_manager' && $this->defaultServiceConfig !== []) {
             $this->serviceManagers[$smKey]['configuration']['default_config'] = $this->defaultServiceConfig;
         }
 
@@ -95,18 +91,25 @@ class ServiceListener implements ServiceListenerInterface
     #[Override]
     public function attach(EventManagerInterface $events, $priority = 1): void
     {
-        $this->listeners[] = $events->attach(eventName: ModuleEvent::EVENT_LOAD_MODULE, listener: [$this, 'onLoadModule']);
-        $this->listeners[] = $events->attach(eventName: ModuleEvent::EVENT_LOAD_MODULES_POST, listener: [$this, 'onLoadModulesPost']);
+        $this->listeners[] = $events->attach(eventName: ModuleEvent::EVENT_LOAD_MODULE, listener: [
+            $this,
+            'onLoadModule',
+        ]);
+        $this->listeners[] = $events->attach(eventName: ModuleEvent::EVENT_LOAD_MODULES_POST, listener: [
+            $this,
+            'onLoadModulesPost',
+        ]);
     }
 
     /** @return void */
     #[Override]
     public function detach(EventManagerInterface $events): void
     {
+        /** @var mixed $listener */
         foreach ($this->listeners as $key => $listener) {
-            if ($events->detach(listener: $listener)) {
-                unset($this->listeners[$key]);
-            }
+            $events->detach(listener: \Jield\Stdlib\Value::callback($listener));
+
+            unset($this->listeners[$key]);
         }
     }
 
@@ -128,22 +131,27 @@ class ServiceListener implements ServiceListenerInterface
     {
         $module = $e->getModule();
 
+        /** @var mixed $sm */
         foreach ($this->serviceManagers as $key => $sm) {
             if (
-                !$module instanceof $sm['module_class_interface']
-                && !method_exists(object_or_class: $module, method: $sm['module_class_method'])
+                !$module instanceof (\Jield\Stdlib\Value::accessible($sm)['module_class_interface'])
+                && !method_exists(object_or_class: \Jield\Stdlib\Value::objectOrString($module), method: \Jield\Stdlib\Value::string(\Jield\Stdlib\Value::accessible($sm)['module_class_method']))
             ) {
                 continue;
             }
 
-            $config = $module->{$sm['module_class_method']}();
+            /** @var mixed $config */
+            $config = $module->{\Jield\Stdlib\Value::accessible($sm)['module_class_method']}();
 
             if (is_object(value: $config)) {
                 if (method_exists(object_or_class: $config, method: '__invoke')) {
+                    /** @var mixed $config */
                     $config = $config();
                 } elseif (method_exists(object_or_class: $config, method: 'getConfig')) {
+                    /** @var mixed $config */
                     $config = $config->getConfig();
                 } elseif (method_exists(object_or_class: $config, method: 'toArray')) {
+                    /** @var mixed $config */
                     $config = $config->toArray();
                 }
             }
@@ -160,9 +168,9 @@ class ServiceListener implements ServiceListenerInterface
             // We are keeping track of which modules provided which configuration to which service managers.
             // The actual merging takes place later. Doing it this way will enable us to provide more powerful
             // debugging tools for showing which modules overrode what.
-            $fullname = $e->getModuleName() . '::' . $sm['module_class_method'] . '()';
+            $fullname = $e->getModuleName() . '::' . \Jield\Stdlib\Value::stringify(\Jield\Stdlib\Value::accessible($sm)['module_class_method']) . '()';
             /** @codingStandardsIgnoreLine */
-            $this->serviceManagers[$key]['configuration'][$fullname] = $config;
+            \Jield\Stdlib\Value::setPath($this->serviceManagers, [$key, 'configuration', $fullname], $config);
         }
     }
 
@@ -179,22 +187,25 @@ class ServiceListener implements ServiceListenerInterface
     public function onLoadModulesPost(ModuleEvent $e): void
     {
         $configListener = $e->getConfigListener();
-        $config         = $configListener->getMergedConfig(returnConfigAsObject: false);
+        /** @var mixed $config */
+        $config = \Jield\Stdlib\Value::present($configListener)->getMergedConfig(returnConfigAsObject: false);
 
+        /** @var mixed $sm */
         foreach ($this->serviceManagers as $key => $sm) {
-            $smConfig = $this->mergeServiceConfiguration(key: $key, metadata: $sm, config: $config);
+            $smConfig = $this->mergeServiceConfiguration(key: \Jield\Stdlib\Value::string($key), metadata: \Jield\Stdlib\Value::array($sm), config: \Jield\Stdlib\Value::array($config));
 
             if (!$sm['service_manager'] instanceof ServiceManager) {
-                if (!$this->defaultServiceManager->has(id: $sm['service_manager'])) {
+                if (!$this->defaultServiceManager->has(\Jield\Stdlib\Value::string($sm['service_manager']))) {
                     // No plugin manager registered by that name; nothing to configure.
                     continue;
                 }
 
-                $instance = $this->defaultServiceManager->get(id: $sm['service_manager']);
+                /** @var mixed $instance */
+                $instance = $this->defaultServiceManager->get(\Jield\Stdlib\Value::string($sm['service_manager']));
                 if (!$instance instanceof ServiceLocatorInterface) {
                     throw new Exception\RuntimeException(message: sprintf(
                         'Could not find a valid ServiceManager for %s',
-                        $sm['service_manager']
+                        \Jield\Stdlib\Value::scalar($sm['service_manager']),
                     ));
                 }
 
@@ -203,12 +214,14 @@ class ServiceListener implements ServiceListenerInterface
 
             // The service listener is meant to operate during bootstrap, and, as such,
             // needs to be able to override existing configuration.
-            $allowOverride = $sm['service_manager']->getAllowOverride();
-            $sm['service_manager']->setAllowOverride(flag: true);
+            $allowOverride = \Jield\Stdlib\Value::instance($sm['service_manager'], \Laminas\ServiceManager\ServiceManager::class)->getAllowOverride();
+            \Jield\Stdlib\Value::instance($sm['service_manager'], \Laminas\ServiceManager\ServiceManager::class)->setAllowOverride(flag: true);
 
-            $sm['service_manager']->configure(config: $smConfig);
+            /** @var ServiceManagerConfiguration $managerConfiguration */
+        $managerConfiguration = $smConfig;
+        \Jield\Stdlib\Value::instance($sm['service_manager'], \Laminas\ServiceManager\ServiceManager::class)->configure(config: $managerConfiguration);
 
-            $sm['service_manager']->setAllowOverride(flag: $allowOverride);
+            \Jield\Stdlib\Value::instance($sm['service_manager'], \Laminas\ServiceManager\ServiceManager::class)->setAllowOverride(flag: $allowOverride);
         }
     }
 
@@ -227,17 +240,20 @@ class ServiceListener implements ServiceListenerInterface
         if (!class_exists(class: $className)) {
             throw new Exception\RuntimeException(message: sprintf(
                 'Invalid service manager configuration class provided; "%s" could not be found',
-                $className
+                $className,
             ));
         }
 
-        $instance = new $className();
+        $instance = \Jield\Stdlib\Value::instantiate($className);
 
         if (method_exists(object_or_class: $instance, method: '__invoke')) {
+            /** @var mixed $config */
             $config = $instance();
         } elseif (method_exists(object_or_class: $instance, method: 'getConfig')) {
+            /** @var mixed $config */
             $config = $instance->getConfig();
         } elseif (method_exists(object_or_class: $instance, method: 'toArray')) {
+            /** @var mixed $config */
             $config = $instance->toArray();
         } elseif ($instance instanceof Traversable) {
             $config = ArrayUtils::iteratorToArray(iterator: $instance);
@@ -248,7 +264,7 @@ class ServiceListener implements ServiceListenerInterface
         if (!is_array(value: $config)) {
             throw new Exception\RuntimeException(message: sprintf(
                 'Invalid service manager configuration class provided; "%s" did not return an array',
-                $className
+                $className,
             ));
         }
 
@@ -270,18 +286,20 @@ class ServiceListener implements ServiceListenerInterface
             && is_array(value: $config[$metadata['config_key']])
             && !empty($config[$metadata['config_key']])
         ) {
-            $this->serviceManagers[$key]['configuration']['merged_config'] = $config[$metadata['config_key']];
+            \Jield\Stdlib\Value::setPath($this->serviceManagers, [$key, 'configuration', 'merged_config'], $config[$metadata['config_key']]);
         }
 
         // Merge all of the things!
         $serviceConfig = [];
-        foreach ($this->serviceManagers[$key]['configuration'] as $configs) {
+        /** @var mixed $configs */
+        foreach (\Jield\Stdlib\Value::iterable(\Jield\Stdlib\Value::accessible($this->serviceManagers[$key])['configuration']) as $configs) {
             if (isset($configs['configuration_classes'])) {
-                foreach ($configs['configuration_classes'] as $class) {
-                    $configs = ArrayUtils::merge(a: $configs, b: $this->serviceConfigToArray(config: $class));
+                /** @var mixed $class */
+                foreach (\Jield\Stdlib\Value::iterable($configs['configuration_classes']) as $class) {
+                    $configs = ArrayUtils::merge(a: $configs, b: $this->serviceConfigToArray(config: \Jield\Stdlib\Value::string($class)));
                 }
             }
-            $serviceConfig = ArrayUtils::merge(a: $serviceConfig, b: $configs);
+            $serviceConfig = ArrayUtils::merge(a: $serviceConfig, b: \Jield\Stdlib\Value::array($configs));
         }
 
         return $serviceConfig;

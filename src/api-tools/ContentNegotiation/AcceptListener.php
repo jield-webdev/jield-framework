@@ -28,17 +28,11 @@ class AcceptListener
     {
         $this->selector = $selector;
 
-        if (
-            isset($config['controllers'])
-            && is_array(value: $config['controllers'])
-        ) {
+        if (isset($config['controllers']) && is_array(value: $config['controllers'])) {
             $this->controllerConfig = $config['controllers'];
         }
 
-        if (
-            isset($config['selectors'])
-            && is_array(value: $config['selectors'])
-        ) {
+        if (isset($config['selectors']) && is_array(value: $config['selectors'])) {
             $this->selectorsConfig = $config['selectors'];
         }
     }
@@ -51,8 +45,9 @@ class AcceptListener
             return null;
         }
 
+        /** @var mixed $result */
         $result = $e->getResult();
-        if (!is_array(value: $result) && !$result instanceof ViewModelInterface) {
+        if (!is_array(value: $result) && !$result instanceof ViewModel) {
             // We will only attempt to re-cast ContentNegotiation\ViewModel
             // results or arrays to what the AcceptableViewModelSelector gives
             // us. Anything else, we cannot handle.
@@ -68,11 +63,12 @@ class AcceptListener
         }
 
         $selector = $this->selector;
-        $selector->setController(controller: $controller);
+        $selector->setController(controller: \Jield\Stdlib\Value::instance($controller, \Laminas\Stdlib\DispatchableInterface::class));
 
-        $criteria = $e->getParam(name: 'JieldContentNegotiation');
+        /** @var mixed $criteria */
+        $criteria = $e->getParam(name: 'LaminasContentNegotiation');
 
-        // If the criteria from the JieldContentNegotiation parameter is a string,
+        // If the criteria from the LaminasContentNegotiation parameter is a string,
         // attempt to get it via a selector.
         if (is_string(value: $criteria)) {
             $criteria = $this->getCriteria(criteria: $criteria);
@@ -80,10 +76,12 @@ class AcceptListener
 
         // If we have no criteria, derive it from configuration and/or any set fallbacks
         if (!$criteria) {
-            $fallbackConfig = $e->getParam(name: 'JieldContentNegotiationFallback');
-            $controllerName = $e->getRouteMatch()->getParam(name: 'controller');
+            /** @var mixed $fallbackConfig */
+            $fallbackConfig = $e->getParam(name: 'LaminasContentNegotiationFallback');
+            /** @var mixed $controllerName */
+            $controllerName = \Jield\Stdlib\Value::present($e->getRouteMatch())->getParam(name: 'controller');
 
-            $criteria = $this->getSelectorCriteria(fallbackConfig: $fallbackConfig, controllerName: $controllerName);
+            $criteria = $this->getSelectorCriteria(fallbackConfig: \Jield\Stdlib\Value::nullableString($fallbackConfig), controllerName: \Jield\Stdlib\Value::nullableString($controllerName));
         }
 
         // Retrieve a view model based on the criteria
@@ -92,15 +90,13 @@ class AcceptListener
             $useDefault = true;
         }
 
-        $viewModel = $selector(matchAgainst: $criteria, returnDefault: $useDefault);
+        $viewModel = $selector(matchAgainst: \Jield\Stdlib\Value::nullableArray($criteria), returnDefault: $useDefault);
 
         if (!$viewModel instanceof ViewModelInterface) {
-            return new ApiProblemResponse(
-                apiProblem: new ApiProblem(
-                                status: 406,
-                                detail: 'Unable to resolve Accept header to a representation'
-                            )
-            );
+            return new ApiProblemResponse(apiProblem: new ApiProblem(
+                status: 406,
+                detail: 'Unable to resolve Accept header to a representation',
+            ));
         }
 
         // Populate the view model with the result...
@@ -129,9 +125,10 @@ class AcceptListener
         }
 
         // Retrieve the criteria; if none found, or invalid, use the fallback.
+        /** @var mixed $criteria */
         $criteria = $controllers[$controllerName];
 
-        return $this->getCriteria(criteria: $criteria) ?: $this->getCriteria(criteria: $fallbackConfig);
+        return $this->getCriteria(criteria: \Jield\Stdlib\Value::nullableArrayOrString($criteria)) ?: $this->getCriteria(criteria: $fallbackConfig);
     }
 
     /**
@@ -142,19 +139,18 @@ class AcceptListener
      *
      * If the result is an array, we pass those values as the view model variables.
      *
-     * @param array|ViewModelInterface $result
+     * @param array|ViewModel $result
      */
     protected function populateViewModel(ViewModel|array $result, ViewModelInterface $viewModel, MvcEvent $e): void
     {
-        if ($result instanceof ViewModelInterface) {
+        if ($result instanceof ViewModel) {
             // "Re-cast" content-negotiation view models to the view model type
             // selected by the AcceptableViewModelSelector
 
             $viewModel->setVariables(variables: $result->getVariables());
-            $viewModel->setTemplate(template: $result->getTemplate());
-            $viewModel->setOptions(options: $result->getOptions());
+            $viewModel->setTemplate(template: \Jield\Stdlib\Value::nonEmptyString($result->getTemplate()));
             $viewModel->setCaptureTo(capture: $result->captureTo());
-            $viewModel->setTerminal(terminate: $result->terminate());
+            $viewModel->setTerminal($result->terminate());
             $viewModel->setAppend(append: $result->isAppend());
             if ($result->hasChildren()) {
                 foreach ($result->getChildren() as $child) {
@@ -168,7 +164,7 @@ class AcceptListener
 
         // At this point, the result is an array; use it to populate the view
         // model variables
-        $viewModel->setVariables(variables: $result);
+        $viewModel->setVariables(variables: \Jield\Stdlib\Value::namedValues($result));
         $e->setResult(result: $viewModel);
     }
 
@@ -194,9 +190,10 @@ class AcceptListener
 
         // if it's a string, we should try to resolve that key to a reusable selector set
         if (is_string(value: $criteria) && isset($this->selectorsConfig[$criteria])) {
+            /** @var mixed $criteria */
             $criteria = $this->selectorsConfig[$criteria];
             if (!empty($criteria)) {
-                return $criteria;
+                return \Jield\Stdlib\Value::array($criteria);
             }
         }
 

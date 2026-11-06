@@ -12,17 +12,13 @@ use function array_key_exists;
 use function assert;
 use function is_string;
 
-class Element implements
-    ElementAttributeRemovalInterface,
-    ElementInterface,
-    InitializableInterface,
-    LabelAwareInterface
+class Element implements ElementAttributeRemovalInterface, ElementInterface, InitializableInterface, LabelAwareInterface
 {
     /** @var array<string, scalar|null>  */
     protected array $attributes = [];
 
     /** @var null|string */
-    protected ?string $label;
+    protected ?string $label = null;
 
     /** @var array<string, scalar|null> */
     protected array $labelAttributes = [];
@@ -41,7 +37,7 @@ class Element implements
     protected array $options = [];
 
     /** @var mixed */
-    protected mixed $value;
+    protected mixed $value = null;
 
     /** @var boolean */
     protected bool $hasValue = false;
@@ -57,7 +53,7 @@ class Element implements
             $this->setName(name: (string) $name);
         }
 
-        if (! empty($options)) {
+        if (!empty($options)) {
             $this->setOptions(options: $options);
         }
     }
@@ -68,12 +64,10 @@ class Element implements
      *
      * @return void
      */
-    public function init(): void
-    {
-    }
+    public function init(): void {}
 
     /** @inheritDoc */
-    public function setName(string $name): ElementInterface|static
+    public function setName(string $name): static
     {
         $this->setAttribute(key: 'name', value: $name);
         return $this;
@@ -94,7 +88,7 @@ class Element implements
      * - label_attributes: attributes to use when the label is rendered
      * - label_options: label specific options
      *
-     * @return self
+     * @return static
      * @throws Exception\InvalidArgumentException
      */
     public function setOptions(iterable $options): static
@@ -104,18 +98,18 @@ class Element implements
         }
 
         if (isset($options['label'])) {
-            $this->setLabel(label: $options['label']);
+            $this->setLabel(label: \Jield\Stdlib\Value::nullableString($options['label']));
         }
 
         if (isset($options['label_attributes'])) {
-            $this->setLabelAttributes(labelAttributes: $options['label_attributes']);
+            $this->setLabelAttributes(labelAttributes: \Jield\Stdlib\Value::scalarMap($options['label_attributes']));
         }
 
         if (isset($options['label_options'])) {
-            $this->setLabelOptions(arrayOrTraversable: $options['label_options']);
+            $this->setLabelOptions(arrayOrTraversable: \Jield\Stdlib\Value::iterable($options['label_options']));
         }
 
-        $this->options = $options;
+        $this->options = \Jield\Stdlib\Value::array($options);
 
         return $this;
     }
@@ -135,7 +129,7 @@ class Element implements
      */
     public function getOption(string $option): mixed
     {
-        if (! isset($this->options[$option])) {
+        if (!isset($this->options[$option])) {
             return null;
         }
 
@@ -146,7 +140,7 @@ class Element implements
      * Set a single option for an element
      *
      * @param  mixed $value
-     * @return $this
+     * @return static
      */
     public function setOption(string $key, mixed $value): static
     {
@@ -155,7 +149,7 @@ class Element implements
     }
 
     /** @inheritDoc */
-    public function setAttribute(string $key, $value): ElementInterface|static
+    public function setAttribute(string $key, $value): static
     {
         // Do not include the value in the list of attributes
         if ($key === 'value') {
@@ -167,9 +161,9 @@ class Element implements
     }
 
     /** @inheritDoc */
-    public function getAttribute(string $key): float|bool|int|string|null
+    public function getAttribute(string $key): mixed
     {
-        if (! isset($this->attributes[$key])) {
+        if (!isset($this->attributes[$key])) {
             return null;
         }
 
@@ -179,7 +173,7 @@ class Element implements
     /**
      * Remove a single attribute
      *
-     * @return $this
+     * @return static
      */
     public function removeAttribute(string $key): static
     {
@@ -199,7 +193,7 @@ class Element implements
      * @inheritDoc
      * @throws Exception\InvalidArgumentException
      */
-    public function setAttributes(iterable $arrayOrTraversable): ElementInterface|static
+    public function setAttributes(iterable $arrayOrTraversable): static
     {
         foreach ($arrayOrTraversable as $key => $value) {
             $this->setAttribute(key: $key, value: $value);
@@ -217,7 +211,7 @@ class Element implements
      * Remove many attributes at once
      *
      * @param list<string> $keys
-     * @return $this
+     * @return static
      */
     public function removeAttributes(array $keys): static
     {
@@ -231,7 +225,7 @@ class Element implements
     /**
      * Clear all attributes
      *
-     * @return $this
+     * @return static
      */
     public function clearAttributes(): static
     {
@@ -240,9 +234,9 @@ class Element implements
     }
 
     /** @inheritDoc */
-    public function setValue(mixed $value): ElementInterface|static
+    public function setValue(mixed $value): static
     {
-        $this->value    = $value;
+        $this->value = $value;
         $this->hasValue = true;
 
         return $this;
@@ -255,7 +249,7 @@ class Element implements
     }
 
     /** @inheritDoc */
-    public function setLabel(?string $label): ElementInterface
+    public function setLabel(?string $label): static
     {
         if (is_string(value: $label)) {
             $this->label = $label;
@@ -271,7 +265,7 @@ class Element implements
     }
 
     /** @inheritDoc */
-    public function setLabelAttributes(array $labelAttributes): LabelAwareInterface|static
+    public function setLabelAttributes(array $labelAttributes): static
     {
         $this->labelAttributes = $labelAttributes;
         return $this;
@@ -287,10 +281,13 @@ class Element implements
      * @inheritDoc
      * @throws Exception\InvalidArgumentException
      */
-    public function setLabelOptions(iterable $arrayOrTraversable): LabelAwareInterface|static
+    public function setLabelOptions(iterable $arrayOrTraversable): static
     {
+        /** @var mixed $key
+         * @var mixed $value
+         */
         foreach ($arrayOrTraversable as $key => $value) {
-            $this->setLabelOption(key: $key, value: $value);
+            $this->setLabelOption(key: \Jield\Stdlib\Value::string($key), value: $value);
         }
         return $this;
     }
@@ -302,15 +299,16 @@ class Element implements
     }
 
     /** @inheritDoc */
-    public function clearLabelOptions(): LabelAwareInterface|static
+    public function clearLabelOptions(): static
     {
         $this->labelOptions = [];
         return $this;
     }
 
     /** @inheritDoc */
-    public function removeLabelOptions(array $keys): LabelAwareInterface|static
+    public function removeLabelOptions(array $keys): static
     {
+        /** @var mixed $key */
         foreach ($keys as $key) {
             unset($this->labelOptions[$key]);
         }
@@ -319,7 +317,7 @@ class Element implements
     }
 
     /** @inheritDoc */
-    public function setLabelOption(string $key, mixed $value): LabelAwareInterface|static
+    public function setLabelOption(string $key, mixed $value): static
     {
         $this->labelOptions[$key] = $value;
         return $this;
@@ -328,7 +326,7 @@ class Element implements
     /** @inheritDoc */
     public function getLabelOption(int|string $key): mixed
     {
-        if (! isset($this->labelOptions[$key])) {
+        if (!isset($this->labelOptions[$key])) {
             return null;
         }
 
@@ -336,7 +334,7 @@ class Element implements
     }
 
     /** @inheritDoc */
-    public function removeLabelOption(string $key): LabelAwareInterface|static
+    public function removeLabelOption(string $key): static
     {
         unset($this->labelOptions[$key]);
         return $this;
@@ -349,12 +347,12 @@ class Element implements
     }
 
     /** @inheritDoc */
-    public function setMessages(iterable $messages): ElementInterface|static
+    public function setMessages(iterable $messages): static
     {
         if ($messages instanceof Traversable) {
             $messages = ArrayUtils::iteratorToArray(iterator: $messages);
         }
-        $this->messages = $messages;
+        $this->messages = \Jield\Stdlib\Value::array($messages);
         return $this;
     }
 

@@ -16,7 +16,7 @@ class NoObjectExists extends ObjectExists
      */
     public const string ERROR_OBJECT_FOUND = 'objectFound';
 
-    /** @var array Message templates */
+    /** @var array<string, string> Message templates */
     protected array $messageTemplates = [self::ERROR_OBJECT_FOUND => "An object matching '%value%' was found"];
 
     /**
@@ -26,7 +26,7 @@ class NoObjectExists extends ObjectExists
     public function isValid($value): bool
     {
         $cleanedValue = $this->cleanSearchValue(value: $value);
-        $match        = $this->objectRepository->findOneBy(criteria: $cleanedValue);
+        $match = $this->objectRepository->findOneBy(criteria: \Jield\Stdlib\Value::stringKeyedArray($cleanedValue));
 
         if (is_object(value: $match)) {
             $this->error(messageKey: self::ERROR_OBJECT_FOUND, value: $value);

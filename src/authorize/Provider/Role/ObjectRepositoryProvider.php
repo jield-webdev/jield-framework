@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace Jield\Authorize\Provider\Role;
 
+use Doctrine\Persistence\ObjectRepository;
 use Jield\Authorize\Role\HierarchicalRoleInterface;
 use Jield\Authorize\Role\Role;
-use Doctrine\Persistence\ObjectRepository;
 use Laminas\Permissions\Acl\Role\RoleInterface;
+
 use function array_values;
 
 /**
@@ -29,18 +30,18 @@ class ObjectRepositoryProvider implements ProviderInterface
     public function getRoles(): array
     {
         $result = $this->objectRepository->findAll();
-        $roles  = [];
+        $roles = [];
 
         // Pass One: Build each object
         foreach ($result as $role) {
-            if (! $role instanceof RoleInterface) {
+            if (!$role instanceof RoleInterface) {
                 continue;
             }
 
             $roleId = $role->getRoleId();
             $parent = null;
 
-            if ($role instanceof HierarchicalRoleInterface && $parent = $role->getParent()) {
+            if ($role instanceof HierarchicalRoleInterface && ($parent = $role->getParent())) {
                 $parent = $parent->getRoleId();
             }
 
@@ -48,7 +49,7 @@ class ObjectRepositoryProvider implements ProviderInterface
         }
 
         // Pass Two: Re-inject parent objects to preserve hierarchy
-        /** @var Role $roleObj */
+        
         foreach ($roles as $roleObj) {
             $parentRoleObj = $roleObj->getParent();
 

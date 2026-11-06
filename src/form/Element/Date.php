@@ -33,16 +33,15 @@ class Date extends DateTimeElement
      */
     protected function getStepValidator(): ValidatorInterface
     {
-        $format    = $this->getFormat();
+        $format = $this->getFormat();
         $stepValue = $this->attributes['step'] ?? 1; // Days
 
         $baseValue = $this->attributes['min'] ?? date(format: $format, timestamp: 0);
 
         return new DateStepValidator(options: [
-            'format'    => $format,
-            'baseValue' => $baseValue,
-            'timezone'  => new DateTimeZone(timezone: 'UTC'),
-            'step'      => new DateInterval(duration: "P{$stepValue}D"),
+            'format' => $format,
+            'baseValue' => (string) $baseValue,
+            'step' => new DateInterval(duration: "P{$stepValue}D"),
         ]);
     }
 }

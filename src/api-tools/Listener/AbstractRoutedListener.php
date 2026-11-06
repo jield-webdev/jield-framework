@@ -15,17 +15,51 @@ abstract class AbstractRoutedListener extends AbstractResourceListener
 
     protected static ?string $privilege = null;
 
-    protected static int $pageSize    = 30;
+    protected static int $pageSize = 30;
     protected static int $maxPageSize = 1000;
 
     protected static array $entityCollectionWhitelist = [];
+
+    /** @var array<string, list<string>> Accepted scope alternatives per HTTP method. Empty denies bearer access. */
+    protected static array $scopes = [];
+
+    /** @var list<string> Scopes explicitly allowed for application identities, in addition to $scopes. */
+    protected static array $applicationScopes = [];
+
+    protected static bool $requireAccessToken = false;
+
+    public static function getScopes(): array
+    {
+        return static::$scopes;
+    }
+
+    /** @return list<string> HEAD uses the GET policy unless explicitly declared. */
+    public static function getScopesForMethod(string $method): array
+    {
+        $method = strtoupper($method);
+        if ($method === 'HEAD' && !array_key_exists('HEAD', static::$scopes)) {
+            $method = 'GET';
+        }
+        return static::$scopes[$method] ?? [];
+    }
+
+    /** @return list<string> */
+    public static function getApplicationScopes(): array
+    {
+        return static::$applicationScopes;
+    }
+
+    public static function requiresAccessToken(): bool
+    {
+        return static::$requireAccessToken;
+    }
 
     public static function getRoute(): string
     {
         return static::$route;
     }
 
-    public static function getPrivilege(): null|string
+    public static function getPrivilege(): ?string
     {
         return static::$privilege;
     }
@@ -40,7 +74,6 @@ abstract class AbstractRoutedListener extends AbstractResourceListener
         return static::$maxPageSize;
     }
 
-
     public static function getInputFilterSpecification(): array
     {
         return [];
@@ -51,12 +84,12 @@ abstract class AbstractRoutedListener extends AbstractResourceListener
         return static::$entityCollectionWhitelist;
     }
 
-    public static function getRouteAssertionClass(): null|string
+    public static function getRouteAssertionClass(): ?string
     {
         return null;
     }
 
-    protected function convertJSDateTimeToPHPDateTime(?string $dateTimeString): null|DateTime|ApiProblem
+    protected function convertJSDateTimeToPHPDateTime(?string $dateTimeString): DateTime|ApiProblem|null
     {
         if (empty($dateTimeString)) {
             return null;
@@ -68,7 +101,10 @@ abstract class AbstractRoutedListener extends AbstractResourceListener
             return $dateProcessed;
         }
 
-        $dateProcessed = DateTime::createFromFormat(format: DateTimeInterface::RFC3339_EXTENDED, datetime: $dateTimeString);
+        $dateProcessed = DateTime::createFromFormat(
+            format: DateTimeInterface::RFC3339_EXTENDED,
+            datetime: $dateTimeString,
+        );
 
         if ($dateProcessed instanceof DateTime) {
             return $dateProcessed;
@@ -86,9 +122,6 @@ abstract class AbstractRoutedListener extends AbstractResourceListener
             return $dateProcessed;
         }
 
-        return new ApiProblem(
-            status: 400,
-            detail: 'Invalid date format'
-        );
+        return new ApiProblem(status: 400, detail: 'Invalid date format');
     }
 }

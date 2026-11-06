@@ -1,14 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\Mvc\Controller\Plugin;
 
-use Laminas\EventManager\EventInterface;
 use Jield\Mvc\Exception\DomainException;
 use Jield\Mvc\Exception\InvalidArgumentException;
 use Jield\Mvc\Exception\RuntimeException;
 use Jield\Mvc\InjectApplicationEventInterface;
 use Jield\Mvc\ModuleRouteListener;
 use Jield\Mvc\MvcEvent;
+use Laminas\EventManager\EventInterface;
 use Laminas\Router\RouteStackInterface;
 use Traversable;
 
@@ -36,56 +38,56 @@ class Url extends AbstractPlugin
     public function fromRoute($route = null, $params = [], $options = [], $reuseMatchedParams = false): string
     {
         $controller = $this->getController();
-        if (! $controller instanceof InjectApplicationEventInterface) {
+        if (!$controller instanceof InjectApplicationEventInterface) {
             throw new DomainException(
-                'Url plugin requires a controller that implements InjectApplicationEventInterface'
+                'Url plugin requires a controller that implements InjectApplicationEventInterface',
             );
         }
 
-        if (! is_array($params)) {
-            if (! $params instanceof Traversable) {
-                throw new InvalidArgumentException(
-                    'Params is expected to be an array or a Traversable object'
-                );
+        if (!is_array($params)) {
+            if (!$params instanceof Traversable) {
+                throw new InvalidArgumentException('Params is expected to be an array or a Traversable object');
             }
             $params = iterator_to_array($params);
         }
 
-        $event   = $controller->getEvent();
-        $router  = null;
+        $event = $controller->getEvent();
+        $router = null;
         $matches = null;
         if ($event instanceof MvcEvent) {
-            $router  = $event->getRouter();
+            $router = $event->getRouter();
             $matches = $event->getRouteMatch();
-        } elseif ($event instanceof EventInterface) {
-            $router  = $event->getParam('router', false);
+        } else {
+            /** @var mixed $router */
+            $router = $event->getParam('router', false);
+            /** @var mixed $matches */
             $matches = $event->getParam('route-match', false);
         }
-        if (! $router instanceof RouteStackInterface) {
-            throw new DomainException(
-                'Url plugin requires that controller event compose a router; none found'
-            );
+        if (!$router instanceof RouteStackInterface) {
+            throw new DomainException('Url plugin requires that controller event compose a router; none found');
         }
 
         if (3 === func_num_args() && is_bool($options)) {
             $reuseMatchedParams = $options;
-            $options            = [];
+            $options = [];
         }
 
         if ($route === null) {
-            if (! $matches) {
+            if (!$matches) {
                 throw new RuntimeException('No RouteMatch instance present');
             }
 
-            $route = $matches->getMatchedRouteName();
+            /** @var mixed $route */
+            $route = \Jield\Stdlib\Value::call($matches, 'getMatchedRouteName');
 
             if ($route === null) {
                 throw new RuntimeException('RouteMatch does not contain a matched route name');
             }
         }
 
-        if ($reuseMatchedParams && $matches) {
-            $routeMatchParams = $matches->getParams();
+        if ($reuseMatchedParams && \Jield\Stdlib\Value::truthy($matches)) {
+            /** @var mixed $routeMatchParams */
+            $routeMatchParams = \Jield\Stdlib\Value::call($matches, 'getParams');
 
             if (isset($routeMatchParams[ModuleRouteListener::ORIGINAL_CONTROLLER])) {
                 $routeMatchParams['controller'] = $routeMatchParams[ModuleRouteListener::ORIGINAL_CONTROLLER];
@@ -96,10 +98,10 @@ class Url extends AbstractPlugin
                 unset($routeMatchParams[ModuleRouteListener::MODULE_NAMESPACE]);
             }
 
-            $params = array_merge($routeMatchParams, $params);
+            $params = array_merge(\Jield\Stdlib\Value::array($routeMatchParams), $params);
         }
 
         $options['name'] = $route;
-        return $router->assemble($params, $options);
+        return $router->assemble(\Jield\Stdlib\Value::routeParams($params), \Jield\Stdlib\Value::array($options))->toString();
     }
 }

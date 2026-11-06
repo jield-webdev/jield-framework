@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Jield\ApiTools\ContentValidation\InputFilter;
 
-use Laminas\InputFilter\InputFilterInterface;
 use Jield\Mvc\Controller\Plugin\AbstractPlugin;
 use Jield\Mvc\InjectApplicationEventInterface;
+use Laminas\InputFilter\InputFilterInterface;
 
 class InputFilterPlugin extends AbstractPlugin
 {
@@ -18,7 +18,8 @@ class InputFilterPlugin extends AbstractPlugin
             return null;
         }
 
-        $event       = $controller->getEvent();
+        $event = $controller->getEvent();
+        /** @var mixed $inputFilter */
         $inputFilter = $event->getParam(name: __NAMESPACE__);
 
         if (!$inputFilter instanceof InputFilterInterface) {

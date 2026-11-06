@@ -15,8 +15,8 @@ class UploadFileValidatorFactory implements FactoryInterface
     public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): UploadFile
     {
         $validator = new UploadFile(options: $options);
-        if ($container->has(id: 'Request')) {
-            $validator->setRequest(request: $container->get('Request'));
+        if ($container->has('Request')) {
+            $validator->setRequest(request: \Jield\Stdlib\Service::get($container, \Laminas\Stdlib\RequestInterface::class, 'Request'));
         }
 
         return $validator;

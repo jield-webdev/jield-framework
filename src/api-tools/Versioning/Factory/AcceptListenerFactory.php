@@ -11,12 +11,15 @@ class AcceptListenerFactory
 {
     public function __invoke(ContainerInterface $container): AcceptListener
     {
-        $config = $container->has(id: 'config') ? $container->get('config') : [];
+        /** @var mixed $config */
+        $config = $container->has('config') ? $container->get('config') : [];
+        /** @var mixed $config */
         $config = $config['api-tools-versioning']['content-type'] ?? [];
 
         $listener = new AcceptListener();
-        foreach ($config as $regexp) {
-            $listener->addRegexp(regex: $regexp);
+        /** @var mixed $regexp */
+        foreach (\Jield\Stdlib\Value::iterable($config) as $regexp) {
+            $listener->addRegexp(regex: \Jield\Stdlib\Value::string($regexp));
         }
 
         return $listener;

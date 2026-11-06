@@ -26,9 +26,8 @@ final class Menu
         private readonly EscapeHtml $escapeHtml,
         private readonly EscapeHtmlAttr $escapeHtmlAttr,
         private readonly HtmlAttributes $htmlAttributes,
-        private readonly ?TranslatorInterface $translator = null
-    ) {
-    }
+        private readonly ?TranslatorInterface $translator = null,
+    ) {}
 
     /**
      * @param AbstractContainer $container
@@ -36,26 +35,34 @@ final class Menu
      */
     public function __invoke(AbstractContainer $container, array $options = []): string
     {
-        $ulClass            = $options['ulClass'] ?? $this->ulClass;
-        $indent             = $options['indent'] ?? '';
-        $minDepth           = $options['minDepth'] ?? 0;
-        $maxDepth           = $options['maxDepth'] ?? null;
-        $onlyActive         = $options['onlyActive'] ?? false;
-        $escapeLabels       = $options['escapeLabels'] ?? true;
+        /** @var mixed $ulClass */
+        $ulClass = $options['ulClass'] ?? $this->ulClass;
+        /** @var mixed $indent */
+        $indent = $options['indent'] ?? '';
+        /** @var mixed $minDepth */
+        $minDepth = $options['minDepth'] ?? 0;
+        /** @var mixed $maxDepth */
+        $maxDepth = $options['maxDepth'] ?? null;
+        /** @var mixed $onlyActive */
+        $onlyActive = $options['onlyActive'] ?? false;
+        /** @var mixed $escapeLabels */
+        $escapeLabels = $options['escapeLabels'] ?? true;
+        /** @var mixed $addClassToListItem */
         $addClassToListItem = $options['addClassToListItem'] ?? false;
-        $liActiveClass      = $options['liActiveClass'] ?? 'active';
-        $this->renderInvisible = (bool) ($options['renderInvisible'] ?? $this->renderInvisible);
+        /** @var mixed $liActiveClass */
+        $liActiveClass = $options['liActiveClass'] ?? 'active';
+        $this->renderInvisible = \Jield\Stdlib\Value::truthy($options['renderInvisible'] ?? $this->renderInvisible);
 
         return $this->renderNormalMenu(
             container: $container,
-            ulClass: $ulClass,
-            indent: $indent,
-            minDepth: $minDepth,
-            maxDepth: $maxDepth,
-            onlyActive: $onlyActive,
-            escapeLabels: $escapeLabels,
-            addClassToListItem: $addClassToListItem,
-            liActiveClass: $liActiveClass
+            ulClass: \Jield\Stdlib\Value::string($ulClass),
+            indent: \Jield\Stdlib\Value::string($indent),
+            minDepth: \Jield\Stdlib\Value::int($minDepth),
+            maxDepth: \Jield\Stdlib\Value::nullableInt($maxDepth),
+            onlyActive: \Jield\Stdlib\Value::bool($onlyActive),
+            escapeLabels: \Jield\Stdlib\Value::bool($escapeLabels),
+            addClassToListItem: \Jield\Stdlib\Value::bool($addClassToListItem),
+            liActiveClass: \Jield\Stdlib\Value::string($liActiveClass),
         );
     }
 
@@ -68,7 +75,7 @@ final class Menu
         bool $onlyActive,
         bool $escapeLabels,
         bool $addClassToListItem,
-        string $liActiveClass
+        string $liActiveClass,
     ): string {
         $html = '';
 
@@ -76,10 +83,7 @@ final class Menu
         $foundPage = $found['page'] ?? null;
         $foundDepth = $found['depth'] ?? 0;
 
-        $iterator = new RecursiveIteratorIterator(
-            iterator: $container,
-            mode: RecursiveIteratorIterator::SELF_FIRST
-        );
+        $iterator = new RecursiveIteratorIterator(iterator: $container, mode: RecursiveIteratorIterator::SELF_FIRST);
 
         if (is_int($maxDepth)) {
             $iterator->setMaxDepth($maxDepth);
@@ -87,29 +91,29 @@ final class Menu
 
         $prevDepth = -1;
 
-        /** @var AbstractPage $page */
+        
         foreach ($iterator as $key => $page) {
             $depth = $iterator->getDepth();
             $isActive = $page->isActive(true);
 
             if ($depth === 0) {
-                $page->setClass(trim('nav-link ' . $page->getClass()));
+                $page->setClass(trim('nav-link ' . (string) ($page->getClass())));
             } elseif ($depth > 0) {
-                $page->setClass(trim('dropdown-item ' . $page->getClass()));
+                $page->setClass(trim('dropdown-item ' . (string) ($page->getClass())));
             }
 
             $parent = $page->getParent();
             if ($parent?->hasChildren() && $depth === 0) {
-                $page->setClass(trim('dropdown-toggle ' . $page->getClass()));
-                $page->setId((string) $key);
+                $page->setClass(trim('dropdown-toggle ' . (string) ($page->getClass())));
+                $page->setId( $key);
                 $page->setOptions(['role' => 'button', 'data-bs-toggle' => 'dropdown', 'aria-expanded' => false]);
             }
 
-            if ($depth < $minDepth || ! $this->accept($page)) {
+            if ($depth < $minDepth || !$this->accept($page)) {
                 continue;
             }
 
-            if ($onlyActive && ! $isActive) {
+            if ($onlyActive && !$isActive) {
                 $accept = false;
                 if ($foundPage instanceof AbstractPage) {
                     if ($foundPage->hasPage($page)) {
@@ -118,32 +122,32 @@ final class Menu
                         $foundParent = $foundPage->getParent();
                         if ($foundParent && $foundParent->hasPage($page)) {
                             if (
-                                ! $foundPage->hasPages(! $this->renderInvisible)
-                                || (is_int($maxDepth) && $foundDepth + 1 > $maxDepth)
+                                !$foundPage->hasPages(!$this->renderInvisible)
+                                || is_int($maxDepth) && ($foundDepth + 1) > $maxDepth
                             ) {
                                 $accept = true;
                             }
                         }
                     }
                 }
-                if (! $accept) {
+                if (!$accept) {
                     continue;
                 }
             }
 
             $depth -= $minDepth;
-            $myIndent = $indent . str_repeat('        ', $depth);
+            $myIndent = $indent . str_repeat('        ', \Jield\Stdlib\Value::nonNegativeInt($depth));
 
             if ($depth > $prevDepth) {
                 if ($ulClass !== '' && $depth === 0) {
-                    $ulClass = ' class="' . $this->escapeHtmlAttr->__invoke($ulClass) . '"';
+                    $ulClass = ' class="' . \Jield\Stdlib\Value::stringify($this->escapeHtmlAttr->__invoke($ulClass)) . '"';
                 } else {
                     $ulClass = ' class="dropdown-menu" aria-labelledby="' . $key . '"';
                 }
                 $html .= $myIndent . '<ul' . $ulClass . '>' . PHP_EOL;
             } elseif ($prevDepth > $depth) {
                 for ($i = $prevDepth; $i > $depth; $i--) {
-                    $ind = $indent . str_repeat('        ', $i);
+                    $ind = $indent . str_repeat('        ', \Jield\Stdlib\Value::nonNegativeInt($i));
                     $html .= $ind . '    </li>' . PHP_EOL;
                     $html .= $ind . '</ul>' . PHP_EOL;
                 }
@@ -166,9 +170,17 @@ final class Menu
                 $liClasses[] = $page->getClass();
             }
 
-            $liClass = ' class="' . $this->escapeHtmlAttr->__invoke(implode(' ', $liClasses)) . '"';
-            $html .= $myIndent . '    <li' . $liClass . '>' . PHP_EOL
-                . $myIndent . '        ' . $this->htmlify($page, $escapeLabels, $addClassToListItem) . PHP_EOL;
+            $liClass = ' class="' . \Jield\Stdlib\Value::stringify($this->escapeHtmlAttr->__invoke(implode(' ', $liClasses))) . '"';
+            $html .=
+                $myIndent
+                . '    <li'
+                . $liClass
+                . '>'
+                . PHP_EOL
+                . $myIndent
+                . '        '
+                . $this->htmlify($page, $escapeLabels, $addClassToListItem)
+                . PHP_EOL;
 
             $prevDepth = $depth;
         }
@@ -176,8 +188,7 @@ final class Menu
         if ($html !== '') {
             for ($i = $prevDepth + 1; $i > 0; $i--) {
                 $myIndent = $indent . str_repeat('        ', $i - 1);
-                $html .= $myIndent . '    </li>' . PHP_EOL
-                    . $myIndent . '</ul>' . PHP_EOL;
+                $html .= $myIndent . '    </li>' . PHP_EOL . $myIndent . '</ul>' . PHP_EOL;
             }
             $html = rtrim($html, PHP_EOL);
         }
@@ -202,7 +213,7 @@ final class Menu
             $attribs['aria-expanded'] = $page->get('aria-expanded');
         }
 
-        if (! $addClassToListItem) {
+        if (!$addClassToListItem) {
             $attribs['class'] = $page->getClass();
         }
 
@@ -219,7 +230,7 @@ final class Menu
         $label = $this->translate($page->getLabel(), $page->getTextDomain());
 
         if ($escapeLabel) {
-            $html .= $this->escapeHtml->__invoke($label);
+            $html .= \Jield\Stdlib\Value::stringify($this->escapeHtml->__invoke($label));
         } else {
             $html .= $label;
         }
@@ -238,7 +249,7 @@ final class Menu
 
     private function accept(AbstractPage $page): bool
     {
-        if (! $this->renderInvisible && ! $page->isVisible()) {
+        if (!$this->renderInvisible && !$page->isVisible()) {
             return false;
         }
 
@@ -252,26 +263,21 @@ final class Menu
     {
         $found = null;
 
-        $iterator = new RecursiveIteratorIterator(
-            iterator: $container,
-            mode: RecursiveIteratorIterator::SELF_FIRST
-        );
+        $iterator = new RecursiveIteratorIterator(iterator: $container, mode: RecursiveIteratorIterator::SELF_FIRST);
 
         if (is_int($maxDepth)) {
             $iterator->setMaxDepth($maxDepth);
         }
 
         foreach ($iterator as $page) {
-            if (! $page instanceof AbstractPage) {
-                continue;
-            }
+            
 
             $depth = $iterator->getDepth();
-            if ($depth < $minDepth || ! $this->accept($page)) {
+            if ($depth < $minDepth || !$this->accept($page)) {
                 continue;
             }
 
-            if (! $page->isActive(true)) {
+            if (!$page->isActive(true)) {
                 continue;
             }
 

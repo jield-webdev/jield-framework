@@ -21,8 +21,8 @@ class DefaultListenerAggregate extends AbstractListener implements ListenerAggre
     #[Override]
     public function attach(EventManagerInterface $events, $priority = 1): void
     {
-        $options                     = $this->getOptions();
-        $configListener              = $this->getConfigListener();
+        $options = $this->getOptions();
+        $configListener = $this->getConfigListener();
         $locatorRegistrationListener = new LocatorRegistrationListener(options: $options);
 
         // High priority, we assume module autoloading (for FooNamespace\Module
@@ -34,8 +34,10 @@ class DefaultListenerAggregate extends AbstractListener implements ListenerAggre
             $this->listeners[] = $moduleLoaderListener;
         }
 
-
-        $this->listeners[] = $events->attach(eventName: ModuleEvent::EVENT_LOAD_MODULE_RESOLVE, listener: new ModuleResolverListener());
+        $this->listeners[] = $events->attach(
+            eventName: ModuleEvent::EVENT_LOAD_MODULE_RESOLVE,
+            listener: new ModuleResolverListener(),
+        );
 
         if ($options->useLaminasLoader()) {
             // High priority, because most other loadModule listeners will assume
@@ -44,7 +46,7 @@ class DefaultListenerAggregate extends AbstractListener implements ListenerAggre
             $this->listeners[] = $events->attach(
                 eventName: ModuleEvent::EVENT_LOAD_MODULE,
                 listener: new AutoloaderListener(options: $options),
-                priority: 9000
+                priority: 9000,
             );
         }
 
@@ -52,12 +54,18 @@ class DefaultListenerAggregate extends AbstractListener implements ListenerAggre
             $this->listeners[] = $events->attach(
                 eventName: ModuleEvent::EVENT_LOAD_MODULE,
                 listener: new ModuleDependencyCheckerListener(),
-                priority: 8000
+                priority: 8000,
             );
         }
 
-        $this->listeners[] = $events->attach(eventName: ModuleEvent::EVENT_LOAD_MODULE, listener: new InitTrigger(options: $options));
-        $this->listeners[] = $events->attach(eventName: ModuleEvent::EVENT_LOAD_MODULE, listener: new OnBootstrapListener(options: $options));
+        $this->listeners[] = $events->attach(
+            eventName: ModuleEvent::EVENT_LOAD_MODULE,
+            listener: new InitTrigger(options: $options),
+        );
+        $this->listeners[] = $events->attach(
+            eventName: ModuleEvent::EVENT_LOAD_MODULE,
+            listener: new OnBootstrapListener(options: $options),
+        );
 
         $locatorRegistrationListener->attach(events: $events);
         $configListener->attach(events: $events);
@@ -71,6 +79,7 @@ class DefaultListenerAggregate extends AbstractListener implements ListenerAggre
     #[Override]
     public function detach(EventManagerInterface $events): void
     {
+        /** @var mixed $listener */
         foreach ($this->listeners as $key => $listener) {
             if ($listener instanceof ListenerAggregateInterface) {
                 $listener->detach(events: $events);
@@ -78,7 +87,7 @@ class DefaultListenerAggregate extends AbstractListener implements ListenerAggre
                 continue;
             }
 
-            $events->detach(listener: $listener);
+            $events->detach(listener: \Jield\Stdlib\Value::callback($listener));
             unset($this->listeners[$key]);
         }
     }

@@ -6,12 +6,12 @@ namespace Jield\ApiTools\ContentNegotiation;
 
 use Jield\ApiTools\ApiProblem\ApiProblem;
 use Jield\ApiTools\ApiProblem\ApiProblemResponse;
+use Jield\Mvc\MvcEvent;
 use Laminas\EventManager\AbstractListenerAggregate;
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\Http\Request as HttpRequest;
-use Jield\Mvc\MvcEvent;
-
 use Override;
+
 use function array_key_exists;
 use function in_array;
 use function sprintf;
@@ -33,12 +33,16 @@ class HttpMethodOverrideListener extends AbstractListenerAggregate
      * Priority is set very high (should be executed before all other listeners that rely on the request method value).
      * TODO: Check priority value, maybe value should be even higher??
      *
-     * @param int $priority
+     * @param int                   $priority
      */
     #[Override]
     public function attach(EventManagerInterface $events, $priority = 1): void
     {
-        $this->listeners[] = $events->attach(eventName: MvcEvent::EVENT_ROUTE, listener: $this->onRoute(...), priority: -40);
+        $this->listeners[] = $events->attach(
+            eventName: MvcEvent::EVENT_ROUTE,
+            listener: $this->onRoute(...),
+            priority: -40,
+        );
     }
 
     /**
@@ -49,32 +53,33 @@ class HttpMethodOverrideListener extends AbstractListenerAggregate
     {
         $request = $event->getRequest();
 
-        if (! $request instanceof HttpRequest) {
+        if (!$request instanceof HttpRequest) {
             return null;
         }
 
-        if (! $request->getHeaders()->has(name: 'X-HTTP-Method-Override')) {
+        if (!\Jield\Stdlib\Value::instance($request->getHeaders(), \Laminas\Http\Headers::class)->has('X-HTTP-Method-Override')) {
             return null;
         }
 
         $method = $request->getMethod();
 
-        if (! array_key_exists(key: $method, array: $this->httpMethodOverride)) {
-            return new ApiProblemResponse(apiProblem: new ApiProblem(
-                status: 400,
-                detail: sprintf('Overriding %s method with X-HTTP-Method-Override header is not allowed', $method)
-            ));
+        if (!array_key_exists(key: $method, array: $this->httpMethodOverride)) {
+            return new ApiProblemResponse(apiProblem: new ApiProblem(status: 400, detail: sprintf(
+                'Overriding %s method with X-HTTP-Method-Override header is not allowed',
+                $method,
+            )));
         }
 
-        $header         = $request->getHeader(name: 'X-HTTP-Method-Override');
-        $overrideMethod = $header->getFieldValue();
+        $header = $request->getHeader(name: 'X-HTTP-Method-Override');
+        $overrideMethod = \Jield\Stdlib\Value::instance($header, \Laminas\Http\Header\HeaderInterface::class)->getFieldValue();
+        /** @var mixed $allowedMethods */
         $allowedMethods = $this->httpMethodOverride[$method];
 
-        if (! in_array(needle: $overrideMethod, haystack: $allowedMethods)) {
-            return new ApiProblemResponse(apiProblem: new ApiProblem(
-                status: 400,
-                detail: sprintf('Illegal override method %s in X-HTTP-Method-Override header', $overrideMethod)
-            ));
+        if (!in_array(needle: $overrideMethod, haystack: \Jield\Stdlib\Value::array($allowedMethods), strict: true)) {
+            return new ApiProblemResponse(apiProblem: new ApiProblem(status: 400, detail: sprintf(
+                'Illegal override method %s in X-HTTP-Method-Override header',
+                $overrideMethod,
+            )));
         }
 
         $request->setMethod(method: $overrideMethod);

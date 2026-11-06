@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Jield\Search\Solr\Expression;
 
-use Jield\Search\Solr\Util;
+use Jield\Search\Solr\ExpressionInterface;
+
 use Stringable;
 
 use function substr;
@@ -20,12 +21,14 @@ class WildcardExpression extends Expression implements Stringable
     /**
      * Create new wildcard query object
      *
-     * @param string|Expression $prefix
-     * @param string|Expression $suffix
+     * @param string|ExpressionInterface $prefix
+     * @param string|ExpressionInterface $suffix
      */
-    public function __construct(private string $wildcard, private Expression|string $prefix = '*', private Expression|string $suffix = '*')
-    {
-    }
+    public function __construct(
+        private string $wildcard,
+        private ExpressionInterface|string $prefix = '*',
+        private ExpressionInterface|string $suffix = '*',
+    ) {}
 
     public function __toString(): string
     {
@@ -34,18 +37,18 @@ class WildcardExpression extends Expression implements Stringable
         }
 
         if ($this->prefix instanceof PhraseExpression) {
-            $prefix = substr(string: $this->prefix, offset: 0, length: -1);
+            $prefix = substr(string: (string) $this->prefix, offset: 0, length: -1);
             $phrasePrefix = true;
         } else {
-            $prefix = $this->prefix;// Util::escape(value: $this->prefix);
+            $prefix = (string) $this->prefix; // Util::escape(value: $this->prefix);
             $phrasePrefix = false;
         }
 
         if ($this->suffix instanceof PhraseExpression) {
-            $suffix = substr(string: $this->suffix, offset: 1);
+            $suffix = substr(string: (string) $this->suffix, offset: 1);
             $phraseSuffix = true;
         } else {
-            $suffix = $this->suffix;//Util::escape(value: $this->suffix);
+            $suffix = (string) $this->suffix; //Util::escape(value: $this->suffix);
             $phraseSuffix = false;
         }
 

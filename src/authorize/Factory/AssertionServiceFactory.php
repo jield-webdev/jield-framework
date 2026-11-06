@@ -16,11 +16,8 @@ final class AssertionServiceFactory implements FactoryInterface
      * @throws ContainerExceptionInterface
      * @throws NotFoundExceptionInterface
      */
-    public function __invoke(
-        ContainerInterface $container,
-        $requestedName,
-        ?array $options = null
-    ): AssertionService {
-        return new AssertionService(container: $container);
+    public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): AssertionService
+    {
+        return new AssertionService(container: \Jield\Stdlib\Value::instance($container, \Laminas\ServiceManager\ServiceManager::class));
     }
 }

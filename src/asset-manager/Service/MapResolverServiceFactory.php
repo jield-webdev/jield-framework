@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\AssetManager\Service;
 
 use Jield\AssetManager\Resolver\MapResolver;
@@ -15,13 +17,15 @@ class MapResolverServiceFactory implements FactoryInterface
     #[Override]
     public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): MapResolver
     {
+        /** @var mixed $config */
         $config = $container->get('config');
-        $map    = [];
+        $map = [];
 
         if (isset($config['asset_manager']['resolver_configs']['map'])) {
+            /** @var mixed $map */
             $map = $config['asset_manager']['resolver_configs']['map'];
         }
 
-        return new MapResolver(map: $map);
+        return new MapResolver(map: \Jield\Stdlib\Value::iterable($map));
     }
 }

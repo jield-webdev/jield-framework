@@ -7,9 +7,10 @@ namespace DoctrineModule\Authentication\Adapter;
 use Doctrine\Inflector\Inflector;
 use Doctrine\Inflector\InflectorFactory;
 use DoctrineModule\Options\Authentication as AuthenticationOptions;
-use Jield\Authentication\Adapter\AbstractAdapter;
-use Jield\Authentication\Adapter\Exception;
-use Jield\Authentication\Result as AuthenticationResult;
+use Laminas\Authentication\Adapter\AbstractAdapter;
+use Laminas\Authentication\Adapter\Exception;
+use Laminas\Authentication\Result as AuthenticationResult;
+
 use function call_user_func;
 use function method_exists;
 use function property_exists;
@@ -27,7 +28,7 @@ class ObjectRepository extends AbstractAdapter
      *
      * @var array
      */
-    protected array|null $authenticationResultInfo = null;
+    protected ?array $authenticationResultInfo = null;
 
     protected Inflector $inflector;
 
@@ -36,7 +37,7 @@ class ObjectRepository extends AbstractAdapter
      *
      * @param array|AuthenticationOptions $options
      */
-    public function __construct(array|AuthenticationOptions $options = [], Inflector|null $inflector = null)
+    public function __construct(array|AuthenticationOptions $options = [], ?Inflector $inflector = null)
     {
         $this->setOptions(options: $options);
         $this->inflector = $inflector ?? InflectorFactory::create()->build();
@@ -46,7 +47,7 @@ class ObjectRepository extends AbstractAdapter
     public function setOptions(array|AuthenticationOptions $options): self
     {
         if (!$options instanceof AuthenticationOptions) {
-            $options = new AuthenticationOptions(options: $options);
+            $options = new AuthenticationOptions(options: \Jield\Stdlib\Value::stringKeyedArray($options));
         }
 
         $this->options = $options;
@@ -62,14 +63,14 @@ class ObjectRepository extends AbstractAdapter
     public function authenticate(): AuthenticationResult
     {
         $this->setup();
-        $options  = $this->options;
+        $options = $this->options;
         $identity = $options
             ->getObjectRepository()
             ->findOneBy(criteria: [$options->getIdentityProperty() => $this->identity]);
 
         if (!$identity) {
-            $this->authenticationResultInfo['code']       = AuthenticationResult::FAILURE_IDENTITY_NOT_FOUND;
-            $this->authenticationResultInfo['messages'][] = 'A record with the supplied identity could not be found.';
+            $this->authenticationResultInfo['code'] = AuthenticationResult::FAILURE_IDENTITY_NOT_FOUND;
+            \Jield\Stdlib\Value::setPath($this->authenticationResultInfo, ['messages', null], 'A record with the supplied identity could not be found.');
 
             return $this->createAuthenticationResult();
         }
@@ -86,41 +87,44 @@ class ObjectRepository extends AbstractAdapter
     protected function validateIdentity(object $identity): AuthenticationResult
     {
         $credentialProperty = $this->options->getCredentialProperty();
-        $getter             = 'get' . $this->inflector->classify(word: $credentialProperty);
+        $getter = 'get' . $this->inflector->classify(word: $credentialProperty);
 
         if (method_exists(object_or_class: $identity, method: $getter)) {
-            $documentCredential = $identity->$getter();
+            /** @var mixed $documentCredential */
+            $documentCredential = \Jield\Stdlib\Value::call($identity, $getter);
         } elseif (property_exists(object_or_class: $identity, property: $credentialProperty)) {
+            /** @var mixed $documentCredential */
             $documentCredential = $identity->{$credentialProperty};
         } else {
-            throw new Exception\UnexpectedValueException(
-                message: sprintf(
-                    'Property (%s) in (%s) is not accessible. You should implement %s::%s()',
-                    $credentialProperty,
-                    $identity::class,
-                    $identity::class,
-                    $getter,
-                ),
-            );
+            throw new Exception\UnexpectedValueException(message: sprintf(
+                'Property (%s) in (%s) is not accessible. You should implement %s::%s()',
+                $credentialProperty,
+                $identity::class,
+                $identity::class,
+                $getter,
+            ));
         }
 
+        /** @var mixed $credentialValue */
         $credentialValue = $this->credential;
-        $callable        = $this->options->getCredentialCallable();
+        /** @var mixed $callable */
+        $callable = $this->options->getCredentialCallable();
 
         if ($callable) {
-            $credentialValue = call_user_func($callable, $identity, $credentialValue);
+            /** @var mixed $credentialValue */
+            $credentialValue = call_user_func(\Jield\Stdlib\Value::callback($callable), $identity, $credentialValue);
         }
 
         if ($credentialValue !== true && $credentialValue !== $documentCredential) {
-            $this->authenticationResultInfo['code']       = AuthenticationResult::FAILURE_CREDENTIAL_INVALID;
-            $this->authenticationResultInfo['messages'][] = 'Supplied credential is invalid.';
+            $this->authenticationResultInfo['code'] = AuthenticationResult::FAILURE_CREDENTIAL_INVALID;
+            \Jield\Stdlib\Value::setPath($this->authenticationResultInfo, ['messages', null], 'Supplied credential is invalid.');
 
             return $this->createAuthenticationResult();
         }
 
-        $this->authenticationResultInfo['code']       = AuthenticationResult::SUCCESS;
-        $this->authenticationResultInfo['identity']   = $identity;
-        $this->authenticationResultInfo['messages'][] = 'Authentication successful.';
+        $this->authenticationResultInfo['code'] = AuthenticationResult::SUCCESS;
+        $this->authenticationResultInfo['identity'] = $identity;
+        \Jield\Stdlib\Value::setPath($this->authenticationResultInfo, ['messages', null], 'Authentication successful.');
 
         return $this->createAuthenticationResult();
     }
@@ -135,36 +139,32 @@ class ObjectRepository extends AbstractAdapter
     protected function setup(): void
     {
         if ($this->identity === null) {
-            throw new Exception\RuntimeException(
-                message: 'A value for the identity was not provided prior to authentication with ObjectRepository '
-                . 'authentication adapter',
-            );
+            throw new Exception\RuntimeException(message: 'A value for the identity was not provided prior to authentication with ObjectRepository '
+            . 'authentication adapter');
         }
 
         if ($this->credential === null) {
-            throw new Exception\RuntimeException(
-                message: 'A credential value was not provided prior to authentication with ObjectRepository'
-                . ' authentication adapter',
-            );
+            throw new Exception\RuntimeException(message: 'A credential value was not provided prior to authentication with ObjectRepository'
+            . ' authentication adapter');
         }
 
         $this->authenticationResultInfo = [
-            'code'     => AuthenticationResult::FAILURE,
+            'code' => AuthenticationResult::FAILURE,
             'identity' => $this->identity,
             'messages' => [],
         ];
     }
 
     /**
-     * Creates a Jield\Authentication\Result object from the information that has been collected
+     * Creates a Laminas\Authentication\Result object from the information that has been collected
      * during the authenticate() attempt.
      */
     protected function createAuthenticationResult(): AuthenticationResult
     {
         return new AuthenticationResult(
-            code: $this->authenticationResultInfo['code'],
+            code: \Jield\Stdlib\Value::int($this->authenticationResultInfo['code']),
             identity: $this->authenticationResultInfo['identity'],
-            messages: $this->authenticationResultInfo['messages'],
+            messages: \Jield\Stdlib\Value::array($this->authenticationResultInfo['messages']),
         );
     }
 }

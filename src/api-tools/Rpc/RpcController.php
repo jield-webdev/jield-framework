@@ -8,8 +8,9 @@ use Closure;
 use Exception;
 use Jield\Mvc\Controller\AbstractActionController as BaseAbstractActionController;
 use Jield\Mvc\MvcEvent;
-use Laminas\View\Model\JsonModel;
+use Jield\Mvc\View\Model\JsonModel;
 use Override;
+
 use function call_user_func_array;
 use function is_array;
 use function is_callable;
@@ -19,7 +20,7 @@ use function method_exists;
 use function str_replace;
 use function ucwords;
 
-class RpcController extends BaseAbstractActionController
+final class RpcController extends BaseAbstractActionController
 {
     /** @var null|callable */
     protected $wrappedCallable;
@@ -38,8 +39,12 @@ class RpcController extends BaseAbstractActionController
     {
         $routeMatch = $e->getRouteMatch();
 
-        $contentNegotiationParams = $e->getParam(name: 'JieldContentNegotiationParameterData');
-        $routeParameters = $contentNegotiationParams ? $contentNegotiationParams->getRouteParams() : $routeMatch->getParams();
+        /** @var mixed $contentNegotiationParams */
+        $contentNegotiationParams = $e->getParam(name: 'LaminasContentNegotiationParameterData');
+        /** @var mixed $routeParameters */
+        $routeParameters = $contentNegotiationParams
+            ? \Jield\Stdlib\Value::call($contentNegotiationParams, 'getRouteParams')
+            : \Jield\Stdlib\Value::present($routeMatch)->getParams();
 
         $parameterMatcher = new ParameterMatcher(mvcEvent: $e);
 
@@ -49,12 +54,12 @@ class RpcController extends BaseAbstractActionController
         } elseif (is_array(value: $this->wrappedCallable) && is_callable(value: $this->wrappedCallable)) {
             $callable = $this->wrappedCallable;
         } elseif (is_object(value: $this->wrappedCallable) || null === $this->wrappedCallable) {
-            $action   = $routeMatch->getParam(name: 'action', default: 'not-found');
-            $method   = static::getMethodFromAction(action: $action);
-            $callable = null === $this->wrappedCallable && static::class !== self::class
-                ? $this
-                : $this->wrappedCallable;
-            if (!method_exists(object_or_class: $callable, method: $method)) {
+            /** @var mixed $action */
+            $action = \Jield\Stdlib\Value::present($routeMatch)->getParam(name: 'action', default: 'not-found');
+            $method = static::getMethodFromAction(action: \Jield\Stdlib\Value::string($action));
+            $callable =
+                null === $this->wrappedCallable && static::class !== self::class ? $this : $this->wrappedCallable;
+            if (!method_exists(object_or_class: \Jield\Stdlib\Value::objectOrString($callable), method: $method)) {
                 $method = 'notFoundAction';
             }
 
@@ -63,11 +68,16 @@ class RpcController extends BaseAbstractActionController
             throw new Exception(message: 'RPC Controller Not Understood');
         }
 
-        $dispatchParameters = $parameterMatcher->getMatchedParameters(callable: $callable, parameters: $routeParameters ?: []);
-        $result             = call_user_func_array(callback: $callable, args: $dispatchParameters);
+        $dispatchParameters = $parameterMatcher->getMatchedParameters(
+            callable: \Jield\Stdlib\Value::callback($callable),
+            parameters: \Jield\Stdlib\Value::array($routeParameters ?: []),
+        );
+        /** @var mixed $result */
+        $result = call_user_func_array(callback: $callable, args: $dispatchParameters);
 
-        $e->setParam(name: 'JieldContentNegotiationFallback', value: [JsonModel::class => ['application/json']]);
+        $e->setParam(name: 'LaminasContentNegotiationFallback', value: [JsonModel::class => ['application/json']]);
         $e->setResult(result: $result);
+        return null;
     }
 
     /**
@@ -77,13 +87,11 @@ class RpcController extends BaseAbstractActionController
      * @return string
      */
     #[Override]
-    public static function getMethodFromAction(string $action): string
+    public static function getMethodFromAction($action): string
     {
         $method = str_replace(search: ['.', '-', '_'], replace: ' ', subject: $action);
         $method = ucwords(string: $method);
         $method = str_replace(search: ' ', replace: '', subject: $method);
-        $method = lcfirst(string: $method);
-
-        return $method;
+        return lcfirst(string: $method);
     }
 }

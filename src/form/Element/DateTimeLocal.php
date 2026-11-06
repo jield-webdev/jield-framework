@@ -29,9 +29,9 @@ class DateTimeLocal extends AbstractDateTime
         $baseValue = $this->attributes['min'] ?? '1970-01-01T00:00';
 
         return new DateStepValidator(options: [
-            'format'    => $this->format,
-            'baseValue' => $baseValue,
-            'step'      => new DateInterval(duration: "PT{$stepValue}M"),
+            'format' => $this->format,
+            'baseValue' => (string) $baseValue,
+            'step' => new DateInterval(duration: "PT{$stepValue}M"),
         ]);
     }
 }

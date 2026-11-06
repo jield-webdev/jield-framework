@@ -30,15 +30,15 @@ class Time extends AbstractDateTime
      */
     protected function getStepValidator(): ValidatorInterface
     {
-        $format    = $this->getFormat();
+        $format = $this->getFormat();
         $stepValue = $this->attributes['step'] ?? 60; // Seconds
 
         $baseValue = $this->attributes['min'] ?? date(format: $format, timestamp: 0);
 
         return new DateStepValidator(options: [
-            'format'    => $format,
-            'baseValue' => $baseValue,
-            'step'      => new DateInterval(duration: "PT{$stepValue}S"),
+            'format' => $format,
+            'baseValue' => (string) $baseValue,
+            'step' => new DateInterval(duration: "PT{$stepValue}S"),
         ]);
     }
 }

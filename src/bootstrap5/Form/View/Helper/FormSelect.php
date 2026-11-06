@@ -22,7 +22,7 @@ final class FormSelect extends Helper\FormSelect
         }
 
         if (count(value: $element->getMessages()) > 0) {
-            $element->setAttribute(key: 'class', value: $element->getAttribute(key: 'class') . ' is-invalid');
+            $element->setAttribute(key: 'class', value: (string) ($element->getAttribute(key: 'class')) . ' is-invalid');
         }
 
         if (null === $element->getAttribute(key: 'id')) {

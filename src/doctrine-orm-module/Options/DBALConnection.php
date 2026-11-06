@@ -41,13 +41,15 @@ final class DBALConnection extends AbstractOptions
      * Setting the driver is deprecated. You should set the
      * driver class directly instead.
      */
-    protected string $driverClass = PDOMySQLDriver::class;
+    /** @var class-string<Driver>|null */
+    protected ?string $driverClass = PDOMySQLDriver::class;
 
     /**
      * Set the wrapper class for the driver. In general, this should not
      * need to be changed.
      */
-    protected string|null $wrapperClass = null;
+    /** @var class-string<Connection>|null */
+    protected ?string $wrapperClass = null;
 
     /**
      * Driver specific connection parameters.
@@ -130,13 +132,13 @@ final class DBALConnection extends AbstractOptions
         return $this->doctrineCommentedTypes;
     }
 
-    public function setDriverClass(string|null $driverClass): void
+    public function setDriverClass(?string $driverClass): void
     {
-        $this->driverClass = $driverClass;
+        $this->driverClass = $driverClass === null ? null : \Jield\Stdlib\Value::subclass($driverClass, Driver::class);
     }
 
     /** @return class-string<Driver>|null */
-    public function getDriverClass(): string|null
+    public function getDriverClass(): ?string
     {
         return $this->driverClass;
     }
@@ -153,11 +155,11 @@ final class DBALConnection extends AbstractOptions
 
     public function setWrapperClass(string $wrapperClass): void
     {
-        $this->wrapperClass = $wrapperClass;
+        $this->wrapperClass = \Jield\Stdlib\Value::subclass($wrapperClass, Connection::class);
     }
 
     /** @return class-string<Connection>|null */
-    public function getWrapperClass(): string|null
+    public function getWrapperClass(): ?string
     {
         return $this->wrapperClass;
     }

@@ -11,7 +11,6 @@ use Jield\ApiTools\ValueObject\ListenerValueObject;
 use Laminas\ConfigAggregator\GlobTrait;
 use ReflectionClass;
 use ReflectionIntersectionType;
-use ReflectionMethod;
 use ReflectionNamedType;
 use ReflectionUnionType;
 use Symfony\Component\Finder\Finder;
@@ -21,39 +20,41 @@ final class ListenerConfigProvider
 {
     use GlobTrait;
 
-    public const string CONFIG_KEY = 'api-tools';
-    public const string LISTENER_PATHS_KEY = 'listener_paths';
-    public const string DEFAULT_LISTENER_PATH = __DIR__ . '/../../../../module/api/src/V1/Rest';
-
     private array $listeners = [];
 
-    public function __construct(private readonly array $config = [])
+    /** @param array<string, string> $listenerPaths Namespace prefixes mapped to directories. */
+    public function __construct(array $listenerPaths = [])
     {
-        $listenerPaths = $this->getListenerPaths();
-        if ($listenerPaths === []) {
-            return;
+        foreach ($listenerPaths as $namespace => $directory) {
+            $this->discover($directory, $namespace);
         }
+    }
 
+    private function discover(string $directory, string $namespace): void
+    {
         $finder = new Finder();
-        $finder->files()->name(patterns: '*Listener.php')->in(dirs: $listenerPaths);
+        $finder->files()->name(patterns: '*Listener.php')->in(dirs: $directory);
 
         foreach ($finder as $fileInfo) {
-            $className       = $this->getClassNameFromFileInfo(fileInfo: $fileInfo);
+            $className = $this->getClassNameFromFileInfo(fileInfo: $fileInfo, namespace: $namespace);
             $reflectionClass = $this->getReflectionClassFromClassName(className: $className);
 
-            if ($reflectionClass->isInstantiable() && $reflectionClass->isSubclassOf(
-                    class: AbstractRoutedListener::class
-                )) {
+            if (
+                $reflectionClass->isInstantiable()
+                && $reflectionClass->isSubclassOf(class: AbstractRoutedListener::class)
+            ) {
                 //Create a list of classes defined in the main method to see if we have a fetch, create etc defined in the listener
                 $definedClasses = [];
                 foreach ($reflectionClass->getMethods() as $method) {
-                    if ($method->getDeclaringClass()->getName() === $className && !$method->isConstructor()) {
-                        $definedClasses[] = $method->getName();
+                    if (!($method->getDeclaringClass()->getName() === $className && !$method->isConstructor())) {
+                        continue;
                     }
+
+                    $definedClasses[] = $method->getName();
                 }
 
                 //Set the default type
-                $routeType   = RouteTypeEnum::ENTITY;
+                $routeType = RouteTypeEnum::ENTITY;
                 $routeMethod = RouteMethodEnum::GET;
 
                 /** @var class-string<AbstractRoutedListener> $staticClass */
@@ -70,10 +71,9 @@ final class ListenerConfigProvider
                 }
                 if (in_array(needle: 'create', haystack: $definedClasses, strict: true)) {
                     //Create can be for entities or collections depending on we have an :id in the route
-                    $routeType   = str_contains(
-                        haystack: $staticClass::getRoute(),
-                        needle: ':'
-                    ) ? RouteTypeEnum::ENTITY : RouteTypeEnum::COLLECTION;
+                    $routeType = str_contains(haystack: $staticClass::getRoute(), needle: ':')
+                        ? RouteTypeEnum::ENTITY
+                        : RouteTypeEnum::COLLECTION;
                     $routeMethod = RouteMethodEnum::POST;
                 }
 
@@ -82,7 +82,7 @@ final class ListenerConfigProvider
                 }
 
                 if (in_array(needle: 'update', haystack: $definedClasses, strict: true)) {
-                    $routeType   = RouteTypeEnum::COLLECTION;
+                    $routeType = RouteTypeEnum::COLLECTION;
                     $routeMethod = RouteMethodEnum::POST;
                 }
 
@@ -90,33 +90,30 @@ final class ListenerConfigProvider
                     $routeMethod = RouteMethodEnum::DELETE;
                 }
 
-
-                $this->registerListener(
-                    listenerValueObject: new ListenerValueObject(
-                        listener: $className,
-                        route: $staticClass::getRoute(),
-                        routeType: $routeType,
-                        routeMethod: $routeMethod,
-                        configAbstractFactories: $this->getConstructorArguments(className: $className),
-                        entityCollectionWhiteList: $staticClass::getEntityCollectionWhiteList(),
-                        pageSize: $staticClass::getPageSize(),
-                        maxPageSize: $staticClass::getMaxPageSize(),
-                        inputFilterSpecification: $staticClass::getInputFilterSpecification(),
-                        routeAssertionClass: $staticClass::getRouteAssertionClass(),
-                        privilege: $staticClass::getPrivilege()
-                    )
-                );
+                $this->registerListener(listenerValueObject: new ListenerValueObject(
+                    listener: $className,
+                    route: $staticClass::getRoute(),
+                    routeType: $routeType,
+                    routeMethod: $routeMethod,
+                    configAbstractFactories: $this->getConstructorArguments(className: $className),
+                    entityCollectionWhiteList: $staticClass::getEntityCollectionWhiteList(),
+                    pageSize: $staticClass::getPageSize(),
+                    maxPageSize: $staticClass::getMaxPageSize(),
+                    inputFilterSpecification: $staticClass::getInputFilterSpecification(),
+                    routeAssertionClass: $staticClass::getRouteAssertionClass(),
+                    privilege: $staticClass::getPrivilege(),
+                ));
             }
         }
     }
 
-    private function getClassNameFromFileInfo(SplFileInfo $fileInfo): string
+    private function getClassNameFromFileInfo(SplFileInfo $fileInfo, string $namespace): string
     {
-        return 'Api\\V1\\Rest\\' . str_replace(
-                search: ['/', '.php'],
-                replace: ['\\', ''],
-                subject: $fileInfo->getRelativePathname()
-            );
+        return (
+            trim($namespace, '\\')
+            . '\\'
+            . str_replace(search: ['/', '.php'], replace: ['\\', ''], subject: $fileInfo->getRelativePathname())
+        );
     }
 
     private function getReflectionClassFromClassName(string $className): ReflectionClass
@@ -131,7 +128,10 @@ final class ListenerConfigProvider
 
     private function getConstructorArguments(string $className): array
     {
-        $constructor = new ReflectionMethod(objectOrMethod: $className, method: '__construct');
+        $constructor = new ReflectionClass($className)->getConstructor();
+        if ($constructor === null) {
+            return [];
+        }
 
         $arguments = [];
         foreach ($constructor->getParameters() as $parameter) {
@@ -142,7 +142,7 @@ final class ListenerConfigProvider
             }
 
             if ($type instanceof ReflectionUnionType || $type instanceof ReflectionIntersectionType) {
-                $arguments[] = (string)$type;
+                $arguments[] = (string) $type;
                 continue;
             }
 
@@ -157,24 +157,11 @@ final class ListenerConfigProvider
         //Return a merged array of all the listeners (with the toArray method called an all objects)
         $configuration = [];
 
+        /** @var mixed $listener */
         foreach ($this->listeners as $listener) {
-            $configuration = array_merge_recursive($configuration, $listener->toArray());
+            $configuration = array_merge_recursive($configuration, \Jield\Stdlib\Value::array(\Jield\Stdlib\Value::call($listener, 'toArray')));
         }
 
         return $configuration;
-    }
-
-    /**
-     * @return array<int, string>
-     */
-    private function getListenerPaths(): array
-    {
-        $paths = $this->config[self::CONFIG_KEY][self::LISTENER_PATHS_KEY] ?? [self::DEFAULT_LISTENER_PATH];
-
-        if (is_string($paths)) {
-            $paths = [$paths];
-        }
-
-        return array_values(array_filter($paths, 'is_dir'));
     }
 }

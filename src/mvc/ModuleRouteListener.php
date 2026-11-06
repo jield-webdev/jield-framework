@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\Mvc;
 
+use Jield\Mvc\Router\RouteMatch;
 use Laminas\EventManager\AbstractListenerAggregate;
 use Laminas\EventManager\EventManagerInterface;
-use Laminas\Router\RouteMatch;
 
 use function str_replace;
 use function str_starts_with;
@@ -12,13 +14,13 @@ use function ucwords;
 
 class ModuleRouteListener extends AbstractListenerAggregate
 {
-    public const string MODULE_NAMESPACE    = '__NAMESPACE__';
+    public const string MODULE_NAMESPACE = '__NAMESPACE__';
     public const string ORIGINAL_CONTROLLER = '__CONTROLLER__';
 
     /**
      * Attach to an event manager
      *
-     * @param  int $priority
+     * @param int $priority
      */
     public function attach(EventManagerInterface $events, $priority = 1): void
     {
@@ -32,31 +34,31 @@ class ModuleRouteListener extends AbstractListenerAggregate
      * If the route match contains a parameter key matching the MODULE_NAMESPACE
      * constant, that value will be prepended, with a namespace separator, to
      * the matched controller parameter.
-     *
-     * @return null
      */
-    public function onRoute(MvcEvent $e): null
+    public function onRoute(MvcEvent $e): void
     {
         $matches = $e->getRouteMatch();
-        if (! $matches instanceof RouteMatch) {
+        if (!$matches instanceof RouteMatch) {
             // Can't do anything without a route match
             return;
         }
 
+        /** @var mixed $module */
         $module = $matches->getParam(self::MODULE_NAMESPACE, false);
-        if (! $module) {
+        if (!$module) {
             // No module namespace found; nothing to do
             return;
         }
 
+        /** @var mixed $controller */
         $controller = $matches->getParam('controller', false);
-        if (! $controller) {
+        if (!$controller) {
             // no controller matched, nothing to do
             return;
         }
 
         // Ensure the module namespace has not already been applied
-        if (str_starts_with($controller, $module)) {
+        if (str_starts_with(\Jield\Stdlib\Value::string($controller), \Jield\Stdlib\Value::string($module))) {
             return;
         }
 

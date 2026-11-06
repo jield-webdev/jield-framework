@@ -11,6 +11,11 @@ use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
 use Psr\Container\ContainerInterface;
 
+/**
+ * @psalm-type HandlerOptions = array{stream?: string, level?: int|string|\Monolog\Level, bubble?: bool, connection?: string, table?: string}
+ * @psalm-type HandlerConfig = array{type?: string, options?: HandlerOptions}
+ * @psalm-type MonologConfig = array{default_logger?: string, loggers?: array<string, array{name?: string, handlers?: list<string>}>, handlers?: array<string, HandlerConfig>}
+ */
 final class LoggerFactory
 {
     public function __invoke(ContainerInterface $container): Logger
@@ -18,27 +23,23 @@ final class LoggerFactory
         $config = $this->getConfig($container);
         $loggerName = $config['default_logger'] ?? 'app';
 
-        return $this->createLogger(
-            container: $container,
-            config: $config,
-            loggerName: $loggerName
-        );
+        return $this->createLogger(container: $container, config: $config, loggerName: $loggerName);
     }
 
     /**
-     * @param array<string, mixed> $config
+     * @param MonologConfig $config
      */
     public function createLogger(ContainerInterface $container, array $config, string $loggerName): Logger
     {
         $loggerConfig = $config['loggers'][$loggerName] ?? ['name' => $loggerName, 'handlers' => []];
-        $name = (string) ($loggerConfig['name'] ?? $loggerName);
+        $name = $loggerConfig['name'] ?? $loggerName;
 
         $logger = new Logger($name);
 
         $handlers = $loggerConfig['handlers'] ?? [];
         foreach ($handlers as $handlerName) {
             $handlerConfig = $config['handlers'][$handlerName] ?? null;
-            if (!is_array($handlerConfig)) {
+            if ($handlerConfig === null) {
                 continue;
             }
 
@@ -52,7 +53,7 @@ final class LoggerFactory
     }
 
     /**
-     * @param array<string, mixed> $handlerConfig
+     * @param HandlerConfig $handlerConfig
      */
     private function createHandler(ContainerInterface $container, array $handlerConfig): ?HandlerInterface
     {
@@ -62,9 +63,6 @@ final class LoggerFactory
         }
 
         $options = $handlerConfig['options'] ?? [];
-        if (!is_array($options)) {
-            $options = [];
-        }
 
         return match ($type) {
             'stream' => $this->createStreamHandler($options),
@@ -74,13 +72,13 @@ final class LoggerFactory
     }
 
     /**
-     * @param array<string, mixed> $options
+     * @param HandlerOptions $options
      */
     private function createStreamHandler(array $options): HandlerInterface
     {
-        $stream = (string) ($options['stream'] ?? 'data/log/app.log');
+        $stream = $options['stream'] ?? 'data/log/app.log';
         $level = $options['level'] ?? 'debug';
-        $bubble = (bool) ($options['bubble'] ?? true);
+        $bubble = $options['bubble'] ?? true;
 
         $handler = new StreamHandler($stream, $level, $bubble);
         $formatter = new LineFormatter();
@@ -90,40 +88,38 @@ final class LoggerFactory
     }
 
     /**
-     * @param array<string, mixed> $options
+     * @param HandlerOptions $options
      */
     private function createDoctrineDbalHandler(ContainerInterface $container, array $options): HandlerInterface
     {
-        $connectionService = (string) ($options['connection'] ?? 'doctrine.connection.orm_default');
-        $table = (string) ($options['table'] ?? 'application_log');
+        $connectionService = $options['connection'] ?? 'doctrine.connection.orm_default';
+        $table = $options['table'] ?? 'application_log';
         $level = $options['level'] ?? 'error';
-        $bubble = (bool) ($options['bubble'] ?? true);
+        $bubble = $options['bubble'] ?? true;
 
-        $connection = $container->get($connectionService);
+        $connection = \Jield\Stdlib\Service::get($container, \Doctrine\DBAL\Connection::class, $connectionService);
 
-        return new DoctrineDbalHandler(
-            connection: $connection,
-            table: $table,
-            level: $level,
-            bubble: $bubble
-        );
+        return new DoctrineDbalHandler(connection: $connection, table: $table, level: $level, bubble: $bubble);
     }
 
     /**
-     * @return array<string, mixed>
+     * @return MonologConfig
      */
-    private function getConfig(ContainerInterface $container): array
+    public function getConfig(ContainerInterface $container): array
     {
+        /** @var mixed $config */
         $config = $container->has('config') ? $container->get('config') : [];
         if (!is_array($config)) {
             return [];
         }
 
+        /** @var mixed $monologConfig */
         $monologConfig = $config['monolog'] ?? [];
         if (!is_array($monologConfig)) {
             return [];
         }
 
+        /** @var MonologConfig $monologConfig */
         return $monologConfig;
     }
 }

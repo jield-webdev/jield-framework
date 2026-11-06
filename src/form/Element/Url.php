@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Jield\Form\Element;
 
-use Laminas\Filter\StringTrim;
 use Jield\Form\Element;
+use Laminas\Filter\StringTrim;
 use Laminas\InputFilter\InputProviderInterface;
 use Laminas\Validator\Uri as UriValidator;
 use Laminas\Validator\ValidatorInterface;
@@ -19,7 +19,7 @@ class Url extends Element implements InputProviderInterface
     ];
 
     /** @var null|ValidatorInterface */
-    protected ?ValidatorInterface $validator;
+    protected ?ValidatorInterface $validator = null;
 
     /**
      * Get validator
@@ -45,8 +45,8 @@ class Url extends Element implements InputProviderInterface
     public function getInputSpecification(): array
     {
         $spec = [
-            'required'   => true,
-            'filters'    => [
+            'required' => true,
+            'filters' => [
                 ['name' => StringTrim::class],
             ],
             'validators' => [

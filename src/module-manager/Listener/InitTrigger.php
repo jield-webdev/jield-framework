@@ -14,7 +14,7 @@ class InitTrigger extends AbstractListener
     {
         $module = $e->getModule();
         if ($module instanceof InitProviderInterface) {
-            $module->init($e->getTarget());
+            $module->init(\Jield\Stdlib\Value::instance($e->getTarget(), \Jield\ModuleManager\ModuleManagerInterface::class));
         }
     }
 }

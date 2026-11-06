@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\Mvc\View\Http;
 
 use Exception;
@@ -24,28 +26,28 @@ class DefaultRenderingStrategy extends AbstractListenerAggregate
     /**
      * Set view
      */
-    public function __construct(protected View $view)
-    {
-    }
+    public function __construct(
+        protected View $view,
+    ) {}
 
     /**
      * {@inheritDoc}
      */
     public function attach(EventManagerInterface $events, $priority = 1): void
     {
-        $this->listeners[] = $events->attach(MvcEvent::EVENT_RENDER, [$this, 'render'], -10000);
-        $this->listeners[] = $events->attach(MvcEvent::EVENT_RENDER_ERROR, [$this, 'render'], -10000);
+        $this->listeners[] = $events->attach(MvcEvent::EVENT_RENDER, [$this, 'render'], -10_000);
+        $this->listeners[] = $events->attach(MvcEvent::EVENT_RENDER_ERROR, [$this, 'render'], -10_000);
     }
 
     /**
      * Set layout template value
      *
      * @param string $layoutTemplate
-     * @return DefaultRenderingStrategy
+     * @return static
      */
     public function setLayoutTemplate($layoutTemplate): static
     {
-        $this->layoutTemplate = (string)$layoutTemplate;
+        $this->layoutTemplate = $layoutTemplate;
         return $this;
     }
 
@@ -67,27 +69,24 @@ class DefaultRenderingStrategy extends AbstractListenerAggregate
      */
     public function render(MvcEvent $e): ?Response
     {
+        /** @var mixed $result */
         $result = $e->getResult();
         if ($result instanceof Response) {
             return $result;
         }
 
         // Martial arguments
-        $request   = $e->getRequest();
-        $response  = $e->getResponse();
+        $request = $e->getRequest();
+        $response = $e->getResponse();
         $viewModel = $e->getViewModel();
-        if (!$viewModel instanceof ViewModel) {
-            return null;
-        }
+        
 
         $view = $this->view;
-        $view->setRequest($request);
-        $view->setResponse($response);
 
         $caughtException = null;
 
         try {
-            $view->render($viewModel);
+            $response->setContent($view->renderLayout($viewModel));
         } catch (Throwable $ex) {
             $caughtException = $ex;
         }
@@ -98,7 +97,7 @@ class DefaultRenderingStrategy extends AbstractListenerAggregate
             }
 
             $application = $e->getApplication();
-            $events      = $application->getEventManager();
+            $events = \Jield\Stdlib\Value::present($application)->getEventManager();
 
             $e->setError(Application::ERROR_EXCEPTION);
             $e->setParam('exception', $caughtException);

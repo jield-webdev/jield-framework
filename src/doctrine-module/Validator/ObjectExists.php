@@ -9,6 +9,7 @@ use Laminas\Stdlib\ArrayUtils;
 use Laminas\Validator\AbstractValidator;
 use Laminas\Validator\Exception;
 use ValueError;
+
 use function array_combine;
 use function array_key_exists;
 use function array_values;
@@ -29,7 +30,7 @@ class ObjectExists extends AbstractValidator
      */
     public const string ERROR_NO_OBJECT_FOUND = 'noObjectFound';
 
-    /** @var array Message templates */
+    /** @var array<string, string> Message templates */
     protected array $messageTemplates = [self::ERROR_NO_OBJECT_FOUND => "No object matching '%value%' was found"];
 
     /**
@@ -62,22 +63,18 @@ class ObjectExists extends AbstractValidator
                 $provided = gettype(value: $options['object_repository']);
             }
 
-            throw new Exception\InvalidArgumentException(
-                message: sprintf(
-                    'Option "object_repository" is required and must be an instance of'
-                    . ' Doctrine\Persistence\ObjectRepository, %s given',
-                    $provided,
-                ),
-            );
+            throw new Exception\InvalidArgumentException(message: sprintf(
+                'Option "object_repository" is required and must be an instance of'
+                . ' Doctrine\Persistence\ObjectRepository, %s given',
+                $provided,
+            ));
         }
 
         $this->objectRepository = $options['object_repository'];
 
         if (!isset($options['fields'])) {
-            throw new Exception\InvalidArgumentException(
-                message: 'Key `fields` must be provided and be a field or a list of fields to be used when searching for'
-                . ' existing instances',
-            );
+            throw new Exception\InvalidArgumentException(message: 'Key `fields` must be provided and be a field or a list of fields to be used when searching for'
+            . ' existing instances');
         }
 
         $this->fields = $options['fields'];
@@ -95,17 +92,20 @@ class ObjectExists extends AbstractValidator
      */
     private function validateFields(): array
     {
-        $fields = (array)$this->fields;
+        $fields = \Jield\Stdlib\Value::toArray($this->fields);
 
         if ($fields === []) {
             throw new Exception\InvalidArgumentException(message: 'Provided fields list was empty!');
         }
 
+        /** @var mixed $field */
         foreach ($fields as $key => $field) {
             if (!is_string(value: $field)) {
-                throw new Exception\InvalidArgumentException(
-                    message: sprintf('Provided fields must be strings, %s provided for key %s', gettype(value: $field), $key),
-                );
+                throw new Exception\InvalidArgumentException(message: sprintf(
+                    'Provided fields must be strings, %s provided for key %s',
+                    gettype(value: $field),
+                    $key,
+                ));
             }
         }
 
@@ -124,23 +124,22 @@ class ObjectExists extends AbstractValidator
      */
     protected function cleanSearchValue(string|int|object|array $value): array
     {
-        $value = is_object(value: $value) ? [$value] : (array)$value;
+        $value = is_object(value: $value) ? [$value] : (array) $value;
 
         if (ArrayUtils::isHashTable(value: $value)) {
             $matchedFieldsValues = [];
 
-            foreach ($this->fields as $field) {
-                if (!array_key_exists(key: $field, array: $value)) {
-                    throw new Exception\RuntimeException(
-                        message: sprintf(
-                            'Field "%s" was not provided, but was expected since the configured field lists needs'
-                            . ' it for validation',
-                            $field,
-                        ),
-                    );
+            /** @var mixed $field */
+            foreach (\Jield\Stdlib\Value::iterable($this->fields) as $field) {
+                if (!array_key_exists(key: \Jield\Stdlib\Value::plainScalar($field), array: $value)) {
+                    throw new Exception\RuntimeException(message: sprintf(
+                        'Field "%s" was not provided, but was expected since the configured field lists needs'
+                        . ' it for validation',
+                        \Jield\Stdlib\Value::scalar($field),
+                    ));
                 }
 
-                $matchedFieldsValues[$field] = $value[$field];
+                $matchedFieldsValues[\Jield\Stdlib\Value::key($field)] = $value[$field];
             }
         } else {
             try {
@@ -150,13 +149,11 @@ class ObjectExists extends AbstractValidator
             }
 
             if ($matchedFieldsValues === false) {
-                throw new Exception\RuntimeException(
-                    message: sprintf(
-                        'Provided values count is %s, while expected number of fields to be matched is %s',
-                        count(value: $value),
-                        is_countable(value: $this->fields) ? count(value: $this->fields) : 0,
-                    ),
-                );
+                throw new Exception\RuntimeException(message: sprintf(
+                    'Provided values count is %s, while expected number of fields to be matched is %s',
+                    count(value: $value),
+                    is_countable(value: $this->fields) ? count(value: $this->fields) : 0,
+                ));
             }
         }
 
@@ -169,7 +166,7 @@ class ObjectExists extends AbstractValidator
     public function isValid($value): bool
     {
         $cleanedValue = $this->cleanSearchValue(value: $value);
-        $match        = $this->objectRepository->findOneBy(criteria: $cleanedValue);
+        $match = $this->objectRepository->findOneBy(criteria: \Jield\Stdlib\Value::stringKeyedArray($cleanedValue));
 
         if (is_object(value: $match)) {
             return true;

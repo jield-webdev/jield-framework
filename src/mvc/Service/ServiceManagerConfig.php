@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\Mvc\Service;
 
 // phpcs:ignore
@@ -17,6 +19,7 @@ use Laminas\ServiceManager\ServiceManager;
 use Laminas\Stdlib\ArrayUtils;
 use Psr\Container\ContainerInterface;
 
+/** @psalm-import-type ServiceManagerConfiguration from \Laminas\ServiceManager\ServiceManager */
 class ServiceManagerConfig
 {
     /**
@@ -27,32 +30,31 @@ class ServiceManagerConfig
      *
      * @var array
      */
-    protected array $config
-        = [
-            'abstract_factories' => [],
-            'aliases'            => [
-                'EventManagerInterface'            => EventManager::class,
-                EventManagerInterface::class       => 'EventManager',
-                ModuleManager::class               => 'ModuleManager',
-                ServiceListener::class             => 'ServiceListener',
-                SharedEventManager::class          => 'SharedEventManager',
-                'SharedEventManagerInterface'      => 'SharedEventManager',
-                SharedEventManagerInterface::class => 'SharedEventManager',
-            ],
-            'delegators'         => [],
-            'factories'          => [
-                'EventManager'    => EventManagerFactory::class,
-                'ModuleManager'   => ModuleManagerFactory::class,
-                'ServiceListener' => ServiceListenerFactory::class,
-            ],
-            'lazy_services'      => [],
-            'initializers'       => [],
-            'invokables'         => [],
-            'services'           => [],
-            'shared'             => [
-                'EventManager' => false,
-            ],
-        ];
+    protected array $config = [
+        'abstract_factories' => [],
+        'aliases' => [
+            'EventManagerInterface' => EventManager::class,
+            EventManagerInterface::class => 'EventManager',
+            ModuleManager::class => 'ModuleManager',
+            ServiceListener::class => 'ServiceListener',
+            SharedEventManager::class => 'SharedEventManager',
+            'SharedEventManagerInterface' => 'SharedEventManager',
+            SharedEventManagerInterface::class => 'SharedEventManager',
+        ],
+        'delegators' => [],
+        'factories' => [
+            'EventManager' => EventManagerFactory::class,
+            'ModuleManager' => ModuleManagerFactory::class,
+            'ServiceListener' => ServiceListenerFactory::class,
+        ],
+        'lazy_services' => [],
+        'initializers' => [],
+        'invokables' => [],
+        'services' => [],
+        'shared' => [
+            'EventManager' => false,
+        ],
+    ];
 
     /**
      * Constructor
@@ -65,35 +67,29 @@ class ServiceManagerConfig
      */
     public function __construct(array $config = [])
     {
-        $this->config['factories']['ServiceManager'] = static fn(
+        \Jield\Stdlib\Value::setPath($this->config, ['factories', 'ServiceManager'], static fn(
             ContainerInterface $container,
-            string             $requestedName,
-            ?array             $options = null
-        ): ContainerInterface => $container;
+            string $requestedName,
+            ?array $options = null,
+        ): ContainerInterface => $container);
 
-        $this->config['factories']['SharedEventManager'] = static fn(
+        \Jield\Stdlib\Value::setPath($this->config, ['factories', 'SharedEventManager'], static fn(
             ContainerInterface $container,
-            string             $requestedName,
-            ?array             $options = null
-        ): SharedEventManager => new SharedEventManager();
+            string $requestedName,
+            ?array $options = null,
+        ): SharedEventManager => new SharedEventManager());
 
-        $this->config['initializers'] = ArrayUtils::merge($this->config['initializers'], [
-            'EventManagerAwareInitializer' => static function (
-                ContainerInterface $container,
-                object|array       $instance
-            ): void {
+        $this->config['initializers'] = ArrayUtils::merge(\Jield\Stdlib\Value::array($this->config['initializers']), [
+            'EventManagerAwareInitializer' => static function (ContainerInterface $container, mixed $instance): void {
                 if (!$instance instanceof EventManagerAwareInterface) {
                     return;
                 }
                 $eventManager = $instance->getEventManager();
                 // If the instance has an EM WITH an SEM composed, do nothing.
-                if (
-                    $eventManager instanceof EventManagerInterface
-                    && $eventManager->getSharedManager() instanceof SharedEventManagerInterface
-                ) {
+                if ($eventManager->getSharedManager() instanceof SharedEventManagerInterface) {
                     return;
                 }
-                $instance->setEventManager($container->get('EventManager'));
+                $instance->setEventManager(\Jield\Stdlib\Service::get($container, \Laminas\EventManager\EventManagerInterface::class, 'EventManager'));
             },
         ]);
 
@@ -115,12 +111,14 @@ class ServiceManagerConfig
      */
     public function configureServiceManager(ServiceManager $services): ServiceManager
     {
-        $this->config['services'][ServiceManager::class] = $services;
+        \Jield\Stdlib\Value::setPath($this->config, ['services', ServiceManager::class], $services);
 
         // This is invoked as part of the bootstrapping process, and requires
         // the ability to override services.
         $services->setAllowOverride(true);
-        $services->configure($this->config);
+        /** @var ServiceManagerConfiguration $managerConfiguration */
+        $managerConfiguration = $this->config;
+        $services->configure($managerConfiguration);
         $services->setAllowOverride(false);
 
         return $services;

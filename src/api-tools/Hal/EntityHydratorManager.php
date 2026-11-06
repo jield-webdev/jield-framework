@@ -8,6 +8,7 @@ use Jield\ApiTools\Hal\Metadata\MetadataMap;
 use Laminas\Hydrator\ExtractionInterface;
 use Laminas\Hydrator\HydratorPluginManager;
 use Laminas\Hydrator\HydratorPluginManagerInterface;
+
 use function is_string;
 use function strtolower;
 
@@ -31,7 +32,7 @@ class EntityHydratorManager
      *
      * @var ExtractionInterface
      */
-    protected ExtractionInterface $defaultHydrator;
+    protected ?ExtractionInterface $defaultHydrator = null;
 
     /**
      * @param HydratorPluginManager|HydratorPluginManagerInterface $hydrators
@@ -39,7 +40,7 @@ class EntityHydratorManager
      */
     public function __construct(HydratorPluginManager|HydratorPluginManagerInterface $hydrators, MetadataMap $map)
     {
-        $this->hydrators   = $hydrators;
+        $this->hydrators = $hydrators;
         $this->metadataMap = $map;
     }
 
@@ -63,10 +64,10 @@ class EntityHydratorManager
         if (is_string(value: $hydrator)) {
             /** @var ExtractionInterface $hydratorInstance */
             $hydratorInstance = $this->hydrators->get($hydrator);
-            $hydrator         = $hydratorInstance;
+            $hydrator = $hydratorInstance;
         }
 
-        $filteredClass                     = strtolower(string: $class);
+        $filteredClass = strtolower(string: $class);
         $this->hydratorMap[$filteredClass] = $hydrator;
         return $this;
     }
@@ -93,15 +94,15 @@ class EntityHydratorManager
      */
     public function getHydratorForEntity(object $entity): false|ExtractionInterface
     {
-        $class      = $entity::class;
+        $class = $entity::class;
         $classLower = strtolower(string: $class);
 
         if (isset($this->hydratorMap[$classLower])) {
-            return $this->hydratorMap[$classLower];
+            return \Jield\Stdlib\Value::instance($this->hydratorMap[$classLower], ExtractionInterface::class);
         }
 
         if ($this->metadataMap->has(class: $entity)) {
-            $metadata = $this->metadataMap->get(class: $class);
+            $metadata = \Jield\Stdlib\Value::instance($this->metadataMap->get(class: $class), \Jield\ApiTools\Hal\Metadata\Metadata::class);
             /** @psalm-suppress PossiblyFalseReference */
             $hydrator = $metadata->getHydrator();
             if ($hydrator instanceof ExtractionInterface) {

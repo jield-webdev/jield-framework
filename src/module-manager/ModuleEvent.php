@@ -9,6 +9,9 @@ use Laminas\EventManager\Event;
 /**
  * Custom event for use with module manager
  * Composes Module objects
+ 
+ *
+ * @extends \Laminas\EventManager\Event<object|string|null, array<string, mixed>>
  */
 class ModuleEvent extends Event
 {
@@ -43,7 +46,7 @@ class ModuleEvent extends Event
      * Set the name of a given module
      *
      * @param string $moduleName
-     * @return ModuleEvent
+     * @return static
      * @throws Exception\InvalidArgumentException
      */
     public function setModuleName(string $moduleName): static
@@ -68,7 +71,7 @@ class ModuleEvent extends Event
      * Set module object to compose in this event
      *
      * @param object $module
-     * @return ModuleEvent
+     * @return static
      * @throws Exception\InvalidArgumentException
      */
     public function setModule(object $module): static
@@ -92,7 +95,7 @@ class ModuleEvent extends Event
     /**
      * Set module object to compose in this event
      *
-     * @return ModuleEvent
+     * @return static
      */
     public function setConfigListener(Listener\ConfigMergerInterface $configListener): static
     {

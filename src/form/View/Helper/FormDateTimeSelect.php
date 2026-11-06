@@ -58,17 +58,16 @@ class FormDateTimeSelect extends AbstractFormDateSelect
      *
      * @template T as null|ElementInterface
      * @psalm-param T $element
-     * @psalm-return (T is null ? self : string)
+     * @psalm-return (T is null ? static : string)
      * @return string|self
      */
     public function __invoke(
         ?ElementInterface $element = null,
         int $dateType = IntlDateFormatter::LONG,
         int $timeType = IntlDateFormatter::LONG,
-        ?string $locale = null
-    ): FormDateTimeSelect|string|static
-    {
-        if (! $element) {
+        ?string $locale = null,
+    ): string|static {
+        if (!$element) {
             return $this;
         }
 
@@ -90,10 +89,10 @@ class FormDateTimeSelect extends AbstractFormDateSelect
      */
     public function render(ElementInterface $element): string
     {
-        if (! $element instanceof DateTimeSelectElement) {
+        if (!$element instanceof DateTimeSelectElement) {
             throw new Exception\InvalidArgumentException(message: sprintf(
                 '%s requires that the element is of type Jield\Form\Element\DateTimeSelect',
-                __METHOD__
+                __METHOD__,
             ));
         }
 
@@ -101,23 +100,23 @@ class FormDateTimeSelect extends AbstractFormDateSelect
         if ($name === null || $name === '') {
             throw new Exception\DomainException(message: sprintf(
                 '%s requires that the element has an assigned name; none discovered',
-                __METHOD__
+                __METHOD__,
             ));
         }
 
         $shouldRenderDelimiters = $element->shouldRenderDelimiters();
-        $selectHelper           = $this->getSelectElementHelper();
-        $pattern                = $this->parsePattern(renderDelimiters: $shouldRenderDelimiters);
-        $daysOptions            = $this->getDaysOptions(pattern: $pattern['day']);
-        $monthsOptions          = $this->getMonthsOptions(pattern: $pattern['month']);
-        $yearOptions            = $this->getYearsOptions(minYear: $element->getMinYear(), maxYear: $element->getMaxYear());
-        $hourOptions            = $this->getHoursOptions(pattern: $pattern['hour']);
-        $minuteOptions          = $this->getMinutesOptions(pattern: $pattern['minute']);
+        $selectHelper = $this->getSelectElementHelper();
+        $pattern = $this->parsePattern(renderDelimiters: $shouldRenderDelimiters);
+        $daysOptions = $this->getDaysOptions(pattern: \Jield\Stdlib\Value::string($pattern['day']));
+        $monthsOptions = $this->getMonthsOptions(pattern: \Jield\Stdlib\Value::string($pattern['month']));
+        $yearOptions = $this->getYearsOptions(minYear: $element->getMinYear(), maxYear: $element->getMaxYear());
+        $hourOptions = $this->getHoursOptions(pattern: \Jield\Stdlib\Value::string($pattern['hour']));
+        $minuteOptions = $this->getMinutesOptions(pattern: \Jield\Stdlib\Value::string($pattern['minute']));
 
-        $dayElement    = $element->getDayElement()->setValueOptions(options: $daysOptions);
-        $monthElement  = $element->getMonthElement()->setValueOptions(options: $monthsOptions);
-        $yearElement   = $element->getYearElement()->setValueOptions(options: $yearOptions);
-        $hourElement   = $element->getHourElement()->setValueOptions(options: $hourOptions);
+        $dayElement = $element->getDayElement()->setValueOptions(options: $daysOptions);
+        $monthElement = $element->getMonthElement()->setValueOptions(options: $monthsOptions);
+        $yearElement = $element->getYearElement()->setValueOptions(options: $yearOptions);
+        $hourElement = $element->getHourElement()->setValueOptions(options: $hourOptions);
         $minuteElement = $element->getMinuteElement()->setValueOptions(options: $minuteOptions);
 
         if ($element->shouldCreateEmptyOption()) {
@@ -128,15 +127,15 @@ class FormDateTimeSelect extends AbstractFormDateSelect
             $minuteElement->setEmptyOption(emptyOption: '');
         }
 
-        $data                     = [];
-        $data[$pattern['day']]    = $selectHelper->render(element: $dayElement);
-        $data[$pattern['month']]  = $selectHelper->render(element: $monthElement);
-        $data[$pattern['year']]   = $selectHelper->render(element: $yearElement);
-        $data[$pattern['hour']]   = $selectHelper->render(element: $hourElement);
+        $data = [];
+        $data[$pattern['day']] = $selectHelper->render(element: $dayElement);
+        $data[$pattern['month']] = $selectHelper->render(element: $monthElement);
+        $data[\Jield\Stdlib\Value::key($pattern['year'])] = $selectHelper->render(element: $yearElement);
+        $data[$pattern['hour']] = $selectHelper->render(element: $hourElement);
         $data[$pattern['minute']] = $selectHelper->render(element: $minuteElement);
 
         if ($element->shouldShowSeconds() && array_key_exists(key: 'second', array: $pattern)) {
-            $secondOptions = $this->getSecondsOptions(pattern: $pattern['second']);
+            $secondOptions = $this->getSecondsOptions(pattern: \Jield\Stdlib\Value::string($pattern['second']));
             $secondElement = $element->getSecondElement()->setValueOptions(options: $secondOptions);
 
             if ($element->shouldCreateEmptyOption()) {
@@ -153,10 +152,11 @@ class FormDateTimeSelect extends AbstractFormDateSelect
         }
 
         $markup = '';
+        /** @var mixed $value */
         foreach ($pattern as $key => $value) {
             // Delimiter
             if (is_numeric(value: $key)) {
-                $markup .= $value;
+                $markup .= \Jield\Stdlib\Value::stringify($value);
             } else {
                 $markup .= $data[$value];
             }
@@ -166,7 +166,7 @@ class FormDateTimeSelect extends AbstractFormDateSelect
     }
 
     /**
-     * @return $this
+     * @return static
      */
     public function setTimeType(int $timeType): static
     {
@@ -195,9 +195,13 @@ class FormDateTimeSelect extends AbstractFormDateSelect
     public function getPattern(): string
     {
         if ($this->pattern === null) {
-            $intl = new IntlDateFormatter(locale: $this->getLocale(), dateType: $this->dateType, timeType: $this->timeType);
+            $intl = new IntlDateFormatter(
+                locale: $this->getLocale(),
+                dateType: $this->dateType,
+                timeType: $this->timeType,
+            );
             // remove time zone format character
-            $pattern       = rtrim(string: $intl->getPattern(), characters: ' z');
+            $pattern = rtrim(string: $intl->getPattern(), characters: ' z');
             $this->pattern = $pattern;
         }
 
@@ -209,6 +213,7 @@ class FormDateTimeSelect extends AbstractFormDateSelect
      */
     protected function parsePattern(bool $renderDelimiters = true): array
     {
+        $matches = [];
         $pattern = $this->getPattern();
 
         // are there any non-latin characters in the pattern?
@@ -217,7 +222,7 @@ class FormDateTimeSelect extends AbstractFormDateSelect
         if ($count) {
             // put single quotes around these characters
             foreach ($matches[0] as $match) {
-                $pattern = str_replace(search: $match, replace: "'$match'", subject: $pattern);
+                $pattern = str_replace(search: $match, replace: "'{$match}'", subject: $pattern);
             }
 
             // remove double quotes, if there were already quotes around them
@@ -228,7 +233,7 @@ class FormDateTimeSelect extends AbstractFormDateSelect
             pattern: "/([ \-,.:0abvxz\/]*'.*?'[ \-,.:0abvxz\/]*)|([ \-,.:0abvxz\/]+)/i",
             subject: $pattern,
             limit: -1,
-            flags: PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY
+            flags: PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY,
         );
 
         assert(assertion: $pregResult !== false);
@@ -260,7 +265,7 @@ class FormDateTimeSelect extends AbstractFormDateSelect
                 "Cannot parse date format '%s' for locale '%s': missing '%s'",
                 $pattern,
                 $this->getLocale(),
-                implode(separator: "', '", array: array_diff($valid, array_keys(array: $result)))
+                implode(separator: "', '", array: array_diff($valid, array_keys(array: $result))),
             ));
         }
 
@@ -271,6 +276,7 @@ class FormDateTimeSelect extends AbstractFormDateSelect
      * Create a key => value options for days
      *
      * @param  string $pattern Pattern to use for days
+     * @return array<array-key, string|false>
      */
     protected function getDaysOptions(string $pattern): array
     {
@@ -280,14 +286,14 @@ class FormDateTimeSelect extends AbstractFormDateSelect
             timeType: IntlDateFormatter::NONE,
             timezone: null,
             calendar: null,
-            pattern: $pattern
+            pattern: $pattern,
         );
-        $date           = new DateTime(datetime: '1970-01-01');
+        $date = new DateTime(datetime: '1970-01-01');
 
         $result = [];
         for ($day = 1; $day <= 31; $day++) {
-            $key          = $date->format(format: 'd');
-            $value        = $valueFormatter->format(datetime: $date);
+            $key = $date->format(format: 'd');
+            $value = $valueFormatter->format(datetime: $date);
             $result[$key] = $value;
 
             $date->modify(modifier: '+1 day');
@@ -300,6 +306,7 @@ class FormDateTimeSelect extends AbstractFormDateSelect
      * Create a key => value options for hours
      *
      * @param  string $pattern Pattern to use for hours
+     * @return array<array-key, string|false>
      */
     protected function getHoursOptions(string $pattern): array
     {
@@ -309,14 +316,14 @@ class FormDateTimeSelect extends AbstractFormDateSelect
             timeType: IntlDateFormatter::NONE,
             timezone: null,
             calendar: null,
-            pattern: $pattern
+            pattern: $pattern,
         );
-        $date           = new DateTime(datetime: '1970-01-01 00:00:00');
+        $date = new DateTime(datetime: '1970-01-01 00:00:00');
 
         $result = [];
         for ($hour = 0; $hour <= 23; $hour++) {
-            $key          = $date->format(format: 'H');
-            $value        = $valueFormatter->format(datetime: $date);
+            $key = $date->format(format: 'H');
+            $value = $valueFormatter->format(datetime: $date);
             $result[$key] = $value;
 
             $date->modify(modifier: '+1 hour');
@@ -329,6 +336,7 @@ class FormDateTimeSelect extends AbstractFormDateSelect
      * Create a key => value options for minutes
      *
      * @param  string $pattern Pattern to use for minutes
+     * @return array<array-key, string|false>
      */
     protected function getMinutesOptions(string $pattern): array
     {
@@ -338,14 +346,14 @@ class FormDateTimeSelect extends AbstractFormDateSelect
             timeType: IntlDateFormatter::NONE,
             timezone: null,
             calendar: null,
-            pattern: $pattern
+            pattern: $pattern,
         );
-        $date           = new DateTime(datetime: '1970-01-01 00:00:00');
+        $date = new DateTime(datetime: '1970-01-01 00:00:00');
 
         $result = [];
         for ($min = 0; $min <= 59; $min++) {
-            $key          = $date->format(format: 'i');
-            $value        = $valueFormatter->format(datetime: $date);
+            $key = $date->format(format: 'i');
+            $value = $valueFormatter->format(datetime: $date);
             $result[$key] = $value;
 
             $date->modify(modifier: '+1 minute');
@@ -358,6 +366,7 @@ class FormDateTimeSelect extends AbstractFormDateSelect
      * Create a key => value options for seconds
      *
      * @param  string $pattern Pattern to use for seconds
+     * @return array<array-key, string|false>
      */
     protected function getSecondsOptions(string $pattern): array
     {
@@ -367,14 +376,14 @@ class FormDateTimeSelect extends AbstractFormDateSelect
             timeType: IntlDateFormatter::NONE,
             timezone: null,
             calendar: null,
-            pattern: $pattern
+            pattern: $pattern,
         );
-        $date           = new DateTime(datetime: '1970-01-01 00:00:00');
+        $date = new DateTime(datetime: '1970-01-01 00:00:00');
 
         $result = [];
         for ($sec = 0; $sec <= 59; $sec++) {
-            $key          = $date->format(format: 's');
-            $value        = $valueFormatter->format(datetime: $date);
+            $key = $date->format(format: 's');
+            $value = $valueFormatter->format(datetime: $date);
             $result[$key] = $value;
 
             $date->modify(modifier: '+1 second');

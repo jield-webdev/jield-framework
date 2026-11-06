@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Jield\Form\Element;
 
-use Laminas\Filter\StringTrim;
 use Jield\Form\Element;
+use Laminas\Filter\StringTrim;
 use Laminas\InputFilter\InputProviderInterface;
 use Laminas\Validator\Explode as ExplodeValidator;
 use Laminas\Validator\Regex as RegexValidator;
@@ -20,10 +20,10 @@ class Email extends Element implements InputProviderInterface
     ];
 
     /** @var null|ValidatorInterface */
-    protected ?ValidatorInterface $validator;
+    protected ?ValidatorInterface $validator = null;
 
     /** @var null|ValidatorInterface */
-    protected ?ValidatorInterface $emailValidator;
+    protected ?ValidatorInterface $emailValidator = null;
 
     /**
      * Get primary validator
@@ -50,7 +50,7 @@ class Email extends Element implements InputProviderInterface
     /**
      * Sets the primary validator to use for this element
      *
-     * @return $this
+     * @return static
      */
     public function setValidator(ValidatorInterface $validator): static
     {
@@ -80,7 +80,7 @@ class Email extends Element implements InputProviderInterface
     {
         if (null === $this->emailValidator) {
             $this->emailValidator = new RegexValidator(
-                options: '/^[a-zA-Z0-9.!#$%&\'*+\/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/'
+                options: '/^[a-zA-Z0-9.!#$%&\'*+\/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/',
             );
         }
         return $this->emailValidator;
@@ -90,7 +90,7 @@ class Email extends Element implements InputProviderInterface
      * Sets the email validator to use for multiple or single
      * email addresses.
      *
-     * @return $this
+     * @return static
      */
     public function setEmailValidator(ValidatorInterface $validator): static
     {
@@ -108,8 +108,8 @@ class Email extends Element implements InputProviderInterface
     public function getInputSpecification(): array
     {
         $spec = [
-            'required'   => true,
-            'filters'    => [
+            'required' => true,
+            'filters' => [
                 ['name' => StringTrim::class],
             ],
             'validators' => [

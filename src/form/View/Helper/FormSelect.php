@@ -22,8 +22,8 @@ use function sprintf;
 use function strval;
 
 /**
- * @final
  * @psalm-import-type ValueOptions from SelectElement
+ * @psalm-import-type OptGroup from SelectElement
  */
 class FormSelect extends AbstractHelper
 {
@@ -33,14 +33,14 @@ class FormSelect extends AbstractHelper
      * @var array
      */
     protected array $validSelectAttributes = [
-        'name'         => true,
+        'name' => true,
         'autocomplete' => true,
-        'autofocus'    => true,
-        'disabled'     => true,
-        'form'         => true,
-        'multiple'     => true,
-        'required'     => true,
-        'size'         => true,
+        'autofocus' => true,
+        'disabled' => true,
+        'form' => true,
+        'multiple' => true,
+        'required' => true,
+        'size' => true,
     ];
 
     /**
@@ -51,8 +51,8 @@ class FormSelect extends AbstractHelper
     protected array $validOptionAttributes = [
         'disabled' => true,
         'selected' => true,
-        'label'    => true,
-        'value'    => true,
+        'label' => true,
+        'value' => true,
     ];
 
     /**
@@ -62,7 +62,7 @@ class FormSelect extends AbstractHelper
      */
     protected array $validOptgroupAttributes = [
         'disabled' => true,
-        'label'    => true,
+        'label' => true,
     ];
 
     /** @var array<string, bool> */
@@ -71,7 +71,7 @@ class FormSelect extends AbstractHelper
     ];
 
     /** @var FormHidden|null */
-    protected ?FormHidden $formHiddenHelper;
+    protected ?FormHidden $formHiddenHelper = null;
 
     /**
      * Invoke helper as functor
@@ -80,12 +80,12 @@ class FormSelect extends AbstractHelper
      *
      * @template T as null|ElementInterface
      * @psalm-param T $element
-     * @psalm-return (T is null ? self : string)
+     * @psalm-return (T is null ? static : string)
      * @return string|FormSelect
      */
-    public function __invoke(?ElementInterface $element = null): string|FormSelect|static
+    public function __invoke(?ElementInterface $element = null): string|static
     {
-        if (! $element) {
+        if (!$element) {
             return $this;
         }
 
@@ -100,10 +100,10 @@ class FormSelect extends AbstractHelper
      */
     public function render(ElementInterface $element): string
     {
-        if (! $element instanceof SelectElement) {
+        if (!$element instanceof SelectElement) {
             throw new Exception\InvalidArgumentException(message: sprintf(
                 '%s requires that the element is of type Jield\Form\Element\Select',
-                __METHOD__
+                __METHOD__,
             ));
         }
 
@@ -111,7 +111,7 @@ class FormSelect extends AbstractHelper
         if ($name === null || $name === '') {
             throw new Exception\DomainException(message: sprintf(
                 '%s requires that the element has an assigned name; none discovered',
-                __METHOD__
+                __METHOD__,
             ));
         }
 
@@ -122,7 +122,7 @@ class FormSelect extends AbstractHelper
         }
 
         $attributes = $element->getAttributes();
-        $value      = $this->validateMultiValue(value: $element->getValue(), attributes: $attributes);
+        $value = $this->validateMultiValue(value: $element->getValue(), attributes: $attributes);
 
         $attributes['name'] = $name;
         if (array_key_exists(key: 'multiple', array: $attributes) && $attributes['multiple']) {
@@ -133,7 +133,7 @@ class FormSelect extends AbstractHelper
         $rendered = sprintf(
             '<select %s>%s</select>',
             $this->createAttributesString(attributes: $attributes),
-            $this->renderOptions(options: $options, selectedOptions: $value)
+            $this->renderOptions(options: $options, selectedOptions: $value),
         );
 
         // Render hidden element
@@ -163,15 +163,15 @@ class FormSelect extends AbstractHelper
      */
     public function renderOptions(array $options, array $selectedOptions = []): string
     {
-        $template      = '<option %s>%s</option>';
+        $template = '<option %s>%s</option>';
         $optionStrings = [];
-        $escapeHtml    = $this->getEscapeHtmlHelper();
+        $escapeHtml = $this->getEscapeHtmlHelper();
 
         $stringSelectedOptions = array_map(callback: strval(...), array: $selectedOptions);
 
         foreach ($options as $key => $optionSpec) {
-            $value    = '';
-            $label    = '';
+            $value = '';
+            $label = '';
             $selected = false;
             $disabled = false;
 
@@ -183,7 +183,7 @@ class FormSelect extends AbstractHelper
             }
 
             /** @psalm-suppress RedundantConditionGivenDocblockType Retain defensive check that `options` is an array */
-            if (isset($optionSpec['options']) && is_array(value: $optionSpec['options'])) {
+            if (isset($optionSpec['options'])) {
                 $optionStrings[] = $this->renderOptgroup(optgroup: $optionSpec, selectedOptions: $selectedOptions);
                 continue;
             }
@@ -208,21 +208,21 @@ class FormSelect extends AbstractHelper
             $label = $this->translateLabel(label: $label);
 
             $attributes = [
-                'value'    => $value,
+                'value' => $value,
                 'selected' => $selected,
                 'disabled' => $disabled,
             ];
 
             /** @psalm-suppress RedundantConditionGivenDocblockType Retain defensive check that `attributes` is an array */
-            if (isset($optionSpec['attributes']) && is_array(value: $optionSpec['attributes'])) {
+            if (isset($optionSpec['attributes'])) {
                 $attributes = array_merge($attributes, $optionSpec['attributes']);
             }
 
             $this->validTagAttributes = $this->validOptionAttributes;
-            $optionStrings[]          = sprintf(
+            $optionStrings[] = sprintf(
                 $template,
                 $this->createAttributesString(attributes: $attributes),
-                $escapeHtml(value: $label)
+                \Jield\Stdlib\Value::scalar($escapeHtml(value: $label)),
             );
         }
 
@@ -236,28 +236,26 @@ class FormSelect extends AbstractHelper
      * an optgroup is simply an option that has an additional "options" key
      * with an array following the specification for renderOptions().
      *
-     * @param ValueOptions $optgroup
+     * @param OptGroup $optgroup
      */
     public function renderOptgroup(array $optgroup, array $selectedOptions = []): string
     {
         $template = '<optgroup%s>%s</optgroup>';
 
         $options = [];
-        if (isset($optgroup['options']) && is_array(value: $optgroup['options'])) {
-            $options = $optgroup['options'];
-            unset($optgroup['options']);
-        }
+        $options = $optgroup['options'];
+unset($optgroup['options']);
 
         $this->validTagAttributes = $this->validOptgroupAttributes;
-        $attributes               = $this->createAttributesString(attributes: $optgroup);
-        if (! empty($attributes)) {
+        $attributes = $this->createAttributesString(attributes: $optgroup);
+        if (!empty($attributes)) {
             $attributes = ' ' . $attributes;
         }
 
         return sprintf(
             $template,
             $attributes,
-            $this->renderOptions(options: $options, selectedOptions: $selectedOptions)
+            $this->renderOptions(options: $options, selectedOptions: $selectedOptions),
         );
     }
 
@@ -277,15 +275,15 @@ class FormSelect extends AbstractHelper
             return [];
         }
 
-        if (! is_array(value: $value)) {
+        if (!is_array(value: $value)) {
             return [$value];
         }
 
-        if (! isset($attributes['multiple']) || ! $attributes['multiple']) {
+        if (!isset($attributes['multiple']) || !$attributes['multiple']) {
             throw new Exception\DomainException(message: sprintf(
                 '%s does not allow specifying multiple selected values when the element does not have a multiple '
                 . 'attribute set to a boolean true',
-                self::class
+                self::class,
             ));
         }
 
@@ -307,7 +305,7 @@ class FormSelect extends AbstractHelper
         }
 
         if (null !== $this->view && method_exists(object_or_class: $this->view, method: 'plugin')) {
-            $this->formHiddenHelper = $this->view->plugin('formhidden');
+            $this->formHiddenHelper = $this->getView()->plugin('formhidden', \Jield\Form\View\Helper\FormHidden::class);
         }
 
         if (null === $this->formHiddenHelper) {

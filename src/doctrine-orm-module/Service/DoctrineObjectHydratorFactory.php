@@ -13,8 +13,8 @@ final class DoctrineObjectHydratorFactory implements FactoryInterface
     /**
      * {@inheritDoc}
      */
-    public function __invoke(ContainerInterface $container, $requestedName, array|null $options = null): DoctrineObject
+    public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): DoctrineObject
     {
-        return new DoctrineObject($container->get('doctrine.entitymanager.orm_default'));
+        return new DoctrineObject(\Jield\Stdlib\Service::get($container, \Doctrine\ORM\EntityManagerInterface::class, 'doctrine.entitymanager.orm_default'));
     }
 }

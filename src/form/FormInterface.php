@@ -12,11 +12,11 @@ use Laminas\InputFilter\InputFilterInterface;
  */
 interface FormInterface extends FieldsetInterface
 {
-    public const int BIND_ON_VALIDATE  = 0x00;
-    public const int BIND_MANUAL       = 0x01;
+    public const int BIND_ON_VALIDATE = 0x00;
+    public const int BIND_MANUAL = 0x01;
     public const int VALUES_NORMALIZED = 0x11;
-    public const int VALUES_RAW        = 0x12;
-    public const int VALUES_AS_ARRAY   = 0x13;
+    public const int VALUES_RAW = 0x12;
+    public const int VALUES_AS_ARRAY = 0x13;
 
     /**
      * Set data to validate and/or populate elements

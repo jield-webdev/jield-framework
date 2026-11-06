@@ -17,7 +17,8 @@ class IdentityPlugin extends AbstractPlugin
             return new GuestIdentity();
         }
 
-        $event    = $controller->getEvent();
+        $event = $controller->getEvent();
+        /** @var mixed $identity */
         $identity = $event->getParam(name: __NAMESPACE__);
 
         if (!$identity instanceof IdentityInterface) {

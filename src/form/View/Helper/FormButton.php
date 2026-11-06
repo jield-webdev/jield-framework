@@ -22,17 +22,17 @@ class FormButton extends FormInput
      * @var array
      */
     protected array $validTagAttributes = [
-        'name'           => true,
-        'autofocus'      => true,
-        'disabled'       => true,
-        'form'           => true,
-        'formaction'     => true,
-        'formenctype'    => true,
-        'formmethod'     => true,
+        'name' => true,
+        'autofocus' => true,
+        'disabled' => true,
+        'form' => true,
+        'formaction' => true,
+        'formenctype' => true,
+        'formmethod' => true,
         'formnovalidate' => true,
-        'formtarget'     => true,
-        'type'           => true,
-        'value'          => true,
+        'formtarget' => true,
+        'type' => true,
+        'value' => true,
     ];
 
     /**
@@ -42,7 +42,7 @@ class FormButton extends FormInput
      */
     protected array $validTypes = [
         'button' => true,
-        'reset'  => true,
+        'reset' => true,
         'submit' => true,
     ];
 
@@ -53,12 +53,12 @@ class FormButton extends FormInput
      *
      * @template T as null|ElementInterface
      * @psalm-param T $element
-     * @psalm-return (T is null ? self : string)
+     * @psalm-return (T is null ? static : string)
      * @return string|FormButton
      */
-    public function __invoke(?ElementInterface $element = null, ?string $buttonContent = null): FormButton|string|static
+    public function __invoke(?ElementInterface $element = null, ?string $buttonContent = null): string|static
     {
-        if (! $element) {
+        if (!$element) {
             return $this;
         }
 
@@ -78,13 +78,11 @@ class FormButton extends FormInput
         if (null === $buttonContent) {
             $buttonContent = $element->getLabel();
             if (null === $buttonContent) {
-                throw new Exception\DomainException(
-                    message: sprintf(
-                        '%s expects either button content as the second argument, '
-                        . 'or that the element provided has a label value; neither found',
-                        __METHOD__
-                    )
-                );
+                throw new Exception\DomainException(message: sprintf(
+                    '%s expects either button content as the second argument, '
+                    . 'or that the element provided has a label value; neither found',
+                    __METHOD__,
+                ));
             }
         }
 
@@ -112,32 +110,23 @@ class FormButton extends FormInput
             return sprintf('<button %s>', $attributes);
         }
 
-        if (! $attributesOrElement instanceof ElementInterface) {
-            throw new Exception\InvalidArgumentException(message: sprintf(
-                '%s expects an array or Jield\Form\ElementInterface instance; received "%s"',
-                __METHOD__,
-                get_debug_type(value: $attributesOrElement)
-            ));
-        }
+        
 
         $element = $attributesOrElement;
-        $name    = $element->getName();
+        $name = $element->getName();
         if ($name === null || $name === '') {
             throw new Exception\DomainException(message: sprintf(
                 '%s requires that the element has an assigned name; none discovered',
-                __METHOD__
+                __METHOD__,
             ));
         }
 
-        $attributes          = $element->getAttributes();
-        $attributes['name']  = $name;
-        $attributes['type']  = $this->getType(element: $element);
+        $attributes = $element->getAttributes();
+        $attributes['name'] = $name;
+        $attributes['type'] = $this->getType(element: $element);
         $attributes['value'] = $element->getValue();
 
-        return sprintf(
-            '<button %s>',
-            $this->createAttributesString(attributes: $attributes)
-        );
+        return sprintf('<button %s>', $this->createAttributesString(attributes: $attributes));
     }
 
     /**
@@ -154,12 +143,12 @@ class FormButton extends FormInput
     protected function getType(ElementInterface $element): string
     {
         $type = $element->getAttribute(key: 'type');
-        if (! is_string(value: $type) || $type === '') {
+        if (!is_string(value: $type) || $type === '') {
             return 'submit';
         }
 
         $type = strtolower(string: $type);
-        if (! isset($this->validTypes[$type])) {
+        if (!isset($this->validTypes[$type])) {
             return 'submit';
         }
 

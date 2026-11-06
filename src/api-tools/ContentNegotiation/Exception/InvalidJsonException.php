@@ -6,6 +6,4 @@ namespace Jield\ApiTools\ContentNegotiation\Exception;
 
 use RuntimeException;
 
-class InvalidJsonException extends RuntimeException implements ExceptionInterface
-{
-}
+class InvalidJsonException extends RuntimeException implements ExceptionInterface {}

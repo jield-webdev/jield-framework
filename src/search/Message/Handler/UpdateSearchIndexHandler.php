@@ -16,26 +16,25 @@ final class UpdateSearchIndexHandler
 {
     public function __construct(
         private readonly ContainerInterface $container,
-        private readonly EntityManager      $entityManager
-    )
-    {
-    }
+        private readonly EntityManager $entityManager,
+    ) {}
 
     public function __invoke(UpdateSearchIndexMessage $updateSearchIndexMessage): int
     {
         $entityClassName = $updateSearchIndexMessage->getEntityClassName();
-        $searchServices  = $updateSearchIndexMessage->getSearchServices();
+        $searchServices = $updateSearchIndexMessage->getSearchServices();
 
         //Clear the entity manager to always have fresh results
         $this->entityManager->clear();
 
         $output = new BufferedOutput();
 
+        /** @var mixed $searchService */
         foreach ($searchServices as $searchService) {
             //I have to tell the system which search service we have to take (to have the correct connection)
             /** @var AbstractSearchService $searchServiceInstance */
-            $searchServiceInstance = $this->container->get($searchService);
-            $searchServiceInstance->updateCollection(output: $output, entity: new $entityClassName());
+            $searchServiceInstance = $this->container->get(\Jield\Stdlib\Value::string($searchService));
+            $searchServiceInstance->updateCollection(output: $output, entity: \Jield\Stdlib\Value::instance(\Jield\Stdlib\Value::instantiate($entityClassName), \Jield\Search\Entity\HasSearchInterface::class));
         }
 
         return 0;

@@ -19,12 +19,13 @@ class RouteParams extends AbstractPlugin
 
         if (!$controller instanceof InjectApplicationEventInterface) {
             throw new RuntimeException(
-                message: 'Controllers must implement Jield\Mvc\InjectApplicationEventInterface to use this plugin.'
+                message: 'Controllers must implement Jield\Mvc\InjectApplicationEventInterface to use this plugin.',
             );
         }
 
         if ($controller instanceof AbstractController) {
-            $parameterData = $controller->getEvent()->getParam(name: 'JieldContentNegotiationParameterData');
+            /** @var mixed $parameterData */
+            $parameterData = $controller->getEvent()->getParam(name: 'LaminasContentNegotiationParameterData');
             if ($parameterData instanceof ParameterDataContainer) {
                 return $parameterData->getRouteParams();
             }
@@ -35,6 +36,6 @@ class RouteParams extends AbstractPlugin
             return [];
         }
 
-        return $event->getRouteMatch()->getParams();
+        return \Jield\Stdlib\Value::present($event->getRouteMatch())->getParams();
     }
 }

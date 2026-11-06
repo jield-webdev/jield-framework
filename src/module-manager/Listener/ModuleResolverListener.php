@@ -6,6 +6,7 @@ namespace Jield\ModuleManager\Listener;
 
 use Generator;
 use Jield\ModuleManager\ModuleEvent;
+
 use function class_exists;
 use function in_array;
 use function sprintf;
@@ -17,10 +18,9 @@ class ModuleResolverListener extends AbstractListener
      *
      * @var string[]
      */
-    protected array $invalidClassNames
-        = [
-            Generator::class,
-        ];
+    protected array $invalidClassNames = [
+        Generator::class,
+    ];
 
     /**
      * @return object|false False if module class does not exist
@@ -31,19 +31,19 @@ class ModuleResolverListener extends AbstractListener
 
         $class = sprintf('%s\Module', $moduleName);
         if (class_exists(class: $class)) {
-            return new $class();
+            return \Jield\Stdlib\Value::instantiate($class);
         }
 
         $class = sprintf('%s\ConfigProvider', $moduleName);
         if (class_exists(class: $class)) {
-            return new $class();
+            return \Jield\Stdlib\Value::instantiate($class);
         }
 
         if (
             class_exists(class: $moduleName)
             && !in_array(needle: $moduleName, haystack: $this->invalidClassNames, strict: true)
         ) {
-            return new $moduleName();
+            return \Jield\Stdlib\Value::instantiate($moduleName);
         }
 
         return false;

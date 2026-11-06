@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\Mvc\View\Http;
 
+use Jield\Mvc\MvcEvent;
 use Laminas\EventManager\AbstractListenerAggregate;
 use Laminas\EventManager\EventManagerInterface as Events;
-use Jield\Mvc\MvcEvent;
 use Laminas\View\Model\ClearableModelInterface;
 use Laminas\View\Model\ModelInterface as ViewModel;
 
@@ -31,8 +33,9 @@ class InjectViewModelListener extends AbstractListenerAggregate
      */
     public function injectViewModel(MvcEvent $e): void
     {
+        /** @var mixed $result */
         $result = $e->getResult();
-        if (! $result instanceof ViewModel) {
+        if (!$result instanceof ViewModel) {
             return;
         }
 

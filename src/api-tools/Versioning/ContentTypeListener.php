@@ -4,18 +4,18 @@ declare(strict_types=1);
 
 namespace Jield\ApiTools\Versioning;
 
+use Jield\Mvc\MvcEvent;
+use Jield\Mvc\Router\RouteMatch;
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\EventManager\ListenerAggregateInterface;
 use Laminas\EventManager\ListenerAggregateTrait;
 use Laminas\Http\Request;
-use Jield\Mvc\MvcEvent;
-use Laminas\Router\RouteMatch;
 use Override;
+
 use function array_reverse;
 use function array_shift;
 use function explode;
 use function is_array;
-use function is_int;
 use function is_numeric;
 use function preg_match;
 use function trim;
@@ -35,10 +35,9 @@ class ContentTypeListener implements ListenerAggregateInterface
     /**
      * @var array
      */
-    protected array $regexes
-        = [
-            '#^application/vnd\.(?P<jield_ver_vendor>[^.]+)\.v(?P<jield_ver_version>\d+)(?:\.(?P<jield_ver_resource>[a-zA-Z0-9_-]+))?(?:\+[a-z]+)?$#',
-        ];
+    protected array $regexes = [
+        '#^application/vnd\.(?P<laminas_ver_vendor>[^.]+)\.v(?P<laminas_ver_version>\d+)(?:\.(?P<laminas_ver_resource>[a-zA-Z0-9_-]+))?(?:\+[a-z]+)?$#',
+    ];
 
     // @codingStandardsIgnoreEnd
 
@@ -48,7 +47,11 @@ class ContentTypeListener implements ListenerAggregateInterface
     #[Override]
     public function attach(EventManagerInterface $events, $priority = 1): void
     {
-        $this->listeners[] = $events->attach(eventName: MvcEvent::EVENT_ROUTE, listener: $this->onRoute(...), priority: -40);
+        $this->listeners[] = $events->attach(
+            eventName: MvcEvent::EVENT_ROUTE,
+            listener: $this->onRoute(...),
+            priority: -40,
+        );
     }
 
     /**
@@ -70,7 +73,7 @@ class ContentTypeListener implements ListenerAggregateInterface
     public function onRoute(MvcEvent $e): void
     {
         $routeMatches = $e->getRouteMatch();
-        if (!($routeMatches instanceof RouteMatch)) {
+        if (!$routeMatches instanceof RouteMatch) {
             return;
         }
 
@@ -80,13 +83,13 @@ class ContentTypeListener implements ListenerAggregateInterface
         }
 
         $headers = $request->getHeaders();
-        if (!$headers->has(name: $this->headerName)) {
+        if (!\Jield\Stdlib\Value::instance($headers, \Laminas\Http\Headers::class)->has($this->headerName)) {
             return;
         }
 
-        $header = $headers->get(name: $this->headerName);
+        $header = \Jield\Stdlib\Value::instance($headers, \Laminas\Http\Headers::class)->get($this->headerName);
 
-        $matches = $this->parseHeaderForMatches(value: $header->getFieldValue());
+        $matches = $this->parseHeaderForMatches(value: \Jield\Stdlib\Value::instance($header, \Laminas\Http\Header\HeaderInterface::class)->getFieldValue());
         if (is_array(value: $matches)) {
             $this->injectRouteMatches(routeMatches: $routeMatches, matches: $matches);
         }
@@ -100,12 +103,14 @@ class ContentTypeListener implements ListenerAggregateInterface
      */
     protected function parseHeaderForMatches(string $value): false|array
     {
-        $parts       = explode(separator: ';', string: $value);
+        $matches = [];
+        $parts = explode(separator: ';', string: $value);
         $contentType = array_shift(array: $parts);
         $contentType = trim(string: $contentType);
 
+        /** @var mixed $regex */
         foreach (array_reverse(array: $this->regexes) as $regex) {
-            if (!preg_match(pattern: $regex, subject: $contentType, matches: $matches)) {
+            if (!preg_match(pattern: \Jield\Stdlib\Value::string($regex), subject: $contentType, matches: $matches)) {
                 continue;
             }
 
@@ -123,8 +128,9 @@ class ContentTypeListener implements ListenerAggregateInterface
      */
     protected function injectRouteMatches(RouteMatch $routeMatches, array $matches): void
     {
+        /** @var mixed $value */
         foreach ($matches as $key => $value) {
-            if (is_numeric(value: $key) || is_int(value: $key) || $value === '') {
+            if (is_numeric(value: $key) || $value === '') {
                 continue;
             }
 

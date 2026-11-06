@@ -17,7 +17,7 @@ class IsAllowedFactory implements FactoryInterface
      */
     public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): IsAllowed
     {
-        $authorize = $container->get(AuthorizeService::class);
+        $authorize = \Jield\Stdlib\Service::get($container, AuthorizeService::class);
 
         return new IsAllowed(authorizeService: $authorize);
     }

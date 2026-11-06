@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Jield\Search\Solr\Expression;
 
+use Jield\Search\Solr\ExpressionInterface;
+
 use JetBrains\PhpStorm\Pure;
 use Jield\Search\Solr\Util;
 use Stringable;
@@ -18,17 +20,20 @@ class FieldExpression extends Expression implements Stringable
     /**
      * Create new field query
      *
-     * @param string|Expression $field
-     * @param string|Expression $expr
+     * @param string|ExpressionInterface $field
+     * @param string|ExpressionInterface $expr
      */
-    #[Pure] public function __construct(private Expression|string $field, Expression|string $expr)
-    {
+    #[Pure]
+    public function __construct(
+        private ExpressionInterface|string $field,
+        ExpressionInterface|string $expr,
+    ) {
         parent::__construct(expr: $expr);
     }
 
     public function __toString(): string
     {
-        $field      = Util::escape(value: $this->field);
+        $field = Util::escape(value: $this->field);
         $expression = Util::sanitize(value: $this->expr);
 
         if ($this->expr instanceof LocalParamsExpression) {

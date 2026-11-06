@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\AssetManager\Service;
 
 use Assetic\Contracts\Asset\AssetInterface;
@@ -8,16 +10,13 @@ use Jield\AssetManager\Resolver\ResolverInterface;
 use Laminas\Http\PhpEnvironment\Request;
 use Laminas\Http\Response;
 use Laminas\Stdlib\RequestInterface;
-use Laminas\Uri\UriInterface;
 use Override;
 
 /**
  * @category    AssetManager
  * @package     AssetManager
  */
-class AssetManager implements
-    AssetFilterManagerAwareInterface,
-    AssetCacheManagerAwareInterface
+class AssetManager implements AssetFilterManagerAwareInterface, AssetCacheManagerAwareInterface
 {
     protected ResolverInterface $resolver;
 
@@ -70,7 +69,7 @@ class AssetManager implements
             $this->asset = $this->resolve(request: $request);
         }
 
-        return (bool)$this->asset;
+        return (bool) $this->asset;
     }
 
     /**
@@ -112,35 +111,38 @@ class AssetManager implements
      */
     public function setAssetOnResponse(Response $response): Response
     {
-        if (!$this->asset instanceof \AssetManager\Asset\AssetInterface) {
+        if (!$this->asset instanceof \Jield\AssetManager\Asset\AssetInterface) {
             throw new Exception\RuntimeException(
-                message: 'Unable to set asset on response. Request has not been resolved to an asset.'
+                message: 'Unable to set asset on response. Request has not been resolved to an asset.',
             );
         }
 
-        if (empty($this->asset->mimetype)) {
+        if (empty($this->asset->getMimeType())) {
             throw new Exception\RuntimeException(message: 'Expected property "mimetype" on asset.');
         }
 
-        $this->getAssetFilterManager()->setFilters(path: $this->path, asset: $this->asset);
+        $this->getAssetFilterManager()->setFilters(path: $this->path, asset: \Jield\Stdlib\Value::instance($this->asset, \Jield\AssetManager\Asset\AssetInterface::class));
 
-        $this->asset   = $this->getAssetCacheManager()->setCache(path: $this->path, asset: $this->asset);
-        $mimeType      = $this->asset->getMimetype();
+        $this->asset = $this->getAssetCacheManager()->setCache(path: $this->path, asset: \Jield\Stdlib\Value::instance($this->asset, \Jield\AssetManager\Asset\AssetInterface::class));
+        $mimeType = $this->asset->getMimetype();
         $assetContents = $this->asset->dump();
         // @codeCoverageIgnoreStart
-        $contentLength = function_exists(function: 'mb_strlen') ? mb_strlen($assetContents, '8bit') : strlen(string: $assetContents);
+        $contentLength = function_exists(function: 'mb_strlen')
+            ? mb_strlen($assetContents, '8bit')
+            : strlen(string: $assetContents);
 
         // @codeCoverageIgnoreEnd
         // Only clean the output buffer if it's turned on and something
         // has been buffered.
-        if (!empty($this->config['clear_output_buffer']) && $this->config['clear_output_buffer'] && ob_get_length() > 0) {
+        if (!empty($this->config['clear_output_buffer']) && (ob_get_length() ?: 0) > 0) {
             ob_clean();
         }
 
-        $response->getHeaders()
+        $response
+            ->getHeaders()
             ->addHeaderLine(headerFieldNameOrLine: 'Content-Transfer-Encoding', fieldValue: 'binary')
             ->addHeaderLine(headerFieldNameOrLine: 'Content-Type', fieldValue: $mimeType)
-            ->addHeaderLine(headerFieldNameOrLine: 'Content-Length', fieldValue: $contentLength);
+            ->addHeaderLine(headerFieldNameOrLine: 'Content-Length', fieldValue: (string) $contentLength);
 
         $response->setContent(value: $assetContents);
 
@@ -164,9 +166,9 @@ class AssetManager implements
 
         /* @var $request Request */
         /* @var $uri UriInterface */
-        $uri      = $request->getUri();
+        $uri = $request->getUri();
         $fullPath = $uri->getPath();
-        $path     = substr(string: (string)$fullPath, offset: strlen(string: $request->getBasePath()) + 1);
+        $path = substr(string: (string) $fullPath, offset: strlen(string: $request->getBasePath()) + 1);
 
         //Remove any trailing slash from the path
         $path = rtrim(string: $path, characters: '/');

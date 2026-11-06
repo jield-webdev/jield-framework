@@ -7,8 +7,7 @@ namespace Jield\ApiTools\MvcAuth\Factory;
 use Jield\ApiTools\MvcAuth\Authentication\DefaultAuthenticationListener;
 use Jield\ApiTools\MvcAuth\Authentication\HttpAdapter;
 use Jield\ApiTools\MvcAuth\Authentication\OAuth2Adapter;
-use Laminas\ServiceManager\DelegatorFactoryInterface;
-use Laminas\ServiceManager\ServiceLocatorInterface;
+use Laminas\ServiceManager\Factory\DelegatorFactoryInterface;
 use Override;
 use Psr\Container\ContainerInterface;
 
@@ -22,41 +21,33 @@ class AuthenticationAdapterDelegatorFactory implements DelegatorFactoryInterface
      *
      * Attaches adapters as listeners if present in configuration.
      *
-     * @param string $name
+     * @param  string             $name
      */
     #[Override]
-    public function __invoke(ContainerInterface $container, string $name, callable $callback, ?array $options = null): DefaultAuthenticationListener
-    {
+    public function __invoke(
+        ContainerInterface $container,
+        $name,
+        callable $callback,
+        ?array $options = null,
+    ): DefaultAuthenticationListener {
+        /** @var mixed $listener */
         $listener = $callback();
 
+        /** @var mixed $config */
         $config = $container->get('config');
         if (
-            ! isset($config['api-tools-mvc-auth']['authentication']['adapters'])
-            || ! is_array(value: $config['api-tools-mvc-auth']['authentication']['adapters'])
+            !isset($config['api-tools-mvc-auth']['authentication']['adapters'])
+            || !is_array(value: $config['api-tools-mvc-auth']['authentication']['adapters'])
         ) {
-            return $listener;
+            return \Jield\Stdlib\Value::instance($listener, \Jield\ApiTools\MvcAuth\Authentication\DefaultAuthenticationListener::class);
         }
 
+        /** @var mixed $data */
         foreach ($config['api-tools-mvc-auth']['authentication']['adapters'] as $type => $data) {
-            $this->attachAdapterOfType(type: $type, adapterConfig: $data, container: $container, listener: $listener);
+            $this->attachAdapterOfType(type: \Jield\Stdlib\Value::string($type), adapterConfig: \Jield\Stdlib\Value::array($data), container: $container, listener: \Jield\Stdlib\Value::instance($listener, \Jield\ApiTools\MvcAuth\Authentication\DefaultAuthenticationListener::class));
         }
 
-        return $listener;
-    }
-
-    /**
-     * Decorate the DefaultAuthenticationListener (v2)
-     *
-     * Provided for backwards compatibility; proxies to __invoke().
-     *
-     * @param string $name
-     * @param string $requestedName
-     * @param callable $callback
-     */
-    #[Override]
-    public function createDelegatorWithName(ServiceLocatorInterface $container, string $name, string $requestedName, callable $callback): DefaultAuthenticationListener
-    {
-        return $this(container: $container, name: $requestedName, callback: $callback);
+        return \Jield\Stdlib\Value::instance($listener, \Jield\ApiTools\MvcAuth\Authentication\DefaultAuthenticationListener::class);
     }
 
     /**
@@ -66,28 +57,33 @@ class AuthenticationAdapterDelegatorFactory implements DelegatorFactoryInterface
         string $type,
         array $adapterConfig,
         ContainerInterface $container,
-        DefaultAuthenticationListener $listener
+        DefaultAuthenticationListener $listener,
     ): void {
-        if (
-            ! isset($adapterConfig['adapter'])
-            || ! is_string(value: $adapterConfig['adapter'])
-        ) {
+        if (!isset($adapterConfig['adapter']) || !is_string(value: $adapterConfig['adapter'])) {
             return;
         }
 
         switch ($adapterConfig['adapter']) {
             case HttpAdapter::class:
-                $adapter = AuthenticationHttpAdapterFactory::factory(type: $type, config: $adapterConfig, container: $container);
+                $adapter = AuthenticationHttpAdapterFactory::factory(
+                    type: $type,
+                    config: $adapterConfig,
+                    container: $container,
+                );
                 break;
             case OAuth2Adapter::class:
-                $adapter = AuthenticationOAuth2AdapterFactory::factory(type: $type, config: $adapterConfig, container: $container);
+                $adapter = AuthenticationOAuth2AdapterFactory::factory(
+                    type: $type,
+                    config: $adapterConfig,
+                    container: $container,
+                );
                 break;
             default:
                 $adapter = false;
                 break;
         }
 
-        if (! $adapter) {
+        if (!$adapter) {
             return;
         }
 

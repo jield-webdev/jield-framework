@@ -1,7 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\Mvc\Exception;
 
-class BadMethodCallException extends \BadMethodCallException implements ExceptionInterface
-{
-}
+class BadMethodCallException extends \BadMethodCallException implements ExceptionInterface {}

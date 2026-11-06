@@ -6,11 +6,11 @@ namespace Jield\Authorize\Provider\Identity;
 
 use Doctrine\Common\Collections\Collection;
 use JetBrains\PhpStorm\Pure;
-use Jield\Authentication\AuthenticationService;
 use Jield\Authorize\Role\UserAsRole;
 use Jield\Authorize\Role\UserAsRoleInterface;
 use Jield\Authorize\Service\AccessRolesByUserInterface;
 use Jield\Authorize\Service\HasPermitInterface;
+use Laminas\Authentication\AuthenticationService;
 use Laminas\Permissions\Acl\Role\RoleInterface;
 
 /**
@@ -18,7 +18,6 @@ use Laminas\Permissions\Acl\Role\RoleInterface;
  */
 class AuthenticationIdentityProvider implements ProviderInterface
 {
-
     public const string ACCESS_PUBLIC = 'public';
     public const string ACCESS_AUTHENTICATED = 'user';
 
@@ -27,14 +26,13 @@ class AuthenticationIdentityProvider implements ProviderInterface
 
     #[Pure]
     public function __construct(
-        protected AuthenticationService    $authService,
+        protected AuthenticationService $authService,
         private AccessRolesByUserInterface $accessOrUserService,
-        private HasPermitInterface         $permitService,
-        array                              $authorizeConfig
-    )
-    {
-        $this->defaultRole       = $authorizeConfig['default_role'] ?? self::ACCESS_PUBLIC;
-        $this->authenticatedRole = $authorizeConfig['authenticated_role'] ?? self::ACCESS_AUTHENTICATED;
+        private HasPermitInterface $permitService,
+        array $authorizeConfig,
+    ) {
+        $this->defaultRole = \Jield\Stdlib\Value::instanceOrString($authorizeConfig['default_role'] ?? self::ACCESS_PUBLIC, RoleInterface::class);
+        $this->authenticatedRole = \Jield\Stdlib\Value::instanceOrString($authorizeConfig['authenticated_role'] ?? self::ACCESS_AUTHENTICATED, RoleInterface::class);
     }
 
     public function getIdentityAsRole(): UserAsRole
@@ -66,12 +64,12 @@ class AuthenticationIdentityProvider implements ProviderInterface
             return [$this->defaultRole];
         }
 
-        return $this->accessOrUserService->getAccessRolesByUser(user: $this->authService->getIdentity());
+        return $this->accessOrUserService->getAccessRolesByUser(user: \Jield\Stdlib\Value::instance($this->authService->getIdentity(), \Jield\Authorize\Role\UserAsRoleInterface::class));
     }
 
     public function hasPermit(object $resource, string|array $privilege): bool
     {
-        return $this->permitService->hasPermit(user: $this->getIdentity(), resource: $resource, privilege: $privilege);
+        return $this->permitService->hasPermit(user: \Jield\Stdlib\Value::instance($this->getIdentity(), \Jield\Authorize\Role\UserAsRoleInterface::class), resource: $resource, privilege: $privilege);
     }
 
     public function getIdentity(): ?UserAsRoleInterface
@@ -80,18 +78,22 @@ class AuthenticationIdentityProvider implements ProviderInterface
             return null;
         }
 
-        return $this->authService->getIdentity();
+        return \Jield\Stdlib\Value::nullableInstance($this->authService->getIdentity(), \Jield\Authorize\Role\UserAsRoleInterface::class);
     }
 
     public function hasGeneralPermit(string $className, string $privilege): bool
     {
-        return $this->permitService->hasGeneralPermit(user: $this->getIdentity(), className: $className, privilege: $privilege);
+        return $this->permitService->hasGeneralPermit(
+            user: \Jield\Stdlib\Value::instance($this->getIdentity(), \Jield\Authorize\Role\UserAsRoleInterface::class),
+            className: $className,
+            privilege: $privilege,
+        );
     }
 
     public function hasRole(string|array|int|Collection $roles): bool
     {
         if ($roles instanceof Collection) {
-            $roles = $roles->map(func: fn(RoleInterface $role) => $role->getRoleId())->toArray();
+            $roles = $roles->map(func: static fn(RoleInterface $role) => $role->getRoleId())->toArray();
         }
 
         if (!is_array(value: $roles)) {
@@ -100,5 +102,4 @@ class AuthenticationIdentityProvider implements ProviderInterface
 
         return !empty(array_intersect($roles, $this->getIdentityRoles()));
     }
-
 }

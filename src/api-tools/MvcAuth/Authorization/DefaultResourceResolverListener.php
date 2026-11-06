@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace Jield\ApiTools\MvcAuth\Authorization;
 
 use Jield\ApiTools\MvcAuth\MvcAuthEvent;
+use Jield\Mvc\Router\RouteMatch;
 use Laminas\Http\Request;
-use Laminas\Router\RouteMatch;
 use Laminas\Stdlib\RequestInterface;
+
 use function array_key_exists;
 use function sprintf;
 
@@ -36,11 +37,11 @@ class DefaultResourceResolverListener
      */
     public function __invoke(MvcAuthEvent $mvcAuthEvent): void
     {
-        $mvcEvent   = $mvcAuthEvent->getMvcEvent();
-        $request    = $mvcEvent->getRequest();
+        $mvcEvent = $mvcAuthEvent->getMvcEvent();
+        $request = $mvcEvent->getRequest();
         $routeMatch = $mvcEvent->getRouteMatch();
 
-        $resource = $this->buildResourceString(routeMatch: $routeMatch, request: $request);
+        $resource = $this->buildResourceString(routeMatch: \Jield\Stdlib\Value::instance($routeMatch, \Jield\Mvc\Router\RouteMatch::class), request: $request);
         if (!$resource) {
             return;
         }
@@ -70,6 +71,7 @@ class DefaultResourceResolverListener
     {
         // Considerations:
         // - We want the controller service name
+        /** @var mixed $controller */
         $controller = $routeMatch->getParam(name: 'controller', default: false);
         if (!$controller) {
             return false;
@@ -77,21 +79,24 @@ class DefaultResourceResolverListener
 
         // - Is this an RPC or a REST call?
         //   - Basically, if it's not in the api-tools-rest configuration, we assume RPC
-        if (!array_key_exists(key: $controller, array: $this->restControllers)) {
+        if (!array_key_exists(key: \Jield\Stdlib\Value::plainScalar($controller), array: $this->restControllers)) {
+            /** @var mixed $action */
             $action = $routeMatch->getParam(name: 'action', default: 'index');
-            return sprintf('%s::%s', $controller, $action);
+            return sprintf('%s::%s', \Jield\Stdlib\Value::scalar($controller), \Jield\Stdlib\Value::scalar($action));
         }
 
         //   - If it is a REST controller, we need to know if we have a
         //     resource or a controller. The way to determine that is if we have
         //     an identifier. We find that info from the route parameters.
+        /** @var mixed $identifierName */
         $identifierName = $this->restControllers[$controller];
-        $id             = $this->getIdentifier(identifierName: $identifierName, routeMatch: $routeMatch, request: $request);
+        /** @var mixed $id */
+        $id = $this->getIdentifier(identifierName: \Jield\Stdlib\Value::string($identifierName), routeMatch: $routeMatch, request: $request);
         if ($id !== false) {
-            return sprintf('%s::entity', $controller);
+            return sprintf('%s::entity', \Jield\Stdlib\Value::scalar($controller));
         }
 
-        return sprintf('%s::collection', $controller);
+        return sprintf('%s::collection', \Jield\Stdlib\Value::scalar($controller));
     }
 
     /**
@@ -103,10 +108,11 @@ class DefaultResourceResolverListener
      * @param string $identifierName
      * @param RouteMatch $routeMatch Validated by calling method.
      * @param RequestInterface $request
-     * @return false|mixed
+     * @return mixed
      */
     protected function getIdentifier(string $identifierName, RouteMatch $routeMatch, RequestInterface $request): mixed
     {
+        /** @var mixed $id */
         $id = $routeMatch->getParam(name: $identifierName, default: false);
         if ($id !== false) {
             return $id;

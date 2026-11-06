@@ -142,7 +142,7 @@ final class Configuration extends DBALConfiguration
     /**
      * Default repository class
      */
-    protected string|null $defaultRepositoryClassName = null;
+    protected ?string $defaultRepositoryClassName = null;
 
     /**
      * Repository factory or name of the repository factory service to be set in ORM
@@ -154,7 +154,7 @@ final class Configuration extends DBALConfiguration
      * Class name of MetaData factory to be set in ORM.
      * The entityManager will create a new instance on construction.
      */
-    protected string|null $classMetadataFactoryName = null;
+    protected ?string $classMetadataFactoryName = null;
 
     /**
      * Entity listener resolver or service name of the entity listener resolver
@@ -169,12 +169,12 @@ final class Configuration extends DBALConfiguration
      *
      * @link http://docs.doctrine-project.org/projects/doctrine-orm/en/latest/reference/second-level-cache.html
      */
-    protected SecondLevelCacheConfiguration|null $secondLevelCache = null;
+    protected ?SecondLevelCacheConfiguration $secondLevelCache = null;
 
     /**
      * Configuration option for the filter schema assets expression
      */
-    protected string|null $filterSchemaAssetsExpression = null;
+    protected ?string $filterSchemaAssetsExpression = null;
 
     /**
      * Stack of middleware names
@@ -444,7 +444,7 @@ final class Configuration extends DBALConfiguration
         return $this;
     }
 
-    public function getClassMetadataFactoryName(): string|null
+    public function getClassMetadataFactoryName(): ?string
     {
         return $this->classMetadataFactoryName;
     }
@@ -464,7 +464,7 @@ final class Configuration extends DBALConfiguration
     /** @param  mixed[] $secondLevelCache */
     public function setSecondLevelCache(array $secondLevelCache): self
     {
-        $this->secondLevelCache = new SecondLevelCacheConfiguration(options: $secondLevelCache);
+        $this->secondLevelCache = new SecondLevelCacheConfiguration(options: \Jield\Stdlib\Value::stringKeyedArray($secondLevelCache));
 
         return $this;
     }
@@ -481,7 +481,7 @@ final class Configuration extends DBALConfiguration
         return $this;
     }
 
-    public function getFilterSchemaAssetsExpression(): string|null
+    public function getFilterSchemaAssetsExpression(): ?string
     {
         return $this->filterSchemaAssetsExpression;
     }
@@ -493,7 +493,7 @@ final class Configuration extends DBALConfiguration
         return $this;
     }
 
-    public function getSchemaAssetsFilter(): callable|null
+    public function getSchemaAssetsFilter(): ?callable
     {
         return $this->schemaAssetsFilter;
     }
@@ -511,7 +511,7 @@ final class Configuration extends DBALConfiguration
     /**
      * Get default repository class name.
      */
-    public function getDefaultRepositoryClassName(): string|null
+    public function getDefaultRepositoryClassName(): ?string
     {
         return $this->defaultRepositoryClassName;
     }

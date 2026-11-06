@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\Mvc\Factory;
 
 // phpcs:ignore
@@ -14,7 +16,7 @@ class SendResponseListenerFactory
     public function __invoke(ContainerInterface $container): SendResponseListener
     {
         $listener = new SendResponseListener();
-        $listener->setEventManager($container->get('EventManager'));
+        $listener->setEventManager(\Jield\Stdlib\Service::get($container, \Laminas\EventManager\EventManagerInterface::class, 'EventManager'));
         return $listener;
     }
 }

@@ -12,6 +12,7 @@ use Laminas\Uri\UriFactory;
 use Override;
 use Psr\Link\LinkInterface;
 use Traversable;
+
 use function get_debug_type;
 use function is_array;
 use function is_string;
@@ -58,10 +59,10 @@ class Link implements LinkInterface
      * $spec['url'] is deprecated since 1.5.0; use $spec['href'] instead
      *
      * @psalm-param array{
-     *     rel: string|array<array-key,string>,
+     *     rel?: string|array<array-key,string>,
      *     props?: array<array-key,mixed>,
      *     href?: string,
-     *     route?: string|array{name:string,params:string|array<array-key,mixed>,options:string|array<array-key,mixed>},
+     *     route?: mixed,
      *     url?: string
      * } $spec
      * @throws Exception\InvalidArgumentException If missing a "rel" or invalid route specifications.
@@ -71,16 +72,13 @@ class Link implements LinkInterface
         if (!isset($spec['rel'])) {
             throw new Exception\InvalidArgumentException(message: sprintf(
                 '%s requires that the specification array contain a "rel" element; none found',
-                __METHOD__
+                __METHOD__,
             ));
         }
 
         $link = new Link(relation: $spec['rel']);
         /** @psalm-suppress RedundantConditionGivenDocblockType */
-        if (
-            isset($spec['props'])
-            && is_array(value: $spec['props'])
-        ) {
+        if (isset($spec['props'])) {
             /** @var array<string, mixed> $props */
             $props = $spec['props'];
             $link->setProps(props: $props);
@@ -94,7 +92,7 @@ class Link implements LinkInterface
         }
 
         /** @psalm-suppress RedundantConditionGivenDocblockType */
-        if (isset($spec['href']) && is_string(value: $spec['href'])) {
+        if (isset($spec['href'])) {
             $link->href = $spec['href'];
             return $link;
         }
@@ -111,26 +109,22 @@ class Link implements LinkInterface
                 throw new Exception\InvalidArgumentException(message: sprintf(
                     '%s requires that the specification array\'s "route" element be a string or array; received "%s"',
                     __METHOD__,
-                    get_debug_type(value: $routeInfo)
+                    get_debug_type(value: $routeInfo),
                 ));
             }
 
             if (!isset($routeInfo['name'])) {
                 throw new Exception\InvalidArgumentException(message: sprintf(
                     '%s requires that the specification array\'s "route" array contain a "name" element; none found',
-                    __METHOD__
+                    __METHOD__,
                 ));
             }
 
-            $name    = $routeInfo['name'];
-            $params  = isset($routeInfo['params']) && is_array(value: $routeInfo['params'])
-                ? $routeInfo['params']
-                : [];
-            $options = isset($routeInfo['options']) && is_array(value: $routeInfo['options'])
-                ? $routeInfo['options']
-                : [];
+            $name = $routeInfo['name'];
+            $params = is_array(value: $routeInfo['params']) ? $routeInfo['params'] : [];
+            $options = is_array(value: $routeInfo['options']) ? $routeInfo['options'] : [];
             /** @psalm-suppress RedundantCastGivenDocblockType */
-            $link->setRoute(route: (string)$name, params: $params, options: $options);
+            $link->setRoute(route: \Jield\Stdlib\Value::string($name), params: $params, options: $options);
             return $link;
         }
 
@@ -162,11 +156,8 @@ class Link implements LinkInterface
      */
     public function setRoute(string $route, ?iterable $params = null, ?iterable $options = null): static
     {
-        if ($this->hasUrl()) {
-            throw new DomainException(message: sprintf(
-                '%s already has a URL set; cannot set route',
-                static::class
-            ));
+        if ($this->getHref() !== '') {
+            throw new DomainException(message: sprintf('%s already has a URL set; cannot set route', static::class));
         }
 
         $this->route = $route;
@@ -195,7 +186,7 @@ class Link implements LinkInterface
             $options = ArrayUtils::iteratorToArray(iterator: $options);
         }
 
-        $this->routeOptions = $options;
+        $this->routeOptions = \Jield\Stdlib\Value::array($options);
         return $this;
     }
 
@@ -228,25 +219,21 @@ class Link implements LinkInterface
     public function setUrl(string $href): static
     {
         if ($this->hasRoute()) {
-            throw new DomainException(message: sprintf(
-                '%s already has a route set; cannot set URL',
-                static::class
-            ));
+            throw new DomainException(message: sprintf('%s already has a route set; cannot set URL', static::class));
         }
 
         try {
             $uri = UriFactory::factory(uriString: $href);
         } catch (UriException\ExceptionInterface $exception) {
-            throw new Exception\InvalidArgumentException(message: sprintf(
-                'Received invalid URL: %s',
-                $exception->getMessage()
-            ), code: (int)$exception->getCode(), previous: $exception);
+            throw new Exception\InvalidArgumentException(
+                message: sprintf('Received invalid URL: %s', \Jield\Stdlib\Value::scalar($exception->getMessage())),
+                code: (int) $exception->getCode(),
+                previous: $exception,
+            );
         }
 
         if (!$uri->isValid()) {
-            throw new Exception\InvalidArgumentException(
-                message: 'Received invalid URL'
-            );
+            throw new Exception\InvalidArgumentException(message: 'Received invalid URL');
         }
 
         $this->href = $href;
@@ -276,7 +263,7 @@ class Link implements LinkInterface
     {
         $rels = $this->getRels();
 
-        return (string)reset(array: $rels);
+        return (string) reset(array: $rels);
     }
 
     /**
@@ -367,7 +354,7 @@ class Link implements LinkInterface
     #[Override]
     public function getHref(): string
     {
-        return (string)$this->href;
+        return (string) $this->href;
     }
 
     /**

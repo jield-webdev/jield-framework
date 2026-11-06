@@ -16,7 +16,7 @@ use Stringable;
  */
 class BooleanExpression extends Expression implements Stringable
 {
-    final public const string OPERATOR_REQUIRED   = '+';
+    final public const string OPERATOR_REQUIRED = '+';
     final public const string OPERATOR_PROHIBITED = '-';
 
     /**
@@ -25,8 +25,12 @@ class BooleanExpression extends Expression implements Stringable
      * @param string|ExpressionInterface $expr
      * @param bool $useNotNotation use the NOT notation: (*:* NOT <expr>), e.g. (*:* NOT fieldName:*)
      */
-    #[Pure] public function __construct(private readonly string $operator, ExpressionInterface|string $expr, private readonly bool $useNotNotation = false)
-    {
+    #[Pure]
+    public function __construct(
+        private readonly string $operator,
+        ExpressionInterface|string $expr,
+        private readonly bool $useNotNotation = false,
+    ) {
         parent::__construct(expr: $expr);
     }
 

@@ -6,6 +6,4 @@ namespace Jield\ApiTools\Hal\Exception;
 
 use RuntimeException;
 
-class DeprecatedMethodException extends RuntimeException implements ExceptionInterface
-{
-}
+class DeprecatedMethodException extends RuntimeException implements ExceptionInterface {}

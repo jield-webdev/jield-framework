@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace Jield\Authorize\Permissions\Acl\Assertion;
 
-use Jield\Authorize\Role\UserAsRole;
-use Jield\Authorize\Role\UserAsRoleInterface;
 use Doctrine\Common\Collections\Collection;
 use Jield\Authorize\Provider\Identity\AuthenticationIdentityProvider;
+use Jield\Authorize\Role\UserAsRole;
+use Jield\Authorize\Role\UserAsRoleInterface;
+use Jield\Mvc\Router\RouteMatch;
 use Laminas\Http\Request;
 use Laminas\Permissions\Acl\Assertion\AssertionInterface;
 use Laminas\Stdlib\RequestInterface;
-use Laminas\Router\RouteMatch;
 use Psr\Container\ContainerInterface;
 
 abstract class AbstractAssertion implements AssertionInterface
@@ -24,9 +24,10 @@ abstract class AbstractAssertion implements AssertionInterface
 
     protected RequestInterface|Request $request;
 
-    public function __construct(protected ContainerInterface $container)
-    {
-        $this->authenticationIdentityProvider = $this->container->get(AuthenticationIdentityProvider::class);
+    public function __construct(
+        protected ContainerInterface $container,
+    ) {
+        $this->authenticationIdentityProvider = \Jield\Stdlib\Service::get($this->container, AuthenticationIdentityProvider::class);
     }
 
     public function setRouteMatch(RouteMatch $routeMatch): AbstractAssertion
@@ -47,7 +48,7 @@ abstract class AbstractAssertion implements AssertionInterface
             return false;
         }
 
-        return $this->authenticationIdentityProvider->hasPermit(resource: $entity, privilege: $privilege);
+        return $this->authenticationIdentityProvider->hasPermit(resource: \Jield\Stdlib\Value::object($entity), privilege: $privilege);
     }
 
     protected function isLoggedIn(): bool
@@ -70,7 +71,7 @@ abstract class AbstractAssertion implements AssertionInterface
             throw new \RuntimeException(message: 'Calling getIdentity when nog logged in is not possible');
         }
 
-        return $this->authenticationIdentityProvider->getIdentity();
+        return \Jield\Stdlib\Value::instance($this->authenticationIdentityProvider->getIdentity(), \Jield\Authorize\Role\UserAsRoleInterface::class);
     }
 
     protected function hasRole(string|array|int|Collection $roles): bool
@@ -86,9 +87,11 @@ abstract class AbstractAssertion implements AssertionInterface
         }
 
         if (!isset($this->routeMatch)) {
-            throw new \RuntimeException(message: 'Calling parsePrivilege before setting the routematch is not possible');
+            throw new \RuntimeException(
+                message: 'Calling parsePrivilege before setting the routematch is not possible',
+            );
         }
 
-        return $this->routeMatch->getParam(name: 'privilege') ?? $this->routeMatch->getParam(name: 'action');
+        return \Jield\Stdlib\Value::string($this->routeMatch->getParam(name: 'privilege') ?? $this->routeMatch->getParam(name: 'action'));
     }
 }

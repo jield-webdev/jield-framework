@@ -18,7 +18,7 @@ final class ConfigProvider
     public function getControllerPluginConfig(): array
     {
         return [
-            'aliases'   => [
+            'aliases' => [
                 'identity' => Identity::class,
                 'Identity' => Identity::class,
             ],

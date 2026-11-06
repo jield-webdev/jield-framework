@@ -8,30 +8,32 @@ use Jield\ApiTools\Provider\SolariumProviderInterface;
 use Laminas\Paginator\Adapter\AdapterInterface;
 use Override;
 use Solarium\Client;
-use Solarium\Core\Query\Result\ResultInterface;
 use Solarium\QueryType\Select\Query\Query;
-use Solarium\QueryType\Select\Result\Result;
 
 /**
  * Solarium result paginator.
+ 
+ *
+ * @implements \Laminas\Paginator\Adapter\AdapterInterface<array-key, mixed>
  */
 class SolariumPaginatorAdapter implements AdapterInterface
 {
     protected ?int $count = null;
 
     public function __construct(
-        protected Client                    $client,
-        protected Query                     $query,
-        protected SolariumProviderInterface $provider
-    )
-    {
-    }
+        protected Client $client,
+        protected Query $query,
+        protected SolariumProviderInterface $provider,
+    ) {}
 
     #[Override]
     public function count(): int
     {
         if (null === $this->count) {
-            $this->getItems(offset: 0, itemCountPerPage: 0);
+            $query = clone $this->query;
+            $query->setStart(0)->setRows(0);
+            $result = $this->client->select($query);
+            $this->count = \Jield\Stdlib\Value::instance($result, \Solarium\QueryType\Select\Result\Result::class)->getNumFound() ?? 0;
         }
 
         return $this->count;
@@ -43,12 +45,13 @@ class SolariumPaginatorAdapter implements AdapterInterface
         $this->query->setStart(start: $offset);
         $this->query->setRows(rows: $itemCountPerPage);
 
-        $result      = $this->client->select(query: $this->query);
-        $this->count = $result->getNumFound();
+        $result = $this->client->select($this->query);
+        $this->count = $result->getNumFound() ?? 0;
 
         $results = [];
+        /** @var mixed $result */
         foreach ($result->getIterator() as $result) {
-            $results[] = $this->provider->generateArrayFromSearchDocument(document: $result);
+            $results[] = $this->provider->generateArrayFromSearchDocument(document: \Jield\Stdlib\Value::instance($result, \Solarium\QueryType\Select\Result\Document::class));
         }
 
         return $results;

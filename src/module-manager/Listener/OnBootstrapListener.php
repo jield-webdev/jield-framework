@@ -18,15 +18,17 @@ class OnBootstrapListener extends AbstractListener
     {
         $module = $e->getModule();
         if (
-            ! $module instanceof BootstrapListenerInterface
-            && ! method_exists(object_or_class: $module, method: 'onBootstrap')
+            !$module instanceof BootstrapListenerInterface
+            && !method_exists(object_or_class: \Jield\Stdlib\Value::objectOrString($module), method: 'onBootstrap')
         ) {
             return;
         }
 
         $moduleManager = $e->getTarget();
-        $events        = $moduleManager->getEventManager();
-        $sharedEvents  = $events->getSharedManager();
-        $sharedEvents->attach(Application::class, ModuleManager::EVENT_BOOTSTRAP, [$module, 'onBootstrap']);
+        /** @var mixed $events */
+        $events = \Jield\Stdlib\Value::call(\Jield\Stdlib\Value::present(\Jield\Stdlib\Value::object($moduleManager)), 'getEventManager');
+        /** @var mixed $sharedEvents */
+        $sharedEvents = \Jield\Stdlib\Value::call($events, 'getSharedManager');
+        \Jield\Stdlib\Value::call($sharedEvents, 'attach', [Application::class, ModuleManager::EVENT_BOOTSTRAP, [$module, 'onBootstrap']]);
     }
 }

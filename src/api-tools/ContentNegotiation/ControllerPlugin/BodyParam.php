@@ -14,28 +14,30 @@ class BodyParam extends AbstractPlugin
      * Grabs a param from body match after content-negotiation
      *
      * @param string|null $param
-     * @param mixed|null $default
+     * @param mixed $default
      * @return mixed
      */
     public function __invoke(?string $param = null, mixed $default = null): mixed
     {
         $controller = $this->getController();
         if ($controller instanceof AbstractController) {
-            $parameterData = $controller->getEvent()->getParam(name: 'JieldContentNegotiationParameterData');
+            /** @var mixed $parameterData */
+            $parameterData = $controller->getEvent()->getParam(name: 'LaminasContentNegotiationParameterData');
             if ($parameterData instanceof ParameterDataContainer) {
-                return $parameterData->getBodyParam(name: $param, default: $default);
+                return $parameterData->getBodyParam(name: \Jield\Stdlib\Value::string($param), default: $default);
             }
         }
 
-        if (!method_exists(object_or_class: $controller, method: 'getRequest')) {
+        if (!method_exists(object_or_class: \Jield\Stdlib\Value::objectOrString($controller), method: 'getRequest')) {
             return $default;
         }
 
-        $request = $controller->getRequest();
-        if (!method_exists(object_or_class: $request, method: 'getPost')) {
+        /** @var mixed $request */
+        $request = \Jield\Stdlib\Value::call($controller, 'getRequest');
+        if (!method_exists(object_or_class: \Jield\Stdlib\Value::objectOrString($request), method: 'getPost')) {
             return $default;
         }
 
-        return $request->getPost(name: $param, default: $default);
+        return \Jield\Stdlib\Value::call($request, 'getPost', ['name' => $param, 'default' => $default]);
     }
 }

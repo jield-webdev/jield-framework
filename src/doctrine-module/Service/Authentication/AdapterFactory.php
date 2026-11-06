@@ -9,6 +9,7 @@ use DoctrineModule\Options\Authentication;
 use DoctrineModule\Service\AbstractFactory;
 use Psr\Container\ContainerInterface;
 use RuntimeException;
+
 use function is_string;
 use function sprintf;
 
@@ -20,7 +21,7 @@ final class AdapterFactory extends AbstractFactory
     /**
      * {@inheritDoc}
      */
-    public function __invoke(ContainerInterface $container, $requestedName, array|null $options = null): ObjectRepository
+    public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): ObjectRepository
     {
         $containerOptions = $this->getOptions(container: $container, key: 'authentication');
 
@@ -32,9 +33,10 @@ final class AdapterFactory extends AbstractFactory
             ));
         }
 
+        /** @var mixed $objectManager */
         $objectManager = $containerOptions->getObjectManager();
         if (is_string(value: $objectManager)) {
-            $containerOptions->setObjectManager(objectManager: $container->get($objectManager));
+            $containerOptions->setObjectManager(objectManager: \Jield\Stdlib\Value::instanceOrString($container->get($objectManager), \Doctrine\Persistence\ObjectManager::class));
         }
 
         return new ObjectRepository(options: $options);

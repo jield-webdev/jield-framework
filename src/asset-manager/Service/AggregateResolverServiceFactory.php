@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\AssetManager\Service;
 
 use Jield\AssetManager\Exception;
@@ -25,7 +27,9 @@ class AggregateResolverServiceFactory implements FactoryInterface
     #[Override]
     public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): AggregateResolver
     {
+        /** @var mixed $config */
         $config = $container->get('config');
+        /** @var mixed $config */
         $config = $config['asset_manager'] ?? [];
 
         $resolver = new AggregateResolver();
@@ -34,13 +38,16 @@ class AggregateResolverServiceFactory implements FactoryInterface
             return $resolver;
         }
 
-        foreach ($config['resolvers'] as $resolverService => $priority) {
-
-            $resolverService = $container->get($resolverService);
+        /** @var mixed $resolverService
+         * @var mixed $priority
+         */
+        foreach (\Jield\Stdlib\Value::iterable($config['resolvers']) as $resolverService => $priority) {
+            /** @var mixed $resolverService */
+            $resolverService = $container->get(\Jield\Stdlib\Value::string($resolverService));
 
             if (!$resolverService instanceof ResolverInterface) {
                 throw new Exception\RuntimeException(
-                    message: 'Service does not implement the required interface ResolverInterface.'
+                    message: 'Service does not implement the required interface ResolverInterface.',
                 );
             }
 
@@ -49,16 +56,14 @@ class AggregateResolverServiceFactory implements FactoryInterface
             }
 
             if ($resolverService instanceof MimeResolverAwareInterface) {
-                $resolverService->setMimeResolver(mimeResolver: $container->get(MimeResolver::class));
+                $resolverService->setMimeResolver(mimeResolver: \Jield\Stdlib\Service::get($container, MimeResolver::class));
             }
 
             if ($resolverService instanceof AssetFilterManagerAwareInterface) {
-                $resolverService->setAssetFilterManager(
-                    filterManager: $container->get(AssetFilterManager::class)
-                );
+                $resolverService->setAssetFilterManager(filterManager: \Jield\Stdlib\Service::get($container, AssetFilterManager::class));
             }
 
-            $resolver->attach(resolver: $resolverService, priority: $priority);
+            $resolver->attach(resolver: $resolverService, priority: \Jield\Stdlib\Value::int($priority));
         }
 
         return $resolver;

@@ -7,7 +7,6 @@ namespace Jield\Form\Element;
 use Laminas\Validator\InArray as InArrayValidator;
 use Laminas\Validator\ValidatorInterface;
 
-/** @final */
 class Radio extends MultiCheckbox
 {
     /** @var array<string, scalar|null>  */
@@ -20,10 +19,10 @@ class Radio extends MultiCheckbox
      */
     protected function getValidator(): ?ValidatorInterface
     {
-        if (null === $this->validator && ! $this->disableInArrayValidator()) {
+        if (null === $this->validator && !$this->disableInArrayValidator()) {
             $this->validator = new InArrayValidator(options: [
                 'haystack' => $this->getValueOptionsValues(),
-                'strict'   => false,
+                'strict' => false,
             ]);
         }
         return $this->validator;

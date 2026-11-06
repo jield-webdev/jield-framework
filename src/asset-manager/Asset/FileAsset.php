@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\AssetManager\Asset;
 
 class FileAsset extends \Assetic\Asset\FileAsset implements AssetInterface
@@ -16,6 +18,4 @@ class FileAsset extends \Assetic\Asset\FileAsset implements AssetInterface
         $this->mimetype = $mimetype;
         return $this;
     }
-
-
 }

@@ -11,21 +11,23 @@ use Stringable;
 class FunctionExpression extends Expression implements Stringable
 {
     /**
-     * @param string|Expression $function
-     * @param array|ExpressionInterface|null $parameters
+     * @param string|ExpressionInterface $function
+     * @param array|ExpressionInterface|string|null $parameters
      */
-    public function __construct(private Expression|string $function, private ExpressionInterface|array|null $parameters = null)
-    {
-    }
+    public function __construct(
+        private ExpressionInterface|string $function,
+        private ExpressionInterface|array|string|null $parameters = null,
+    ) {}
 
-    #[Pure] public function __toString(): string
+    #[Pure]
+    public function __toString(): string
     {
         $parameters = $this->parameters ?: null;
 
         if ($parameters && !$parameters instanceof ParameterExpression) {
-            $parameters = new ParameterExpression(parameters: $parameters);
+            $parameters = new ParameterExpression(parameters: is_array($parameters) ? $parameters : [$parameters]);
         }
 
-        return $this->function . '(' . $parameters . ')';
+        return (string) $this->function . '(' . (string) $parameters . ')';
     }
 }

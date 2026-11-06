@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Jield\ApiTools\Hal\Extractor;
 
 use ArrayObject;
-use JsonSerializable;
 use Jield\ApiTools\Hal\EntityHydratorManager;
+use JsonSerializable;
 use Laminas\Hydrator\ExtractionInterface;
 use Override;
 use SplObjectStorage;
@@ -31,7 +31,7 @@ class EntityExtractor implements ExtractionInterface
     public function __construct(EntityHydratorManager $entityHydratorManager)
     {
         $this->entityHydratorManager = $entityHydratorManager;
-        $this->serializedEntities    = new SplObjectStorage();
+        $this->serializedEntities = new SplObjectStorage();
     }
 
     /**
@@ -47,7 +47,7 @@ class EntityExtractor implements ExtractionInterface
 
         $this->serializedEntities[$object] = $this->extractEntity(entity: $object);
 
-        /** @psalm-var array<array-key, mixed> */
+        
         return $this->serializedEntities[$object];
     }
 

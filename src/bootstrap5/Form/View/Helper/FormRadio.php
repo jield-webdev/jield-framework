@@ -14,7 +14,7 @@ final class FormRadio extends FormMultiCheckbox
 {
     protected static function getName(ElementInterface $element): string
     {
-        return $element->getName();
+        return \Jield\Stdlib\Value::string($element->getName());
     }
 
     protected function getInputType(): string

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace DoctrineModule\Authentication\Storage;
 
 use DoctrineModule\Options\Authentication as AuthenticationOptions;
-use Jield\Authentication\Storage\StorageInterface;
+use Laminas\Authentication\Storage\StorageInterface;
 
 /**
  * This class implements StorageInterface and allow to save the result of an authentication against an object repository
@@ -17,8 +17,8 @@ class ObjectRepository implements StorageInterface
     /** @param array|AuthenticationOptions $options */
     public function setOptions(array|AuthenticationOptions $options): ObjectRepository
     {
-        if (! $options instanceof AuthenticationOptions) {
-            $options = new AuthenticationOptions(options: $options);
+        if (!$options instanceof AuthenticationOptions) {
+            $options = new AuthenticationOptions(options: \Jield\Stdlib\Value::stringKeyedArray($options));
         }
 
         $this->options = $options;
@@ -38,16 +38,17 @@ class ObjectRepository implements StorageInterface
 
     public function isEmpty(): bool
     {
-        return $this->options->getStorage()->isEmpty();
+        return \Jield\Stdlib\Value::instance($this->options->getStorage(), StorageInterface::class)->isEmpty();
     }
 
     /**
      * This function assumes that the storage only contains identifier values (which is the case if
      * the ObjectRepository authentication adapter is used).
      */
-    public function read(): object|null
+    public function read(): ?object
     {
-        $identity = $this->options->getStorage()->read();
+        /** @var mixed $identity */
+        $identity = \Jield\Stdlib\Value::instance($this->options->getStorage(), StorageInterface::class)->read();
         if ($identity) {
             return $this->options->getObjectRepository()->find(id: $identity);
         }
@@ -61,19 +62,20 @@ class ObjectRepository implements StorageInterface
      */
     public function readKeyOnly(): mixed
     {
-        return $identity = $this->options->getStorage()->read();
+        /** @var mixed $identity */
+        return $identity = \Jield\Stdlib\Value::instance($this->options->getStorage(), StorageInterface::class)->read();
     }
 
     public function write(mixed $contents): void
     {
-        $metadataInfo     = $this->options->getClassMetadata();
-        $identifierValues = $metadataInfo->getIdentifierValues($contents);
+        $metadataInfo = $this->options->getClassMetadata();
+        $identifierValues = $metadataInfo->getIdentifierValues(\Jield\Stdlib\Value::object($contents));
 
-        $this->options->getStorage()->write(contents: $identifierValues);
+        \Jield\Stdlib\Value::instance($this->options->getStorage(), StorageInterface::class)->write(contents: $identifierValues);
     }
 
     public function clear(): void
     {
-        $this->options->getStorage()->clear();
+        \Jield\Stdlib\Value::instance($this->options->getStorage(), StorageInterface::class)->clear();
     }
 }

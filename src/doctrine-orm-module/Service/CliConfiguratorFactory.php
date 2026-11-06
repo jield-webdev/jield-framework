@@ -13,7 +13,7 @@ final class CliConfiguratorFactory implements FactoryInterface
     /**
      * {@inheritDoc}
      */
-    public function __invoke(ContainerInterface $container, $requestedName, array|null $options = null): CliConfigurator
+    public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): CliConfigurator
     {
         return new CliConfigurator(container: $container);
     }

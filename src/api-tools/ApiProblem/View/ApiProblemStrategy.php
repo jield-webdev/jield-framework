@@ -4,39 +4,40 @@ declare(strict_types=1);
 
 namespace Jield\ApiTools\ApiProblem\View;
 
-use Jield\ApiTools\ApiProblem\ApiProblem;
+use Jield\Mvc\MvcEvent;
+use Laminas\EventManager\AbstractListenerAggregate;
+use Laminas\EventManager\EventManagerInterface;
 
-/**
- * Helper to render ApiProblemModel responses.
- */
-class ApiProblemStrategy
+class ApiProblemStrategy extends AbstractListenerAggregate
 {
-    private ApiProblemRenderer $renderer;
+    public function __construct(
+        private readonly ApiProblemRenderer $renderer,
+    ) {}
 
-    public function __construct(ApiProblemRenderer $renderer)
+    public function attach(EventManagerInterface $events, $priority = 300): void
     {
-        $this->renderer = $renderer;
+        $this->listeners[] = $events->attach(MvcEvent::EVENT_RENDER, $this->render(...), $priority);
+        $this->listeners[] = $events->attach(MvcEvent::EVENT_RENDER_ERROR, $this->render(...), $priority);
     }
 
-    public function render(ApiProblemModel $model): string
+    public function render(MvcEvent $event): void
     {
-        return $this->renderer->render(nameOrModel: $model);
-    }
-
-    /**
-     * Retrieve the HTTP status from an ApiProblem object.
-     *
-     * Ensures that the status falls within the acceptable range (100 - 599).
-     *
-     */
-    public function getStatusCodeFromApiProblem(ApiProblem $problem): int
-    {
-        $status = $problem->getStatus();
-
-        if ($status < 100 || $status >= 600) {
-            return 500;
+        /** @var mixed $model */
+        $model = $event->getResult();
+        if (!$model instanceof ApiProblemModel) {
+            $model = $event->getViewModel();
         }
-
-        return $status;
+        if (!$model instanceof ApiProblemModel) {
+            return;
+        }
+        $body = $this->renderer->render($model);
+        $problem = $model;
+        $response = $event->getResponse();
+        $status = $problem->getApiProblem()->getStatus();
+\Jield\Stdlib\Value::instance($response, \Laminas\Http\Response::class)->setStatusCode($status >= 100 && $status <= 599 ? $status : 500);
+        $response->setContent($body);
+        \Jield\Stdlib\Value::instance($response, \Laminas\Http\AbstractMessage::class)->getHeaders()->addHeaderLine('Content-Type', 'application/problem+json');
+        $event->setResult($response);
+        $event->stopPropagation();
     }
 }

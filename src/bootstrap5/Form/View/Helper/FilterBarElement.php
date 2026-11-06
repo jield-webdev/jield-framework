@@ -7,13 +7,17 @@ namespace Jield\Bootstrap5\Form\View\Helper;
 use Jield\Form\ElementInterface;
 use Jield\Form\Fieldset;
 use Jield\Form\Form;
+
 use function implode;
 use function sprintf;
 
 class FilterBarElement extends FormElement
 {
-    public function __invoke(?ElementInterface $element = null, $type = false, bool $formElementOnly = false): FilterBarElement|FormElement|string|\Jield\Form\View\Helper\FormElement|static
-    {
+    public function __invoke(
+        ?ElementInterface $element = null,
+        $type = false,
+        bool $formElementOnly = false,
+    ): string|static {
         if ($element instanceof Form) {
             return $this->renderFilterBar(element: $element);
         }
@@ -73,7 +77,7 @@ class FilterBarElement extends FormElement
             $this->renderFacets(form: $element),
             $this->renderRaw(element: $element->get(elementOrFieldset: 'query')),
             $this->renderRaw(element: $element->get(elementOrFieldset: 'search')),
-            $this->renderRaw(element: $element->get(elementOrFieldset: 'reset'))
+            $this->renderRaw(element: $element->get(elementOrFieldset: 'reset')),
         );
     }
 
@@ -81,8 +85,7 @@ class FilterBarElement extends FormElement
     {
         $facets = [];
 
-        $facetWrapper
-            = '<li class="nav-item dropdown">
+        $facetWrapper = '<li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="searchDropdown-%d" role="button"
                            data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                             %s
@@ -94,31 +97,38 @@ class FilterBarElement extends FormElement
                                                                         
                     </li>';
 
-
         /** @var Fieldset $facet */
-        foreach ($form->get(elementOrFieldset: 'facet')->getFieldsets() as $counter => $facet) {
+        foreach (\Jield\Stdlib\Value::instance($form->get(elementOrFieldset: 'facet'), \Jield\Form\FieldsetInterface::class)->getFieldsets() as $counter => $facet) {
             $yesNo = '';
             if ($facet->has(elementOrFieldset: 'yesNo')) {
-                $facet->get(elementOrFieldset: 'yesNo')->setAttribute(key: 'class', value: 'form-check-search form-check-yes-no');
+                $facet->get(elementOrFieldset: 'yesNo')->setAttribute(
+                    key: 'class',
+                    value: 'form-check-search form-check-yes-no',
+                );
                 $facet->get(elementOrFieldset: 'yesNo')->setLabel(label: 'Include');
                 if ($facet->get(elementOrFieldset: 'yesNo')->getValue() === 'no') {
                     $facet->get(elementOrFieldset: 'yesNo')->setLabel(label: 'Exclude');
                 }
-                $yesNo = '<div class="dropdown-item"><div class="form-check">' . $this->renderRaw(
-                        element: $facet->get(elementOrFieldset: 'yesNo')
-                    ) . '</div></div>';
+                $yesNo =
+                    '<div class="dropdown-item"><div class="form-check">'
+                    . (string) ($this->renderRaw(element: $facet->get(elementOrFieldset: 'yesNo')))
+                    . '</div></div>';
             }
 
             $andOr = '';
             if ($facet->has(elementOrFieldset: 'andOr')) {
-                $facet->get(elementOrFieldset: 'andOr')->setAttribute(key: 'class', value: 'form-check-search form-check-and-or');
+                $facet->get(elementOrFieldset: 'andOr')->setAttribute(
+                    key: 'class',
+                    value: 'form-check-search form-check-and-or',
+                );
                 $facet->get(elementOrFieldset: 'andOr')->setLabel(label: 'Or');
                 if ($facet->get(elementOrFieldset: 'andOr')->getValue() === 'and') {
                     $facet->get(elementOrFieldset: 'andOr')->setLabel(label: 'And');
                 }
-                $andOr = '<div class="dropdown-item"><div class="form-check">' . $this->renderRaw(
-                        element: $facet->get(elementOrFieldset: 'andOr')
-                    ) . '</div></div>';
+                $andOr =
+                    '<div class="dropdown-item"><div class="form-check">'
+                    . (string) ($this->renderRaw(element: $facet->get(elementOrFieldset: 'andOr')))
+                    . '</div></div>';
             }
 
             $facets[] = sprintf(
@@ -128,7 +138,7 @@ class FilterBarElement extends FormElement
                 $counter,
                 $yesNo,
                 $andOr,
-                $this->renderRaw(element: $facet->get(elementOrFieldset: 'values'))
+                $this->renderRaw(element: $facet->get(elementOrFieldset: 'values')),
             );
         }
 
@@ -145,7 +155,7 @@ class FilterBarElement extends FormElement
                 /** @var FormMultiCheckbox $formMultiCheckbox */
                 $formMultiCheckbox = $this->getView()->plugin('lbs5formmulticheckbox');
                 $formMultiCheckbox->setTemplate(
-                    template: '<div class="dropdown-item"><div class="form-check %s">%s%s%s%s</div></div>'
+                    template: '<div class="dropdown-item"><div class="form-check %s">%s%s%s%s</div></div>',
                 );
 
                 return $formMultiCheckbox->render(element: $element);
@@ -154,7 +164,7 @@ class FilterBarElement extends FormElement
                 /** @var FormMultiCheckbox $formMultiCheckbox */
                 $formMultiCheckbox = $this->getView()->plugin('lbs5formradio');
                 $formMultiCheckbox->setTemplate(
-                    template: '<div class="dropdown-item"><div class="form-check %s">%s%s%s%s</div></div>'
+                    template: '<div class="dropdown-item"><div class="form-check %s">%s%s%s%s</div></div>',
                 );
 
                 return $formMultiCheckbox->render(element: $element);
@@ -167,15 +177,12 @@ class FilterBarElement extends FormElement
             case 'checkbox':
                 //Get the helper
                 /** @var FormCheckbox $formMultiCheckbox */
-                $formMultiCheckbox = $this->getView()?->plugin('lbs5formcheckbox');
+                $formMultiCheckbox = $this->getView()->plugin('lbs5formcheckbox');
 
                 return $formMultiCheckbox->render(element: $element);
             case 'text':
             case 'search':
-                $element->setAttribute(
-                    key: 'class',
-                    value: 'form-control ' . $element->getAttribute(key: 'class')
-                );
+                $element->setAttribute(key: 'class', value: 'form-control ' . (string) ($element->getAttribute(key: 'class')));
                 return $this->renderHelper(name: 'lbs5forminput', element: $element);
             case 'button':
                 $element->setAttribute(key: 'id', value: 'searchButton');
@@ -186,7 +193,7 @@ class FilterBarElement extends FormElement
             case 'submit':
                 return $this->renderHelper(name: 'formsubmit', element: $element);
             default:
-                return $this->renderHelper(name: $type, element: $element);
+                return $this->renderHelper(name: \Jield\Stdlib\Value::string($type), element: $element);
         }
     }
 }

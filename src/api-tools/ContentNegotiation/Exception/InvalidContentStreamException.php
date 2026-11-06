@@ -6,6 +6,4 @@ namespace Jield\ApiTools\ContentNegotiation\Exception;
 
 use InvalidArgumentException;
 
-class InvalidContentStreamException extends InvalidArgumentException implements ExceptionInterface
-{
-}
+class InvalidContentStreamException extends InvalidArgumentException implements ExceptionInterface {}

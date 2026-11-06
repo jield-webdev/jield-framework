@@ -7,6 +7,8 @@ namespace Jield\ApiTools\ContentValidation;
 use Jield\ApiTools\ApiProblem\ApiProblem;
 use Jield\ApiTools\ApiProblem\ApiProblemResponse;
 use Jield\ApiTools\ContentNegotiation\ParameterDataContainer;
+use Jield\Mvc\MvcEvent;
+use Jield\Mvc\Router\RouteMatch;
 use Laminas\EventManager\EventManager;
 use Laminas\EventManager\EventManagerAwareInterface;
 use Laminas\EventManager\EventManagerInterface;
@@ -18,11 +20,10 @@ use Laminas\InputFilter\CollectionInputFilter;
 use Laminas\InputFilter\Exception\InvalidArgumentException as InputFilterInvalidArgumentException;
 use Laminas\InputFilter\InputFilterInterface;
 use Laminas\InputFilter\UnknownInputsCapableInterface;
-use Jield\Mvc\MvcEvent;
-use Laminas\Router\RouteMatch;
 use Laminas\ServiceManager\ServiceLocatorInterface;
 use Laminas\Stdlib\ArrayUtils;
 use Override;
+
 use function array_filter;
 use function array_key_exists;
 use function array_keys;
@@ -34,11 +35,15 @@ use function is_array;
 use function is_bool;
 use function preg_match;
 use function sprintf;
+
 use const ARRAY_FILTER_USE_BOTH;
 
 class ContentValidationListener implements ListenerAggregateInterface, EventManagerAwareInterface
 {
     use ListenerAggregateTrait;
+
+    /** @var \Laminas\InputFilter\InputFilterValidationResult<array<array-key, mixed>>|null */
+    private ?\Laminas\InputFilter\InputFilterValidationResult $validationResult = null;
 
     public const string EVENT_BEFORE_VALIDATE = 'contentvalidation.beforevalidate';
 
@@ -53,12 +58,11 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
      */
     protected array $inputFilters = [];
 
-    protected array $methodsWithoutBodies
-        = [
-            'GET',
-            'HEAD',
-            'OPTIONS',
-        ];
+    protected array $methodsWithoutBodies = [
+        'GET',
+        'HEAD',
+        'OPTIONS',
+    ];
 
     /**
      * Map of REST controllers => route identifier names
@@ -68,18 +72,18 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
     protected array $restControllers;
 
     public function __construct(
-        array                    $config = [],
+        array $config = [],
         ?ServiceLocatorInterface $inputFilterManager = null,
-        array                    $restControllers = []
-    )
-    {
-        $this->config             = $config;
+        array $restControllers = [],
+    ) {
+        $this->config = $config;
         $this->inputFilterManager = $inputFilterManager;
-        $this->restControllers    = $restControllers;
+        $this->restControllers = $restControllers;
 
         if (isset($config['methods_without_bodies']) && is_array(value: $config['methods_without_bodies'])) {
+            /** @var mixed $method */
             foreach ($config['methods_without_bodies'] as $method) {
-                $this->addMethodWithoutBody(method: $method);
+                $this->addMethodWithoutBody(method: \Jield\Stdlib\Value::string($method));
             }
         }
     }
@@ -101,7 +105,7 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
         ]);
         $this->events = $eventManager;
 
-        return $this;
+        
     }
 
     /**
@@ -130,7 +134,11 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
     public function attach(EventManagerInterface $events, $priority = 1): void
     {
         // trigger after authentication/authorization and content negotiation
-        $this->listeners[] = $events->attach(eventName: MvcEvent::EVENT_ROUTE, listener: $this->onRoute(...), priority: -650);
+        $this->listeners[] = $events->attach(
+            eventName: MvcEvent::EVENT_ROUTE,
+            listener: $this->onRoute(...),
+            priority: -650,
+        );
     }
 
     /**
@@ -161,64 +169,69 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
             return null;
         }
 
+        /** @var mixed $controllerService */
         $controllerService = $routeMatches->getParam(name: 'controller', default: false);
         if (!$controllerService) {
             return null;
         }
 
-        $method        = $request->getMethod();
-        $dataContainer = $e->getParam(name: 'JieldContentNegotiationParameterData', default: false);
+        $method = $request->getMethod();
+        /** @var mixed $dataContainer */
+        $dataContainer = $e->getParam(name: 'LaminasContentNegotiationParameterData', default: false);
         if (!$dataContainer instanceof ParameterDataContainer) {
-            return new ApiProblemResponse(
-                apiProblem: new ApiProblem(
-                    status: 500,
-                    detail: 'Jield\\ApiTools\\ContentNegotiation module is not initialized; cannot validate request'
-                )
-            );
+            return new ApiProblemResponse(apiProblem: new ApiProblem(
+                status: 500,
+                detail: 'Laminas\\ApiTools\\ContentNegotiation module is not initialized; cannot validate request',
+            ));
         }
 
-        $data         = in_array(needle: $method, haystack: $this->methodsWithoutBodies)
+        $data = in_array(needle: $method, haystack: $this->methodsWithoutBodies, strict: true)
             ? $dataContainer->getQueryParams()
             : $dataContainer->getBodyParams();
-        $receivedData = in_array(needle: $method, haystack: $this->methodsWithoutBodies)
+        $receivedData = in_array(needle: $method, haystack: $this->methodsWithoutBodies, strict: true)
             ? $dataContainer->getQueryParams()
             : $dataContainer->getBodyParams();
 
-        if (null === $data || '' === $data) {
-            $data = [];
-        }
+        $isCollection = $this->isCollection(
+            serviceName: \Jield\Stdlib\Value::string($controllerService),
+            data: $data,
+            matches: $routeMatches,
+            request: $request,
+        );
 
-        $isCollection = $this->isCollection(serviceName: $controllerService, data: $data, matches: $routeMatches, request: $request);
-
-        $inputFilterService = $this->getInputFilterService(controllerService: $controllerService, method: $method, isCollection: $isCollection);
+        $inputFilterService = $this->getInputFilterService(
+            controllerService: \Jield\Stdlib\Value::string($controllerService),
+            method: $method,
+            isCollection: $isCollection,
+        );
 
         if (!$inputFilterService) {
             return null;
         }
 
         if (!$this->hasInputFilter(inputFilterService: $inputFilterService)) {
-            return new ApiProblemResponse(
-                apiProblem: new ApiProblem(
-                    status: 500,
-                    detail: sprintf('Listed input filter "%s" does not exist; cannot validate request', $inputFilterService)
-                )
-            );
+            return new ApiProblemResponse(apiProblem: new ApiProblem(status: 500, detail: sprintf(
+                'Listed input filter "%s" does not exist; cannot validate request',
+                $inputFilterService,
+            )));
         }
 
+        /** @var mixed $files */
         $files = $request->getFiles();
-        if (!$isCollection && 0 < count(value: $files)) {
+        if (!$isCollection && 0 < count(value: \Jield\Stdlib\Value::countable(\Jield\Stdlib\Value::instance($files, \Laminas\Stdlib\ParametersInterface::class)->toArray()))) {
             // File uploads are not validated for collections; impossible to
             // match file fields to discrete sets
-            $data = ArrayUtils::merge(a: $data, b: $files->toArray(), preserveNumericKeys: true);
+            $data = ArrayUtils::merge(a: $data, b: \Jield\Stdlib\Value::array($files->toArray()), preserveNumericKeys: true);
         }
 
         $inputFilter = $this->getInputFilter(inputFilterService: $inputFilterService);
 
         if (
-            $isCollection && !in_array(needle: $method, haystack: $this->methodsWithoutBodies)
+            $isCollection
+            && !in_array(needle: $method, haystack: $this->methodsWithoutBodies, strict: true)
             && !$inputFilter instanceof CollectionInputFilter
         ) {
-            $collectionInputFilter = new CollectionInputFilter();
+            $collectionInputFilter = new CollectionInputFilter(\Jield\Form\InputFilterFactory::create());
             $collectionInputFilter->setInputFilter(inputFilter: $inputFilter);
             $inputFilter = $collectionInputFilter;
         }
@@ -229,11 +242,14 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
         $currentEventName = $e->getName();
         $e->setName(name: self::EVENT_BEFORE_VALIDATE);
 
-        $events  = $this->getEventManager();
-        $results = $events->triggerEventUntil(callback: fn($result) => $result instanceof ApiProblem
-            || $result instanceof ApiProblemResponse, event: $e);
-        $e->setName(name: $currentEventName);
+        $events = $this->getEventManager();
+        $results = $events->triggerEventUntil(
+            callback: static fn($result) => $result instanceof ApiProblem || $result instanceof ApiProblemResponse,
+            event: $e,
+        );
+        $e->setName(name: \Jield\Stdlib\Value::string($currentEventName));
 
+        /** @var mixed $last */
         $last = $results->last();
 
         if ($last instanceof ApiProblem) {
@@ -244,25 +260,38 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
             return $last;
         }
 
-        $data = ArrayUtils::merge(a: $data, b: $e->getParam(name: 'Jield\ApiTools\ContentValidation\ParameterData'), preserveNumericKeys: true);
+        $data = ArrayUtils::merge(
+            a: $data,
+            b: \Jield\Stdlib\Value::array($e->getParam(name: 'Jield\ApiTools\ContentValidation\ParameterData')),
+            preserveNumericKeys: true,
+        );
 
-        $inputFilter->setData(data: $data);
+        $this->validationResult = null;
 
         $status = $request->isPatch()
             ? $this->validatePatch(inputFilter: $inputFilter, data: $data, isCollection: $isCollection)
-            : $inputFilter->isValid();
+            : ($this->validationResult = \Jield\Stdlib\InputFilterValidator::validate($inputFilter, $data))->valid();
 
         if ($status instanceof ApiProblemResponse) {
             return $status;
         }
 
+        $validationResult = $this->validationResult ?? \Jield\Stdlib\InputFilterValidator::validate(
+            $inputFilter, $data,
+            $request->isPatch() ? \Jield\Stdlib\InputFilterValidator::fieldsIn($data, $isCollection) : null,
+        );
+
         // Invalid? Return a 422 response.
         if (false === $status) {
-            return new ApiProblemResponse(
-                apiProblem: new ApiProblem(status: 422, detail: 'Failed Validation', type: null, title: null, additional: [
-                    'validation_messages' => $inputFilter->getMessages(),
-                ])
-            );
+            return new ApiProblemResponse(apiProblem: new ApiProblem(
+                status: 422,
+                detail: 'Failed Validation',
+                type: null,
+                title: null,
+                additional: [
+                    'validation_messages' => $validationResult->getMessages()->toArray(),
+                ],
+            ));
         }
 
         // Should we use the raw data vs. the filtered data?
@@ -270,9 +299,10 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
         //   that was the default experience starting in 1.0.
         // - If the flag is present AND is boolean true, that is also
         //   an indicator that the raw data should be present.
-        $useRawData = $this->useRawData(controllerService: $controllerService);
+        $useRawData = $this->useRawData(controllerService: \Jield\Stdlib\Value::string($controllerService));
         if (!$useRawData) {
-            $data = $inputFilter->getValues();
+            /** @var mixed $data */
+            $data = $validationResult->value();
         }
 
         // Should we remove empty data from received data?
@@ -280,29 +310,28 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
         // - If `remove_empty_data` flag is present AND is boolean true, then remove
         //   empty data from current data array
         // - Does not remove empty data if keys matched received data
-        $removeEmptyData = $this->shouldRemoveEmptyData(controllerService: $controllerService);
+        $removeEmptyData = $this->shouldRemoveEmptyData(controllerService: \Jield\Stdlib\Value::string($controllerService));
         if ($removeEmptyData) {
-            $data = $this->removeEmptyData(data: $data, compareTo: $receivedData);
+            $data = $this->removeEmptyData(data: \Jield\Stdlib\Value::array($data), compareTo: $receivedData);
         }
 
         // If we don't have an instance of UnknownInputsCapableInterface, or no
         // unknown data is in the input filter, at this point we can just
         // set the current data into the data container.
-        if (
-            !$inputFilter instanceof UnknownInputsCapableInterface
-            || !$inputFilter->hasUnknown()
-        ) {
-            $dataContainer->setBodyParams(bodyParams: $data);
+        if (!$inputFilter instanceof UnknownInputsCapableInterface || !$inputFilter->hasUnknown()) {
+            $dataContainer->setBodyParams(bodyParams: \Jield\Stdlib\Value::array($data));
             return null;
         }
 
         $unknown = $inputFilter->getUnknown();
 
-        if ($this->allowsOnlyFieldsInFilter(controllerService: $controllerService)) {
+        if ($this->allowsOnlyFieldsInFilter(controllerService: \Jield\Stdlib\Value::string($controllerService))) {
             if ($inputFilter instanceof CollectionInputFilter) {
                 $unknownFields = [];
+                /** @var mixed $fields */
                 foreach ($unknown as $key => $fields) {
-                    $unknownFields[] = '[' . $key . ': ' . implode(separator: ', ', array: array_keys(array: $fields)) . ']';
+                    $unknownFields[] =
+                        '[' . $key . ': ' . implode(separator: ', ', array: array_keys(array: \Jield\Stdlib\Value::array($fields))) . ']';
                 }
 
                 $fields = implode(separator: ', ', array: $unknownFields);
@@ -310,7 +339,7 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
                 $fields = implode(separator: ', ', array: array_keys(array: $unknown));
             }
 
-            $detail  = sprintf('Unrecognized fields: %s', $fields);
+            $detail = sprintf('Unrecognized fields: %s', $fields);
             $problem = new ApiProblem(status: Response::STATUS_CODE_422, detail: $detail);
 
             return new ApiProblemResponse(apiProblem: $problem);
@@ -319,13 +348,13 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
         // The raw data already contains unknown inputs, so no need to merge
         // them with the data.
         if ($useRawData) {
-            $dataContainer->setBodyParams(bodyParams: $data);
+            $dataContainer->setBodyParams(bodyParams: \Jield\Stdlib\Value::array($data));
             return null;
         }
 
         // When not using raw data, we merge the unknown data with the
         // validated data to get the full set of input.
-        $dataContainer->setBodyParams(bodyParams: array_merge($data, $unknown));
+        $dataContainer->setBodyParams(bodyParams: array_merge(\Jield\Stdlib\Value::array($data), $unknown));
         return null;
     }
 
@@ -359,9 +388,10 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
      */
     protected function useRawData(string $controllerService): bool
     {
-        return !isset($this->config[$controllerService]['use_raw_data'])
-            || (isset($this->config[$controllerService]['use_raw_data'])
-                && $this->config[$controllerService]['use_raw_data'] === true);
+        return (
+            !isset($this->config[$controllerService]['use_raw_data'])
+            || $this->config[$controllerService]['use_raw_data'] === true
+        );
     }
 
     /**
@@ -370,8 +400,10 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
      */
     protected function shouldRemoveEmptyData(string $controllerService): bool
     {
-        return isset($this->config[$controllerService]['remove_empty_data'])
-            && $this->config[$controllerService]['remove_empty_data'] === true;
+        return (
+            isset($this->config[$controllerService]['remove_empty_data'])
+            && $this->config[$controllerService]['remove_empty_data'] === true
+        );
     }
 
     /**
@@ -388,14 +420,14 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
          * @param mixed $value
          * @param int|string|null $key
          */
-        $removeNull = function (mixed $value, null|int|string $key = null) use ($compareTo): bool {
+        $removeNull = static function (mixed $value, int|string|null $key = null) use ($compareTo): bool {
             // If comparison array is empty, do a straight comparison
             if ($compareTo === []) {
                 return null !== $value;
             }
 
             // If key exists in comparison array, the 'null' value is on purpose, leave as is
-            if (array_key_exists(key: $key, array: $compareTo)) {
+            if (array_key_exists(key: \Jield\Stdlib\Value::plainScalar($key), array: $compareTo)) {
                 return true;
             }
 
@@ -408,10 +440,14 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
             return $data;
         }
 
+        /** @var mixed $value */
         foreach ($data as $key => $value) {
             if (
                 !is_array(value: $value)
-                && (!empty($value) || is_bool(value: $value) && !in_array(needle: $key, haystack: $compareTo))
+                && (
+                    !empty($value)
+                    || is_bool(value: $value) && !in_array(needle: $key, haystack: $compareTo, strict: true)
+                )
             ) {
                 continue;
             }
@@ -455,21 +491,24 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
      * @param bool $isCollection
      * @return string|false
      */
-    protected function getInputFilterService(string $controllerService, string $method, bool $isCollection): false|string
-    {
+    protected function getInputFilterService(
+        string $controllerService,
+        string $method,
+        bool $isCollection,
+    ): false|string {
         if ($isCollection && isset($this->config[$controllerService][$method . '_COLLECTION'])) {
-            return $this->config[$controllerService][$method . '_COLLECTION'];
+            return \Jield\Stdlib\Value::string(\Jield\Stdlib\Value::path($this->config, [$controllerService, $method . '_COLLECTION']));
         }
 
         if (isset($this->config[$controllerService][$method])) {
-            return $this->config[$controllerService][$method];
+            return \Jield\Stdlib\Value::string($this->config[$controllerService][$method]);
         }
 
-        if ($method === 'DELETE' || in_array(needle: $method, haystack: $this->methodsWithoutBodies)) {
+        if ($method === 'DELETE' || in_array(needle: $method, haystack: $this->methodsWithoutBodies, strict: true)) {
             return false;
         }
 
-        return $this->config[$controllerService]['input_filter'] ?? false;
+        return \Jield\Stdlib\Value::stringOrFalse($this->config[$controllerService]['input_filter'] ?? false);
     }
 
     /**
@@ -484,13 +523,11 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
             return true;
         }
 
-        if (
-            null === $this->inputFilterManager
-            || !$this->inputFilterManager->has(id: $inputFilterService)
-        ) {
+        if (null === $this->inputFilterManager || !$this->inputFilterManager->has($inputFilterService)) {
             return false;
         }
 
+        /** @var mixed $inputFilter */
         $inputFilter = $this->inputFilterManager->get($inputFilterService);
         if (!$inputFilter instanceof InputFilterInterface) {
             return false;
@@ -508,7 +545,7 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
      */
     protected function getInputFilter(string $inputFilterService): InputFilterInterface
     {
-        return $this->inputFilters[$inputFilterService];
+        return \Jield\Stdlib\Value::instance($this->inputFilters[$inputFilterService], \Laminas\InputFilter\InputFilterInterface::class);
     }
 
     /**
@@ -528,12 +565,13 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
             return false;
         }
 
+        /** @var mixed $identifierName */
         $identifierName = $this->restControllers[$serviceName];
-        if ($matches->getParam(name: $identifierName) !== null) {
+        if ($matches->getParam(name: \Jield\Stdlib\Value::string($identifierName)) !== null) {
             return false;
         }
 
-        return null === $request->getQuery(name: $identifierName, default: null);
+        return null === $request->getQuery(name: \Jield\Stdlib\Value::nullableString($identifierName), default: null);
     }
 
     /**
@@ -542,32 +580,46 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
      * @param object|array $data
      * @param bool $isCollection
      */
-    protected function validatePatch(InputFilterInterface $inputFilter, object|array $data, bool $isCollection): bool|ApiProblemResponse
-    {
+    protected function validatePatch(
+        InputFilterInterface $inputFilter,
+        object|array $data,
+        bool $isCollection,
+    ): bool|ApiProblemResponse {
+        $data = is_object($data) ? get_object_vars($data) : $data;
         if ($isCollection) {
             $validationGroup = $data;
+            /** @var mixed $subData */
             foreach ($validationGroup as &$subData) {
-                $subData = array_keys(array: $subData);
+                $subData = array_keys(array: \Jield\Stdlib\Value::array($subData));
             }
         } else {
-            $validationGroup = array_keys(array: $data);
+            $validationGroup = array_keys(array: \Jield\Stdlib\Value::array($data));
         }
 
         try {
-            $inputFilter->setValidationGroup(name: $validationGroup);
-            return $inputFilter->isValid();
+            $this->validationResult = \Jield\Stdlib\InputFilterValidator::validate(
+                $inputFilter, \Jield\Stdlib\Value::array($data), $validationGroup,
+            );
+            return $this->validationResult->valid();
         } catch (InputFilterInvalidArgumentException $inputFilterInvalidArgumentException) {
+            $matches = [];
             $pattern = '/expects a list of valid input names; "(?P<field>[^"]*)" was not found/';
-            $matched = preg_match(pattern: $pattern, subject: $inputFilterInvalidArgumentException->getMessage(), matches: $matches);
+            $matched = preg_match(
+                pattern: $pattern,
+                subject: $inputFilterInvalidArgumentException->getMessage(),
+                matches: $matches,
+            );
             if ($matched === 0) {
-                return new ApiProblemResponse(
-                    apiProblem: new ApiProblem(status: 400, detail: $inputFilterInvalidArgumentException)
-                );
+                return new ApiProblemResponse(apiProblem: new ApiProblem(
+                    status: 400,
+                    detail: $inputFilterInvalidArgumentException,
+                ));
             }
 
-            return new ApiProblemResponse(
-                apiProblem: new ApiProblem(status: 400, detail: 'Unrecognized field "' . $matches['field'] . '"')
-            );
+            return new ApiProblemResponse(apiProblem: new ApiProblem(
+                status: 400,
+                detail: 'Unrecognized field "' . $matches['field'] . '"',
+            ));
         }
     }
 }

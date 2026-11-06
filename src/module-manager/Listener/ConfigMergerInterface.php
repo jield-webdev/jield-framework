@@ -4,16 +4,9 @@ declare(strict_types=1);
 
 namespace Jield\ModuleManager\Listener;
 
-interface ConfigMergerInterface
+interface ConfigMergerInterface extends \Laminas\EventManager\ListenerAggregateInterface
 {
-    /**
-     * @param bool $returnConfigAsObject
-     * @return mixed
-     */
     public function getMergedConfig(bool $returnConfigAsObject = true): mixed;
 
-    /**
-     * @return ConfigMergerInterface
-     */
     public function setMergedConfig(array $config): ConfigMergerInterface;
 }

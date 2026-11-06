@@ -15,19 +15,19 @@ class DefaultAuthenticationPostListener
      */
     public function __invoke(MvcAuthEvent $mvcAuthEvent): ?HttpResponse
     {
-        if (! $mvcAuthEvent->hasAuthenticationResult()) {
+        if (!$mvcAuthEvent->hasAuthenticationResult()) {
             return null;
         }
 
         $authResult = $mvcAuthEvent->getAuthenticationResult();
-        if ($authResult->isValid()) {
+        if (\Jield\Stdlib\Value::present($authResult)->isValid()) {
             return null;
         }
 
         $mvcEvent = $mvcAuthEvent->getMvcEvent();
         $response = $mvcEvent->getResponse();
-        if (! $response instanceof HttpResponse) {
-            return $response;
+        if (!$response instanceof HttpResponse) {
+            return \Jield\Stdlib\Value::nullableInstance($response, \Laminas\Http\Response::class);
         }
 
         $response->setStatusCode(code: 401);

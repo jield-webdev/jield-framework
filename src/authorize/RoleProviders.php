@@ -4,6 +4,4 @@ declare(strict_types=1);
 
 namespace Jield\Authorize;
 
-final class RoleProviders
-{
-}
+final class RoleProviders {}

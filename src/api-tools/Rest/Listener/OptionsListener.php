@@ -4,14 +4,15 @@ declare(strict_types=1);
 
 namespace Jield\ApiTools\Rest\Listener;
 
+use Jield\Mvc\MvcEvent;
+use Jield\Mvc\Router\RouteMatch;
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\EventManager\ListenerAggregateInterface;
 use Laminas\EventManager\ListenerAggregateTrait;
 use Laminas\Http\Request;
 use Laminas\Http\Response;
-use Jield\Mvc\MvcEvent;
-use Laminas\Router\RouteMatch;
 use Override;
+
 use function array_key_exists;
 use function array_walk;
 use function implode;
@@ -41,7 +42,11 @@ class OptionsListener implements ListenerAggregateInterface
     #[Override]
     public function attach(EventManagerInterface $events, $priority = 1): void
     {
-        $this->listeners[] = $events->attach(eventName: MvcEvent::EVENT_ROUTE, listener: $this->onRoute(...), priority: -100);
+        $this->listeners[] = $events->attach(
+            eventName: MvcEvent::EVENT_ROUTE,
+            listener: $this->onRoute(...),
+            priority: -100,
+        );
     }
 
     public function onRoute(MvcEvent $event): ?Response
@@ -58,18 +63,19 @@ class OptionsListener implements ListenerAggregateInterface
             return null;
         }
 
+        /** @var mixed $controller */
         $controller = $matches->getParam(name: 'controller', default: false);
         if (!$controller) {
             // No controller in the matches, nothing to do
             return null;
         }
 
-        if (!array_key_exists(key: $controller, array: $this->config)) {
+        if (!array_key_exists(key: \Jield\Stdlib\Value::plainScalar($controller), array: $this->config)) {
             // No matching controller in our configuration, nothing to do
             return null;
         }
 
-        $config  = $this->getConfigForControllerAndMatches(config: $this->config[$controller], matches: $matches);
+        $config = $this->getConfigForControllerAndMatches(config: \Jield\Stdlib\Value::array($this->config[$controller]), matches: $matches);
         $methods = $this->normalizeMethods(methods: $config);
 
         $method = $request->getMethod();
@@ -78,7 +84,7 @@ class OptionsListener implements ListenerAggregateInterface
             return $this->getOptionsResponse(event: $event, options: $methods);
         }
 
-        if (in_array(needle: $method, haystack: $methods)) {
+        if (in_array(needle: $method, haystack: $methods, strict: true)) {
             // Valid HTTP method; nothing to do
             return null;
         }
@@ -100,10 +106,10 @@ class OptionsListener implements ListenerAggregateInterface
     protected function normalizeMethods(array|string $methods): array|string
     {
         if (is_string(value: $methods)) {
-            $methods = (array)$methods;
+            $methods = (array) $methods;
         }
 
-        array_walk(array: $methods, callback: fn(&$value) => strtoupper(string: (string)$value));
+        array_walk(array: $methods, callback: static fn(&$value) => strtoupper(string: (string) $value));
         return $methods;
     }
 
@@ -114,7 +120,7 @@ class OptionsListener implements ListenerAggregateInterface
     protected function createAllowHeader(array $options, Response $response): void
     {
         $headers = $response->getHeaders();
-        $headers->addHeaderLine(headerFieldNameOrLine: 'Allow', fieldValue: implode(separator: ',', array: $options));
+        $headers->addHeaderLine(headerFieldNameOrLine: 'Allow', fieldValue: implode(separator: ',', array: \Jield\Stdlib\Value::scalars($options)));
     }
 
     /**
@@ -162,17 +168,18 @@ class OptionsListener implements ListenerAggregateInterface
         ) {
             $collectionConfig = $config['collection_http_methods'];
             // Ensure the HTTP method names are normalized
-            array_walk(array: $collectionConfig, callback: function (&$value): void {
-                $value = strtoupper(string: $value);
+            array_walk(array: $collectionConfig, callback: static function (&$value): void {
+                $value = strtoupper(string: \Jield\Stdlib\Value::string($value));
             });
         }
 
         $identifier = false;
         if (array_key_exists(key: 'route_identifier_name', array: $config)) {
+            /** @var mixed $identifier */
             $identifier = $config['route_identifier_name'];
         }
 
-        if (!$identifier || $matches->getParam(name: $identifier, default: false) === false) {
+        if (!$identifier || $matches->getParam(name: \Jield\Stdlib\Value::string($identifier), default: false) === false) {
             return $collectionConfig;
         }
 
@@ -182,8 +189,8 @@ class OptionsListener implements ListenerAggregateInterface
         ) {
             $entityConfig = $config['entity_http_methods'];
             // Ensure the HTTP method names are normalized
-            array_walk(array: $entityConfig, callback: function (&$value): void {
-                $value = strtoupper(string: $value);
+            array_walk(array: $entityConfig, callback: static function (&$value): void {
+                $value = strtoupper(string: \Jield\Stdlib\Value::string($value));
             });
             return $entityConfig;
         }

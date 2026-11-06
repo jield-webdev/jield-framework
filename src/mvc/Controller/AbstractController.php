@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\Mvc\Controller;
 
 use Jield\Mvc\Controller\Plugin\Forward;
@@ -9,6 +11,7 @@ use Jield\Mvc\Controller\Plugin\Redirect;
 use Jield\Mvc\Controller\Plugin\Url;
 use Jield\Mvc\InjectApplicationEventInterface;
 use Jield\Mvc\MvcEvent;
+use Jield\Mvc\View\Model\ViewModel;
 use Laminas\EventManager\EventInterface as Event;
 use Laminas\EventManager\EventManager;
 use Laminas\EventManager\EventManagerAwareInterface;
@@ -21,7 +24,7 @@ use Laminas\Stdlib\DispatchableInterface as Dispatchable;
 use Laminas\Stdlib\RequestInterface as Request;
 use Laminas\Stdlib\ResponseInterface as Response;
 use Laminas\View\Model\ModelInterface;
-use Laminas\View\Model\ViewModel;
+
 use function array_merge;
 use function array_values;
 use function call_user_func_array;
@@ -48,23 +51,20 @@ use function ucwords;
  * @method Url url()
  * @method ViewModel createHttpNotFoundModel(Response $response)
  */
-abstract class AbstractController implements
-    Dispatchable,
-    EventManagerAwareInterface,
-    InjectApplicationEventInterface
+abstract class AbstractController implements Dispatchable, EventManagerAwareInterface, InjectApplicationEventInterface
 {
-    protected PluginManager $plugins;
+    protected ?PluginManager $plugins = null;
 
-    protected Request $request;
+    protected ?Request $request = null;
 
-    protected Response $response;
+    protected ?Response $response = null;
 
-    protected Event $event;
+    protected ?MvcEvent $event = null;
 
-    protected EventManagerInterface $events;
+    protected ?EventManagerInterface $events = null;
 
     /** @var null|string|string[] */
-    protected string|array|null $eventIdentifier;
+    protected string|array|null $eventIdentifier = null;
 
     /**
      * Transform an "action" token into a method name
@@ -124,7 +124,7 @@ abstract class AbstractController implements
      *
      * @return MvcEvent
      */
-    public function getEvent(): Event|MvcEvent
+    public function getEvent(): MvcEvent
     {
         if (!$this->event) {
             $this->setEvent(new MvcEvent());
@@ -140,15 +140,15 @@ abstract class AbstractController implements
      *
      * @return void
      */
-    public function setEvent(Event $e): void
+    public function setEvent(Event $event): void
     {
-        if (!$e instanceof MvcEvent) {
-            $eventParams = $e->getParams();
-            $e           = new MvcEvent();
-            $e->setParams($eventParams);
+        if (!$event instanceof MvcEvent) {
+            $eventParams = $event->getParams();
+            $event = new MvcEvent();
+            $event->setParams($eventParams);
             unset($eventParams);
         }
-        $this->event = $e;
+        $this->event = $event;
     }
 
     /**
@@ -170,9 +170,9 @@ abstract class AbstractController implements
     /**
      * Set the event manager instance used by this context
      *
-     * @return AbstractController
+     * @return void
      */
-    public function setEventManager(EventManagerInterface $events): static
+    public function setEventManager(EventManagerInterface $eventManager): void
     {
         $className = static::class;
 
@@ -187,16 +187,16 @@ abstract class AbstractController implements
             $identifiers[] = substr($className, 0, $rightmostNsPos); // full namespace
         }
 
-        $events->setIdentifiers(array_merge(
+        $eventManager->setIdentifiers(\Jield\Stdlib\Value::strings(array_merge(
             $identifiers,
-            array_values(class_implements($className)),
-            (array)$this->eventIdentifier
-        ));
+            array_values(class_implements($className) ?: []),
+            \Jield\Stdlib\Value::toArray($this->eventIdentifier),
+        )));
 
-        $this->events = $events;
+        $this->events = $eventManager;
         $this->attachDefaultListeners();
 
-        return $this;
+        
     }
 
     /**
@@ -250,6 +250,7 @@ abstract class AbstractController implements
      */
     public function __call($method, $params)
     {
+        /** @var mixed $plugin */
         $plugin = $this->plugin($method);
         if (is_callable($plugin)) {
             return call_user_func_array($plugin, $params);
@@ -282,13 +283,13 @@ abstract class AbstractController implements
         }
 
         $this->plugins->setController($this);
-        return $this->plugins;
+        return \Jield\Stdlib\Value::instance($this->plugins, \Jield\Mvc\Controller\PluginManager::class);
     }
 
     /**
      * Set plugin manager
      *
-     * @return AbstractController
+     * @return static
      */
     public function setPluginManager(PluginManager $plugins): static
     {

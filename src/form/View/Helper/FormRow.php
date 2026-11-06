@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Jield\Form\View\Helper;
 
 use Jield\Form\Element\Button;
-use Jield\Form\Element\Captcha;
 use Jield\Form\Element\MonthSelect;
 use Jield\Form\ElementInterface;
 use Jield\Form\Exception;
@@ -19,7 +18,7 @@ use function strtolower;
 /** @final */
 class FormRow extends AbstractHelper
 {
-    public const string LABEL_APPEND  = 'append';
+    public const string LABEL_APPEND = 'append';
     public const string LABEL_PREPEND = 'prepend';
 
     /**
@@ -55,24 +54,24 @@ class FormRow extends AbstractHelper
      *
      * @var null|FormLabel
      */
-    protected ?FormLabel $labelHelper;
+    protected ?FormLabel $labelHelper = null;
 
     /**
      * Form element helper instance
      *
      * @var null|FormElement
      */
-    protected ?FormElement $elementHelper;
+    protected ?FormElement $elementHelper = null;
 
     /**
      * Form element errors helper instance
      *
      * @var null|FormElementErrors
      */
-    protected ?FormElementErrors $elementErrorsHelper;
+    protected ?FormElementErrors $elementErrorsHelper = null;
 
     /** @var null|string */
-    protected ?string $partial;
+    protected ?string $partial = null;
 
     /**
      * Invoke helper as functor
@@ -81,17 +80,16 @@ class FormRow extends AbstractHelper
      *
      * @template T as null|ElementInterface
      * @psalm-param T $element
-     * @psalm-return (T is null ? self : string)
+     * @psalm-return (T is null ? static : string)
      * @return string|FormRow
      */
     public function __invoke(
         ?ElementInterface $element = null,
         ?string $labelPosition = null,
         ?bool $renderErrors = null,
-        ?string $partial = null
-    ): string|FormRow|static
-    {
-        if (! $element) {
+        ?string $partial = null,
+    ): string|static {
+        if (!$element) {
             return $this;
         }
 
@@ -117,11 +115,11 @@ class FormRow extends AbstractHelper
      */
     public function render(ElementInterface $element, ?string $labelPosition = null): string
     {
-        $labelHelper         = $this->getLabelHelper();
-        $elementHelper       = $this->getElementHelper();
+        $labelHelper = $this->getLabelHelper();
+        $elementHelper = $this->getElementHelper();
         $elementErrorsHelper = $this->getElementErrorsHelper();
 
-        $label           = $element->getLabel() ?? '';
+        $label = $element->getLabel() ?? '';
         $inputErrorClass = $this->getInputErrorClass();
 
         if ($labelPosition === null) {
@@ -134,8 +132,10 @@ class FormRow extends AbstractHelper
         }
 
         // Does this element have errors ?
-        if ($element->getMessages() && $inputErrorClass) {
-            $classAttributes  = $element->hasAttribute(key: 'class') ? (string) $element->getAttribute(key: 'class') . ' ' : '';
+        if ($element->getMessages() !== [] && $inputErrorClass) {
+            $classAttributes = $element->hasAttribute(key: 'class')
+                ? (string) $element->getAttribute(key: 'class') . ' '
+                : '';
             $classAttributes .= $inputErrorClass;
 
             $element->setAttribute(key: 'class', value: $classAttributes);
@@ -143,14 +143,14 @@ class FormRow extends AbstractHelper
 
         if ($this->partial) {
             $vars = [
-                'element'         => $element,
-                'label'           => $label,
+                'element' => $element,
+                'label' => $label,
                 'labelAttributes' => $this->labelAttributes,
-                'labelPosition'   => $labelPosition,
-                'renderErrors'    => $this->renderErrors,
+                'labelPosition' => $labelPosition,
+                'renderErrors' => $this->renderErrors,
             ];
 
-            return $this->view->render($this->partial, $vars);
+            return $this->getView()->render($this->partial, $vars);
         }
 
         $elementErrors = '';
@@ -185,13 +185,8 @@ class FormRow extends AbstractHelper
             $type === 'multi_checkbox'
             || $type === 'radio'
             || $element instanceof MonthSelect
-            || $element instanceof Captcha
         ) {
-            $markup = sprintf(
-                '<fieldset><legend>%s</legend>%s</fieldset>',
-                $label,
-                $elementString
-            );
+            $markup = sprintf('<fieldset><legend>%s</legend>%s</fieldset>', $label, $elementString);
 
             return $markup . $elementErrors;
         }
@@ -200,19 +195,19 @@ class FormRow extends AbstractHelper
         // If element has label option `always_wrap` it will be nested in any case.
         if (
             $element->hasAttribute(key: 'id')
-            && ($element instanceof LabelAwareInterface && ! $element->getLabelOption(key: 'always_wrap'))
+            && ($element instanceof LabelAwareInterface && !$element->getLabelOption(key: 'always_wrap'))
         ) {
-            $labelOpen  = '';
+            $labelOpen = '';
             $labelClose = '';
-            $label      = $labelHelper->openTag(attributesOrElement: $element) . $label . $labelHelper->closeTag();
+            $label = $labelHelper->openTag(attributesOrElement: $element) . $label . $labelHelper->closeTag();
         } else {
-            $labelOpen  = $labelHelper->openTag(attributesOrElement: $labelAttributes);
+            $labelOpen = $labelHelper->openTag(attributesOrElement: $labelAttributes);
             $labelClose = $labelHelper->closeTag();
         }
 
         if (
-            $label !== '' && (! $element->hasAttribute(key: 'id'))
-            || ($element instanceof LabelAwareInterface && $element->getLabelOption(key: 'always_wrap'))
+            $label !== '' && !$element->hasAttribute(key: 'id')
+            || $element instanceof LabelAwareInterface && \Jield\Stdlib\Value::truthy($element->getLabelOption(key: 'always_wrap'))
         ) {
             $label = '<span>' . $label . '</span>';
         }
@@ -222,7 +217,8 @@ class FormRow extends AbstractHelper
             $labelOpen = $labelClose = $label = '';
         }
 
-        if ($element instanceof LabelAwareInterface && $element->getLabelOption(key: 'label_position')) {
+        if ($element instanceof LabelAwareInterface && \Jield\Stdlib\Value::truthy($element->getLabelOption(key: 'label_position'))) {
+            /** @var mixed $labelPosition */
             $labelPosition = $element->getLabelOption(key: 'label_position');
         }
 
@@ -237,7 +233,7 @@ class FormRow extends AbstractHelper
     /**
      * Set the class that is added to element that have errors
      *
-     * @return $this
+     * @return static
      */
     public function setInputErrorClass(string $inputErrorClass): static
     {
@@ -256,7 +252,7 @@ class FormRow extends AbstractHelper
     /**
      * Set the attributes for the row label
      *
-     * @return $this
+     * @return static
      */
     public function setLabelAttributes(array $labelAttributes): static
     {
@@ -276,18 +272,18 @@ class FormRow extends AbstractHelper
      * Set the label position
      *
      * @throws Exception\InvalidArgumentException
-     * @return $this
+     * @return static
      */
     public function setLabelPosition(string $labelPosition): static
     {
         $labelPosition = strtolower(string: $labelPosition);
-        if (! in_array(needle: $labelPosition, haystack: [self::LABEL_APPEND, self::LABEL_PREPEND])) {
+        if (!in_array(needle: $labelPosition, haystack: [self::LABEL_APPEND, self::LABEL_PREPEND], strict: true)) {
             throw new Exception\InvalidArgumentException(message: sprintf(
                 '%s expects either %s::LABEL_APPEND or %s::LABEL_PREPEND; received "%s"',
                 __METHOD__,
                 self::class,
                 self::class,
-                $labelPosition
+                $labelPosition,
             ));
         }
         $this->labelPosition = $labelPosition;
@@ -306,7 +302,7 @@ class FormRow extends AbstractHelper
     /**
      * Set if the errors are rendered by this helper
      *
-     * @return $this
+     * @return static
      */
     public function setRenderErrors(bool $renderErrors): static
     {
@@ -325,7 +321,7 @@ class FormRow extends AbstractHelper
     /**
      * Set a partial view script to use for rendering the row
      *
-     * @return $this
+     * @return static
      */
     public function setPartial(?string $partial): static
     {
@@ -351,18 +347,15 @@ class FormRow extends AbstractHelper
         }
 
         if ($this->view !== null && method_exists(object_or_class: $this->view, method: 'plugin')) {
-            $this->labelHelper = $this->view->plugin('form_label');
+            $this->labelHelper = $this->getView()->plugin('form_label', \Jield\Form\View\Helper\FormLabel::class);
         }
 
-        if (! $this->labelHelper instanceof FormLabel) {
+        if (!$this->labelHelper instanceof FormLabel) {
             $this->labelHelper = new FormLabel();
         }
 
         if ($this->hasTranslator()) {
-            $this->labelHelper->setTranslator(
-                $this->getTranslator(),
-                $this->getTranslatorTextDomain()
-            );
+            $this->labelHelper->setTranslator($this->getTranslator(), $this->getTranslatorTextDomain());
         }
 
         return $this->labelHelper;
@@ -378,11 +371,11 @@ class FormRow extends AbstractHelper
         }
 
         if ($this->view !== null && method_exists(object_or_class: $this->view, method: 'plugin')) {
-            $this->elementHelper = $this->view->plugin('form_element');
+            $this->elementHelper = $this->getView()->plugin('form_element', \Jield\Form\View\Helper\FormElement::class);
         }
 
-        if (! $this->elementHelper instanceof FormElement) {
-            $this->elementHelper = new FormElement();
+        if (!$this->elementHelper instanceof FormElement) {
+            $this->elementHelper = new FormElement($this->getView()->getHelperPluginManager());
         }
 
         return $this->elementHelper;
@@ -398,10 +391,10 @@ class FormRow extends AbstractHelper
         }
 
         if ($this->view !== null && method_exists(object_or_class: $this->view, method: 'plugin')) {
-            $this->elementErrorsHelper = $this->view->plugin('form_element_errors');
+            $this->elementErrorsHelper = $this->getView()->plugin('form_element_errors', \Jield\Form\View\Helper\FormElementErrors::class);
         }
 
-        if (! $this->elementErrorsHelper instanceof FormElementErrors) {
+        if (!$this->elementErrorsHelper instanceof FormElementErrors) {
             $this->elementErrorsHelper = new FormElementErrors();
         }
 

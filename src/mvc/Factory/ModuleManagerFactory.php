@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\Mvc\Factory;
 
 // phpcs:ignore
@@ -32,53 +34,57 @@ class ModuleManagerFactory implements FactoryInterface
      * @param  null|array $options
      * @return ModuleManager
      */
-    public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): ModuleManager
-    {
-        $configuration    = $container->get('ApplicationConfig');
-        $listenerOptions  = new ListenerOptions($configuration['module_listener_options']);
+    public function __invoke(
+        ContainerInterface $container,
+        string $requestedName,
+        ?array $options = null,
+    ): ModuleManager {
+        /** @var mixed $configuration */
+        $configuration = $container->get('ApplicationConfig');
+        $listenerOptions = new ListenerOptions(\Jield\Stdlib\Value::stringKeyedArray(\Jield\Stdlib\Value::accessible($configuration)['module_listener_options']));
         $defaultListeners = new DefaultListenerAggregate($listenerOptions);
-        $serviceListener  = $container->get('ServiceListener');
+        $serviceListener = \Jield\Stdlib\Service::get($container, \Jield\ModuleManager\Listener\ServiceListener::class, 'ServiceListener');
 
         $serviceListener->addServiceManager(
-            $container,
+            \Jield\Stdlib\Value::instance($container, \Laminas\ServiceManager\ServiceManager::class),
             'service_manager',
             ServiceProviderInterface::class,
-            'getServiceConfig'
+            'getServiceConfig',
         );
 
         $serviceListener->addServiceManager(
             'ControllerManager',
             'controllers',
             ControllerProviderInterface::class,
-            'getControllerConfig'
+            'getControllerConfig',
         );
         $serviceListener->addServiceManager(
             'ControllerPluginManager',
             'controller_plugins',
             ControllerPluginProviderInterface::class,
-            'getControllerPluginConfig'
+            'getControllerPluginConfig',
         );
         $serviceListener->addServiceManager(
             'ViewHelperManager',
             'view_helpers',
             ViewHelperProviderInterface::class,
-            'getViewHelperConfig'
+            'getViewHelperConfig',
         );
         $serviceListener->addServiceManager(
             'RoutePluginManager',
             'route_manager',
             RouteProviderInterface::class,
-            'getRouteConfig'
+            'getRouteConfig',
         );
 
-        $events = $container->get('EventManager');
+        $events = \Jield\Stdlib\Service::get($container, \Laminas\EventManager\EventManagerInterface::class, 'EventManager');
         $defaultListeners->attach($events);
         $serviceListener->attach($events);
 
         $moduleEvent = new ModuleEvent();
         $moduleEvent->setParam('ServiceManager', $container);
 
-        $moduleManager = new ModuleManager($configuration['modules'], $events);
+        $moduleManager = new ModuleManager(\Jield\Stdlib\Value::accessible($configuration)['modules'], $events);
         $moduleManager->setEvent($moduleEvent);
 
         return $moduleManager;

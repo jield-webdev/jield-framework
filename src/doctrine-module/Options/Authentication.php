@@ -7,8 +7,8 @@ namespace DoctrineModule\Options;
 use Doctrine\Persistence\Mapping\ClassMetadata;
 use Doctrine\Persistence\ObjectManager;
 use Doctrine\Persistence\ObjectRepository;
-use Jield\Authentication\Adapter\Exception;
-use Jield\Authentication\Storage\StorageInterface;
+use Laminas\Authentication\Adapter\Exception;
+use Laminas\Authentication\Storage\StorageInterface;
 use Laminas\Stdlib\AbstractOptions;
 
 use function gettype;
@@ -60,7 +60,7 @@ final class Authentication extends AbstractOptions
     /**
      * A valid object implementing ObjectRepository interface (or ObjectManager/identityClass)
      */
-    protected ObjectRepository|null $objectRepository = null;
+    protected ?ObjectRepository $objectRepository = null;
 
     /**
      * Entity's class name
@@ -88,7 +88,7 @@ final class Authentication extends AbstractOptions
      * If an objectManager is not supplied, this metadata will be used
      * by DoctrineModule/Authentication/Storage/ObjectRepository
      */
-    protected ClassMetadata|null $classMetadata = null;
+    protected ?ClassMetadata $classMetadata = null;
 
     /**
      * When using this options class to create a DoctrineModule/Authentication/Storage/ObjectRepository
@@ -130,12 +130,12 @@ final class Authentication extends AbstractOptions
             return $this->objectRepository;
         }
 
-        return $this->objectManager->getRepository(className: $this->identityClass);
+        return \Jield\Stdlib\Value::instance($this->objectManager, ObjectManager::class)->getRepository(className: $this->identityClass);
     }
 
     public function setIdentityClass(string $identityClass): Authentication
     {
-        $this->identityClass = $identityClass;
+        $this->identityClass = \Jield\Stdlib\Value::classString($identityClass);
 
         return $this;
     }
@@ -149,9 +149,10 @@ final class Authentication extends AbstractOptions
     public function setIdentityProperty(string $identityProperty): Authentication
     {
         if ($identityProperty === '') {
-            throw new Exception\InvalidArgumentException(
-                message: sprintf('Provided $identityProperty is invalid, %s given', gettype(value: $identityProperty)),
-            );
+            throw new Exception\InvalidArgumentException(message: sprintf(
+                'Provided $identityProperty is invalid, %s given',
+                gettype(value: $identityProperty),
+            ));
         }
 
         $this->identityProperty = $identityProperty;
@@ -168,9 +169,10 @@ final class Authentication extends AbstractOptions
     public function setCredentialProperty(string $credentialProperty): Authentication
     {
         if ($credentialProperty === '') {
-            throw new Exception\InvalidArgumentException(
-                message: sprintf('Provided $credentialProperty is invalid, %s given', gettype(value: $credentialProperty)),
-            );
+            throw new Exception\InvalidArgumentException(message: sprintf(
+                'Provided $credentialProperty is invalid, %s given',
+                gettype(value: $credentialProperty),
+            ));
         }
 
         $this->credentialProperty = $credentialProperty;
@@ -186,13 +188,11 @@ final class Authentication extends AbstractOptions
     /** @throws Exception\InvalidArgumentException */
     public function setCredentialCallable(mixed $credentialCallable): Authentication
     {
-        if (! is_callable(value: $credentialCallable)) {
-            throw new Exception\InvalidArgumentException(
-                message: sprintf(
-                    '"%s" is not a callable',
-                    is_string(value: $credentialCallable) ? $credentialCallable : gettype(value: $credentialCallable),
-                ),
-            );
+        if (!is_callable(value: $credentialCallable)) {
+            throw new Exception\InvalidArgumentException(message: sprintf(
+                '"%s" is not a callable',
+                is_string(value: $credentialCallable) ? $credentialCallable : gettype(value: $credentialCallable),
+            ));
         }
 
         $this->credentialCallable = $credentialCallable;
@@ -211,7 +211,7 @@ final class Authentication extends AbstractOptions
             return $this->classMetadata;
         }
 
-        return $this->objectManager->getClassMetadata(className: $this->identityClass);
+        return \Jield\Stdlib\Value::instance($this->objectManager, ObjectManager::class)->getClassMetadata(className: $this->identityClass);
     }
 
     public function setClassMetadata(ClassMetadata $classMetadata): void

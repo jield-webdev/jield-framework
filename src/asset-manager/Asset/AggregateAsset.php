@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\AssetManager\Asset;
 
 use Assetic\Asset\BaseAsset;
@@ -27,8 +29,12 @@ class AggregateAsset extends BaseAsset implements AssetInterface
      * @param string|null $sourceRoot The source asset root directory
      * @param string|null $sourcePath The source asset path
      */
-    public function __construct(array $content = [], array $filters = [], ?string $sourceRoot = null, ?string $sourcePath = null)
-    {
+    public function __construct(
+        array $content = [],
+        array $filters = [],
+        ?string $sourceRoot = null,
+        ?string $sourcePath = null,
+    ) {
         parent::__construct(filters: $filters, sourceRoot: $sourceRoot, sourcePath: $sourcePath);
         $this->processContent(content: $content);
     }
@@ -50,24 +56,15 @@ class AggregateAsset extends BaseAsset implements AssetInterface
             }
 
             if ($asset->mimetype !== $this->mimetype) {
-                throw new Exception\RuntimeException(
-                    message: sprintf(
-                        'Asset "%s" doesn\'t have the expected mime-type "%s".',
-                        $asset->getTargetPath(),
-                        $this->mimetype
-                    )
-                );
+                throw new Exception\RuntimeException(message: sprintf(
+                    'Asset "%s" doesn\'t have the expected mime-type "%s".',
+                    $asset->getTargetPath(),
+                    $this->mimetype,
+                ));
             }
 
-            $this->setLastModified(
-                lastModified: max(
-                    $asset->getLastModified(),
-                    $this->getLastModified()
-                )
-            );
-            $this->setContent(
-                content: $this->getContent() . $asset->dump()
-            );
+            $this->setLastModified(lastModified: \Jield\Stdlib\Value::int(max($asset->getLastModified(), $this->getLastModified())));
+            $this->setContent(content: $this->getContent() . $asset->dump());
         }
     }
 

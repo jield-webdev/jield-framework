@@ -17,10 +17,7 @@ use Laminas\ServiceManager\ServiceManager;
 /**
  * BjyAuthorize Module
  */
-class Module implements
-    BootstrapListenerInterface,
-    ConfigProviderInterface,
-    DependencyIndicatorInterface
+class Module implements BootstrapListenerInterface, ConfigProviderInterface, DependencyIndicatorInterface
 {
     public function onBootstrap(EventInterface $e): void
     {
@@ -28,11 +25,11 @@ class Module implements
         $app = $e->getTarget();
         /** @var ServiceManager $serviceManager */
         $serviceManager = $app->getServiceManager();
-        $config         = $serviceManager->get(id: Config::class);
+        $config = \Jield\Stdlib\Value::array($serviceManager->get(Config::class));
         /** @var UnauthorizedStrategy $strategy */
-        $strategy = $serviceManager->get(id: $config['unauthorized_strategy']);
+        $strategy = $serviceManager->get(\Jield\Stdlib\Value::string($config['unauthorized_strategy']));
         /** @var AbstractGuard[] $guards */
-        $guards = $serviceManager->get(id: Guards::class);
+        $guards = \Jield\Stdlib\Value::array($serviceManager->get(Guards::class));
 
         foreach ($guards as $guard) {
             $guard->attach(events: $app->getEventManager());
@@ -40,7 +37,7 @@ class Module implements
 
         $strategy->attach(events: $app->getEventManager());
 
-        $ruleWithAssertion = $serviceManager->get(id: RulesWithAssertion::class);
+        $ruleWithAssertion = \Jield\Stdlib\Service::get($serviceManager, RulesWithAssertion::class);
         $ruleWithAssertion->attach(events: $app->getEventManager());
     }
 
@@ -54,7 +51,7 @@ class Module implements
     public function getModuleDependencies(): array
     {
         return [
-            \Laminas\Cache\ConfigProvider::class,
+            'Laminas\\Cache',
         ];
     }
 }

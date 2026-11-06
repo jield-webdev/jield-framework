@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\Mvc;
 
 use Laminas\EventManager\EventsCapableInterface;
@@ -23,6 +25,12 @@ interface ApplicationInterface extends EventsCapableInterface
      * Get the response object
      */
     public function getResponse(): ResponseInterface;
+
+    /** Get the event used by the application's request lifecycle. */
+    public function getMvcEvent(): MvcEvent;
+
+    /** @param array<array-key, string> $listeners */
+    public function bootstrap(array $listeners = []): ApplicationInterface;
 
     /**
      * Run the application

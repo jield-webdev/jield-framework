@@ -6,6 +6,7 @@ namespace Jield\Authorize\Provider\Role;
 
 use Jield\Authorize\Role\Role;
 use Laminas\Permissions\Acl\Role\RoleInterface;
+
 use function array_merge;
 use function count;
 use function is_numeric;
@@ -25,30 +26,32 @@ class Config implements ProviderInterface
     {
         $roles = [];
 
+        /** @var mixed $value */
         foreach ($config as $key => $value) {
             if (is_numeric(value: $key)) {
-                $roles = array_merge($roles, $this->loadRole(name: $value));
+                $roles = array_merge($roles, $this->loadRole(name: \Jield\Stdlib\Value::string($value)));
             } else {
-                $roles = array_merge($roles, $this->loadRole(name: $key, options: $value));
+                $roles = array_merge($roles, $this->loadRole(name: $key, options: \Jield\Stdlib\Value::array($value)));
             }
         }
 
         $this->roles = $roles;
     }
 
-    protected function loadRole(string $name, array $options = [], null|string|RoleInterface $parent = null): array
+    protected function loadRole(string $name, array $options = [], string|RoleInterface|null $parent = null): array
     {
-        $children = isset($options['children']) && count(value: $options['children']) > 0 ? $options['children'] : [];
+        $children = isset($options['children']) && count(value: \Jield\Stdlib\Value::countable($options['children'])) > 0 ? $options['children'] : [];
 
-        $roles   = [];
-        $role    = new Role(roleId: $name, parent: $parent);
+        $roles = [];
+        $role = new Role(roleId: $name, parent: $parent);
         $roles[] = $role;
 
+        /** @var mixed $value */
         foreach ($children as $key => $value) {
             if (is_numeric(value: $key)) {
-                $roles = array_merge($roles, $this->loadRole(name: $value, options: [], parent: $role));
+                $roles = array_merge($roles, $this->loadRole(name: \Jield\Stdlib\Value::string($value), options: [], parent: $role));
             } else {
-                $roles = array_merge($roles, $this->loadRole(name: $key, options: $value, parent: $role));
+                $roles = array_merge($roles, $this->loadRole(name: \Jield\Stdlib\Value::string($key), options: \Jield\Stdlib\Value::array($value), parent: $role));
             }
         }
 

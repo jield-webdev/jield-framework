@@ -117,7 +117,7 @@ interface FieldsetInterface extends
      *
      * @return mixed
      */
-    public function bindValues(array $values = []): mixed;
+    public function bindValues(array $values = [], ?array $validationGroup = null): mixed;
 
     /**
      * Checks if this fieldset can bind data

@@ -7,6 +7,7 @@ namespace Jield\ApiTools\ContentNegotiation;
 use Laminas\Http\Header\ContentType as ContentTypeHeader;
 use Laminas\Http\Request as HttpRequest;
 use Laminas\Stdlib\Parameters;
+
 use function fclose;
 use function fgets;
 use function filesize;
@@ -25,6 +26,7 @@ use function sprintf;
 use function strtoupper;
 use function sys_get_temp_dir;
 use function tempnam;
+
 use const FILEINFO_MIME_TYPE;
 use const UPLOAD_ERR_CANT_WRITE;
 use const UPLOAD_ERR_NO_TMP_DIR;
@@ -47,12 +49,17 @@ class MultipartContentParser
      */
     public function __construct(ContentTypeHeader $contentType, HttpRequest $request)
     {
-        if (!preg_match(pattern: '/boundary=(?P<boundary>[^\s]+)/', subject: $contentType->getFieldValue(), matches: $matches)) {
+        $matches = [];
+        if (!preg_match(
+            pattern: '/boundary=(?P<boundary>[^\s]+)/',
+            subject: $contentType->getFieldValue(),
+            matches: $matches,
+        )) {
             throw new Exception\InvalidMultipartContentException();
         }
 
         $this->boundary = $matches['boundary'];
-        $this->request  = $request;
+        $this->request = $request;
     }
 
     /**
@@ -88,7 +95,7 @@ class MultipartContentParser
         }
 
         $stream = fopen(filename: 'php://temp', mode: 'r+');
-        fwrite(stream: $stream, data: (string)$this->request->getContent());
+        fwrite(stream: $stream, data: (string) $this->request->getContent());
         rewind(stream: $stream);
 
         return $this->parseFromStream(stream: $stream);
@@ -103,24 +110,24 @@ class MultipartContentParser
      */
     protected function parseFromStream($stream): array
     {
-        $buffer         = '';
-        $data           = new Parameters();
-        $files          = new Parameters();
+        $matches = [];
+        $buffer = '';
+        $data = new Parameters();
+        $files = new Parameters();
         $partInProgress = false;
-        $inHeader       = false;
-        $headers        = [];
-        $header         = false;
-        $name           = false;
-        $content        = '';
-        $file           = [];
-        $filename       = false;
-        $mimeType       = false;
-        $tmpFile        = false;
-        $lastLine       = '';
-
+        $inHeader = false;
+        $headers = [];
+        $header = false;
+        $name = false;
+        $content = '';
+        $file = [];
+        $filename = false;
+        $mimeType = false;
+        $tmpFile = false;
+        $lastLine = '';
 
         $partBoundaryPatternStart = '/^--' . $this->boundary . '(--)?/';
-        $partBoundaryPatternEnd   = '/^--' . $this->boundary . '--$/';
+        $partBoundaryPatternEnd = '/^--' . $this->boundary . '--$/';
 
         while (false !== ($line = fgets(stream: $stream))) {
             $trimmedLine = rtrim(string: $line);
@@ -131,13 +138,13 @@ class MultipartContentParser
                     // Data
                     if (!$filename) {
                         $content = rtrim(string: $content, characters: "\r\n");
-                        $buffer  .= sprintf('%s=%s&', $name, rawurlencode(string: $content));
+                        $buffer .= sprintf('%s=%s&', $name, rawurlencode(string: $content));
                     }
 
                     // File (successful upload so far)
                     if ($filename && $tmpFile) {
                         // Write the last line, stripping the EOL characters
-                        if (false === fwrite(stream: $tmpFile, data: rtrim(string: $lastLine, characters: "\r\n"))) {
+                        if (false === fwrite(stream: $tmpFile, data: rtrim(string: \Jield\Stdlib\Value::string($lastLine), characters: "\r\n"))) {
                             // Ooops! error writing the very last line!
                             $file['error'] = UPLOAD_ERR_CANT_WRITE;
                             fclose(stream: $tmpFile);
@@ -147,14 +154,14 @@ class MultipartContentParser
 
                             if ($mimeType === 'application/octet-stream' && function_exists(function: 'finfo_open')) {
                                 $finfo = finfo_open(flags: FILEINFO_MIME_TYPE);
-                                $type  = finfo_file(finfo: $finfo, filename: $file['tmp_name']);
+                                $type = finfo_file(finfo: $finfo, filename: \Jield\Stdlib\Value::string($file['tmp_name']));
                                 if (false !== $type) {
                                     $file['type'] = $type;
                                 }
                             }
 
                             // Finally, set the filesize
-                            $file['size'] = filesize(filename: $file['tmp_name']);
+                            $file['size'] = filesize(filename: \Jield\Stdlib\Value::string($file['tmp_name']));
                         }
                     }
 
@@ -172,9 +179,9 @@ class MultipartContentParser
 
                 // New part to parse!
                 $partInProgress = true;
-                $inHeader       = true;
-                $headers        = [];
-                $header         = '';
+                $inHeader = true;
+                $headers = [];
+                $header = '';
 
                 continue;
             }
@@ -188,9 +195,9 @@ class MultipartContentParser
                 if (preg_match(pattern: '/^\s*$/s', subject: $line)) {
                     // Headers are done; cleanup
                     $inHeader = false;
-                    $content  = '';
-                    $file     = ['error' => UPLOAD_ERR_OK];
-                    $tmpFile  = false;
+                    $content = '';
+                    $file = ['error' => UPLOAD_ERR_OK];
+                    $tmpFile = false;
                     $lastLine = null;
 
                     // Parse headers
@@ -198,7 +205,7 @@ class MultipartContentParser
 
                     if (!$name) {
                         throw new Exception\InvalidMultipartContentException(
-                            message: 'Missing Content-Disposition header, or Content-Disposition header does not contain a "name" field'
+                            message: 'Missing Content-Disposition header, or Content-Disposition header does not contain a "name" field',
                         );
                     }
 
@@ -207,8 +214,12 @@ class MultipartContentParser
                     continue;
                 }
 
-                if (preg_match(pattern: '/^(?P<header>[a-z]+[a-z0-9_-]+):\s*(?P<value>.*)$/i', subject: $trimmedLine, matches: $matches)) {
-                    $header           = strtoupper(string: $matches['header']);
+                if (preg_match(
+                    pattern: '/^(?P<header>[a-z]+[a-z0-9_-]+):\s*(?P<value>.*)$/i',
+                    subject: $trimmedLine,
+                    matches: $matches,
+                )) {
+                    $header = strtoupper(string: $matches['header']);
                     $headers[$header] = $matches['value'];
 
                     continue;
@@ -216,7 +227,7 @@ class MultipartContentParser
 
                 if (!$header) {
                     throw new Exception\InvalidMultipartContentException(
-                        message: 'Malformed or missing MIME part header for multipart content'
+                        message: 'Malformed or missing MIME part header for multipart content',
                     );
                 }
 
@@ -251,8 +262,8 @@ class MultipartContentParser
                     continue;
                 }
 
-                $file['tmp_name'] = tempnam(directory: $tmpDir, prefix: 'jieldc');
-                $tmpFile          = fopen(filename: $file['tmp_name'], mode: 'wb');
+                $file['tmp_name'] = tempnam(directory: $tmpDir, prefix: 'laminasc');
+                $tmpFile = fopen(filename: \Jield\Stdlib\Value::string($file['tmp_name']), mode: 'wb');
                 if (false === $tmpFile) {
                     // Cannot open the temporary file for writing; this is an error
                     $file['error'] = UPLOAD_ERR_CANT_WRITE;
@@ -295,11 +306,16 @@ class MultipartContentParser
      */
     protected function getNameFromHeaders(array $headers): false|string
     {
+        $matches = [];
         if (!isset($headers['CONTENT-DISPOSITION'])) {
             return false;
         }
 
-        if (!preg_match(pattern: '/(?:;|\s)name="(?P<name>[^"]+)"/', subject: (string)$headers['CONTENT-DISPOSITION'], matches: $matches)) {
+        if (!preg_match(
+            pattern: '/(?:;|\s)name="(?P<name>[^"]+)"/',
+            subject: (string) $headers['CONTENT-DISPOSITION'],
+            matches: $matches,
+        )) {
             return false;
         }
 
@@ -314,11 +330,16 @@ class MultipartContentParser
      */
     protected function getFilenameFromHeaders(array $headers): false|string
     {
+        $matches = [];
         if (!isset($headers['CONTENT-DISPOSITION'])) {
             return false;
         }
 
-        if (!preg_match(pattern: '/filename="(?P<filename>[^"]*)"/', subject: (string)$headers['CONTENT-DISPOSITION'], matches: $matches)) {
+        if (!preg_match(
+            pattern: '/filename="(?P<filename>[^"]*)"/',
+            subject: (string) $headers['CONTENT-DISPOSITION'],
+            matches: $matches,
+        )) {
             return false;
         }
 
@@ -337,6 +358,6 @@ class MultipartContentParser
             return 'application/octet-stream';
         }
 
-        return $headers['CONTENT-TYPE'];
+        return \Jield\Stdlib\Value::string($headers['CONTENT-TYPE']);
     }
 }

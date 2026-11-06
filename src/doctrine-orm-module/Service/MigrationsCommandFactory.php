@@ -59,58 +59,66 @@ final class MigrationsCommandFactory implements FactoryInterface
      *
      * @throws InvalidArgumentException
      */
-    public function __invoke(ContainerInterface $container, string $requestedName, array|null $options = null): DoctrineCommand
-    {
+    public function __invoke(
+        ContainerInterface $container,
+        string $requestedName,
+        ?array $options = null,
+    ): DoctrineCommand {
+        $matches = [];
         $commandClassName = $this->commandClassName;
 
-        if (! class_exists(class: $commandClassName)) {
+        if (!class_exists(class: $commandClassName)) {
             throw new InvalidArgumentException(message: 'The class ' . $commandClassName . ' does not exist');
         }
 
-        $config            = $container->get('config');
+        /** @var mixed $config */
+        $config = $container->get('config');
         $objectManagerName = $this->getObjectManagerName();
 
         // Copied from DoctrineModule/ServiceFactory/AbstractDoctrineServiceFactory
-        if (
-            ! preg_match(
-                pattern: '/^doctrine\.((?<mappingType>orm|odm)\.|)(?<serviceType>[a-z0-9_]+)\.(?<serviceName>[a-z0-9_]+)$/',
-                subject: $objectManagerName,
-                matches: $matches,
-            )
-        ) {
+        if (!preg_match(
+            pattern: '/^doctrine\.((?<mappingType>orm|odm)\.|)(?<serviceType>[a-z0-9_]+)\.(?<serviceName>[a-z0-9_]+)$/',
+            subject: $objectManagerName,
+            matches: $matches,
+        )) {
             throw new RuntimeException(message: 'The object manager name is invalid: ' . $objectManagerName);
         }
 
-        $migrationConfig           = $config['doctrine']['migrations_configuration'][$matches['serviceName']] ?? [];
+        /** @var mixed $migrationConfig */
+        $migrationConfig = $config['doctrine']['migrations_configuration'][$matches['serviceName']] ?? [];
         $dependencyFactoryServices = [];
 
-        if (array_key_exists(key: 'dependency_factory_services', array: $migrationConfig)) {
+        if (array_key_exists(key: 'dependency_factory_services', array: \Jield\Stdlib\Value::array($migrationConfig))) {
+            /** @var mixed $dependencyFactoryServices */
             $dependencyFactoryServices = $migrationConfig['dependency_factory_services'];
             unset($migrationConfig['dependency_factory_services']);
         }
 
         $dependencyFactory = DependencyFactory::fromEntityManager(
-            new ConfigurationArray($migrationConfig),
-            new ExistingEntityManager($container->get($objectManagerName)),
+            new ConfigurationArray(\Jield\Stdlib\Value::stringKeyedArray($migrationConfig)),
+            new ExistingEntityManager(\Jield\Stdlib\Value::instance($container->get($objectManagerName), \Doctrine\ORM\EntityManagerInterface::class)),
         );
 
-        foreach ($dependencyFactoryServices as $id => $service) {
-            $dependencyFactory->setService($id, $container->get($service));
+        /** @var mixed $id
+         * @var mixed $service
+         */
+        foreach (\Jield\Stdlib\Value::iterable($dependencyFactoryServices) as $id => $service) {
+            $dependencyFactory->setService(\Jield\Stdlib\Value::string($id), \Jield\Stdlib\Value::callback($container->get(\Jield\Stdlib\Value::string($service))));
         }
 
         // An object manager may not have a migrations configuration and that's OK.
         // Use default values in that case.
-        return new $commandClassName($dependencyFactory);
+        return \Jield\Stdlib\Value::instance(\Jield\Stdlib\Value::instantiate($commandClassName, [$dependencyFactory]), \Doctrine\Migrations\Tools\Console\Command\DoctrineCommand::class);
     }
 
     private function getObjectManagerName(): string
     {
         $arguments = new ArgvInput();
 
-        if (! $arguments->hasParameterOption(values: '--object-manager')) {
+        if (!$arguments->hasParameterOption(values: '--object-manager')) {
             return $this->defaultObjectManagerName;
         }
 
-        return $arguments->getParameterOption(values: '--object-manager');
+        return \Jield\Stdlib\Value::string($arguments->getParameterOption(values: '--object-manager'));
     }
 }

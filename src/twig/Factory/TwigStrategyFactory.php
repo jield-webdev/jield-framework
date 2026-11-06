@@ -13,6 +13,6 @@ class TwigStrategyFactory implements FactoryInterface
 {
     public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): TwigStrategy
     {
-        return new TwigStrategy($container->get(TwigRenderer::class));
+        return new TwigStrategy(\Jield\Stdlib\Service::get($container, TwigRenderer::class));
     }
 }

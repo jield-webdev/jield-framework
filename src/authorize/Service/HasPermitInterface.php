@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\Authorize\Service;
 
 use Jield\Authorize\Role\UserAsRoleInterface;

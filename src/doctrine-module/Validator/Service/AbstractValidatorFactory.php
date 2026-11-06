@@ -35,8 +35,12 @@ abstract class AbstractValidatorFactory implements FactoryInterface
      *
      * @throws ServiceCreationException
      */
-    protected function getRepository(ContainerInterface $container, array|null $options = null): ObjectRepository
+    protected function getRepository(ContainerInterface $container, ?array $options = null): ObjectRepository
     {
+        if (($options['object_repository'] ?? null) instanceof ObjectRepository) {
+            return $options['object_repository'];
+        }
+
         if (empty($options['target_class'])) {
             throw new ServiceCreationException(message: sprintf(
                 "Option 'target_class' is missing when creating validator %s",
@@ -44,26 +48,29 @@ abstract class AbstractValidatorFactory implements FactoryInterface
             ));
         }
 
-        $objectManager   = $this->getObjectManager(container: $container, options: $options);
+        $objectManager = $this->getObjectManager(container: $container, options: $options);
+        /** @var mixed $targetClassName */
         $targetClassName = $options['target_class'];
 
-        if (! class_exists(class: $targetClassName)) {
-            throw new BadMethodCallException(message: sprintf('Class %s could not be found.', $targetClassName));
+        if (!class_exists(class: \Jield\Stdlib\Value::string($targetClassName))) {
+            throw new BadMethodCallException(message: sprintf('Class %s could not be found.', \Jield\Stdlib\Value::scalar($targetClassName)));
         }
 
-        return $objectManager->getRepository(className: $targetClassName);
+        return $objectManager->getRepository(className: \Jield\Stdlib\Value::classString($targetClassName));
     }
 
     /** @param array $options */
-    protected function getObjectManager(ContainerInterface $container, array|null $options = null): ObjectManager
+    protected function getObjectManager(ContainerInterface $container, ?array $options = null): ObjectManager
     {
+        /** @var mixed $objectManager */
         $objectManager = $options['object_manager'] ?? self::DEFAULT_OBJECTMANAGER_KEY;
 
         if (is_string(value: $objectManager)) {
+            /** @var mixed $objectManager */
             $objectManager = $container->get($objectManager);
         }
 
-        return $objectManager;
+        return \Jield\Stdlib\Value::instance($objectManager, \Doctrine\Persistence\ObjectManager::class);
     }
 
     /**
@@ -74,7 +81,7 @@ abstract class AbstractValidatorFactory implements FactoryInterface
     protected function getFields(array $options): array
     {
         if (isset($options['fields'])) {
-            return (array) $options['fields'];
+            return \Jield\Stdlib\Value::toArray($options['fields']);
         }
 
         return [];

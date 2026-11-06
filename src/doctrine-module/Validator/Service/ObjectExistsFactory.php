@@ -14,13 +14,13 @@ final class ObjectExistsFactory extends AbstractValidatorFactory
     /**
      * {@inheritDoc}
      */
-    public function __invoke(ContainerInterface $container, $requestedName, array|null $options = null): ObjectExists
+    public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): ObjectExists
     {
         $repository = $this->getRepository(container: $container, options: $options);
 
-        return new ObjectExists(options: $this->merge(previousOptions: $options, newOptions: [
+        return new ObjectExists(options: $this->merge(previousOptions: \Jield\Stdlib\Value::array($options), newOptions: [
             'object_repository' => $repository,
-            'fields'            => $this->getFields(options: $options),
+            'fields' => $this->getFields(options: \Jield\Stdlib\Value::array($options)),
         ]));
     }
 }

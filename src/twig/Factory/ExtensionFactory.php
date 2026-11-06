@@ -13,6 +13,6 @@ class ExtensionFactory implements FactoryInterface
 {
     public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): Extension
     {
-        return new Extension($container->get(TwigRenderer::class));
+        return new Extension(\Jield\Stdlib\Service::get($container, TwigRenderer::class));
     }
 }

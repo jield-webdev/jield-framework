@@ -17,8 +17,8 @@ use function implode;
  */
 class CompositeExpression extends Expression implements Stringable
 {
-    final public const string TYPE_AND   = 'AND';
-    final public const string TYPE_OR    = 'OR';
+    final public const string TYPE_AND = 'AND';
+    final public const string TYPE_OR = 'OR';
     final public const string TYPE_SPACE = ' ';
 
     /**
@@ -26,14 +26,16 @@ class CompositeExpression extends Expression implements Stringable
      *
      * @param mixed[] $expressions
      */
-    public function __construct(private readonly array $expressions, private readonly ?string $type = self::TYPE_SPACE)
-    {
-    }
+    public function __construct(
+        private readonly array $expressions,
+        private readonly ?string $type = self::TYPE_SPACE,
+    ) {}
 
     public function __toString(): string
     {
         $parts = [];
 
+        /** @var mixed $expression */
         foreach ($this->expressions as $expression) {
             if (!$expression) {
                 continue;
@@ -49,7 +51,7 @@ class CompositeExpression extends Expression implements Stringable
         if ($this->type === static::TYPE_OR || $this->type === static::TYPE_AND) {
             $glue = ' ' . $this->type . ' ';
         } else {
-            $glue = $this->type;
+            $glue = $this->type ?? '';
         }
 
         return implode(separator: $glue, array: array_filter(array: $parts));
@@ -57,9 +59,11 @@ class CompositeExpression extends Expression implements Stringable
 
     public static function isValidType(?string $type): bool
     {
-        return $type === static::TYPE_OR
+        return (
+            $type === static::TYPE_OR
             || $type === static::TYPE_AND
             || $type === static::TYPE_SPACE
-            || $type === null;
+            || $type === null
+        );
     }
 }

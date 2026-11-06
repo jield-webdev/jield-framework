@@ -17,15 +17,15 @@ use function array_intersect;
 use function array_key_exists;
 use function array_keys;
 use function count;
-use function get_class;
-use function gettype;
 use function in_array;
 use function is_array;
-use function is_object;
 use function sprintf;
 
 /**
  * Object describing a collection of link relations
+ 
+ *
+ * @implements \IteratorAggregate<array-key, mixed>
  */
 class LinkCollection implements Countable, IteratorAggregate
 {
@@ -67,7 +67,7 @@ class LinkCollection implements Countable, IteratorAggregate
     public function add(Link $link, bool $overwrite = false): static
     {
         $relation = $link->getRelation();
-        if (! isset($this->links[$relation]) || $overwrite || 'self' === $relation) {
+        if (!isset($this->links[$relation]) || $overwrite || 'self' === $relation) {
             $this->links[$relation] = $link;
             return $this;
         }
@@ -76,14 +76,14 @@ class LinkCollection implements Countable, IteratorAggregate
             $this->links[$relation] = [$this->links[$relation]];
         }
 
-        if (! is_array(value: $this->links[$relation])) {
+        if (!is_array(value: $this->links[$relation])) {
             $type = get_debug_type(value: $this->links[$relation]);
 
             throw new Exception\DomainException(message: sprintf(
                 '%s::$links should be either a %s\Link or an array; however, it is a "%s"',
                 self::class,
                 __NAMESPACE__,
-                $type
+                $type,
             ));
         }
 
@@ -99,18 +99,19 @@ class LinkCollection implements Countable, IteratorAggregate
     public function idempotentAdd(LinkInterface $link): void
     {
         $existingRels = array_keys(array: $this->links);
-        $linkRels     = $link->getRels();
+        $linkRels = $link->getRels();
 
         // update existing rels
         $intersection = array_intersect($linkRels, $existingRels);
         foreach ($intersection as $relation) {
+            /** @var mixed $relationLinks */
             $relationLinks = $this->links[$relation];
-            if (! is_array(value: $relationLinks)) {
+            if (!is_array(value: $relationLinks)) {
                 $relationLinks = [$relationLinks];
             }
 
-            if (! in_array(needle: $link, haystack: $relationLinks, strict: true)) {
-                $relationLinks[]        = $link;
+            if (!in_array(needle: $link, haystack: $relationLinks, strict: true)) {
+                $relationLinks[] = $link;
                 $this->links[$relation] = $relationLinks; // inside the if, otherwise it's not really idempotent
             }
         }
@@ -130,14 +131,12 @@ class LinkCollection implements Countable, IteratorAggregate
      */
     public function get(string $relation): Link|array|LinkInterface|null
     {
-        if (! $this->has(relation: $relation)) {
+        if (!$this->has(relation: $relation)) {
             return null;
         }
 
         /** @psalm-var LinkInterface|Link|array<mixed>|null $value */
-        $value = $this->links[$relation];
-
-        return $value;
+        return $this->links[$relation];
     }
 
     /**
@@ -159,7 +158,7 @@ class LinkCollection implements Countable, IteratorAggregate
      */
     public function remove(string $relation): bool
     {
-        if (! $this->has(relation: $relation)) {
+        if (!$this->has(relation: $relation)) {
             return false;
         }
 

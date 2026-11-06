@@ -1,0 +1,47 @@
+#:schema https://mago.carthage.software/1.59.0/schema.json
+# Welcome to Mago!
+# For full documentation, see https://mago.carthage.software/1.59.0/en/tools/overview/
+version = "1"
+php-version = "8.4.0"
+
+[source]
+workspace = "."
+paths = ["src/api-tools", "src/asset-manager", "src/authorize", "src/bootstrap5", "src/cors", "src/doctrine-module", "src/doctrine-orm-module", "src/error-handler", "src/export", "src/form", "src/google-analytics", "src/log", "src/module-manager", "src/mvc", "src/mvc-plugin-flashmessenger", "src/mvc-plugin-identity", "src/recaptcha", "src/search", "src/stdlib", "src/test", "src/twig", "src/validator"]
+includes = ["vendor"]
+patches = ["analysis/mago"]
+excludes = []
+
+[source.glob]
+literal-separator = true
+
+[formatter]
+preset = "default"
+
+[linter]
+integrations = ["symfony"]
+
+[linter.rules]
+ambiguous-function-call = { enabled = false }
+literal-named-argument = { enabled = false }
+halstead = { effort-threshold = 7000 }
+
+[analyzer]
+plugins = ["psr-container"]
+find-unused-definitions = true
+find-unused-expressions = false
+analyze-dead-code = false
+memoize-properties = true
+allow-possibly-undefined-array-keys = true
+check-throws = false
+check-dead-catch = false
+unchecked-exceptions = ["Error", "LogicException"]
+unchecked-exception-classes = []
+check-missing-override = false
+find-unused-parameters = false
+strict-list-index-checks = false
+strict-array-index-existence = false
+allow-array-truthy-operand = false
+allow-operator-overloading = false
+no-boolean-literal-comparison = false
+check-missing-type-hints = false
+register-super-globals = true

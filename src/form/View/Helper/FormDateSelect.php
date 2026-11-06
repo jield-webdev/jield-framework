@@ -23,16 +23,15 @@ class FormDateSelect extends AbstractFormDateSelect
      *
      * @template T as null|ElementInterface
      * @psalm-param T $element
-     * @psalm-return (T is null ? self : string)
+     * @psalm-return (T is null ? static : string)
      * @return string|self
      */
     public function __invoke(
         ?ElementInterface $element = null,
         int $dateType = IntlDateFormatter::LONG,
-        ?string $locale = null
-    ): string|FormDateSelect|static
-    {
-        if (! $element) {
+        ?string $locale = null,
+    ): string|static {
+        if (!$element) {
             return $this;
         }
 
@@ -53,10 +52,10 @@ class FormDateSelect extends AbstractFormDateSelect
      */
     public function render(ElementInterface $element): string
     {
-        if (! $element instanceof DateSelectElement) {
+        if (!$element instanceof DateSelectElement) {
             throw new Exception\InvalidArgumentException(message: sprintf(
                 '%s requires that the element is of type Jield\Form\Element\DateSelect',
-                __METHOD__
+                __METHOD__,
             ));
         }
 
@@ -64,20 +63,20 @@ class FormDateSelect extends AbstractFormDateSelect
         if ($name === null || $name === '') {
             throw new Exception\DomainException(message: sprintf(
                 '%s requires that the element has an assigned name; none discovered',
-                __METHOD__
+                __METHOD__,
             ));
         }
 
         $selectHelper = $this->getSelectElementHelper();
-        $pattern      = $this->parsePattern(renderDelimiters: $element->shouldRenderDelimiters());
+        $pattern = $this->parsePattern(renderDelimiters: $element->shouldRenderDelimiters());
 
-        $daysOptions   = $this->getDaysOptions(pattern: $pattern['day']);
-        $monthsOptions = $this->getMonthsOptions(pattern: $pattern['month']);
-        $yearOptions   = $this->getYearsOptions(minYear: $element->getMinYear(), maxYear: $element->getMaxYear());
+        $daysOptions = $this->getDaysOptions(pattern: \Jield\Stdlib\Value::string($pattern['day']));
+        $monthsOptions = $this->getMonthsOptions(pattern: \Jield\Stdlib\Value::string($pattern['month']));
+        $yearOptions = $this->getYearsOptions(minYear: $element->getMinYear(), maxYear: $element->getMaxYear());
 
-        $dayElement   = $element->getDayElement()->setValueOptions(options: $daysOptions);
+        $dayElement = $element->getDayElement()->setValueOptions(options: $daysOptions);
         $monthElement = $element->getMonthElement()->setValueOptions(options: $monthsOptions);
-        $yearElement  = $element->getYearElement()->setValueOptions(options: $yearOptions);
+        $yearElement = $element->getYearElement()->setValueOptions(options: $yearOptions);
 
         if ($element->shouldCreateEmptyOption()) {
             $dayElement->setEmptyOption(emptyOption: '');
@@ -85,16 +84,17 @@ class FormDateSelect extends AbstractFormDateSelect
             $monthElement->setEmptyOption(emptyOption: '');
         }
 
-        $data                    = [];
-        $data[$pattern['day']]   = $selectHelper->render(element: $dayElement);
+        $data = [];
+        $data[$pattern['day']] = $selectHelper->render(element: $dayElement);
         $data[$pattern['month']] = $selectHelper->render(element: $monthElement);
-        $data[$pattern['year']]  = $selectHelper->render(element: $yearElement);
+        $data[\Jield\Stdlib\Value::key($pattern['year'])] = $selectHelper->render(element: $yearElement);
 
         $markup = '';
+        /** @var mixed $value */
         foreach ($pattern as $key => $value) {
             // Delimiter
             if (is_numeric(value: $key)) {
-                $markup .= $value;
+                $markup .= \Jield\Stdlib\Value::stringify($value);
             } else {
                 $markup .= $data[$value];
             }
@@ -107,6 +107,7 @@ class FormDateSelect extends AbstractFormDateSelect
      * Create a key => value options for days
      *
      * @param  string $pattern Pattern to use for days
+     * @return array<array-key, string|false>
      */
     protected function getDaysOptions(string $pattern): array
     {
@@ -116,14 +117,14 @@ class FormDateSelect extends AbstractFormDateSelect
             timeType: IntlDateFormatter::NONE,
             timezone: null,
             calendar: null,
-            pattern: $pattern
+            pattern: $pattern,
         );
-        $date           = new DateTime(datetime: '1970-01-01');
+        $date = new DateTime(datetime: '1970-01-01');
 
         $result = [];
         for ($day = 1; $day <= 31; $day++) {
-            $key          = $date->format(format: 'd');
-            $value        = $valueFormatter->format(datetime: $date);
+            $key = $date->format(format: 'd');
+            $value = $valueFormatter->format(datetime: $date);
             $result[$key] = $value;
 
             $date->modify(modifier: '+1 day');

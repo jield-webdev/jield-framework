@@ -1,18 +1,25 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\Mvc\ResponseSender;
 
 use Laminas\EventManager\Event;
 use Laminas\Stdlib\ResponseInterface;
+
 use function spl_object_hash;
 
+/**
+ * @extends \Laminas\EventManager\Event<object|string|null, array<string, mixed>>
+ */
 class SendResponseEvent extends Event
 {
     /**#@+
      * Send response events triggered by eventmanager
      */
     public const string EVENT_SEND_RESPONSE = 'sendResponse';
-    /**#@-*/
+
+    /** #@- */
 
     protected $name = 'sendResponse';
 
@@ -23,7 +30,7 @@ class SendResponseEvent extends Event
     protected array $contentSent = [];
 
     /**
-     * @return SendResponseEvent
+     * @return static
      */
     public function setResponse(ResponseInterface $response): static
     {
@@ -43,14 +50,15 @@ class SendResponseEvent extends Event
     /**
      * Set content sent for current response
      *
-     * @return SendResponseEvent
+     * @return static
      */
     public function setContentSent(): static
     {
-        $response                         = $this->getResponse();
-        $contentSent                      = $this->getParam('contentSent', []);
-        $responseObjectHash               = spl_object_hash($response);
-        $contentSent[$responseObjectHash] = true;
+        $response = $this->getResponse();
+        /** @var mixed $contentSent */
+        $contentSent = $this->getParam('contentSent', []);
+        $responseObjectHash = spl_object_hash($response);
+        \Jield\Stdlib\Value::setPath($contentSent, [$responseObjectHash], true);
         $this->setParam('contentSent', $contentSent);
         $this->contentSent[$responseObjectHash] = true;
         return $this;
@@ -71,14 +79,15 @@ class SendResponseEvent extends Event
     /**
      * Set headers sent for current response object
      *
-     * @return SendResponseEvent
+     * @return static
      */
     public function setHeadersSent(): static
     {
-        $response                         = $this->getResponse();
-        $headersSent                      = $this->getParam('headersSent', []);
-        $responseObjectHash               = spl_object_hash($response);
-        $headersSent[$responseObjectHash] = true;
+        $response = $this->getResponse();
+        /** @var mixed $headersSent */
+        $headersSent = $this->getParam('headersSent', []);
+        $responseObjectHash = spl_object_hash($response);
+        \Jield\Stdlib\Value::setPath($headersSent, [$responseObjectHash], true);
         $this->setParam('headersSent', $headersSent);
         $this->headersSent[$responseObjectHash] = true;
         return $this;

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\Mvc\Controller\Plugin;
 
 use Laminas\Stdlib\DispatchableInterface as Dispatchable;

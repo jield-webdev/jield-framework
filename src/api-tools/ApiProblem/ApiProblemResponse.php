@@ -6,8 +6,8 @@ namespace Jield\ApiTools\ApiProblem;
 
 use Laminas\Http\Headers;
 use Laminas\Http\Response;
-
 use Override;
+
 use function json_encode;
 
 use const JSON_PARTIAL_OUTPUT_ON_ERROR;
@@ -34,7 +34,7 @@ class ApiProblemResponse extends Response
         $this->setCustomStatusCode(code: $apiProblem->getStatus());
 
         if ($apiProblem->getTitle() !== null) {
-            $this->setReasonPhrase(reasonPhrase: $apiProblem->getTitle());
+            $this->setReasonPhrase(reasonPhrase: \Jield\Stdlib\Value::string($apiProblem->getTitle()));
         }
 
         $this->jsonFlags = JSON_UNESCAPED_SLASHES | JSON_PARTIAL_OUTPUT_ON_ERROR;
@@ -58,7 +58,7 @@ class ApiProblemResponse extends Response
     #[Override]
     public function getContent(): string
     {
-        return json_encode(value: $this->apiProblem->toArray(), flags: $this->jsonFlags);
+        return json_encode(value: $this->apiProblem->toArray(), flags: $this->jsonFlags) ?: '{}';
     }
 
     /**
@@ -73,7 +73,7 @@ class ApiProblemResponse extends Response
     public function getHeaders(): Headers
     {
         $headers = parent::getHeaders();
-        if (! $headers->has(name: 'content-type')) {
+        if (!$headers->has('content-type')) {
             $headers->addHeaderLine(headerFieldNameOrLine: 'content-type', fieldValue: ApiProblem::CONTENT_TYPE);
         }
 
@@ -91,10 +91,10 @@ class ApiProblemResponse extends Response
     #[Override]
     public function getReasonPhrase(): string
     {
-        if (! empty($this->reasonPhrase)) {
+        if (!empty($this->reasonPhrase)) {
             return $this->reasonPhrase;
         }
 
-        return $this->recommendedReasonPhrases[$this->statusCode] ?? 'Unknown Error';
+        return \Jield\Stdlib\Value::string($this->recommendedReasonPhrases[$this->statusCode] ?? 'Unknown Error');
     }
 }

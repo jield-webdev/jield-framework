@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Jield\ApiTools\Rest;
 
+use Jield\ApiTools\MvcAuth\Identity\IdentityInterface;
+use Jield\Mvc\Router\RouteMatch;
 use Laminas\EventManager\EventManagerAwareInterface;
 use Laminas\InputFilter\InputFilterInterface;
-use Laminas\Router\RouteMatch;
 use Laminas\Stdlib\Parameters;
-use Jield\ApiTools\MvcAuth\Identity\IdentityInterface;
 
 /**
  * Interface describing operations for a given resource.
@@ -51,7 +51,7 @@ interface ResourceInterface extends EventManagerAwareInterface
     /**
      * Create a record in the resource
      */
-    public function create(Parameters $data): mixed;
+    public function create(object|array $data): mixed;
 
     /**
      * Update (replace) an existing record

@@ -7,7 +7,7 @@ namespace Jield\ApiTools\ApiProblem\Exception;
 /**
  * Interface for exceptions that can provide additional API Problem details.
  */
-interface ProblemExceptionInterface
+interface ProblemExceptionInterface extends \Throwable
 {
     public function getAdditionalDetails(): ?iterable;
 

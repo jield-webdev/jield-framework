@@ -6,9 +6,7 @@ namespace Jield\ApiTools\ApiProblem\Exception;
 
 use Override;
 
-class DomainException extends \DomainException implements
-    ExceptionInterface,
-    ProblemExceptionInterface
+class DomainException extends \DomainException implements ExceptionInterface, ProblemExceptionInterface
 {
     /** @var string */
     protected string $type;

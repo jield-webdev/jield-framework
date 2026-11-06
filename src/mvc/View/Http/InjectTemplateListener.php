@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\Mvc\View\Http;
 
+use Jield\Mvc\MvcEvent;
 use Laminas\EventManager\AbstractListenerAggregate;
 use Laminas\EventManager\EventManagerInterface as Events;
-use Jield\Mvc\MvcEvent;
 use Laminas\Stdlib\StringUtils;
 use Laminas\View\Model\ModelInterface as ViewModel;
 
@@ -60,19 +62,21 @@ class InjectTemplateListener extends AbstractListenerAggregate
      */
     public function injectTemplate(MvcEvent $e): void
     {
+        /** @var mixed $model */
         $model = $e->getResult();
-        if (! $model instanceof ViewModel) {
+        if (!$model instanceof ViewModel) {
             return;
         }
 
         $template = $model->getTemplate();
-        if (! empty($template)) {
+        if (!empty($template)) {
             return;
         }
 
         $routeMatch = $e->getRouteMatch();
-        if ($preferRouteMatchController = $routeMatch->getParam('prefer_route_match_controller', false)) {
-            $this->setPreferRouteMatchController($preferRouteMatchController);
+        /** @var mixed $preferRouteMatchController */
+        if ($preferRouteMatchController = \Jield\Stdlib\Value::present($routeMatch)->getParam('prefer_route_match_controller', false)) {
+            $this->setPreferRouteMatchController(\Jield\Stdlib\Value::bool($preferRouteMatchController));
         }
 
         $controller = $e->getTarget();
@@ -80,24 +84,27 @@ class InjectTemplateListener extends AbstractListenerAggregate
             $controller = $controller::class;
         }
 
-        $routeMatchController = $routeMatch->getParam('controller', '');
-        if (! $controller || ($this->preferRouteMatchController && $routeMatchController)) {
+        /** @var mixed $routeMatchController */
+        $routeMatchController = \Jield\Stdlib\Value::present($routeMatch)->getParam('controller', '');
+        if (!$controller || $this->preferRouteMatchController && \Jield\Stdlib\Value::truthy($routeMatchController)) {
+            /** @var mixed $controller */
             $controller = $routeMatchController;
         }
 
-        $template = $this->mapController($controller);
+        $template = $this->mapController(\Jield\Stdlib\Value::string($controller));
 
-        $action = $routeMatch->getParam('action');
+        /** @var mixed $action */
+        $action = \Jield\Stdlib\Value::present($routeMatch)->getParam('action');
         if (null !== $action) {
-            $template .= '/' . $this->inflectName($action);
+            $template = (string) $template . '/' . $this->inflectName(\Jield\Stdlib\Value::string($action));
         }
-        $model->setTemplate($template);
+        $model->setTemplate(\Jield\Stdlib\Value::nonEmptyString($template));
     }
 
     /**
      * Set map of controller namespace -> template pairs
      *
-     * @return self
+     * @return static
      */
     public function setControllerMap(array $map): static
     {
@@ -115,21 +122,22 @@ class InjectTemplateListener extends AbstractListenerAggregate
     public function mapController($controller): false|string
     {
         $mapped = '';
+        /** @var mixed $replacement */
         foreach ($this->controllerMap as $namespace => $replacement) {
             if (
                 // Allow disabling rule by setting value to false since config
                 // merging have no feature to remove entries
                 $replacement === false
                 // Match full class or full namespace
-                || ! ($controller === $namespace || str_starts_with($controller, $namespace . '\\'))
+                || !($controller === $namespace || str_starts_with($controller, $namespace . '\\'))
             ) {
                 continue;
             }
 
             // Map namespace to $replacement if its value is string
             if (is_string($replacement)) {
-                $mapped     = rtrim($replacement, '/') . '/';
-                $controller = substr($controller, strlen($namespace) + 1) ?: '';
+                $mapped = rtrim($replacement, '/') . '/';
+                $controller = substr($controller, strlen(\Jield\Stdlib\Value::string($namespace)) + 1) ?: '';
                 break;
             }
         }
@@ -139,7 +147,7 @@ class InjectTemplateListener extends AbstractListenerAggregate
         array_pop($parts);
         $parts = array_diff($parts, ['Controller']);
         //strip trailing Controller in class name
-        $parts[]    = $this->deriveControllerClass($controller);
+        $parts[] = $this->deriveControllerClass($controller);
         $controller = implode('/', $parts);
 
         $template = trim($mapped . $controller, '/');
@@ -159,15 +167,15 @@ class InjectTemplateListener extends AbstractListenerAggregate
     protected function inflectName($name): string
     {
         if (StringUtils::hasPcreUnicodeSupport()) {
-            $pattern     = ['#(?<=(?:\p{Lu}))(\p{Lu}\p{Ll})#', '#(?<=(?:\p{Ll}|\p{Nd}))(\p{Lu})#'];
+            $pattern = ['#(?<=(?:\p{Lu}))(\p{Lu}\p{Ll})#', '#(?<=(?:\p{Ll}|\p{Nd}))(\p{Lu})#'];
             $replacement = ['-\1', '-\1'];
         } else {
-            $pattern     = ['#(?<=(?:[A-Z]))([A-Z]+)([A-Z][a-z])#', '#(?<=(?:[a-z0-9]))([A-Z])#'];
+            $pattern = ['#(?<=(?:[A-Z]))([A-Z]+)([A-Z][a-z])#', '#(?<=(?:[a-z0-9]))([A-Z])#'];
             $replacement = ['\1-\2', '-\1'];
         }
 
         $name = preg_replace($pattern, $replacement, $name);
-        return strtolower($name);
+        return strtolower(\Jield\Stdlib\Value::string($name));
     }
 
     /**
@@ -181,13 +189,10 @@ class InjectTemplateListener extends AbstractListenerAggregate
     protected function deriveControllerClass($controller): string
     {
         if (str_contains($controller, '\\')) {
-            $controller = substr($controller, strrpos($controller, '\\') + 1);
+            $controller = substr($controller, (strrpos($controller, '\\') ?: -1) + 1);
         }
 
-        if (
-            (10 < strlen($controller))
-            && (str_ends_with($controller, 'Controller'))
-        ) {
+        if (10 < strlen($controller) && str_ends_with($controller, 'Controller')) {
             $controller = substr($controller, 0, -10);
         }
 
@@ -202,7 +207,7 @@ class InjectTemplateListener extends AbstractListenerAggregate
      */
     public function setPreferRouteMatchController($preferRouteMatchController): void
     {
-        $this->preferRouteMatchController = (bool) $preferRouteMatchController;
+        $this->preferRouteMatchController = $preferRouteMatchController;
     }
 
     /**

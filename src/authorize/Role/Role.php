@@ -6,6 +6,7 @@ namespace Jield\Authorize\Role;
 
 use Jield\Authorize\Exception;
 use Laminas\Permissions\Acl\Role\RoleInterface;
+
 use function is_string;
 
 /**
@@ -16,13 +17,13 @@ class Role implements RoleInterface, HierarchicalRoleInterface
     /** @var string */
     protected string $roleId;
 
-    protected null|string|RoleInterface $parent;
+    protected ?RoleInterface $parent = null;
 
     /**
      * @param string|null $roleId
      * @param string|RoleInterface|null $parent
      */
-    public function __construct(?string $roleId = null, null|string|RoleInterface $parent = null)
+    public function __construct(?string $roleId = null, string|RoleInterface|null $parent = null)
     {
         if (null !== $roleId) {
             $this->setRoleId(roleId: $roleId);
@@ -67,12 +68,7 @@ class Role implements RoleInterface, HierarchicalRoleInterface
             return $this;
         }
 
-        if ($parent instanceof RoleInterface) {
-            $this->parent = $parent;
-
-            return $this;
-        }
-
-        throw Exception\InvalidRoleException::invalidRoleInstance(role: $parent);
+        $this->parent = $parent;
+        return $this;
     }
 }

@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Jield\Authorize\Guard;
 
 use Jield\Authorize\Exception\UnAuthorizedException;
-use Laminas\Http\Response;
+use Jield\Authorize\Service\AuthorizeService;
 use Jield\Mvc\Application;
 use Jield\Mvc\MvcEvent;
-use Jield\Authorize\Service\AuthorizeService;
 use Laminas\EventManager\EventManagerInterface;
+use Laminas\Http\Response;
 
 /**
  * Route Guard listener, allows checking of permissions
@@ -27,7 +27,7 @@ class Route extends AbstractGuard
      */
     protected function extractResourcesFromRule(array $rule): array
     {
-        return ['route/' . $rule['route']];
+        return ['route/' . \Jield\Stdlib\Value::stringify($rule['route'])];
     }
 
     /**
@@ -35,7 +35,11 @@ class Route extends AbstractGuard
      */
     public function attach(EventManagerInterface $events, $priority = 1): void
     {
-        $this->listeners[] = $events->attach(eventName: MvcEvent::EVENT_ROUTE, listener: $this->onRoute(...), priority: -1000);
+        $this->listeners[] = $events->attach(
+            eventName: MvcEvent::EVENT_ROUTE,
+            listener: $this->onRoute(...),
+            priority: -1000,
+        );
     }
 
     /**
@@ -44,13 +48,13 @@ class Route extends AbstractGuard
      */
     public function onRoute(MvcEvent $event): mixed
     {
-        /** @var Authorize $service */
-        $service   = $this->container->get(Authorize::class);
-        $match     = $event->getRouteMatch();
-        $routeName = $match->getMatchedRouteName();
+        
+        $service = \Jield\Stdlib\Service::get($this->container, AuthorizeService::class);
+        $match = $event->getRouteMatch();
+        $routeName = \Jield\Stdlib\Value::present($match)->getMatchedRouteName();
 
         if ($service->isAllowed(resource: 'route/' . $routeName)) {
-            return;
+            return null;
         }
 
         $event->setError(message: static::ERROR);
@@ -58,22 +62,25 @@ class Route extends AbstractGuard
         $event->setParam(name: 'identity', value: $service->getIdentity());
         $event->setParam(
             name: 'exception',
-            value: new UnAuthorizedException(message: 'You are not authorized to access ' . $routeName)
+            value: new UnAuthorizedException(message: 'You are not authorized to access ' . $routeName),
         );
 
         /** @var Application $app */
-        $app          = $event->getTarget();
+        $app = $event->getTarget();
         $eventManager = $app->getEventManager();
 
         $event->setName(name: MvcEvent::EVENT_DISPATCH_ERROR);
         $results = $eventManager->triggerEvent(event: $event);
 
+        /** @var mixed $return */
         $return = $results->last();
 
         if (!$return) {
             return $event->getResult();
         }
 
-        return new  Response()->setStatusCode(code: 403)->setReasonPhrase(reasonPhrase: 'Forbidden');
+        return new Response()
+            ->setStatusCode(code: 403)
+            ->setReasonPhrase(reasonPhrase: 'Forbidden');
     }
 }

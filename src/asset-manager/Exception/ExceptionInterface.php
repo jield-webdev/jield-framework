@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\AssetManager\Exception;
 
 /**
@@ -9,6 +11,4 @@ namespace Jield\AssetManager\Exception;
  * @package    AssetManager
  * @subpackage Exception
  */
-interface ExceptionInterface
-{
-}
+interface ExceptionInterface extends \Throwable {}

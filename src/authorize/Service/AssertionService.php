@@ -19,12 +19,13 @@ class AssertionService
      * @throws ContainerExceptionInterface
      * @throws NotFoundExceptionInterface
      */
-    public function __construct(private ServiceManager $container)
-    {
-        /** @var AuthorizeService $authorizeService */
-        $authorizeService       = $this->container->get(id: AuthorizeService::class);
+    public function __construct(
+        private ServiceManager $container,
+    ) {
+        
+        $authorizeService = \Jield\Stdlib\Service::get($this->container, AuthorizeService::class);
         $this->authorizeService = $authorizeService;
-        $this->acl              = $this->authorizeService->getAcl();
+        $this->acl = $this->authorizeService->getAcl();
     }
 
     /**
@@ -32,14 +33,14 @@ class AssertionService
      */
     public function addResource($entity, string $assertion): void
     {
-        if (!$this->acl->hasResource($entity)) {
-            $this->acl->addResource($entity);
-            $this->acl->allow([], $entity, [], $this->container->build(name: $assertion));
+        if (!$this->acl->hasResource(\Jield\Stdlib\Value::instanceOrString($entity, \Laminas\Permissions\Acl\Resource\ResourceInterface::class))) {
+            $this->acl->addResource(\Jield\Stdlib\Value::instanceOrString($entity, \Laminas\Permissions\Acl\Resource\ResourceInterface::class));
+            $this->acl->allow([], \Jield\Stdlib\Value::instanceOrArrayOrString($entity, \Laminas\Permissions\Acl\Resource\ResourceInterface::class), [], $this->container->build(name: $assertion));
         }
     }
 
     public function isUserAllowed($entity, string $privilege): bool
     {
-        return $this->authorizeService->isAllowed(resource: $entity, privilege: $privilege);
+        return $this->authorizeService->isAllowed(resource: \Jield\Stdlib\Value::instanceOrString($entity, \Laminas\Permissions\Acl\Resource\ResourceInterface::class), privilege: $privilege);
     }
 }

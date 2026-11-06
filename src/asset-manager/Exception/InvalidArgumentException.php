@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\AssetManager\Exception;
 
 /**
@@ -7,6 +9,4 @@ namespace Jield\AssetManager\Exception;
  * @package    AssetManager
  * @subpackage Exception
  */
-class InvalidArgumentException extends \InvalidArgumentException implements ExceptionInterface
-{
-}
+class InvalidArgumentException extends \InvalidArgumentException implements ExceptionInterface {}

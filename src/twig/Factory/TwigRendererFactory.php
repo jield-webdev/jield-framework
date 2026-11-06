@@ -18,14 +18,14 @@ class TwigRendererFactory implements FactoryInterface
     public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): TwigRenderer
     {
         $renderer = new TwigRenderer(
-            $container->get(View::class),
-            $container->get(ChainLoader::class),
-            $container->get(Environment::class),
-            $container->get(TwigResolver::class)
+            \Jield\Stdlib\Service::get($container, View::class),
+            \Jield\Stdlib\Service::get($container, ChainLoader::class),
+            \Jield\Stdlib\Service::get($container, Environment::class),
+            \Jield\Stdlib\Service::get($container, TwigResolver::class),
         );
 
         $renderer->setCanRenderTrees(true);
-        $renderer->setHelperPluginManager($container->get(HelperPluginManager::class));
+        $renderer->setHelperPluginManager(\Jield\Stdlib\Service::get($container, HelperPluginManager::class));
 
         return $renderer;
     }

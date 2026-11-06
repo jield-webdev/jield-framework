@@ -15,11 +15,11 @@ final class Module
         $provider = new ConfigProvider();
 
         return [
-            'caches'             => $provider->getCachesConfig(),
-            'doctrine'           => $provider->getDoctrineConfig(),
+            'caches' => $provider->getCachesConfig(),
+            'doctrine' => $provider->getDoctrineConfig(),
             'doctrine_factories' => $provider->getDoctrineFactoryConfig(),
-            'service_manager'    => $provider->getDependencyConfig(),
-            'validators'         => $provider->getValidatorConfig(),
+            'service_manager' => $provider->getDependencyConfig(),
+            'validators' => $provider->getValidatorConfig(),
         ];
     }
 }

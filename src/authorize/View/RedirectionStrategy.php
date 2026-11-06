@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace Jield\Authorize\View;
 
+use Jield\Authorize\Exception\UnAuthorizedException;
 use Jield\Authorize\Guard\Controller;
 use Jield\Authorize\Guard\Route;
-use Jield\Authorize\Exception\UnAuthorizedException;
-use Laminas\Http\Response;
 use Jield\Mvc\Application;
 use Jield\Mvc\MvcEvent;
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\EventManager\ListenerAggregateInterface;
+use Laminas\Http\Response;
 
 /**
  * Dispatch error handler, catches exceptions related with authorization and
@@ -33,7 +33,11 @@ class RedirectionStrategy implements ListenerAggregateInterface
      */
     public function attach(EventManagerInterface $events, $priority = 1): void
     {
-        $this->listeners[] = $events->attach(eventName: MvcEvent::EVENT_DISPATCH_ERROR, listener: $this->onDispatchError(...), priority: -5000);
+        $this->listeners[] = $events->attach(
+            eventName: MvcEvent::EVENT_DISPATCH_ERROR,
+            listener: $this->onDispatchError(...),
+            priority: -5000,
+        );
     }
 
     /**
@@ -42,9 +46,9 @@ class RedirectionStrategy implements ListenerAggregateInterface
     public function detach(EventManagerInterface $events): void
     {
         foreach ($this->listeners as $index => $listener) {
-            if ($events->detach(listener: $listener)) {
-                unset($this->listeners[$index]);
-            }
+            $events->detach(listener: $listener);
+
+            unset($this->listeners[$index]);
         }
     }
 
@@ -54,34 +58,31 @@ class RedirectionStrategy implements ListenerAggregateInterface
     public function onDispatchError(MvcEvent $event): void
     {
         // Do nothing if the result is a response object
-        $result     = $event->getResult();
+        /** @var mixed $result */
+        $result = $event->getResult();
         $routeMatch = $event->getRouteMatch();
-        $response   = $event->getResponse();
-        $router     = $event->getRouter();
-        $error      = $event->getError();
-        $url        = $this->redirectUri;
+        $response = $event->getResponse();
+        $router = $event->getRouter();
+        $error = $event->getError();
+        $url = $this->redirectUri;
 
         if (
             $result instanceof Response
             || !$routeMatch
-            || ($response && !$response instanceof Response)
+            || !$response instanceof Response
             || !(
                 Route::ERROR === $error
                 || Controller::ERROR === $error
-                || (
-                    Application::ERROR_EXCEPTION === $error
-                    && $event->getParam(name: 'exception') instanceof UnAuthorizedException
-                )
+                || Application::ERROR_EXCEPTION === $error
+                && $event->getParam(name: 'exception') instanceof UnAuthorizedException
             )
         ) {
             return;
         }
 
         if (null === $url) {
-            $url = $router->assemble(params: [], options: ['name' => $this->redirectRoute]);
+            $url = $router->assemble(params: [], options: ['name' => $this->redirectRoute])->toString();
         }
-
-        $response = $response ?: new Response();
 
         $response->getHeaders()->addHeaderLine(headerFieldNameOrLine: 'Location', fieldValue: $url);
         $response->setStatusCode(code: 302);

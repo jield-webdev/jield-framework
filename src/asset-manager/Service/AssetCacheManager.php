@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\AssetManager\Service;
 
 use Assetic\Cache\FilesystemCache;
@@ -23,10 +25,8 @@ class AssetCacheManager
      */
     public function __construct(
         protected ContainerInterface $container,
-        protected array              $config = []
-    )
-    {
-    }
+        protected array $config = [],
+    ) {}
 
     /**
      * Set the cache (if any) on the asset, and return the new AssetCache.
@@ -38,6 +38,7 @@ class AssetCacheManager
      */
     public function setCache(string $path, AssetInterface $asset): AssetInterface|AssetCache
     {
+        /** @var mixed $provider */
         $provider = $this->getProvider(path: $path);
 
         if (!$provider instanceof CacheInterface) {
@@ -63,9 +64,7 @@ class AssetCacheManager
             return null;
         }
 
-        if (is_string(value: $cacheProvider['cache']) &&
-            $this->container->has(id: $cacheProvider['cache'])
-        ) {
+        if (is_string(value: $cacheProvider['cache']) && $this->container->has($cacheProvider['cache'])) {
             return $this->container->get($cacheProvider['cache']);
         }
 
@@ -74,15 +73,17 @@ class AssetCacheManager
             return call_user_func($cacheProvider['cache'], $path);
         }
 
-        $dir   = '';
+        $dir = '';
+        /** @var mixed $class */
         $class = $cacheProvider['cache'];
 
         if (!empty($cacheProvider['options']['dir'])) {
+            /** @var mixed $dir */
             $dir = $cacheProvider['options']['dir'];
         }
 
-        $class = $this->classMapper(class: $class);
-        return new $class($dir, $path);
+        $class = $this->classMapper(class: \Jield\Stdlib\Value::string($class));
+        return \Jield\Stdlib\Value::instantiate($class, [$dir, $path]);
     }
 
     /**
@@ -101,10 +102,7 @@ class AssetCacheManager
             $cacheProvider = $this->config[$path];
         }
 
-        if (!$cacheProvider
-            && !empty($this->config['default'])
-            && !empty($this->config['default']['cache'])
-        ) {
+        if (!$cacheProvider && !empty($this->config['default']) && !empty($this->config['default']['cache'])) {
             $cacheProvider = $this->config['default'];
         }
 
@@ -121,12 +119,12 @@ class AssetCacheManager
     private function classMapper(string $class): string
     {
         $classToCheck = $class;
-        $classToCheck .= (str_ends_with(haystack: $class, needle: 'Cache')) ? '' : 'Cache';
+        $classToCheck .= str_ends_with(haystack: $class, needle: 'Cache') ? '' : 'Cache';
 
         return match ($classToCheck) {
             'FilesystemCache' => FilesystemCache::class,
-            'FilePathCache'   => FilePathCache::class,
-            default           => $class,
+            'FilePathCache' => FilePathCache::class,
+            default => $class,
         };
     }
 }

@@ -14,25 +14,24 @@ use function sprintf;
 
 class InvalidArgumentException extends BaseInvalidArgumentException implements ExceptionInterface
 {
+    /** @param list<string>|string $expectation */
     public static function invalidArgument(int $position, string $name, array|string $expectation, mixed $actual): self
     {
-        $expectations = (array)$expectation;
+        $expectations = (array) $expectation;
 
-        return new self(
-            message: sprintf(
-                'Invalid argument #%d $%s given: expected %s, got %s',
-                $position,
-                $name,
-                self::formatExpectations(expectations: $expectations),
-                self::getType(actual: $actual)
-            )
-        );
+        return new self(message: sprintf(
+            'Invalid argument #%d $%s given: expected %s, got %s',
+            $position,
+            $name,
+            self::formatExpectations(expectations: $expectations),
+            self::getType(actual: $actual),
+        ));
     }
 
     /** @param string[] $expectations */
     private static function formatExpectations(array $expectations): string
     {
-        $last = array_pop(array: $expectations);
+        $last = array_pop(array: $expectations) ?? '';
 
         if (!$expectations) {
             return $last;

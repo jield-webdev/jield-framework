@@ -1,15 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jield\Mvc;
 
+use Jield\Mvc\Router\RouteMatch;
+use Jield\Mvc\View\Model\ViewModel;
 use Laminas\EventManager\Event;
-use Laminas\Router\RouteMatch;
 use Laminas\Router\RouteStackInterface;
 use Laminas\Stdlib\RequestInterface as Request;
 use Laminas\Stdlib\ResponseInterface as Response;
 use Laminas\View\Model\ModelInterface as Model;
-use Laminas\View\Model\ViewModel;
 
+/**
+ * @extends \Laminas\EventManager\Event<object|string|null, array<string, mixed>>
+ */
 class MvcEvent extends Event
 {
     /**#@+
@@ -22,24 +27,25 @@ class MvcEvent extends Event
     public const string EVENT_RENDER = 'render';
     public const string EVENT_RENDER_ERROR = 'render.error';
     public const string EVENT_ROUTE = 'route';
-    protected ?ApplicationInterface $application;
+
+    protected ?ApplicationInterface $application = null;
 
     protected Request $request;
 
     protected Response $response;
 
-    protected mixed $result;
+    protected mixed $result = null;
 
     protected RouteStackInterface $router;
 
-    protected ?RouteMatch $routeMatch;
+    protected ?RouteMatch $routeMatch = null;
 
     protected ?Model $viewModel = null;
 
     /**
      * Set application instance
      *
-     * @return MvcEvent
+     * @return static
      */
     public function setApplication(ApplicationInterface $application): static
     {
@@ -71,7 +77,7 @@ class MvcEvent extends Event
     /**
      * Set router
      *
-     * @return MvcEvent
+     * @return static
      */
     public function setRouter(RouteStackInterface $router): static
     {
@@ -93,7 +99,7 @@ class MvcEvent extends Event
     /**
      * Set route match
      *
-     * @return MvcEvent
+     * @return static
      */
     public function setRouteMatch(RouteMatch $matches): static
     {
@@ -115,7 +121,7 @@ class MvcEvent extends Event
     /**
      * Set request
      *
-     * @return MvcEvent
+     * @return static
      */
     public function setRequest(Request $request): static
     {
@@ -137,7 +143,7 @@ class MvcEvent extends Event
     /**
      * Set response
      *
-     * @return MvcEvent
+     * @return static
      */
     public function setResponse(Response $response): static
     {
@@ -149,7 +155,7 @@ class MvcEvent extends Event
     /**
      * Set the view model
      *
-     * @return MvcEvent
+     * @return static
      */
     public function setViewModel(Model $viewModel): static
     {
@@ -176,7 +182,7 @@ class MvcEvent extends Event
     /**
      * Set result
      *
-     * @return MvcEvent
+     * @return static
      */
     public function setResult(mixed $result): static
     {
@@ -192,14 +198,14 @@ class MvcEvent extends Event
      */
     public function isError(): bool
     {
-        return (bool)$this->getParam('error', false);
+        return \Jield\Stdlib\Value::truthy($this->getParam('error', false));
     }
 
     /**
      * Set the error message (indicating error in handling request)
      *
      * @param string $message
-     * @return MvcEvent
+     * @return static
      */
     public function setError(string $message): static
     {
@@ -214,7 +220,7 @@ class MvcEvent extends Event
      */
     public function getError(): string
     {
-        return $this->getParam('error', '');
+        return \Jield\Stdlib\Value::string($this->getParam('error', ''));
     }
 
     /**
@@ -222,16 +228,16 @@ class MvcEvent extends Event
      *
      * @return string
      */
-    public function getController(): string
+    public function getController(): ?string
     {
-        return $this->getParam('controller');
+        return \Jield\Stdlib\Value::nullableString($this->getParam('controller'));
     }
 
     /**
      * Set controller name
      *
      * @param string $name
-     * @return MvcEvent
+     * @return static
      */
     public function setController(string $name): static
     {
@@ -244,16 +250,16 @@ class MvcEvent extends Event
      *
      * @return string
      */
-    public function getControllerClass(): string
+    public function getControllerClass(): ?string
     {
-        return $this->getParam('controller-class');
+        return \Jield\Stdlib\Value::nullableString($this->getParam('controller-class'));
     }
 
     /**
      * Set controller class
      *
      * @param string $class
-     * @return MvcEvent
+     * @return static
      */
     public function setControllerClass(string $class): static
     {

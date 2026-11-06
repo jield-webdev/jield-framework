@@ -4,6 +4,4 @@ declare(strict_types=1);
 
 namespace Jield\ApiTools\Hal\Exception;
 
-class InvalidResourceException extends InvalidArgumentException
-{
-}
+class InvalidResourceException extends InvalidArgumentException {}

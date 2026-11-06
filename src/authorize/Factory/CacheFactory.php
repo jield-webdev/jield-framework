@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace Jield\Authorize\Factory;
 
+use Jield\Authorize\Config;
 use Laminas\Cache\Service\StorageAdapterFactoryInterface;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Psr\Container\ContainerInterface;
-use Jield\Authorize\Config;
+
 use function is_array;
 
 /**
@@ -20,24 +21,31 @@ class CacheFactory implements FactoryInterface
      *
      * @see \Laminas\ServiceManager\Factory\FactoryInterface::__invoke()
      */
-    public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): \Laminas\Cache\Storage\StorageInterface
-    {
-        /** @var StorageAdapterFactoryInterface $storageFactory */
-        $storageFactory = $container->get(StorageAdapterFactoryInterface::class);
+    public function __invoke(
+        ContainerInterface $container,
+        $requestedName,
+        ?array $options = null,
+    ): \Laminas\Cache\Storage\StorageInterface {
+        
+        $storageFactory = \Jield\Stdlib\Service::get($container, StorageAdapterFactoryInterface::class);
 
-        $cacheOptions = $container->get(Config::class)['cache_options'];
+        /** @var mixed $cacheOptions */
+        $cacheOptions = \Jield\Stdlib\Value::array($container->get(Config::class))['cache_options'];
 
         $plugins = [];
-        foreach ($cacheOptions['plugins'] as $plugin) {
-            $plugins[] = is_array(value: $plugin) ? $plugin : [
-                'name' => $plugin,
-            ];
+        /** @var mixed $plugin */
+        foreach (\Jield\Stdlib\Value::iterable(\Jield\Stdlib\Value::accessible($cacheOptions)['plugins']) as $plugin) {
+            $plugins[] = is_array(value: $plugin)
+                ? $plugin
+                : [
+                    'name' => $plugin,
+                ];
         }
 
         return $storageFactory->create(
-            storage: $cacheOptions['adapter']['name'],
-            options: $cacheOptions['options'] ?? [],
-            plugins: $plugins
+            storage: \Jield\Stdlib\Value::nonEmptyString(\Jield\Stdlib\Value::path($cacheOptions, ['adapter', 'name'])),
+            options: \Jield\Stdlib\Value::stringKeyedArray($cacheOptions['options'] ?? []),
+            plugins: $plugins,
         );
     }
 }

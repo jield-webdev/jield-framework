@@ -6,7 +6,7 @@ namespace DoctrineORMModule\Service;
 
 use BadMethodCallException;
 use DoctrineModule\Service\AbstractFactory;
-use DoctrineORMModule\Collector\MappingCollector;
+use Laminas\ServiceManager\Exception\ServiceNotCreatedException;
 use Psr\Container\ContainerInterface;
 
 /**
@@ -19,14 +19,25 @@ final class MappingCollectorFactory extends AbstractFactory
      *
      * @param string $requestedName
      *
-     * @return MappingCollector
+     * @return object
      */
-    public function __invoke(ContainerInterface $container, string $requestedName, array|null $options = null): MappingCollector
-    {
-        $name          = $this->getName();
+    public function __invoke(
+        ContainerInterface $container,
+        string $requestedName,
+        ?array $options = null,
+    ): object {
+        $collectorClass = 'DoctrineORMModule\\Collector\\MappingCollector';
+        if (!class_exists($collectorClass)) {
+            throw new ServiceNotCreatedException('Configure a mapping collector compatible with your developer toolbar.');
+        }
+        $name = $this->getName();
+        /** @var mixed $objectManager */
         $objectManager = $container->get('doctrine.entitymanager.' . $name);
 
-        return new MappingCollector($objectManager->getMetadataFactory(), 'doctrine.mapping_collector.' . $name);
+        return \Jield\Stdlib\Value::instantiate($collectorClass, [
+            \Jield\Stdlib\Value::call($objectManager, 'getMetadataFactory'),
+            'doctrine.mapping_collector.' . $name,
+        ]);
     }
 
     public function getOptionsClass(): string

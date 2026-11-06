@@ -14,13 +14,13 @@ use Laminas\Authentication\AuthenticationServiceInterface;
  */
 class Identity extends AbstractPlugin
 {
-    protected ?AuthenticationServiceInterface $authenticationService;
+    protected ?AuthenticationServiceInterface $authenticationService = null;
 
     public function __invoke()
     {
         if (!$this->authenticationService instanceof AuthenticationServiceInterface) {
             throw new Exception\RuntimeException(
-                'No AuthenticationServiceInterface instance provided; cannot lookup identity'
+                'No AuthenticationServiceInterface instance provided; cannot lookup identity',
             );
         }
 
@@ -41,6 +41,4 @@ class Identity extends AbstractPlugin
         $this->authenticationService = $authenticationService;
         return $this;
     }
-
-
 }

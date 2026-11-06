@@ -42,9 +42,9 @@ class Month extends AbstractDateTime
         $baseValue = $this->attributes['min'] ?? '1970-01';
 
         return new DateStepValidator(options: [
-            'format'    => 'Y-m',
-            'baseValue' => $baseValue,
-            'step'      => new DateInterval(duration: "P{$stepValue}M"),
+            'format' => 'Y-m',
+            'baseValue' => (string) $baseValue,
+            'step' => new DateInterval(duration: "P{$stepValue}M"),
         ]);
     }
 }
