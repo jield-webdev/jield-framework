@@ -226,7 +226,6 @@ class Form extends Fieldset implements FormInterface
         $name = $this->getName();
 
         foreach ($this->iterator as $elementOrFieldset) {
-            assert(assertion: $elementOrFieldset instanceof ElementInterface);
             if ($form instanceof Form && $form->wrapElements()) {
                 $elementOrFieldset->setName(name: (string) $name . '[' . (string) $elementOrFieldset->getName() . ']');
             }
@@ -759,7 +758,6 @@ class Form extends Fieldset implements FormInterface
                         && $inputFilter->getInputFilter() instanceof ReplaceableInputInterface
                     ) {
                         $collectionInputFilter = $inputFilter->getInputFilter();
-                        assert($collectionInputFilter instanceof ReplaceableInputInterface);
                         $input->merge(input: Assert::isInstanceOf(
                             $collectionInputFilter->get($name),
                             InputInterface::class,
@@ -778,7 +776,10 @@ class Form extends Fieldset implements FormInterface
             }
 
             if ($fieldset === $this && $fieldset instanceof InputFilterProviderInterface) {
-                foreach ($fieldset->getInputFilterSpecification() as $name => $spec) {
+                $specification = InputFilterFactory::normalizeSpecification(
+                    $fieldset->getInputFilterSpecification(),
+                );
+                foreach ($specification as $name => $spec) {
                     if ($spec instanceof InputFilterInterface || $spec instanceof InputInterface) {
                         $inputFilter->add($spec, $name);
                         continue;

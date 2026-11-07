@@ -84,14 +84,9 @@ class SplPriorityQueue extends \SplPriorityQueue implements Serializable
     public function __serialize(): array
     {
         $clone = clone $this;
-        $clone->setExtractFlags(self::EXTR_BOTH);
+        $clone->setExtractFlags(\SplPriorityQueue::EXTR_BOTH);
 
         $data = [];
-        /**
-         * The type needs to be forced here because psalm does not know that setExtractFlags() alters the iterable value
-         *
-         * @psalm-var array{data: TValue, priority: InternalPriority} $item
-         */
         foreach ($clone as $item) {
             $data[] = $item;
         }

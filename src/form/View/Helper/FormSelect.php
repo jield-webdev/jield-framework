@@ -16,7 +16,6 @@ use function array_merge;
 use function implode;
 use function is_array;
 use function is_scalar;
-use function method_exists;
 use function sprintf;
 use function strval;
 
@@ -302,7 +301,7 @@ class FormSelect extends AbstractHelper
             return $this->formHiddenHelper;
         }
 
-        if (null !== $this->view && method_exists(object_or_class: $this->view, method: 'plugin')) {
+        if (null !== $this->view) {
             $this->formHiddenHelper = $this->getView()->plugin('formhidden', \Jield\Form\View\Helper\FormHidden::class);
         }
 

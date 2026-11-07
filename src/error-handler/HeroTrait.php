@@ -101,10 +101,10 @@ trait HeroTrait
     /**
      * @throws ErrorException When php error happen and error type is not excluded in the config.
      */
-    public function phpErrorHandler(int $errorType, string $errorMessage, string $errorFile, int $errorLine): void
+    public function phpErrorHandler(int $errorType, string $errorMessage, string $errorFile, int $errorLine): bool
     {
         if ((error_reporting() & $errorType) === 0) {
-            return;
+            return true;
         }
 
         $filter = static fn(mixed $excludePhpError): bool => (
@@ -121,7 +121,7 @@ trait HeroTrait
             ]),
             filter: $filter,
         )) {
-            return;
+            return true;
         }
 
         throw new ErrorException(

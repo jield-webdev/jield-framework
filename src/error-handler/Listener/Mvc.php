@@ -44,8 +44,6 @@ final class Mvc extends AbstractListenerAggregate
         $this->exceptionError($event);
     }
 
-    private ?MvcEvent $_mvcEvent = null;
-
     /** @var string */
     private const string DISPLAY_SETTINGS = 'display-settings';
 

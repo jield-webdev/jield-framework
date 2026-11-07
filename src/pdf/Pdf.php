@@ -53,7 +53,10 @@ class Pdf extends Tcpdf
     {
         $size = $this->getTemplateSize($tpl, $width, $height);
         if ($adjustPageSize) {
-            $this->setPageFormat([$size['width'], $size['height']], $size['orientation']);
+            $this->curformat = [$size['width'], $size['height']];
+            $this->curorientation = $size['orientation'];
+            $this->engine()->page->setPagePWidth($size['width'] * $this->kratio);
+            $this->engine()->page->setPagePHeight($size['height'] * $this->kratio);
         }
         $this->engine()->useImportedPage($this->importedPages[$tpl], $x ?? 0, $y ?? 0, $size['width'], $size['height']);
         return $size;

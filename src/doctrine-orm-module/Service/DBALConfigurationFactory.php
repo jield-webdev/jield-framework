@@ -15,7 +15,6 @@ use RuntimeException;
 use UnexpectedValueException;
 use Webmozart\Assert\Assert;
 
-use function method_exists;
 use function sprintf;
 
 /**
@@ -50,27 +49,25 @@ class DBALConfigurationFactory implements FactoryInterface
         $options = $this->getOptions(container: $container);
         $config->setResultCache($container->get($options->getResultCache()));
 
-        if (method_exists(object_or_class: $config, method: 'setMiddlewares')) {
-            $middlewares = [];
-            foreach ($options->getMiddlewares() as $middlewareName) {
-                if (!$container->has($middlewareName)) {
-                    throw new InvalidArgumentException(message: 'Middleware not exists');
-                }
-
-                $middleware = $container->get($middlewareName);
-                if (!$middleware instanceof Middleware) {
-                    throw new UnexpectedValueException(message: sprintf(
-                        'Invalid middleware with %s name. %s expected.',
-                        $middlewareName,
-                        Middleware::class,
-                    ));
-                }
-
-                $middlewares[] = $middleware;
+        $middlewares = [];
+        foreach ($options->getMiddlewares() as $middlewareName) {
+            if (!$container->has($middlewareName)) {
+                throw new InvalidArgumentException(message: 'Middleware not exists');
             }
 
-            $config->setMiddlewares(middlewares: $middlewares);
+            $middleware = $container->get($middlewareName);
+            if (!$middleware instanceof Middleware) {
+                throw new UnexpectedValueException(message: sprintf(
+                    'Invalid middleware with %s name. %s expected.',
+                    $middlewareName,
+                    Middleware::class,
+                ));
+            }
+
+            $middlewares[] = $middleware;
         }
+
+        $config->setMiddlewares(middlewares: $middlewares);
 
         foreach (Assert::isArray($options->getTypes()) as $name => $class) {
             if (!$class instanceof Type) {

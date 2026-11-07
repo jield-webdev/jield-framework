@@ -15,6 +15,7 @@ use Jield\Mvc\View\Renderer\PhpRenderer;
 use Jield\Stdlib\Service;
 use Jield\Stdlib\Value;
 use Laminas\Authentication\AuthenticationService;
+use Laminas\ServiceManager\Exception\ServiceNotCreatedException;
 use Laminas\Stdlib\RequestInterface;
 use Laminas\Translator\TranslatorInterface;
 use Laminas\View\Factory\Configuration;

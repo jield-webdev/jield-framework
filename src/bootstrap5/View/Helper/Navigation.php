@@ -69,22 +69,18 @@ final class Navigation
         }
 
         if (is_string($container)) {
-            /** @var AbstractContainer $resolved */
             return $this->services->get($container);
         }
 
         if ($this->services->has('navigation')) {
-            /** @var AbstractContainer $resolved */
             return $this->services->get('navigation');
         }
 
         if ($this->services->has(NavigationContainer::class)) {
-            /** @var AbstractContainer $resolved */
             return Service::get($this->services, NavigationContainer::class);
         }
 
         if ($this->services->has('Navigation')) {
-            /** @var AbstractContainer $resolved */
             return $this->services->get('Navigation');
         }
 

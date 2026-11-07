@@ -3,3 +3,14 @@ parameters:
     level: 5
     paths:
         - src
+    scanFiles:
+        - resources/pdf/tcpdf_autoconfig.php
+    # Applications can define these before the PDF defaults are loaded.
+    # Array settings are untyped input and are validated by the facade.
+    dynamicConstantNames:
+        K_ALLOWED_PATHS: mixed
+        K_ALLOWED_HOSTS: mixed
+        K_MAX_REMOTE_SIZE: int
+        K_CURLOPTS: mixed
+        K_TCPDF_THROW_EXCEPTION_ERROR: bool
+        K_TCPDF_CALLS_IN_HTML: bool

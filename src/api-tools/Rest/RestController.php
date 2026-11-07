@@ -670,7 +670,7 @@ final class RestController extends AbstractRestfulController
      * a collection, i.e. create and/or update multiple entities in a collection.
      */
     #[Override]
-    public function patchList($data): array|HalCollection|ApiProblem|Response
+    public function patchList($data): HalCollection|ApiProblem|Response
     {
         $events = $this->getEventManager();
         $events->trigger(eventName: 'patchList.pre', target: $this, argv: ['data' => $data]);
@@ -699,10 +699,10 @@ final class RestController extends AbstractRestfulController
      * Update an existing collection of entities
      *
      * @param mixed $data
-     * @return array|HalCollection|ApiProblem|Response
+     * @return HalCollection|ApiProblem|Response
      */
     #[Override]
-    public function replaceList($data): array|HalCollection|ApiProblem|Response
+    public function replaceList($data): HalCollection|ApiProblem|Response
     {
         $events = $this->getEventManager();
         $events->trigger(eventName: 'replaceList.pre', target: $this, argv: ['data' => $data]);

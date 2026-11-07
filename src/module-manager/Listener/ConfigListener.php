@@ -280,17 +280,6 @@ class ConfigListener extends AbstractListener implements ConfigMergerInterface
             $paths = ArrayUtils::iteratorToArray(iterator: $paths);
         }
 
-        if (!is_array(value: $paths)) {
-            throw new Exception\InvalidArgumentException(message: sprintf(
-                'Argument passed to %s::%s() must be an array, '
-                . 'implement the Traversable interface, or be an '
-                . 'instance of Jield\Config\Config. %s given.',
-                self::class,
-                __METHOD__,
-                gettype(value: $paths),
-            ));
-        }
-
         foreach ($paths as $path) {
             $this->addConfigPath(path: $path, type: $type);
         }
@@ -320,15 +309,6 @@ class ConfigListener extends AbstractListener implements ConfigMergerInterface
     {
         if ($config instanceof Traversable) {
             $config = ArrayUtils::iteratorToArray(iterator: $config);
-        }
-
-        if (!is_array(value: $config)) {
-            throw new Exception\InvalidArgumentException(message: sprintf(
-                'Config being merged must be an array, '
-                . 'implement the Traversable interface, or be an '
-                . 'instance of Jield\Config\Config. %s given.',
-                gettype(value: $config),
-            ));
         }
 
         $this->configs[$key] = $config;

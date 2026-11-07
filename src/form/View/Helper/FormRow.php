@@ -12,7 +12,6 @@ use Jield\Form\LabelAwareInterface;
 use Jield\Stdlib\Value;
 
 use function in_array;
-use function method_exists;
 use function sprintf;
 use function strtolower;
 
@@ -338,7 +337,7 @@ class FormRow extends AbstractHelper
             return $this->labelHelper;
         }
 
-        if ($this->view !== null && method_exists(object_or_class: $this->view, method: 'plugin')) {
+        if ($this->view !== null) {
             $this->labelHelper = $this->getView()->plugin('form_label', \Jield\Form\View\Helper\FormLabel::class);
         }
 
@@ -362,7 +361,7 @@ class FormRow extends AbstractHelper
             return $this->elementHelper;
         }
 
-        if ($this->view !== null && method_exists(object_or_class: $this->view, method: 'plugin')) {
+        if ($this->view !== null) {
             $this->elementHelper = $this->getView()->plugin('form_element', \Jield\Form\View\Helper\FormElement::class);
         }
 
@@ -382,7 +381,7 @@ class FormRow extends AbstractHelper
             return $this->elementErrorsHelper;
         }
 
-        if ($this->view !== null && method_exists(object_or_class: $this->view, method: 'plugin')) {
+        if ($this->view !== null) {
             $this->elementErrorsHelper = $this->getView()->plugin(
                 'form_element_errors',
                 \Jield\Form\View\Helper\FormElementErrors::class,

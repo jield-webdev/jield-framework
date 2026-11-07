@@ -11,14 +11,14 @@ trait LabelAwareTrait
     /**
      * Label specific html attributes
      *
-     * @var array
+     * @var array<string, scalar|null>
      */
     protected array $labelAttributes = [];
 
     /**
      * Label specific options
      *
-     * @var array
+     * @var array<string, mixed>
      */
     protected array $labelOptions = [];
 

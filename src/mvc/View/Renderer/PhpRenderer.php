@@ -14,6 +14,8 @@ use Laminas\View\Renderer\RendererInterface;
 
 final readonly class PhpRenderer implements RendererInterface
 {
+    use \Jield\Form\View\HelperTrait;
+
     public function __construct(
         private NativeRenderer $renderer,
         private HelperPluginManagerInterface $plugins,

@@ -12,11 +12,11 @@ trait FormFactoryAwareTrait
     /**
      * Compose a form factory into the object
      *
-     * @return mixed
+     * @return static
      */
-    public function setFormFactory(Factory $factory): mixed
+    public function setFormFactory(Factory $formFactory): static
     {
-        $this->factory = $factory;
+        $this->factory = $formFactory;
 
         return $this;
     }

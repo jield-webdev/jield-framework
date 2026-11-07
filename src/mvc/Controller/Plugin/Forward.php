@@ -14,7 +14,6 @@ use Jield\Mvc\View\Http\InjectViewModelListener;
 use Jield\Stdlib\Value;
 use Laminas\EventManager\SharedEventManagerInterface as SharedEvents;
 use Laminas\Stdlib\DispatchableInterface;
-use Traversable;
 use Webmozart\Assert\Assert;
 
 use function array_shift;
@@ -269,9 +268,9 @@ class Forward extends AbstractPlugin
      *
      * @param string|int $id
      * @param string $event
-     * @return array|Traversable
+     * @return array
      */
-    private function getSharedListenersById($id, $event, SharedEvents $sharedEvents): Traversable|array
+    private function getSharedListenersById($id, $event, SharedEvents $sharedEvents): array
     {
         return $sharedEvents->getListeners([$id], $event);
     }

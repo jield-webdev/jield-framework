@@ -64,8 +64,7 @@ class Factory
     public function getInputFilterFactory(): InputFilterFactory
     {
         if (null === $this->inputFilterFactory) {
-            $this->setInputFilterFactory(inputFilterFactory: \Jield\Form\InputFilterFactory::create());
-            assert(assertion: null !== $this->inputFilterFactory);
+            $this->inputFilterFactory = \Jield\Form\InputFilterFactory::create();
         }
         return $this->inputFilterFactory;
     }
@@ -87,10 +86,7 @@ class Factory
     public function getFormElementManager(): FormElementManager
     {
         if ($this->formElementManager === null) {
-            $this->setFormElementManager(
-                formElementManager: new FormElementManager(creationContext: new ServiceManager()),
-            );
-            assert(assertion: null !== $this->formElementManager);
+            $this->formElementManager = new FormElementManager(creationContext: new ServiceManager());
         }
 
         return $this->formElementManager;
@@ -122,15 +118,6 @@ class Factory
         }
 
         return $this->configureElement(element: $element, spec: $spec);
-
-        throw new Exception\DomainException(message: sprintf(
-            '%s expects the $spec["type"] to implement one of %s, %s, or %s; received %s',
-            __METHOD__,
-            ElementInterface::class,
-            FieldsetInterface::class,
-            FormInterface::class,
-            $type,
-        ));
     }
 
     /**

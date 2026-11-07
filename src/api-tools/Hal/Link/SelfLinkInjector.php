@@ -52,12 +52,12 @@ class SelfLinkInjector implements SelfLinkInjectorInterface
         }
 
         $routeParams = $this->getRouteParams(resource: $resource, routeIdentifier: $routeIdentifier);
-        if ($routeParams !== '' && $routeParams !== '0' && $routeParams !== []) {
+        if ($routeParams !== []) {
             $route['params'] = $routeParams;
         }
 
         $routeOptions = $this->getRouteOptions(resource: $resource);
-        if ($routeOptions !== '' && $routeOptions !== '0' && $routeOptions !== []) {
+        if ($routeOptions !== []) {
             $route['options'] = $routeOptions;
         }
 
@@ -79,10 +79,9 @@ class SelfLinkInjector implements SelfLinkInjectorInterface
     /**
      * @param array|Collection|Entity|null $resource
      * @param string $routeIdentifier
-     * @return array|string
-     * @psalm-return array<array-key, mixed>|string
+     * @return array<array-key, mixed>
      */
-    private function getRouteParams(Entity|array|Collection|null $resource, string $routeIdentifier): array|string
+    private function getRouteParams(Entity|array|Collection|null $resource, string $routeIdentifier): array
     {
         if ($resource instanceof Collection) {
             return $resource->getCollectionRouteParams();
@@ -101,10 +100,9 @@ class SelfLinkInjector implements SelfLinkInjectorInterface
 
     /**
      * @param array|Collection|Entity|null $resource
-     * @return array|string
-     * @psalm-return array<array-key, mixed>|string
+     * @return array<array-key, mixed>
      */
-    private function getRouteOptions(Entity|array|Collection|null $resource): array|string
+    private function getRouteOptions(Entity|array|Collection|null $resource): array
     {
         if ($resource instanceof Collection) {
             return $resource->getCollectionRouteOptions();

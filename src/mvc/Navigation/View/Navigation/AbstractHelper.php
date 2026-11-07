@@ -159,7 +159,6 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
         } catch (\Exception $e) {
             $msg = $e::class . ': ' . $e->getMessage();
             trigger_error($msg, E_USER_ERROR);
-            return '';
         }
     }
 
@@ -274,7 +273,6 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
 
             /**
              * Load the navigation container from the root service locator
-             * @var mixed $container
              */
             $container = Service::get($services, AbstractContainer::class, $container);
             return;

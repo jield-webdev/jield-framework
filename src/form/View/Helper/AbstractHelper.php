@@ -21,7 +21,6 @@ use function in_array;
 use function is_bool;
 use function is_string;
 use function mb_strpos;
-use function method_exists;
 use function preg_match;
 use function sprintf;
 use function str_starts_with;
@@ -333,7 +332,7 @@ abstract class AbstractHelper extends BaseAbstractHelper
             return $this->doctypeHelper;
         }
 
-        if ($this->view !== null && method_exists(object_or_class: $this->view, method: 'plugin')) {
+        if ($this->view !== null) {
             $this->doctypeHelper = $this->getView()->plugin('doctype', \Laminas\View\Helper\Doctype::class);
         }
 
@@ -353,7 +352,7 @@ abstract class AbstractHelper extends BaseAbstractHelper
             return $this->escapeHtmlHelper;
         }
 
-        if ($this->view !== null && method_exists(object_or_class: $this->view, method: 'plugin')) {
+        if ($this->view !== null) {
             $this->escapeHtmlHelper = $this->getView()->plugin('escapehtml', \Laminas\View\Helper\EscapeHtml::class);
         }
 
@@ -373,7 +372,7 @@ abstract class AbstractHelper extends BaseAbstractHelper
             return $this->escapeHtmlAttrHelper;
         }
 
-        if ($this->view !== null && method_exists(object_or_class: $this->view, method: 'plugin')) {
+        if ($this->view !== null) {
             $this->escapeHtmlAttrHelper = $this->getView()->plugin(
                 'escapehtmlattr',
                 \Laminas\View\Helper\EscapeHtmlAttr::class,

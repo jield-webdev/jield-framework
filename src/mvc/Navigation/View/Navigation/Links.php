@@ -507,7 +507,7 @@ class Links extends AbstractHelper
 
         switch (count($found)) {
             case 0:
-                return;
+                return null;
             case 1:
                 return $found[0];
             default:
@@ -539,7 +539,7 @@ class Links extends AbstractHelper
 
         switch (count($found)) {
             case 0:
-                return;
+                return null;
             case 1:
                 return $found[0];
             default:
@@ -577,7 +577,7 @@ class Links extends AbstractHelper
 
         switch (count($found)) {
             case 0:
-                return;
+                return null;
             case 1:
                 return $found[0];
             default:

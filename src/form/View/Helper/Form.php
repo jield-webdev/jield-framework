@@ -6,13 +6,11 @@ namespace Jield\Form\View\Helper;
 
 use Jield\Form\FieldsetInterface;
 use Jield\Form\FormInterface;
-use Jield\Mvc\View\Renderer\PhpRenderer;
 use Jield\Stdlib\Value;
 use Laminas\View\Helper\Doctype;
 
 use function array_key_exists;
 use function array_merge;
-use function assert;
 use function method_exists;
 use function sprintf;
 
@@ -68,7 +66,6 @@ class Form extends AbstractHelper
         $formContent = '';
 
         $renderer = $this->getView();
-        assert(assertion: $renderer instanceof PhpRenderer);
         foreach ($form as $element) {
             if ($element instanceof FieldsetInterface) {
                 $formContent .= Value::stringify(Value::call($renderer, 'formCollection', [$element]));

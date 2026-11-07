@@ -756,7 +756,7 @@ abstract class AbstractControllerTestCase extends TestCase
         $routeMatch = $application->getMvcEvent()->getRouteMatch();
 
         if (!$routeMatch instanceof RouteMatch) {
-            Assert::assertTrue(true);
+            $this->addToAssertionCount(1);
             return;
         }
 

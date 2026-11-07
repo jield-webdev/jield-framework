@@ -150,7 +150,7 @@ class FilterBarElement extends FormElement
         return implode(separator: PHP_EOL, array: $facets);
     }
 
-    private function renderRaw(ElementInterface $element): ?string
+    private function renderRaw(ElementInterface $element): string
     {
         $type = $element->getAttribute(key: 'type');
 

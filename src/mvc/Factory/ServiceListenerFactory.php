@@ -159,7 +159,7 @@ class ServiceListenerFactory implements FactoryInterface
      * Validate and inject plugin manager options into the service listener.
      *
      * @param mixed $options
-     * @throws ServiceListenerInterface For invalid $options types.
+     * @throws ServiceNotCreatedException For invalid $options types.
      */
     private function injectServiceListenerOptions($options, ServiceListenerInterface $serviceListener): void
     {

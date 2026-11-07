@@ -15,7 +15,6 @@ use function array_combine;
 use function array_key_exists;
 use function count;
 use function gettype;
-use function is_countable;
 use function is_object;
 use function is_string;
 use function sprintf;
@@ -146,7 +145,7 @@ class ObjectExists extends AbstractValidator
                 throw new Exception\RuntimeException(message: sprintf(
                     'Provided values count is %s, while expected number of fields to be matched is %s',
                     count(value: $value),
-                    is_countable(value: $this->fields) ? count(value: $this->fields) : 0,
+                    count(value: $this->fields),
                 ));
             }
         }

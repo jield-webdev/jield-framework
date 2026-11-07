@@ -96,7 +96,7 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
                 $header,
             )));
         }
-        $this->assertFalse($responseHeader);
+        $this->addToAssertionCount(1);
     }
 
     /**
@@ -215,7 +215,7 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
             }
         }
 
-        $this->assertFalse($headerMatched);
+        $this->addToAssertionCount(1);
     }
 
     /**
@@ -249,7 +249,7 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
                 $responseHeader->getFieldValue(),
             )));
         }
-        $this->assertFalse($responseHeader);
+        $this->addToAssertionCount(1);
     }
 
     /**
@@ -865,7 +865,7 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
             )));
         }
 
-        $this->assertTrue($found);
+        $this->addToAssertionCount(1);
     }
 
     /**

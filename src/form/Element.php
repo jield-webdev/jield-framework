@@ -14,21 +14,13 @@ use function is_string;
 
 class Element implements ElementAttributeRemovalInterface, ElementInterface, InitializableInterface, LabelAwareInterface
 {
+    use LabelAwareTrait;
+
     /** @var array<string, scalar|null>  */
     protected array $attributes = [];
 
     /** @var null|string */
     protected ?string $label = null;
-
-    /** @var array<string, scalar|null> */
-    protected array $labelAttributes = [];
-
-    /**
-     * Label specific options
-     *
-     * @var array<string, mixed>
-     */
-    protected array $labelOptions = [];
 
     /** @var array Validation error messages */
     protected array $messages = [];
@@ -265,61 +257,6 @@ class Element implements ElementAttributeRemovalInterface, ElementInterface, Ini
     }
 
     /** @inheritDoc */
-    public function setLabelAttributes(array $labelAttributes): static
-    {
-        $this->labelAttributes = $labelAttributes;
-        return $this;
-    }
-
-    /** @inheritDoc */
-    public function getLabelAttributes(): array
-    {
-        return $this->labelAttributes;
-    }
-
-    /**
-     * @inheritDoc
-     * @throws Exception\InvalidArgumentException
-     */
-    public function setLabelOptions(iterable $arrayOrTraversable): static
-    {
-        foreach ($arrayOrTraversable as $key => $value) {
-            $this->setLabelOption(key: $key, value: $value);
-        }
-        return $this;
-    }
-
-    /** @inheritDoc */
-    public function getLabelOptions(): array
-    {
-        return $this->labelOptions;
-    }
-
-    /** @inheritDoc */
-    public function clearLabelOptions(): static
-    {
-        $this->labelOptions = [];
-        return $this;
-    }
-
-    /** @inheritDoc */
-    public function removeLabelOptions(array $keys): static
-    {
-        foreach ($keys as $key) {
-            unset($this->labelOptions[$key]);
-        }
-
-        return $this;
-    }
-
-    /** @inheritDoc */
-    public function setLabelOption(string $key, mixed $value): static
-    {
-        $this->labelOptions[$key] = $value;
-        return $this;
-    }
-
-    /** @inheritDoc */
     public function getLabelOption(int|string $key): mixed
     {
         if (!isset($this->labelOptions[$key])) {
@@ -327,19 +264,6 @@ class Element implements ElementAttributeRemovalInterface, ElementInterface, Ini
         }
 
         return $this->labelOptions[$key];
-    }
-
-    /** @inheritDoc */
-    public function removeLabelOption(string $key): static
-    {
-        unset($this->labelOptions[$key]);
-        return $this;
-    }
-
-    /** @inheritDoc */
-    public function hasLabelOption(string $key): bool
-    {
-        return array_key_exists(key: $key, array: $this->labelOptions);
     }
 
     /** @inheritDoc */

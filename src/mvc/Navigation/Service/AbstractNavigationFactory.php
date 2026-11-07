@@ -21,7 +21,6 @@ use Psr\Container\ContainerInterface;
 use Traversable;
 
 use function assert;
-use function get_debug_type;
 use function is_array;
 use function sprintf;
 
@@ -130,9 +129,6 @@ abstract class AbstractNavigationFactory implements FactoryInterface
         ?Router $router = null,
         ?Request $request = null,
     ): array {
-        $this->validateRouteMatch($routeMatch);
-        $this->validateRouter($router);
-
         foreach ($pages as &$page) {
             $hasUri = isset($page['uri']);
             $hasMvc = isset($page['action']) || isset($page['controller']) || isset($page['route']);
@@ -152,49 +148,5 @@ abstract class AbstractNavigationFactory implements FactoryInterface
         }
 
         return $pages;
-    }
-
-    /**
-     * Validate that a route match argument provided to injectComponents is valid.
-     *
-     * @psalm-assert RouteMatch|null $routeMatch
-     * @throws Exception\InvalidArgumentException
-     */
-    private function validateRouteMatch(mixed $routeMatch): void
-    {
-        if (null === $routeMatch) {
-            return;
-        }
-
-        if (!$routeMatch instanceof RouteMatch) {
-            throw new Exception\InvalidArgumentException(sprintf(
-                '%s expected by %s::injectComponents; received %s',
-                RouteMatch::class,
-                self::class,
-                get_debug_type($routeMatch),
-            ));
-        }
-    }
-
-    /**
-     * Validate that a router argument provided to injectComponents is valid.
-     *
-     * @psalm-assert Router|null $router
-     * @throws Exception\InvalidArgumentException
-     */
-    private function validateRouter(mixed $router): void
-    {
-        if (null === $router) {
-            return;
-        }
-
-        if (!$router instanceof Router) {
-            throw new Exception\InvalidArgumentException(sprintf(
-                '%s expected by %s::injectComponents; received %s',
-                RouteMatch::class,
-                self::class,
-                get_debug_type($router),
-            ));
-        }
     }
 }

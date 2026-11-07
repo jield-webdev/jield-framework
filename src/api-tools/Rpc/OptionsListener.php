@@ -141,11 +141,8 @@ class OptionsListener implements ListenerAggregateInterface
      */
     protected function getOptionsResponse(MvcEvent $event, array $options): Response
     {
-        $response = $event->getResponse();
-        $this->createAllowHeader(options: $options, response: Assert::isInstanceOf(
-            $response,
-            \Laminas\Http\Response::class,
-        ));
+        $response = Assert::isInstanceOf($event->getResponse(), Response::class);
+        $this->createAllowHeader(options: $options, response: $response);
         return $response;
     }
 

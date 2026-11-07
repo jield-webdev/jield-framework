@@ -23,7 +23,6 @@ use Psr\Container\ContainerInterface;
 use Webmozart\Assert\Assert;
 
 use function is_string;
-use function method_exists;
 use function sprintf;
 
 final class ConfigurationFactory extends DoctrineConfigurationFactory
@@ -195,20 +194,9 @@ final class ConfigurationFactory extends DoctrineConfigurationFactory
             $config->setSecondLevelCacheConfiguration(cacheConfig: $cacheConfiguration);
         }
 
-        // only works for DBAL 2.x, not for 3.x
-        if (method_exists(object_or_class: $config, method: 'setFilterSchemaAssetsExpression')) {
-            $filterSchemaAssetsExpression = $options->getFilterSchemaAssetsExpression();
-            if ($filterSchemaAssetsExpression) {
-                $config->setFilterSchemaAssetsExpression($filterSchemaAssetsExpression);
-            }
-        }
-
-        // DBAL 2.x
-        if (method_exists(object_or_class: $config, method: 'setSchemaAssetsFilter')) {
-            $schemaAssetsFilter = $options->getSchemaAssetsFilter();
-            if ($schemaAssetsFilter) {
-                $config->setSchemaAssetsFilter(schemaAssetsFilter: $schemaAssetsFilter);
-            }
+        $schemaAssetsFilter = $options->getSchemaAssetsFilter();
+        if ($schemaAssetsFilter) {
+            $config->setSchemaAssetsFilter(schemaAssetsFilter: $schemaAssetsFilter);
         }
 
         $className = $options->getDefaultRepositoryClassName();

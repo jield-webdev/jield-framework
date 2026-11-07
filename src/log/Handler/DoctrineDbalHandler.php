@@ -9,7 +9,6 @@ use Doctrine\DBAL\ParameterType;
 use Monolog\Handler\AbstractProcessingHandler;
 use Monolog\Level;
 use Monolog\LogRecord;
-use UnhandledMatchError;
 
 final class DoctrineDbalHandler extends AbstractProcessingHandler
 {
@@ -24,17 +23,7 @@ final class DoctrineDbalHandler extends AbstractProcessingHandler
             : (
                 is_int($level)
                     ? Level::from($level)
-                    : match (strtolower($level)) {
-                        'debug' => Level::Debug,
-                        'info' => Level::Info,
-                        'notice' => Level::Notice,
-                        'warning' => Level::Warning,
-                        'error' => Level::Error,
-                        'critical' => Level::Critical,
-                        'alert' => Level::Alert,
-                        'emergency' => Level::Emergency,
-                        default => throw new UnhandledMatchError(sprintf('Unknown log level: %s', $level)),
-                    }
+                    : Level::fromName($level)
             );
         parent::__construct($level, $bubble);
     }

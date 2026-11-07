@@ -19,7 +19,6 @@ use function array_keys;
 use function count;
 use function in_array;
 use function is_array;
-use function sprintf;
 
 /**
  * Object describing a collection of link relations
@@ -74,17 +73,6 @@ class LinkCollection implements Countable, IteratorAggregate
 
         if ($this->links[$relation] instanceof LinkInterface) {
             $this->links[$relation] = [$this->links[$relation]];
-        }
-
-        if (!is_array(value: $this->links[$relation])) {
-            $type = get_debug_type(value: $this->links[$relation]);
-
-            throw new Exception\DomainException(message: sprintf(
-                '%s::$links should be either a %s\Link or an array; however, it is a "%s"',
-                self::class,
-                __NAMESPACE__,
-                $type,
-            ));
         }
 
         $this->links[$relation][] = $link;

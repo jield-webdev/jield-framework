@@ -355,7 +355,8 @@ class Tcpdf
         $diskcache = false,
         $pdfa = false,
     ) {
-        // $_diskcache is deprecated and intentionally ignored.
+        // $diskcache is deprecated and intentionally ignored.
+        unset($diskcache);
         // $_encoding: the engine always works in UTF-8.
         $this->unicode = (bool) $unicode;
         $this->charencoding = (string) $encoding;
@@ -1498,7 +1499,7 @@ class Tcpdf
             return;
         }
 
-        $text = implode("\n", $blocks[0] ?? []);
+        $text = implode("\n", $blocks[0]);
         // Neutralize color and rendering-mode operators inside the copy so
         // the whole layer paints in the shadow color.
         $text = (string) preg_replace(
@@ -1556,7 +1557,7 @@ class Tcpdf
 
         $pageheight = (float) ($pages[$pid]['height'] ?? $this->getPageHeight());
         $bottom = $fallback;
-        foreach ($matches[1] ?? [] as $pdfy) {
+        foreach ($matches[1] as $pdfy) {
             $bottom = max($bottom, $pageheight - ((float) $pdfy / $this->kratio));
         }
 
@@ -2291,8 +2292,8 @@ class Tcpdf
     /**
      * Return the cell height for the given font size.
      *
-     * @param int|float $_fontsize Font size in user units.
-     * @param bool      $_padding  When true include the top and bottom cell padding.
+     * @param int|float $fontsize Font size in user units.
+     * @param bool      $padding  When true include the top and bottom cell padding.
      *
      * @return float Cell height in user units.
      */
@@ -2356,7 +2357,7 @@ class Tcpdf
     /**
      * Return the page width in user units.
      *
-     * @param int|null $_pagenum Page number (1-based) or null for the current page.
+     * @param int|null $pagenum Page number (1-based) or null for the current page.
      *
      * @return float Page width in user units.
      */
@@ -2378,7 +2379,7 @@ class Tcpdf
     /**
      * Return the page height in user units.
      *
-     * @param int|null $_pagenum Page number (1-based) or null for the current page.
+     * @param int|null $pagenum Page number (1-based) or null for the current page.
      *
      * @return float Page height in user units.
      */
@@ -2400,7 +2401,7 @@ class Tcpdf
     /**
      * Return the automatic page-break bottom margin.
      *
-     * @param int|null $_pagenum Page number (1-based) or null for the current page.
+     * @param int|null $pagenum Page number (1-based) or null for the current page.
      *
      * @return float Break margin in user units.
      */
@@ -3111,11 +3112,11 @@ class Tcpdf
     /**
      * Return the length of a string in user units.
      *
-     * @param string $_s         Input string.
-     * @param string $_fontname  Optional family to measure with (default: current font).
-     * @param string $_fontstyle Optional font style.
-     * @param int|float $_fontsize Optional font size in points.
-     * @param bool   $_getarray  When true return an array of per-character widths.
+     * @param string $s         Input string.
+     * @param string $fontname  Optional family to measure with (default: current font).
+     * @param string $fontstyle Optional font style.
+     * @param int|float $fontsize Optional font size in points.
+     * @param bool   $getarray  When true return an array of per-character widths.
      *
      * @return float|array<int, float> Total width, or per-character widths.
      */
@@ -3133,11 +3134,11 @@ class Tcpdf
     /**
      * Return the width of a character array in user units.
      *
-     * @param array<int, int|string> $_sa Characters (codepoints or strings).
-     * @param string $_fontname  Optional family to measure with (default: current font).
-     * @param string $_fontstyle Optional font style.
-     * @param int|float $_fontsize Optional font size in points.
-     * @param bool   $_getarray  When true return an array of per-character widths.
+     * @param array<int, int|string> $sa Characters (codepoints or strings).
+     * @param string $fontname  Optional family to measure with (default: current font).
+     * @param string $fontstyle Optional font style.
+     * @param int|float $fontsize Optional font size in points.
+     * @param bool   $getarray  When true return an array of per-character widths.
      *
      * @return float|array<int, float> Total width, or per-character widths.
      */
@@ -3194,7 +3195,7 @@ class Tcpdf
     }
 
     /**
-     * @param int|string $_char Character codepoint or string.
+     * @param int|string $char Character codepoint or string.
      *
      * @return float Character width in user units.
      */
@@ -3244,8 +3245,8 @@ class Tcpdf
         if (preg_match('/^(courier|helvetica|times)(bi|b|i)$/', $family, $match) === 1) {
             // Legacy core font names may carry the style suffix in the
             // family ('courierB'); the engine expects family + style.
-            $family = $match[1] ?? $family;
-            $style .= strtoupper($match[2] ?? '');
+            $family = $match[1];
+            $style .= strtoupper($match[2]);
         }
         $this->fontdecor = [
             'U' => str_contains($style, 'U'),
@@ -3308,7 +3309,7 @@ class Tcpdf
     {
         $ord = is_int($char) ? $char : $this->engine()->uniconv->ord((string) $char);
         $bbox = $this->engine()->font->getCharBBox($ord);
-        return array_map(fn(mixed $val): float => $val / $this->kratio, array_values($bbox));
+        return array_map(fn(mixed $val): float => $val / $this->kratio, $bbox);
     }
 
     public function getFontDescent($font, $style = '', $size = 0)
@@ -3355,8 +3356,9 @@ class Tcpdf
         }
 
         $ordarr = $eng->uniconv->strToOrdArr((string) $text);
+        $inputSubs = $subs;
         $subs = [];
-        foreach (is_array($subs) ? $subs : [] as $key => $values) {
+        foreach (is_array($inputSubs) ? $inputSubs : [] as $key => $values) {
             $subs[(int) $key] = array_map(static fn(mixed $val): int => (int) $val, (array) $values);
         }
 
@@ -3413,8 +3415,9 @@ class Tcpdf
             return;
         }
 
+        $inputOptions = $opt;
         $opt = [];
-        foreach (is_array($opt) ? $opt : [] as $key => $val) {
+        foreach (is_array($inputOptions) ? $inputOptions : [] as $key => $val) {
             $key = strtolower((string) $key);
             if ($key === 'fs' && is_string($val)) {
                 $val = $this->resolveLocalFile($val);
@@ -4659,8 +4662,8 @@ class Tcpdf
      * given: getPDFFilename() returns the name actually used. The output
      * directory must be inside an allowed path (K_ALLOWED_PATHS).
      *
-     * @param mixed $_name File name.
-     * @param mixed $_dest Destination: I, D, F, S, FI, FD or E. A boolean is
+     * @param mixed $name File name.
+     * @param mixed $dest Destination: I, D, F, S, FI, FD or E. A boolean is
      *                     accepted for legacy callers: true is D, false is F.
      *
      * @return string
@@ -5241,8 +5244,9 @@ class Tcpdf
 
     public function Polycurve($x0, $y0, $segments, $style = '', $line_style = [], $fill_color = [])
     {
+        $inputSegments = $segments;
         $segments = [];
-        foreach (is_array($segments) ? $segments : [] as $segment) {
+        foreach (is_array($inputSegments) ? $inputSegments : [] as $segment) {
             if (!is_array($segment)) {
                 continue;
             }
@@ -5250,13 +5254,13 @@ class Tcpdf
             $segments[] = array_map(static fn(mixed $val): float => (float) $val, array_values($segment));
         }
 
-        $style = $this->shapeStyleFromLegacy($line_style, $fill_color);
+        $graphStyle = $this->shapeStyleFromLegacy($line_style, $fill_color);
         $this->emitToPage($this->engine()->graph->getPolycurve(
             (float) $x0,
             (float) $y0,
             $segments,
             $this->shapeModeFromLegacy($style, false),
-            $style,
+            $graphStyle,
         ));
     }
 
@@ -6181,7 +6185,7 @@ class Tcpdf
     {
         $match = [];
         if ($this->xobjtid !== '' && preg_match('|/GS([0-9]+) gs|', $cmd, $match) === 1) {
-            $this->engine()->addXObjectExtGStateID($this->xobjtid, (int) ($match[1] ?? 0));
+            $this->engine()->addXObjectExtGStateID($this->xobjtid, (int) ($match[1]));
         }
     }
 
@@ -6478,8 +6482,9 @@ class Tcpdf
             static fn(mixed $val): float => (float) $val,
             array_values(is_array($coords) ? $coords : []),
         );
+        $inputStops = $stops;
         $stops = [];
-        foreach (is_array($stops) ? $stops : [] as $stop) {
+        foreach (is_array($inputStops) ? $inputStops : [] as $stop) {
             if (!is_array($stop)) {
                 continue;
             }
@@ -7564,13 +7569,13 @@ class Tcpdf
         $result = preg_replace_callback(
             '/<(a|span|font)(\s[^>]*?)?\s+style="([^"]*background-color[^"]*)"([^>]*)>(.*?)<\/\1>/is',
             static function (array $match): string {
-                $tag = $match[1] ?? '';
-                $attrs = trim(($match[2] ?? '') . ($match[4] ?? ''));
-                $parentstyle = rtrim($match[3] ?? '', '; ');
-                $inner = $match[5] ?? '';
+                $tag = $match[1];
+                $attrs = trim(($match[2]) . ($match[4]));
+                $parentstyle = rtrim($match[3], '; ');
+                $inner = $match[5];
                 if (stripos($inner, '<') === false) {
                     // No nested elements: the engine handles this directly.
-                    return $match[0] ?? '';
+                    return $match[0];
                 }
 
                 // Tokenize into text runs and one-level inline children.
@@ -7581,7 +7586,7 @@ class Tcpdf
                     PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY,
                 );
                 if (!is_array($tokens)) {
-                    return $match[0] ?? '';
+                    return $match[0];
                 }
 
                 $out = '';
@@ -7590,16 +7595,16 @@ class Tcpdf
                     if (
                         preg_match('/^<(span|font|b|i|u|em|strong)\b([^>]*)>(.*)<\/\1>$/is', $token, $childmatch) === 1
                     ) {
-                        $childinner = $childmatch[3] ?? '';
+                        $childinner = $childmatch[3];
                         if (stripos($childinner, '<') !== false) {
                             // Deeper nesting: bail out, keep the original markup.
-                            return $match[0] ?? '';
+                            return $match[0];
                         }
 
-                        $childattrs = $childmatch[2] ?? '';
+                        $childattrs = $childmatch[2];
                         $stylematch = [];
                         $childstyle = preg_match('/style="([^"]*)"/i', $childattrs, $stylematch) === 1
-                            ? $stylematch[1] ?? ''
+                            ? $stylematch[1]
                             : '';
                         $merged = $parentstyle . ';' . $childstyle;
                         $out .=
@@ -7618,7 +7623,7 @@ class Tcpdf
 
                     if (str_contains($token, '<')) {
                         // Unhandled markup (images, breaks, ...): bail out.
-                        return $match[0] ?? '';
+                        return $match[0];
                     }
 
                     $out .=
@@ -7699,13 +7704,13 @@ class Tcpdf
         $html = (string) preg_replace_callback(
             '/(src=["\'])([^"\']+)(["\'])/',
             fn(array $match): string => (
-                ($match[1] ?? '') . $this->absolutizeMarkupPath($match[2] ?? '') . ($match[3] ?? '')
+                ($match[1]) . $this->absolutizeMarkupPath($match[2]) . ($match[3])
             ),
             $html,
         );
         $html = (string) preg_replace_callback(
             '/url\(["\']?([^"\')]+)["\']?\)/',
-            fn(array $match): string => "url('" . $this->absolutizeMarkupPath($match[1] ?? '') . "')",
+            fn(array $match): string => "url('" . $this->absolutizeMarkupPath($match[1]) . "')",
             $html,
         );
         // Legacy custom list bullet syntax: list-style-type:img|ext|w|h|path.
@@ -7713,7 +7718,7 @@ class Tcpdf
         $html = (string) preg_replace_callback(
             '/list-style-type\s*:\s*img\|[^|;"\'<>]*\|[^|;"\'<>]*\|[^|;"\'<>]*\|([^;"\'<>]+)/i',
             fn(array $match): string => (
-                "list-style-image:url('" . $this->absolutizeMarkupPath(trim($match[1] ?? '')) . "')"
+                "list-style-image:url('" . $this->absolutizeMarkupPath(trim($match[1])) . "')"
             ),
             $html,
         );
@@ -7722,9 +7727,9 @@ class Tcpdf
         $html = (string) preg_replace_callback(
             '/(\bhref\s*=\s*["\'])#([0-9]+)(?:,([0-9]*\.?[0-9]*))?(["\'])/i',
             fn(array $match): string => (
-                ($match[1] ?? '')
-                . $this->engine()->addInternalLink(max(0, (int) ($match[2] ?? '1') - 1), (float) ($match[3] ?? '0'))
-                . ($match[4] ?? '')
+                ($match[1])
+                . $this->engine()->addInternalLink(max(0, (int) ($match[2]) - 1), (float) ($match[3]))
+                . ($match[4])
             ),
             $html,
         );
@@ -7742,7 +7747,7 @@ class Tcpdf
         $result = preg_replace_callback(
             '/<style\b[^>]*>.*?<\/style\s*>|<[a-zA-Z][^>]*>/is',
             static function (array $match): string {
-                $part = $match[0] ?? '';
+                $part = $match[0];
                 if (strncasecmp($part, '<style', 6) === 0) {
                     return self::repairCssColors($part);
                 }
@@ -7750,14 +7755,14 @@ class Tcpdf
                 $part = (string) preg_replace_callback(
                     '/(\bstyle\s*=\s*)(?:"([^"]*)"|\'([^\']*)\')/i',
                     static fn(array $style): string => isset($style[3])
-                        ? ($style[1] ?? '') . "'" . self::repairCssColors($style[3]) . "'"
-                        : ($style[1] ?? '') . '"' . self::repairCssColors($style[2] ?? '') . '"',
+                        ? ($style[1]) . "'" . self::repairCssColors($style[3]) . "'"
+                        : ($style[1]) . '"' . self::repairCssColors($style[2] ?? '') . '"',
                     $part,
                 );
 
                 return (string) preg_replace_callback(
                     '/(\b[a-z-]*color\s*=\s*["\']?)#([0-9a-zA-Z]+)\b/i',
-                    static fn(array $attr): string => ($attr[1] ?? '') . self::repairHexColor('#' . ($attr[2] ?? '')),
+                    static fn(array $attr): string => ($attr[1]) . self::repairHexColor('#' . ($attr[2])),
                     $part,
                 );
             },
@@ -7778,10 +7783,10 @@ class Tcpdf
             '/:[^;{}]*+(?=[;}]|$)/',
             static fn(array $decl): string => (string) preg_replace_callback(
                 '/"[^"]*"|\'[^\']*\'|(?<!&)#[0-9a-zA-Z]+\b/',
-                static fn(array $item): string => str_starts_with($item[0] ?? '', '#')
-                    ? self::repairHexColor($item[0] ?? '')
-                    : $item[0] ?? '',
-                $decl[0] ?? '',
+                static fn(array $item): string => str_starts_with($item[0], '#')
+                    ? self::repairHexColor($item[0])
+                    : $item[0],
+                $decl[0],
             ),
             $css,
         );
@@ -7860,7 +7865,7 @@ class Tcpdf
                 continue;
             }
 
-            $payload = json_decode(urldecode($match[1] ?? ''), true);
+            $payload = json_decode(urldecode($match[1]), true);
             if (!is_array($payload) || !isset($payload['m']) || !is_string($payload['m'])) {
                 continue;
             }
@@ -7911,9 +7916,9 @@ class Tcpdf
 
     public function setHtmlVSpace($tagvs)
     {
-        /** @var array<string, array<int, array{h?: float|int, n?: int}>> $tagvs */
+        $inputTagVSpace = $tagvs;
         $tagvs = [];
-        foreach (is_array($tagvs) ? $tagvs : [] as $tag => $spaces) {
+        foreach (is_array($inputTagVSpace) ? $inputTagVSpace : [] as $tag => $spaces) {
             if (!is_string($tag) || !is_array($spaces)) {
                 continue;
             }
@@ -7971,7 +7976,7 @@ class Tcpdf
         } elseif (is_string($htmlval)) {
             $mat = [];
             if (preg_match('/^([0-9\.\-\+]+)[\s]*(%|em|ex|px|in|mm|cm|pc|pt)?$/', trim($htmlval), $mat) === 1) {
-                $value = (float) ($mat[1] ?? 0);
+                $value = (float) ($mat[1]);
                 if (isset($mat[2]) && in_array($mat[2], $supportedunits, true)) {
                     $unit = $mat[2];
                 }
@@ -8378,8 +8383,9 @@ class Tcpdf
 
     public function setColumnsArray($columns)
     {
+        $inputColumns = $columns;
         $columns = [];
-        foreach (is_array($columns) ? $columns : [] as $column) {
+        foreach (is_array($inputColumns) ? $inputColumns : [] as $column) {
             if (!is_array($column)) {
                 continue;
             }
@@ -8539,8 +8545,9 @@ class Tcpdf
                 $eng->setTexHyphenPatterns($eng->loadTexHyphenPatterns($file));
             }
         } elseif (is_array($patterns) && $patterns !== []) {
+            $inputPatterns = $patterns;
             $patterns = [];
-            foreach ($patterns as $key => $val) {
+            foreach ($inputPatterns as $key => $val) {
                 if (!(is_string($key) && is_string($val))) {
                     continue;
                 }
@@ -8837,8 +8844,8 @@ class Tcpdf
         $size = $this->getFontSize();
         $match = [];
         if (preg_match('/font-size\s*:\s*([0-9.]+)\s*(px|pt|em|ex|mm|cm|in|pc|%)?/i', $html, $match) === 1) {
-            $unit = isset($match[2]) && $match[2] !== '' ? $match[2] : 'pt';
-            $size = (float) $this->getHTMLUnitToUnits($match[1] ?? '', $this->getFontSize(), $unit);
+            $unit = $match[2] ?? 'pt';
+            $size = (float) $this->getHTMLUnitToUnits($match[1], $this->getFontSize(), $unit);
         }
 
         return $this->getCellHeight($size, false);

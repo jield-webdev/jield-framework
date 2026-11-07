@@ -270,7 +270,7 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
         $validationResult = $this->validationResult ?? InputFilterValidator::validate(
             $inputFilter,
             $data,
-            $request->isPatch() ? InputFilterValidator::fieldsIn($data, $isCollection) : null,
+            InputFilterValidator::fieldsIn($data, $isCollection),
         );
 
         // Invalid? Return a 422 response.

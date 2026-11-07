@@ -14,7 +14,6 @@ use Webmozart\Assert\Assert;
 
 use function assert;
 use function is_callable;
-use function method_exists;
 use function sprintf;
 
 /** @final */
@@ -107,10 +106,6 @@ class FormCollection extends AbstractHelper
     public function render(ElementInterface $element): string
     {
         $renderer = $this->getView();
-        if (!method_exists(object_or_class: $renderer, method: 'plugin')) {
-            // Bail early if renderer is not pluggable
-            return '';
-        }
 
         $markup = '';
         $templateMarkup = '';
@@ -243,7 +238,7 @@ class FormCollection extends AbstractHelper
             return $this->elementHelper;
         }
 
-        if ($this->view !== null && method_exists(object_or_class: $this->view, method: 'plugin')) {
+        if ($this->view !== null) {
             $this->elementHelper = $this->getView()->plugin($this->getDefaultElementHelper());
         }
 

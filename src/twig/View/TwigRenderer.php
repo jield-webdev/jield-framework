@@ -141,7 +141,7 @@ class TwigRenderer implements RendererInterface
      */
     public function render(string|ModelInterface $templateNameOrModel, $variables = null): string
     {
-        $variables = $variables instanceof ModelInterface ? $variables->getVariables() : $variables ?? [];
+        $variables ??= [];
         $values = is_array($variables) ? $variables : iterator_to_array($variables);
         if ($templateNameOrModel instanceof ModelInterface) {
             $model = $templateNameOrModel;

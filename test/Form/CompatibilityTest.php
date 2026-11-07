@@ -8,12 +8,34 @@ use ArrayIterator;
 use Jield\Form\Element;
 use Jield\Form\Factory;
 use Jield\Form\Fieldset;
+use Jield\Form\Form;
 use Jield\Form\View\Helper\FormSelect;
+use Laminas\Filter\StringTrim;
 use Laminas\Hydrator\ObjectPropertyHydrator;
+use Laminas\InputFilter\InputFilterProviderInterface;
 use PHPUnit\Framework\TestCase;
 
 final class CompatibilityTest extends TestCase
 {
+    public function testRootFormSpecificationsApplyFiltersAndNumericInputNames(): void
+    {
+        $form = new class ('profile') extends Form implements InputFilterProviderInterface {
+            public function getInputFilterSpecification(): array
+            {
+                return [
+                    'name' => ['filters' => [['name' => StringTrim::class]]],
+                    0 => ['required' => false],
+                ];
+            }
+        };
+        $form->add(new Element('name'));
+        $form->add(new Element('0'));
+        $form->setData(['name' => ' Alice ', 0 => 'numeric']);
+
+        self::assertTrue($form->isValid());
+        self::assertSame(['name' => 'Alice', 0 => 'numeric'], $form->getData());
+    }
+
     public function testCollectionExtractsItsArrayOfObjects(): void
     {
         $collection = new Element\Collection('items');

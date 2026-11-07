@@ -11,7 +11,6 @@ use Locale;
 
 use function assert;
 use function extension_loaded;
-use function method_exists;
 use function preg_split;
 use function sprintf;
 use function str_replace;
@@ -225,7 +224,7 @@ abstract class AbstractFormDateSelect extends AbstractHelper
             return $this->selectHelper;
         }
 
-        if (null !== $this->view && method_exists(object_or_class: $this->view, method: 'plugin')) {
+        if (null !== $this->view) {
             $this->selectHelper = $this->getView()->plugin('formselect', \Jield\Form\View\Helper\FormSelect::class);
         }
 

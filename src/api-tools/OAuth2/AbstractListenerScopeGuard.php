@@ -50,8 +50,7 @@ abstract class AbstractListenerScopeGuard
             );
         }
         if (
-            $listener !== null
-            && $this->isApplicationIdentity($data)
+            $this->isApplicationIdentity($data)
             && array_intersect($scopes, $required, $listener::getApplicationScopes()) === []
         ) {
             return $this->deny(

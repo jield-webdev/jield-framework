@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Jield\Form\View\Helper;
 
 use Jield\Form\ElementInterface;
-use Jield\Form\Exception;
 
 /** @final */
 class FormReset extends FormInput
@@ -35,8 +34,6 @@ class FormReset extends FormInput
 
     /**
      * Determine input type to use
-     *
-     * @throws Exception\DomainException
      */
     protected function getType(ElementInterface $element): string
     {

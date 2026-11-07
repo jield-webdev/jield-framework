@@ -517,7 +517,7 @@ final class Value
      * @template T
      * @param T $target
      * @param non-empty-list<array-key|null> $path Null appends a new element.
-     * @psalm-param-out (T is \ArrayAccess ? \ArrayAccess<mixed, mixed> : array<array-key, mixed>) $target
+     * @psalm-param-out (T is \ArrayAccess ? \ArrayAccess : array<array-key, mixed>) $target
      */
     public static function setPath(mixed &$target, array $path, mixed $value): void
     {

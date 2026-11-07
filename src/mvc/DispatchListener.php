@@ -7,7 +7,6 @@ namespace Jield\Mvc;
 use ArrayObject;
 use Exception;
 use Jield\Mvc\Controller\ControllerManager;
-use Jield\Mvc\Exception\InvalidControllerException;
 use Jield\Mvc\Router\RouteMatch;
 use Jield\Stdlib\Value;
 use Laminas\EventManager\AbstractListenerAggregate;
@@ -89,7 +88,7 @@ class DispatchListener extends AbstractListenerAggregate
 
         try {
             $controller = $controllerManager->get($controllerName);
-        } catch (InvalidControllerException|InvalidServiceException $exception) {
+        } catch (InvalidServiceException $exception) {
             $return = $this->marshalControllerNotFoundEvent(
                 type: Application::ERROR_CONTROLLER_INVALID,
                 controllerName: $controllerName,

@@ -15,7 +15,6 @@ use Laminas\Session\Validator\Csrf as CsrfValidator;
 use Webmozart\Assert\Assert;
 
 use function array_merge;
-use function assert;
 
 /**
  * @final
@@ -86,8 +85,7 @@ class Csrf extends Element implements InputProviderInterface, ElementPrepareAwar
                 $csrfOptions['session'] = Assert::isInstanceOf($csrfOptions['session'], Container::class);
             }
             /** @var OptionsArgument $csrfOptions */
-            $this->setCsrfValidator(validator: new CsrfValidator($csrfOptions));
-            assert(assertion: null !== $this->csrfValidator);
+            $this->csrfValidator = new CsrfValidator($csrfOptions);
         }
         return $this->csrfValidator;
     }

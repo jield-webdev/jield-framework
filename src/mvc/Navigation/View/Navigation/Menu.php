@@ -8,14 +8,12 @@ use Jield\Stdlib\Value;
 use Laminas\Navigation\AbstractContainer;
 use Laminas\Navigation\Page\AbstractPage;
 use Laminas\View\Exception;
-use Laminas\View\Helper\EscapeHtmlAttr;
 use Laminas\View\Helper\Partial;
 use RecursiveIteratorIterator;
 use Webmozart\Assert\Assert;
 
 use function array_key_exists;
 use function array_merge;
-use function assert;
 use function count;
 use function implode;
 use function is_array;
@@ -165,7 +163,6 @@ class Menu extends AbstractHelper
         }
 
         $escaper = $this->getView()->plugin('escapeHtmlAttr', \Laminas\View\Helper\EscapeHtmlAttr::class);
-        assert($escaper instanceof EscapeHtmlAttr);
         $ulClass = $ulClass ? ' class="' . Value::stringify($escaper($ulClass)) . '"' : '';
         $html = $indent . '<ul' . $ulClass . '>' . PHP_EOL;
 
@@ -274,7 +271,6 @@ class Menu extends AbstractHelper
         $found = $this->findActive($container, $minDepth, $maxDepth);
 
         $escaper = $this->getView()->plugin('escapeHtmlAttr', \Laminas\View\Helper\EscapeHtmlAttr::class);
-        assert($escaper instanceof EscapeHtmlAttr);
 
         $foundPage = null;
         $foundDepth = 0;
@@ -546,7 +542,7 @@ class Menu extends AbstractHelper
             $options['indent'] = $this->getIndent();
         }
 
-        if (isset($options['ulClass']) && $options['ulClass'] !== null) {
+        if (isset($options['ulClass'])) {
             $options['ulClass'] = (string) $options['ulClass'];
         } else {
             $options['ulClass'] = $this->getUlClass();
@@ -580,7 +576,7 @@ class Menu extends AbstractHelper
 
         $options['addClassToListItem'] ??= $this->getAddClassToListItem();
 
-        if (isset($options['liActiveClass']) && $options['liActiveClass'] !== null) {
+        if (isset($options['liActiveClass'])) {
             $options['liActiveClass'] = (string) $options['liActiveClass'];
         } else {
             $options['liActiveClass'] = $this->getLiActiveClass();

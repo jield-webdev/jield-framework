@@ -21,7 +21,6 @@ use ReflectionNamedType;
 use ReflectionObject;
 use Webmozart\Assert\Assert;
 
-use function count;
 use function is_array;
 use function is_string;
 use function is_subclass_of;
@@ -46,7 +45,7 @@ class ParameterMatcher
         if (is_string(value: $callable) || $callable instanceof Closure) {
             $reflection = new ReflectionFunction(function: $callable);
             $reflMethodParams = $reflection->getParameters();
-        } elseif (is_array(value: $callable) && count(value: $callable) === 2) {
+        } elseif (is_array(value: $callable)) {
             $object = $callable[0];
             $method = $callable[1];
             $reflection = new ReflectionObject(object: Assert::object($object));

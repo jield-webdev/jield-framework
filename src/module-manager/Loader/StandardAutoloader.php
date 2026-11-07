@@ -247,7 +247,9 @@ class StandardAutoloader implements SplAutoloader
      */
     public function register()
     {
-        spl_autoload_register($this->autoload(...));
+        spl_autoload_register(function (string $class): void {
+            $this->autoload($class);
+        });
     }
 
     /**

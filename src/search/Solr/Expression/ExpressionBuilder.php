@@ -558,16 +558,14 @@ class ExpressionBuilder
             throw new InvalidArgumentException('Local parameter options must be an array.');
         }
 
-        $useShortForm = is_bool($shortForm) ? $shortForm : true;
-
         if ($additional !== null) {
             return $this->comp(expr: [
-                new LocalParamsExpression(type: $type, params: $params, shortForm: $useShortForm),
+                new LocalParamsExpression(type: $type, params: $params, shortForm: $shortForm),
                 $additional,
             ], type: null);
         }
 
-        return new LocalParamsExpression(type: $type, params: $params, shortForm: $useShortForm);
+        return new LocalParamsExpression(type: $type, params: $params, shortForm: $shortForm);
     }
 
     /**
@@ -728,27 +726,6 @@ class ExpressionBuilder
 
         // Otherwise, combine expressions with OR
         return new GroupExpression(expressions: $expressions, type: CompositeExpression::TYPE_OR);
-    }
-
-    /**
-     * Add words from a string to the expressions array
-     *
-     * @param list<ExpressionInterface> $expressions Array to add the resulting expressions to
-     * @param string $text The text to process
-     */
-    private function _addWordsToExpressions(array &$expressions, string $text): void
-    {
-        $words = preg_split(pattern: '/\s+/', subject: trim(string: $text), limit: -1, flags: PREG_SPLIT_NO_EMPTY);
-
-        foreach ($words ?: [] as $word) {
-            if (empty($word)) {
-                continue;
-            }
-
-            // Escape special characters according to SOLR rules
-            $escapedWord = Util::escape(value: $word);
-            $expressions[] = new Expression(expr: $escapedWord);
-        }
     }
 
     /**

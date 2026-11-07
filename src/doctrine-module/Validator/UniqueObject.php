@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace DoctrineModule\Validator;
 
 use Doctrine\Persistence\ObjectManager;
+use DoctrineModule\Persistence\ObjectManagerAwareInterface;
+use DoctrineModule\Persistence\ProvidesObjectManager;
 use Jield\Stdlib\Value;
 use Laminas\Validator\Exception;
 use Override;
@@ -19,8 +21,10 @@ use function sprintf;
 /**
  * Class that validates if objects exist in a given repository with a given list of matched fields only once.
  */
-class UniqueObject extends ObjectExists
+class UniqueObject extends ObjectExists implements ObjectManagerAwareInterface
 {
+    use ProvidesObjectManager;
+
     /**
      * Error constants
      */
@@ -30,8 +34,6 @@ class UniqueObject extends ObjectExists
     protected array $messageTemplates = [
         self::ERROR_OBJECT_NOT_UNIQUE => "There is already another object matching '%value%'",
     ];
-
-    protected ObjectManager $objectManager;
 
     protected bool $useContext;
 

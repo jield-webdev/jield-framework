@@ -28,8 +28,7 @@ use function sprintf;
 
 class Fieldset extends Element implements FieldsetInterface
 {
-    /** @var null|Factory */
-    protected ?Factory $factory = null;
+    use FormFactoryAwareTrait;
 
     /** @var array<array-key, ElementInterface> */
     protected array $elements = [];
@@ -108,13 +107,6 @@ class Fieldset extends Element implements FieldsetInterface
         return $this;
     }
 
-    /** @inheritDoc */
-    public function setFormFactory(Factory $formFactory): static
-    {
-        $this->factory = $formFactory;
-        return $this;
-    }
-
     /**
      * Retrieve composed form factory
      *
@@ -123,8 +115,7 @@ class Fieldset extends Element implements FieldsetInterface
     public function getFormFactory(): Factory
     {
         if (null === $this->factory) {
-            $this->setFormFactory(formFactory: new Factory());
-            assert(assertion: null !== $this->factory);
+            $this->factory = new Factory();
         }
 
         return $this->factory;
@@ -261,7 +252,6 @@ class Fieldset extends Element implements FieldsetInterface
         if (null === $elementName) {
             $messages = $this->messages;
             foreach ($this->iterator as $name => $element) {
-                assert(assertion: $element instanceof ElementInterface);
                 $messageSet = $element->getMessages();
                 if ($messageSet === []) {
                     continue;
@@ -292,7 +282,6 @@ class Fieldset extends Element implements FieldsetInterface
         $name = $this->getName();
 
         foreach ($this->iterator as $elementOrFieldset) {
-            assert(assertion: $elementOrFieldset instanceof ElementInterface);
             $elementOrFieldset->setName(name: (string) $name . '[' . (string) $elementOrFieldset->getName() . ']');
 
             // Recursively prepare elements
@@ -314,7 +303,6 @@ class Fieldset extends Element implements FieldsetInterface
         }
 
         foreach ($this->iterator as $name => $elementOrFieldset) {
-            assert(assertion: $elementOrFieldset instanceof ElementInterface);
             $valueExists = array_key_exists(key: $name, array: $data);
 
             if ($elementOrFieldset instanceof FieldsetInterface) {
@@ -425,7 +413,7 @@ class Fieldset extends Element implements FieldsetInterface
                 $reflection->getName() === $objectClass || $reflection->isSubclassOf(class: $allowedObjectBindingClass);
         }
 
-        return $validBindingClass || $this->object && $object instanceof $this->object;
+        return $validBindingClass || is_object($this->object) && $object instanceof $this->object;
     }
 
     /**

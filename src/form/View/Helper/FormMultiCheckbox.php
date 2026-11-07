@@ -398,7 +398,7 @@ class FormMultiCheckbox extends FormInput
             return $this->inputHelper;
         }
 
-        if (null !== $this->view && method_exists(object_or_class: $this->view, method: 'plugin')) {
+        if (null !== $this->view) {
             $this->inputHelper = $this->getView()->plugin('form_input', \Jield\Form\View\Helper\FormInput::class);
         }
 

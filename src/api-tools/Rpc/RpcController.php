@@ -15,7 +15,6 @@ use Webmozart\Assert\Assert;
 
 use function call_user_func_array;
 use function is_array;
-use function is_callable;
 use function is_object;
 use function lcfirst;
 use function method_exists;
@@ -51,12 +50,12 @@ final class RpcController extends BaseAbstractActionController
         // match route params to dispatchable parameters
         if ($this->wrappedCallable instanceof Closure) {
             $callable = $this->wrappedCallable;
-        } elseif (is_array(value: $this->wrappedCallable) && is_callable(value: $this->wrappedCallable)) {
+        } elseif (is_array(value: $this->wrappedCallable)) {
             $callable = $this->wrappedCallable;
-        } elseif (is_object(value: $this->wrappedCallable) || null === $this->wrappedCallable) {
+        } elseif (is_object(value: $this->wrappedCallable)) {
             $action = Assert::notNull($routeMatch)->getParam(name: 'action', default: 'not-found');
             $method = static::getMethodFromAction(action: Assert::string($action));
-            $callable = null === $this->wrappedCallable && self::class !== self::class ? $this : $this->wrappedCallable;
+            $callable = $this->wrappedCallable;
             if (!method_exists(object_or_class: $callable, method: $method)) {
                 $method = 'notFoundAction';
             }

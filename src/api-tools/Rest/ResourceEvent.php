@@ -32,6 +32,7 @@ class ResourceEvent extends Event
      *
      * @template NewTParams of array|ArrayAccess|object
      * @param NewTParams $params
+     * @phpstan-self-out static
      *
      **/
     #[Override]

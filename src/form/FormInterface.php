@@ -8,7 +8,7 @@ use Jield\Form\Exception\ExceptionInterface;
 use Laminas\InputFilter\InputFilterInterface;
 
 /**
- * @template TFilteredValues
+ * @template TFilteredValues of array<array-key, mixed>
  */
 interface FormInterface extends FieldsetInterface
 {

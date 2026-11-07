@@ -31,11 +31,6 @@ use function sprintf;
  */
 final class PluginManager extends AbstractPluginManager
 {
-    /**
-     * Default aliases.
-     *
-     * @var array<string, class-string<AbstractHelper>>
-     */
     private ?RendererInterface $renderer = null;
 
     public function setRenderer(RendererInterface $renderer): void
@@ -43,6 +38,11 @@ final class PluginManager extends AbstractPluginManager
         $this->renderer = $renderer;
     }
 
+    /**
+     * Default aliases.
+     *
+     * @var array<string, class-string<AbstractHelper>>
+     */
     protected array $aliases = [
         'breadcrumbs' => Breadcrumbs::class,
         'links' => Links::class,
