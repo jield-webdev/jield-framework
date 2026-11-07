@@ -15,13 +15,6 @@ use Psr\Container\ContainerInterface;
  */
 final class ObjectSelectFactory implements FactoryInterface
 {
-    /**
-     * {@inheritDoc}
-     *
-     * @param string $requestedName
-     *
-     * @return ObjectSelect
-     */
     public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): ObjectSelect
     {
         $entityManager = Service::get($container, EntityManager::class);

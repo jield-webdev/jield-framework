@@ -167,7 +167,6 @@ final class ConfigProvider
                          *
                          * Two locators are shipped, 1 message type to 1 handler and 1 message type to many handlers.
                          * Both locators operate on the basis that handlers are available in the container.
-                         *
                          */
                         'handler_locator' => OneToOneFqcnContainerHandlerLocator::class,
                         'handlers' => [

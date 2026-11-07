@@ -25,15 +25,11 @@ class StackLoader extends Loader\FilesystemLoader
      * Default suffix to use
      *
      * Appends this suffix if the template requested does not use it.
-     *
-     * @var string
      */
     protected string $defaultSuffix = 'twig';
 
     /**
      * Set default file suffix
-     *
-     * @return StackLoader
      */
     public function setDefaultSuffix(string $defaultSuffix): self
     {

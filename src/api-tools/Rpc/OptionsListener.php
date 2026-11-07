@@ -24,9 +24,6 @@ class OptionsListener implements ListenerAggregateInterface
 {
     use ListenerAggregateTrait;
 
-    /**
-     * @param  array $config
-     */
     public function __construct(
         protected array $config,
     ) {}

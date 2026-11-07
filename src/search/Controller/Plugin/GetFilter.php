@@ -27,6 +27,9 @@ class GetFilter extends AbstractPlugin
 
     private readonly Request $request;
 
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     public function __construct(
         private readonly ContainerInterface $container,
     ) {

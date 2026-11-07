@@ -15,8 +15,6 @@ class FormInput extends AbstractHelper
 {
     /**
      * Attributes valid for the input tag
-     *
-     * @var array
      */
     protected array $validTagAttributes = [
         'name' => true,
@@ -53,8 +51,6 @@ class FormInput extends AbstractHelper
 
     /**
      * Valid values for the input type
-     *
-     * @var array
      */
     protected array $validTypes = [
         'text' => true,
@@ -91,7 +87,7 @@ class FormInput extends AbstractHelper
      * @template T as null|ElementInterface
      * @psalm-param T $element
      * @psalm-return (T is null ? static : string)
-     * @return string|FormInput
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function __invoke(?ElementInterface $element = null): string|static
     {
@@ -106,6 +102,7 @@ class FormInput extends AbstractHelper
      * Render a form <input> element from the provided $element
      *
      * @throws Exception\DomainException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function render(ElementInterface $element): string
     {

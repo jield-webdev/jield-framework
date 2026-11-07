@@ -38,17 +38,14 @@ class ViewHelperManagerFactory extends AbstractPluginManagerFactory
      * These are *not* imported; that way they can be optional dependencies.
      *
      * @todo Remove these once their components have Modules defined.
-     * @var array
      */
     protected array $defaultHelperMapClasses = [];
 
     /**
      * Create and return the view helper manager
      *
-     * @param string $requestedName
-     * @param  null|array         $options
-     * @return HelperPluginManager
-     * @throws ServiceNotCreatedException
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
      */
     public function __invoke(
         ContainerInterface $container,
@@ -57,7 +54,7 @@ class ViewHelperManagerFactory extends AbstractPluginManagerFactory
     ): HelperPluginManager {
         $options = $options ?: [];
         $options['factories'] ??= [];
-        Value::setPath($options, ['initializers', null], static function (
+        Value::setPath($options, ['initializers', null], /** @throws \Psr\Container\ContainerExceptionInterface|\ReflectionException */ static function (
             ContainerInterface $pluginContainer,
             mixed $helper,
         ) use ($container): void {
@@ -80,7 +77,7 @@ class ViewHelperManagerFactory extends AbstractPluginManagerFactory
     /**
      * Inject override factories into the plugin manager.
      *
-     * @return HelperPluginManager
+     * @throws \Laminas\ServiceManager\Exception\InvalidServiceException
      */
     private function injectOverrideFactories(
         HelperPluginManager $plugins,
@@ -93,7 +90,7 @@ class ViewHelperManagerFactory extends AbstractPluginManagerFactory
             ServerUrl::class => static fn() => new ServerUrl(),
         ]]);
         $plugins->configure(['factories' => [
-            Identity::class => static fn() => new Identity(Service::get($services, AuthenticationService::class)),
+            Identity::class => /** @throws \Psr\Container\ContainerExceptionInterface */ static fn() => new Identity(Service::get($services, AuthenticationService::class)),
         ]]);
         $plugins->configure(['factories' => [
             Translate::class => static fn() => new Translate(),
@@ -126,11 +123,11 @@ class ViewHelperManagerFactory extends AbstractPluginManagerFactory
      * and the route match from the MvcEvent composed by the application,
      * using them to configure the helper.
      *
-     * @return callable
+     * @return callable(): object
      */
     private function createUrlHelperFactory(ContainerInterface $services): callable
     {
-        return static function () use ($services): object {
+        return /** @throws \Psr\Container\ContainerExceptionInterface */ static function () use ($services): object {
             $helperClass = Url::class;
             $helper = new $helperClass();
             $helper->setRouter($services->get('HttpRouter'));
@@ -151,11 +148,11 @@ class ViewHelperManagerFactory extends AbstractPluginManagerFactory
      *
      * Uses configuration and request services to configure the helper.
      *
-     * @return callable
+     * @return callable(): BasePath
      */
     private function createBasePathHelperFactory(ContainerInterface $services): callable|Closure
     {
-        return static function () use ($services): BasePath {
+        return /** @throws \Psr\Container\ContainerExceptionInterface|\ReflectionException */ static function () use ($services): BasePath {
             $config = Configuration::get($services);
             /** @mago-var mixed $basePath */
             $basePath = $config['view_manager']['base_path'] ?? null;
@@ -181,7 +178,7 @@ class ViewHelperManagerFactory extends AbstractPluginManagerFactory
      * Other view helpers depend on this to decide which spec to generate their tags
      * based on. This is why it must be set early instead of later in the layout phtml.
      *
-     * @return callable
+     * @return callable(): Doctype
      */
     private function createDoctypeHelperFactory(ContainerInterface $services): callable|Closure
     {

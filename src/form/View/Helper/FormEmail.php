@@ -11,8 +11,6 @@ class FormEmail extends FormInput
 {
     /**
      * Attributes valid for the input tag type="email"
-     *
-     * @var array
      */
     protected array $validTagAttributes = [
         'name' => true,

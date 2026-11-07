@@ -26,6 +26,8 @@ class ResourceFactory
 
     /**
      * Create a entity and/or collection based on a metadata map
+     *
+     * @throws \Throwable
      */
     public function createEntityFromMetadata(
         object|array $object,
@@ -74,6 +76,9 @@ class ResourceFactory
         return $halEntity;
     }
 
+    /**
+     * @throws \Throwable
+     */
     public function createCollectionFromMetadata(iterable $object, Metadata $metadata): Collection
     {
         $halCollection = new Collection(collection: $object);
@@ -97,6 +102,8 @@ class ResourceFactory
 
     /**
      * Creates a link object, given metadata and a resource
+     *
+     * @throws \Throwable
      */
     public function marshalLinkFromMetadata(
         Metadata $metadata,
@@ -151,6 +158,7 @@ class ResourceFactory
     /**
      * Inject any links found in the metadata into the resource's link collection
      *
+     * @throws \Throwable
      */
     public function marshalMetadataLinks(Metadata $metadata, LinkCollection $links): void
     {

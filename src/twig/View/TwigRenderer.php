@@ -46,8 +46,8 @@ class TwigRenderer implements RendererInterface
      * * If the helper does not define __invoke, it will be returned
      * * If the helper does define __invoke, it will be called as a functor
      *
-     * @param array $argv
      * @return mixed
+     * @throws \Laminas\ServiceManager\Exception\InvalidServiceException
      */
     public function __call(string $method, array $argv)
     {
@@ -78,6 +78,7 @@ class TwigRenderer implements RendererInterface
      * Get plugin instance, proxy to HelperPluginManager::get
      *
      * @param string $name Name of plugin to return
+     * @throws \Laminas\ServiceManager\Exception\InvalidServiceException
      */
     public function plugin(string $name)
     {
@@ -132,12 +133,12 @@ class TwigRenderer implements RendererInterface
     }
 
     /**
-     * @param string|ModelInterface $templateNameOrModel
      * @param $variables
-     * @return string
      * @throws LoaderError
      * @throws RuntimeError
      * @throws SyntaxError
+     * @throws Exception\RenderingFailedException
+     * @throws Exception\DomainException
      */
     public function render(string|ModelInterface $templateNameOrModel, $variables = null): string
     {

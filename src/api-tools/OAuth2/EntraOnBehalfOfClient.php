@@ -13,7 +13,11 @@ final readonly class EntraOnBehalfOfClient
         private ClientInterface $http,
     ) {}
 
-    /** Call only after the middle tier has authenticated an access token intended for itself. */
+    /**
+     * Call only after the middle tier has authenticated an access token intended for itself.
+     *
+     * @throws EntraException
+     */
     public function acquireToken(EntraClientInterface $middleTier, string $assertion, string $scope): string
     {
         if (

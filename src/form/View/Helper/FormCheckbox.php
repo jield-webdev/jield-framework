@@ -17,6 +17,7 @@ class FormCheckbox extends FormInput
      *
      * @throws Exception\InvalidArgumentException
      * @throws Exception\DomainException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function render(ElementInterface $element): string
     {

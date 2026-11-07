@@ -11,8 +11,6 @@ class FormReset extends FormInput
 {
     /**
      * Attributes valid for the input tag type="reset"
-     *
-     * @var array
      */
     protected array $validTagAttributes = [
         'name' => true,

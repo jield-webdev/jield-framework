@@ -50,8 +50,6 @@ class ClassMapAutoloader implements SplAutoloader
     protected $map = [];
 
     /**
-     * Constructor
-     *
      * Create a new instance, and optionally configure the autoloader.
      *
      * @param null|array|Traversable $options

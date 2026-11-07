@@ -72,8 +72,8 @@ class ViewManager extends AbstractListenerAggregate
     /**
      * Prepares the view layer
      *
-     * @param MvcEvent $event
-     * @return void
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
      */
     public function onBootstrap(MvcEvent $event): void
     {
@@ -156,7 +156,7 @@ class ViewManager extends AbstractListenerAggregate
     /**
      * Retrieves the View instance
      *
-     * @return View
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function getView(): View
     {
@@ -171,7 +171,8 @@ class ViewManager extends AbstractListenerAggregate
     /**
      * Configures the MvcEvent view model to ensure it has the template injected
      *
-     * @return ModelInterface
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
      */
     public function getViewModel(): ModelInterface
     {
@@ -196,7 +197,7 @@ class ViewManager extends AbstractListenerAggregate
      * latter allows each to trigger before the default mvc rendering strategy,
      * and for them to trigger in the order they are registered.
      *
-     * @return void
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     protected function registerMvcRenderingStrategies(EventManagerInterface $events): void
     {
@@ -235,7 +236,7 @@ class ViewManager extends AbstractListenerAggregate
      * latter allows each to trigger before the default strategy, and for them
      * to trigger in the order they are registered.
      *
-     * @return void
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     protected function registerViewStrategies(EventManager $events): void
     {
@@ -269,6 +270,9 @@ class ViewManager extends AbstractListenerAggregate
 
     /**
      * Injects the ViewModel view helper with the root view model.
+     *
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
      */
     private function injectViewModelIntoPlugin(): void
     {

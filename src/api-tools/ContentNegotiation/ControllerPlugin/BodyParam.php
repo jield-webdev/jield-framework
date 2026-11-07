@@ -15,9 +15,7 @@ class BodyParam extends AbstractPlugin
     /**
      * Grabs a param from body match after content-negotiation
      *
-     * @param string|null $param
-     * @param mixed $default
-     * @return mixed
+     * @throws \ReflectionException
      */
     public function __invoke(?string $param = null, mixed $default = null): mixed
     {

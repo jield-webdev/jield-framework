@@ -21,9 +21,6 @@ use function sprintf;
 
 class HttpMethodOverrideListener extends AbstractListenerAggregate
 {
-    /**
-     * @param array $httpMethodOverride
-     */
     public function __construct(
         protected array $httpMethodOverride,
     ) {}
@@ -46,7 +43,6 @@ class HttpMethodOverrideListener extends AbstractListenerAggregate
 
     /**
      * Checks for X-HTTP-Method-Override header and sets header inside request object.
-     *
      */
     public function onRoute(MvcEvent $event): ?ApiProblemResponse
     {

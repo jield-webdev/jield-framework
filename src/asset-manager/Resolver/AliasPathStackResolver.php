@@ -29,17 +29,12 @@ class AliasPathStackResolver implements ResolverInterface, MimeResolverAwareInte
 
     /**
      * The mime resolver.
-     *
-     * @var MimeResolver
      */
     protected MimeResolver $mimeResolver;
 
     /**
-     * Constructor
-     *
      * Populate the array stack with a list of aliases and their corresponding paths
      *
-     * @param array $aliases
      * @throws Exception\InvalidArgumentException
      */
     public function __construct(array $aliases)
@@ -53,8 +48,6 @@ class AliasPathStackResolver implements ResolverInterface, MimeResolverAwareInte
     /**
      * Add a single alias to the stack
      *
-     * @param string $alias
-     * @param string $path
      * @throws Exception\InvalidArgumentException
      */
     private function addAlias(string $alias, string $path): void
@@ -64,9 +57,6 @@ class AliasPathStackResolver implements ResolverInterface, MimeResolverAwareInte
 
     /**
      * Normalize a path for insertion in the stack
-     *
-     * @param string $path
-     * @return string
      */
     private function normalizePath(string $path): string
     {
@@ -93,9 +83,6 @@ class AliasPathStackResolver implements ResolverInterface, MimeResolverAwareInte
 
     /**
      * Set LFI protection flag
-     *
-     * @param bool $flag
-     * @return self
      */
     public function setLfiProtection(bool $flag): AliasPathStackResolver
     {
@@ -106,8 +93,6 @@ class AliasPathStackResolver implements ResolverInterface, MimeResolverAwareInte
 
     /**
      * Return status of LFI protection flag
-     *
-     * @return bool
      */
     public function isLfiProtectionOn(): bool
     {
@@ -153,6 +138,9 @@ class AliasPathStackResolver implements ResolverInterface, MimeResolverAwareInte
         return null;
     }
 
+    /**
+     * @throws RuntimeException
+     */
     public function collect(): array
     {
         $collection = [];

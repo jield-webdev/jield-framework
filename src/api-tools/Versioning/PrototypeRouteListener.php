@@ -26,15 +26,11 @@ class PrototypeRouteListener implements ListenerAggregateInterface
 
     /**
      * Match to prepend to versioned routes.
-     *
-     * @var string
      */
     protected string $versionRoutePrefix = '[/v:version]';
 
     /**
      * Constraints to introduce in versioned routes
-     *
-     * @var array
      */
     protected array $versionRouteOptions = [
         'defaults' => [
@@ -65,7 +61,6 @@ class PrototypeRouteListener implements ListenerAggregateInterface
      * Looks for api-tools-versioning.url and router configuration; if both present,
      * injects the route prototype and adds a chain route to each route listed
      * in the api-tools-versioning.url array.
-     *
      */
     public function onMergeConfig(ModuleEvent $e): void
     {

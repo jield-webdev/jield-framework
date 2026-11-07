@@ -37,7 +37,6 @@ class CorsRequestListenerFactory implements FactoryInterface
     /**
      * @param string $requestedName
      * @throws ContainerExceptionInterface
-     * @throws NotFoundExceptionInterface
      */
     public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): CorsRequestListener
     {

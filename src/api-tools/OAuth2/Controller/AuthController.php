@@ -38,9 +38,6 @@ final class AuthController extends AbstractActionController
     /** @var callable Factory for generating an OAuth2Server instance. */
     protected $serverFactory;
 
-    /**
-     * Constructor
-     */
     public function __construct(
         callable $serverFactory,
         protected UserIdProviderInterface $userIdProvider,
@@ -50,8 +47,6 @@ final class AuthController extends AbstractActionController
 
     /**
      * Should the controller return ApiProblemResponse?
-     *
-     * @return bool
      */
     public function isApiProblemErrorResponse(): bool
     {
@@ -64,9 +59,6 @@ final class AuthController extends AbstractActionController
      * Boolean true indicates ApiProblemResponse should be returned (the
      * default), while false indicates oauth2 errors (per the oauth2 spec)
      * should be returned.
-     *
-     * @param bool $apiProblemErrorResponse
-     * @return void
      */
     public function setApiProblemErrorResponse(bool $apiProblemErrorResponse): void
     {
@@ -75,6 +67,10 @@ final class AuthController extends AbstractActionController
 
     /**
      * Token Action (/oauth)
+     *
+     * @throws RuntimeException
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
      */
     public function tokenAction(): ?Response
     {
@@ -119,6 +115,10 @@ final class AuthController extends AbstractActionController
 
     /**
      * Token Revoke (/oauth/revoke)
+     *
+     * @throws RuntimeException
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
      */
     public function revokeAction(): ?Response
     {
@@ -154,6 +154,10 @@ final class AuthController extends AbstractActionController
 
     /**
      * Test resource (/oauth/resource)
+     *
+     * @throws RuntimeException
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
      */
     public function resourceAction(): Response
     {
@@ -185,6 +189,10 @@ final class AuthController extends AbstractActionController
 
     /**
      * Authorize action (/oauth/authorize)
+     *
+     * @throws RuntimeException
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
      */
     public function authorizeAction(): Response|ViewModel|ResponseInterface|ApiProblemResponse
     {
@@ -234,6 +242,9 @@ final class AuthController extends AbstractActionController
 
     /**
      * Receive code action prints the code/token access
+     *
+     * @throws \ReflectionException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function receiveCodeAction(): ViewModel
     {
@@ -257,7 +268,6 @@ final class AuthController extends AbstractActionController
 
     /**
      * Map OAuth2Response to ApiProblemResponse
-     *
      */
     protected function getApiProblemResponse(OAuth2Response $response): ApiProblemResponse
     {
@@ -291,7 +301,8 @@ final class AuthController extends AbstractActionController
      * This ensures that JSON requests providing credentials for OAuth2
      * verification/validation can be processed.
      *
-     * @return OAuth2Request
+     * @throws \ReflectionException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     protected function getOAuth2Request(): OAuth2Request
     {
@@ -376,8 +387,6 @@ final class AuthController extends AbstractActionController
      * is invoked with the provided $type as an argument, and the value
      * returned.
      *
-     * @param string|null $type
-     * @return OAuth2Server
      * @throws RuntimeException If the factory does not return an OAuth2Server instance.
      */
     private function getOAuth2Server(?string $type): OAuth2Server

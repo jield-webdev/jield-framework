@@ -45,8 +45,6 @@ class Links extends AbstractHelper
 {
     /**
      * Constants used for specifying which link types to find and render
-     *
-     * @var int
      */
     public const int RENDER_ALTERNATE = 0x0001;
     public const int RENDER_STYLESHEET = 0x0002;
@@ -116,6 +114,7 @@ class Links extends AbstractHelper
      *
      * @param string|AbstractContainer|null $container container to operate on
      * @return Links
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function __invoke(AbstractContainer|string|null $container = null)
     {
@@ -137,9 +136,11 @@ class Links extends AbstractHelper
      * $h->findRelFoo($page);     // $h->findRelation($page, 'rel', 'foo');
      * </code>
      *
-     * @param string $method
      * @return mixed
      * @throws Exception\ExceptionInterface
+     * @throws \ErrorException
+     * @throws \Laminas\Navigation\Exception\ExceptionInterface
+     * @throws \ReflectionException
      */
     public function __call(string $method, array $arguments = [])
     {
@@ -164,6 +165,8 @@ class Links extends AbstractHelper
      *                                         container registered in the
      *                                         helper.
      * @return string
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
      */
     public function render($container = null)
     {
@@ -215,6 +218,8 @@ class Links extends AbstractHelper
      *                                subsection
      * @return string
      * @throws Exception\DomainException
+     * @throws \ReflectionException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function renderLink(AbstractPage $page, string $attrib, string $relation)
     {
@@ -268,9 +273,9 @@ class Links extends AbstractHelper
      * </code>
      *
      * @param AbstractPage $page page to find links for
-     * @param int|null $flag
      * @return array[][]
      * @psalm-return array{rel: array<array>, rev: array<array>}
+     * @throws \ReflectionException
      */
     public function findAllRelations(AbstractPage $page, ?int $flag = null)
     {
@@ -317,6 +322,7 @@ class Links extends AbstractHelper
      * @param string $type link type, e.g. 'start', 'next'
      * @return AbstractPage|array|null
      * @throws Exception\DomainException If $rel is not "rel" or "rev".
+     * @throws \ReflectionException
      */
     public function findRelation(AbstractPage $page, string $rel, string $type)
     {
@@ -342,6 +348,7 @@ class Links extends AbstractHelper
      * @param string $rel relation, 'rel' or 'rev'
      * @param string $type link type, e.g. 'start', 'next'
      * @return AbstractPage|array|null
+     * @throws \ReflectionException
      */
     protected function findFromProperty(AbstractPage $page, string $rel, string $type)
     {
@@ -376,6 +383,7 @@ class Links extends AbstractHelper
      * @param string $rel relation, 'rel' or 'rev'
      * @param string $type link type, e.g. 'start', 'next', etc
      * @return AbstractPage|array|null
+     * @throws \ReflectionException
      */
     protected function findFromSearch(AbstractPage $page, string $rel, string $type)
     {
@@ -402,6 +410,7 @@ class Links extends AbstractHelper
      * starting point of the collection.
      *
      * @return AbstractPage|null
+     * @throws \Laminas\Navigation\Exception\OutOfBoundsException
      */
     public function searchRelStart(AbstractPage $page)
     {
@@ -488,6 +497,7 @@ class Links extends AbstractHelper
      * Refers to a document serving as a chapter in a collection of documents.
      *
      * @return AbstractPage|array|null
+     * @throws \ReflectionException
      */
     public function searchRelChapter(AbstractPage $page)
     {
@@ -752,7 +762,6 @@ class Links extends AbstractHelper
      * Note that custom relations can also be rendered directly using the
      * {@link renderLink()} method.
      *
-     * @param int $renderFlag
      * @return Links
      */
     public function setRenderFlag(int $renderFlag)

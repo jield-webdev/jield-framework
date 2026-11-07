@@ -20,7 +20,6 @@ class AssertionService
 
     /**
      * @throws ContainerExceptionInterface
-     * @throws NotFoundExceptionInterface
      */
     public function __construct(
         private readonly ServiceManager $container,

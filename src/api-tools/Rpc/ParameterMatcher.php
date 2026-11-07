@@ -35,10 +35,7 @@ class ParameterMatcher
     ) {}
 
     /**
-     * @param callable $callable
-     * @param array $parameters
-     * @return array
-     * @throws ReflectionException
+     * @throws Exception
      */
     public function getMatchedParameters(callable $callable, array $parameters): array
     {

@@ -16,6 +16,9 @@ class Identity extends AbstractPlugin
 {
     protected ?AuthenticationServiceInterface $authenticationService = null;
 
+    /**
+     * @throws Exception\RuntimeException
+     */
     public function __invoke()
     {
         if (!$this->authenticationService instanceof AuthenticationServiceInterface) {

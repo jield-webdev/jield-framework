@@ -31,6 +31,9 @@ class GoogleAnalytics extends AbstractHelper
         return $this;
     }
 
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     protected function getContainer(): HeadScript
     {
         $containerName = $this->getContainerName();
@@ -42,6 +45,9 @@ class GoogleAnalytics extends AbstractHelper
         return $this;
     }
 
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     public function appendScript(): void
     {
         // Do not render the GA twice

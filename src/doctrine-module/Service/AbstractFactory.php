@@ -16,7 +16,7 @@ use function sprintf;
 /**
  * Base ServiceManager factory
  *
- * @interal
+ * @internal
  */
 abstract class AbstractFactory implements FactoryInterface
 {
@@ -48,6 +48,8 @@ abstract class AbstractFactory implements FactoryInterface
      * Gets options from configuration based on name.
      *
      * @throws \RuntimeException
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
      */
     public function getOptions(ContainerInterface $container, string $key, ?string $name = null): AbstractOptions
     {

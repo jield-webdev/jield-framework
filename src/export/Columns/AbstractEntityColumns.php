@@ -21,11 +21,17 @@ abstract class AbstractEntityColumns implements ColumnsHelperInterface
         protected readonly EntityManager $entityManager,
     ) {}
 
+    /** @param array<string, mixed> $criteria Field names and values to match. */
     protected function findCount(array $criteria): int
     {
         return $this->entityManager->getRepository(\Jield\Stdlib\Value::classString($this->entity))->count(criteria: \Jield\Stdlib\Value::stringKeyedArray($criteria));
     }
 
+    /**
+     * @param array<string, mixed> $criteria Field names and values to match.
+     * @return list<object>
+     * @throws \UnexpectedValueException
+     */
     protected function findSliced(int $offset, array $criteria = []): array
     {
         return $this->entityManager->getRepository(\Jield\Stdlib\Value::classString($this->entity))->findBy(
@@ -53,6 +59,8 @@ abstract class AbstractEntityColumns implements ColumnsHelperInterface
 
     /**
      * Default empty array.
+     *
+     * @return array<array-key, string> Names of exports that must run before this export.
      */
     public function getDependencies(): array
     {

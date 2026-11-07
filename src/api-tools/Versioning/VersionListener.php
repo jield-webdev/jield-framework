@@ -34,7 +34,6 @@ class VersionListener implements ListenerAggregateInterface
 
     /**
      * Determine if versioning is in the route matches, and update the controller accordingly
-     *
      */
     public function onRoute(MvcEvent $e): ?RouteMatch
     {
@@ -82,9 +81,6 @@ class VersionListener implements ListenerAggregateInterface
      * The route prototype sets "version", while the Content-Type listener sets
      * "laminas_ver_version"; check both to obtain the version, giving priority to the
      * route prototype result.
-     *
-     * @param RouteMatch $routeMatches
-     * @return int|false
      */
     protected function getVersionFromRouteMatch(RouteMatch $routeMatches): false|int
     {

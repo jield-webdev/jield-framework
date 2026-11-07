@@ -33,8 +33,6 @@ class Breadcrumbs extends AbstractHelper
 
     /**
      * The minimum depth a page must have to be included when rendering.
-     *
-     * @var int
      */
     protected ?int $minDepth = 1;
 
@@ -57,6 +55,7 @@ class Breadcrumbs extends AbstractHelper
      *
      * @param string|AbstractContainer|null $container container to operate on
      * @return Breadcrumbs
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function __invoke(AbstractContainer|string|null $container = null)
     {
@@ -75,6 +74,9 @@ class Breadcrumbs extends AbstractHelper
      * @param string|null|Navigation\AbstractContainer $container [optional] container to render. Default is
      *                                      to render the container registered in the helper.
      * @return string
+     * @throws \ReflectionException
+     * @throws Exception\RuntimeException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function render($container = null)
     {
@@ -99,6 +101,8 @@ class Breadcrumbs extends AbstractHelper
      * @param AbstractContainer|null $container [optional] container to render. Default is
      *                                      to render the container registered in the helper.
      * @return string
+     * @throws \ReflectionException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function renderStraight(?AbstractContainer $container = null)
     {
@@ -161,6 +165,7 @@ class Breadcrumbs extends AbstractHelper
      * @return string
      * @throws Exception\RuntimeException         If no partial provided.
      * @throws Exception\InvalidArgumentException If partial is invalid array.
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function renderPartial(?AbstractContainer $container = null, array|string|null $partial = null)
     {
@@ -184,6 +189,7 @@ class Breadcrumbs extends AbstractHelper
      * @return string
      * @throws Exception\RuntimeException         If no partial provided.
      * @throws Exception\InvalidArgumentException If partial is invalid array.
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function renderPartialWithParams(
         array $params = [],
@@ -264,11 +270,10 @@ class Breadcrumbs extends AbstractHelper
     /**
      * Render a partial with the given "model".
      *
-     * @param AbstractContainer|null $container
-     * @param array|string|null $partial
      * @return string
      * @throws Exception\RuntimeException         If no partial provided.
      * @throws Exception\InvalidArgumentException If partial is invalid array.
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     protected function renderPartialModel(array $params, ?AbstractContainer $container, array|string|null $partial)
     {

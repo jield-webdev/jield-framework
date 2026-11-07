@@ -15,16 +15,11 @@ class AcceptListener extends ContentTypeListener
 {
     /**
      * Header to examine.
-     *
-     * @var string
      */
     protected string $headerName = 'accept';
 
     /**
      * Parse the header for matches against registered regexes
-     *
-     * @param string $value
-     * @return false|array
      */
     #[Override]
     protected function parseHeaderForMatches(string $value): false|array

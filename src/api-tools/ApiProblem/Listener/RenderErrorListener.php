@@ -23,7 +23,6 @@ use function json_encode;
  */
 class RenderErrorListener extends AbstractListenerAggregate
 {
-    /** @var bool */
     protected bool $displayExceptions = false;
 
     /**
@@ -39,10 +38,6 @@ class RenderErrorListener extends AbstractListenerAggregate
         );
     }
 
-    /**
-     * @param bool $flag
-     * @return static
-     */
     public function setDisplayExceptions(bool $flag): static
     {
         $this->displayExceptions = $flag;
@@ -57,7 +52,6 @@ class RenderErrorListener extends AbstractListenerAggregate
      * the PhpRenderer, when we have no templates.
      *
      * As such, report as an unacceptable response.
-     *
      */
     public function onRenderError(MvcEvent $e): void
     {

@@ -18,6 +18,9 @@ final class JsonStrategy extends AbstractListenerAggregate
         $this->listeners[] = $events->attach(MvcEvent::EVENT_RENDER, $this->render(...), $priority + 100);
     }
 
+    /**
+     * @throws \JsonException
+     */
     public function render(MvcEvent $event): void
     {
         /** @mago-var mixed $model */

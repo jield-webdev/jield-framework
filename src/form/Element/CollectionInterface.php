@@ -51,8 +51,6 @@ interface CollectionInterface extends FieldsetInterface
 
     /**
      * Get a template element used for rendering purposes only
-     *
-     * @return null|ElementInterface|FieldsetInterface
      */
     public function getTemplateElement(): FieldsetInterface|ElementInterface|null;
 }

@@ -20,8 +20,6 @@ class AggregateResolver implements ResolverInterface
     protected PriorityQueue $queue;
 
     /**
-     * Constructor
-     *
      * Instantiate the internal priority queue
      */
     public function __construct()
@@ -32,9 +30,7 @@ class AggregateResolver implements ResolverInterface
     /**
      * Attach a resolver
      *
-     * @param ResolverInterface $resolver
      * @param int $priority
-     * @return self
      */
     public function attach(ResolverInterface $resolver, $priority = 1): AggregateResolver
     {

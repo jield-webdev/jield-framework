@@ -43,11 +43,12 @@ class AcceptableViewModelSelector extends AbstractPlugin
     /**
      * Detects an appropriate viewmodel for request.
      *
-     * @param array $matchAgainst (optional) The Array to match against
+     * @param array|null $matchAgainst View model to media type mappings; null uses the defaults.
      * @param bool $returnDefault (optional) If no match is available. Return default instead
      * @param AbstractFieldValuePart|null $resultReference (optional) The object that was matched
      * @return ModelInterface|null
      * @throws InvalidArgumentException If the supplied and matched View Model could not be found.
+     * @throws \ReflectionException
      */
     public function __invoke(
         ?array $matchAgainst = null,
@@ -60,11 +61,12 @@ class AcceptableViewModelSelector extends AbstractPlugin
     /**
      * Detects an appropriate viewmodel for request.
      *
-     * @param array $matchAgainst (optional) The Array to match against
+     * @param array|null $matchAgainst View model to media type mappings; null uses the defaults.
      * @param bool $returnDefault (optional) If no match is available. Return default instead
      * @param AbstractFieldValuePart|null $resultReference (optional) The object that was matched
      * @return ModelInterface|null
      * @throws InvalidArgumentException If the supplied and matched View Model could not be found.
+     * @throws \ReflectionException
      */
     public function getViewModel(
         ?array $matchAgainst = null,
@@ -87,7 +89,7 @@ class AcceptableViewModelSelector extends AbstractPlugin
     /**
      * Detects an appropriate viewmodel name for request.
      *
-     * @param array $matchAgainst (optional) The Array to match against
+     * @param array|null $matchAgainst View model to media type mappings; null uses the defaults.
      * @param bool $returnDefault (optional) If no match is available. Return default instead
      * @param AbstractFieldValuePart|null $resultReference (optional) The object that was matched.
      * @return string|null Returns null if $returnDefault = false and no match could be made
@@ -113,7 +115,7 @@ class AcceptableViewModelSelector extends AbstractPlugin
     /**
      * Detects an appropriate viewmodel name for request.
      *
-     * @param array $matchAgainst (optional) The Array to match against
+     * @param array|null $matchAgainst View model to media type mappings; null uses the defaults.
      * @return AbstractFieldValuePart|null The object that was matched
      */
     public function match(?array $matchAgainst = null): ?AbstractFieldValuePart
@@ -158,7 +160,6 @@ class AcceptableViewModelSelector extends AbstractPlugin
      * Set the default View Model (name) to return if no match could be made
      *
      * @param string $defaultViewModelName The default View Model name
-     * @return static
      */
     public function setDefaultViewModelName(string $defaultViewModelName): static
     {
@@ -168,8 +169,6 @@ class AcceptableViewModelSelector extends AbstractPlugin
 
     /**
      * Set the default View Model (name) to return if no match could be made
-     *
-     * @return string
      */
     public function getDefaultViewModelName(): string
     {
@@ -179,8 +178,7 @@ class AcceptableViewModelSelector extends AbstractPlugin
     /**
      * Set the default Accept Types and View Model combinations to match against if none are specified.
      *
-     * @param array $matchAgainst (optional) The Array to match against
-     * @return static
+     * @param array|null $matchAgainst Default view model to media type mappings; null clears the defaults.
      */
     public function setDefaultMatchAgainst(?array $matchAgainst = null): static
     {
@@ -190,8 +188,6 @@ class AcceptableViewModelSelector extends AbstractPlugin
 
     /**
      * Get the default Accept Types and View Model combinations to match against if none are specified.
-     *
-     * @return array|null
      */
     public function getDefaultMatchAgainst(): ?array
     {
@@ -200,10 +196,6 @@ class AcceptableViewModelSelector extends AbstractPlugin
 
     /**
      * Inject the viewmodel name into the accept header string
-     *
-     * @param string|array $modelAcceptString
-     * @param string $modelName
-     * @return string
      */
     protected function injectViewModelName(string|array $modelAcceptString, string $modelName): string
     {
@@ -216,8 +208,6 @@ class AcceptableViewModelSelector extends AbstractPlugin
 
     /**
      * Extract the viewmodel name from a match
-     *
-     * @return string
      */
     protected function extractViewModelName(AbstractFieldValuePart $res): string
     {
@@ -229,7 +219,6 @@ class AcceptableViewModelSelector extends AbstractPlugin
     /**
      * Get the request
      *
-     * @return Request
      * @throws DomainException If unable to find request.
      */
     protected function getRequest(): Request
@@ -251,7 +240,6 @@ class AcceptableViewModelSelector extends AbstractPlugin
     /**
      * Get the event
      *
-     * @return MvcEvent
      * @throws DomainException If unable to find event.
      */
     protected function getEvent(): MvcEvent

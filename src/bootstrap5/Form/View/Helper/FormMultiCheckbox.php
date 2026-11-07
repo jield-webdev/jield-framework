@@ -28,6 +28,10 @@ class FormMultiCheckbox extends Helper\FormMultiCheckbox
 {
     private string $template = '<div class="form-check %s">%s%s%s%s</div>';
 
+    /**
+     * @throws \Jield\Form\Exception\ExceptionInterface
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     public function render(ElementInterface|MultiCheckbox $element): string
     {
         $name = static::getName(element: $element);
@@ -63,6 +67,10 @@ class FormMultiCheckbox extends Helper\FormMultiCheckbox
         return $rendered;
     }
 
+    /**
+     * @throws \Jield\Form\Exception\ExceptionInterface
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     protected function renderOptions(
         ElementInterface $element,
         array $options,

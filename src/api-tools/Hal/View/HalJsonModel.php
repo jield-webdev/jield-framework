@@ -22,8 +22,6 @@ class HalJsonModel extends JsonModel
 {
     /**
      * Does the payload represent a HAL collection?
-     *
-     * @return bool
      */
     public function isCollection(): bool
     {
@@ -38,8 +36,6 @@ class HalJsonModel extends JsonModel
      * Deprecated; please use isEntity().
      *
      * @deprecated
-     *
-     * @return bool
      */
     public function isResource(): bool
     {
@@ -52,8 +48,6 @@ class HalJsonModel extends JsonModel
 
     /**
      * Does the payload represent a HAL entity?
-     *
-     * @return bool
      */
     public function isEntity(): bool
     {
@@ -66,7 +60,6 @@ class HalJsonModel extends JsonModel
      * Set the payload for the response
      *
      * This is the value to represent in the response.
-     *
      */
     public function setPayload(mixed $payload): static
     {
@@ -76,8 +69,6 @@ class HalJsonModel extends JsonModel
 
     /**
      * Retrieve the payload for the response
-     *
-     * @return mixed
      */
     public function getPayload(): mixed
     {
@@ -90,7 +81,6 @@ class HalJsonModel extends JsonModel
      * Does nothing; does not allow re-setting "terminate" terminate.
      *
      * @param  bool $terminate
-     * @return static
      */
     #[Override]
     public function setTerminal($terminate = true): static

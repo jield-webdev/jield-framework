@@ -79,6 +79,7 @@ class Navigation extends AbstractNavigationHelper
      *
      * @param string|AbstractContainer|null $container container to operate on
      * @return Navigation
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function __invoke(AbstractContainer|string|null $container = null)
     {
@@ -112,6 +113,7 @@ class Navigation extends AbstractNavigationHelper
      *                                    helper is not an instance of the
      *                                    interface specified in
      *                                    {@link findHelper()}.
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function __call(string $method, array $arguments = [])
     {
@@ -133,7 +135,8 @@ class Navigation extends AbstractNavigationHelper
      *
      * @param AbstractContainer|string|null $container
      * @return string
-     * @throws Exception\RuntimeException
+     * @throws Exception\ExceptionInterface
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function render($container = null)
     {
@@ -152,6 +155,8 @@ class Navigation extends AbstractNavigationHelper
      * @return NavigationHelper|false  helper instance
      * @psalm-return ($strict is true ? NavigationHelper : NavigationHelper|false)
      * @throws Exception\RuntimeException If $strict is true and helper cannot be found.
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws Exception\ExceptionInterface
      */
     public function findHelper(string $proxy, bool $strict = true)
     {
@@ -189,6 +194,7 @@ class Navigation extends AbstractNavigationHelper
      *
      * @param NavigationHelper $helper helper instance
      * @return void
+     * @throws Exception\ExceptionInterface
      */
     protected function inject(NavigationHelper $helper)
     {
@@ -235,7 +241,6 @@ class Navigation extends AbstractNavigationHelper
     /**
      * Sets whether container should be injected when proxying
      *
-     * @param bool $injectContainer
      * @return Navigation
      */
     public function setInjectContainer(bool $injectContainer = true)
@@ -257,7 +262,6 @@ class Navigation extends AbstractNavigationHelper
     /**
      * Sets whether ACL should be injected when proxying
      *
-     * @param bool $injectAcl
      * @return Navigation
      */
     public function setInjectAcl(bool $injectAcl = true)
@@ -279,7 +283,6 @@ class Navigation extends AbstractNavigationHelper
     /**
      * Sets whether translator should be injected when proxying
      *
-     * @param bool $injectTranslator
      * @return Navigation
      */
     public function setInjectTranslator(bool $injectTranslator = true)
@@ -320,6 +323,7 @@ class Navigation extends AbstractNavigationHelper
      * registered.
      *
      * @return Navigation\PluginManager
+     * @throws Exception\RuntimeException
      */
     public function getPluginManager()
     {
@@ -342,8 +346,6 @@ class Navigation extends AbstractNavigationHelper
 
     /**
      * Set the View object
-     *
-     * @return static
      */
     public function setView(Renderer $view): static
     {

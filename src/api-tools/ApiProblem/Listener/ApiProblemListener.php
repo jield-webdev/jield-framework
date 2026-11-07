@@ -85,7 +85,6 @@ class ApiProblemListener extends AbstractListenerAggregate
 
     /**
      * Listen to the render event.
-     *
      */
     public function onRender(MvcEvent $e): void
     {
@@ -128,6 +127,8 @@ class ApiProblemListener extends AbstractListenerAggregate
      *
      * It checks if the controller is in our list
      *
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
      */
     public function onDispatch(MvcEvent $e): void
     {
@@ -159,7 +160,6 @@ class ApiProblemListener extends AbstractListenerAggregate
      *
      * If the event represents an error, and has an exception composed, marshals an ApiProblem
      * based on the exception, stops event propagation, and returns an ApiProblemResponse.
-     *
      */
     public function onDispatchError(MvcEvent $e): ?ApiProblemResponse
     {
@@ -187,7 +187,6 @@ class ApiProblemListener extends AbstractListenerAggregate
 
     /**
      * Determine if we have a valid error event.
-     *
      */
     protected function validateErrorEvent(MvcEvent $e): bool
     {
@@ -218,7 +217,6 @@ class ApiProblemListener extends AbstractListenerAggregate
      * If it matches, but on "*\/*", return false.
      *
      * Otherwise, return based on whether or not one or more criteria match.
-     *
      */
     protected function matchAcceptCriteria(AcceptHeader $accept): bool
     {

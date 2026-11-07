@@ -14,11 +14,9 @@ use function assert;
 final class EntityManagerFactory extends AbstractFactory
 {
     /**
-     * {@inheritDoc}
-     *
-     * @param string $requestedName
-     *
-     * @return EntityManager
+     * @throws \RuntimeException
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
      */
     public function __invoke(
         ContainerInterface $container,

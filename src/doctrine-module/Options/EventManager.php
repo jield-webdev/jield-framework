@@ -17,12 +17,9 @@ final class EventManager extends AbstractOptions
      * An array of subscribers. The array can contain the FQN of the
      * class to instantiate OR a string to be located with the
      * service locator.
-     *
-     * @var array
      */
     protected array $subscribers = [];
 
-    /** @param array $subscribers */
     public function setSubscribers(array $subscribers): self
     {
         $this->subscribers = $subscribers;
@@ -30,7 +27,6 @@ final class EventManager extends AbstractOptions
         return $this;
     }
 
-    /** @return array */
     public function getSubscribers(): array
     {
         return $this->subscribers;

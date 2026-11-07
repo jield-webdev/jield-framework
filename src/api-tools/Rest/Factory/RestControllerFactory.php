@@ -40,6 +40,9 @@ class RestControllerFactory implements AbstractFactoryInterface
      */
     protected array $lookupCache = [];
 
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     #[Override]
     public function canCreate(ContainerInterface $container, string $requestedName): bool
     {
@@ -89,6 +92,10 @@ class RestControllerFactory implements AbstractFactoryInterface
         return true;
     }
 
+    /**
+     * @throws \ReflectionException
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     #[Override]
     public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): RestController
     {
@@ -156,7 +163,6 @@ class RestControllerFactory implements AbstractFactoryInterface
 
     /**
      * Loop through configuration to discover and set controller options.
-     *
      */
     protected function setControllerOptions(array $config, RestController $controller): void
     {

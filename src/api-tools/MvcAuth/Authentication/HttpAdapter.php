@@ -30,9 +30,6 @@ class HttpAdapter extends AbstractAdapter
      */
     private ?string $providesBase = null;
 
-    /**
-     * @param string|null $providesBase
-     */
     public function __construct(
         private readonly HttpAuth $httpAuth,
         private readonly AuthenticationServiceInterface $authenticationService,

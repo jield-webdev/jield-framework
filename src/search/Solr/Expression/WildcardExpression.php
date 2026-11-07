@@ -19,9 +19,6 @@ class WildcardExpression extends Expression implements Stringable
 {
     /**
      * Create new wildcard query object
-     *
-     * @param string|ExpressionInterface $prefix
-     * @param string|ExpressionInterface $suffix
      */
     public function __construct(
         private readonly string $wildcard,

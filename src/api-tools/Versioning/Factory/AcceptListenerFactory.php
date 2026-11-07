@@ -10,6 +10,9 @@ use Webmozart\Assert\Assert;
 
 class AcceptListenerFactory
 {
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     public function __invoke(ContainerInterface $container): AcceptListener
     {
         /** @mago-var mixed $config */

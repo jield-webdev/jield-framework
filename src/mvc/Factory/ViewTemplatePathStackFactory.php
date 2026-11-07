@@ -20,10 +20,6 @@ class ViewTemplatePathStackFactory implements FactoryInterface
      * Creates a Laminas\View\Resolver\TemplatePathStack and populates it with the
      * ['view_manager']['template_path_stack'] and sets the default suffix with the
      * ['view_manager']['default_template_suffix']
-     *
-     * @param  string $requestedName
-     * @param  null|array $options
-     * @return ViewResolver\TemplatePathStack
      */
     public function __invoke(
         ContainerInterface $container,

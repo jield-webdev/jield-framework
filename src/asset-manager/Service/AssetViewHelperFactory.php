@@ -36,10 +36,8 @@ class AssetViewHelperFactory implements FactoryInterface
     }
 
     /**
-     * @param ServiceLocatorInterface $container
-     * @param array $config
-     *
-     * @return AbstractCacheAdapter|null
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws InvalidArgumentException
      */
     private function loadCache(ContainerInterface $container, array $config): ?AbstractCacheAdapter
     {

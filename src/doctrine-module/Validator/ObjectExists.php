@@ -44,8 +44,6 @@ class ObjectExists extends AbstractValidator
     protected array $fields = [];
 
     /**
-     * Constructor
-     *
      * @param array $options required keys are `object_repository`, which must be an instance of
      *                       Doctrine\Persistence\ObjectRepository, and `fields`, with either
      *                       a string or an array of strings representing the fields to be matched by the validator.
@@ -115,7 +113,6 @@ class ObjectExists extends AbstractValidator
      * @param mixed $value a field value or an array of field values if more fields have been configured to be
      *                      matched
      *
-     * @return array
      *
      * @throws Exception\RuntimeException
      */

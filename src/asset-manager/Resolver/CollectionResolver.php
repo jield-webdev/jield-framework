@@ -27,11 +27,7 @@ class CollectionResolver implements ResolverInterface, AggregateResolverAwareInt
     protected array $collections = [];
 
     /**
-     * Constructor
-     *
      * Instantiate and optionally populate collections.
-     *
-     * @param iterable $collections
      */
     public function __construct(iterable $collections = [])
     {
@@ -40,8 +36,6 @@ class CollectionResolver implements ResolverInterface, AggregateResolverAwareInt
 
     /**
      * Retrieve the collections
-     *
-     * @return array
      */
     public function getCollections(): array
     {
@@ -53,7 +47,6 @@ class CollectionResolver implements ResolverInterface, AggregateResolverAwareInt
      *
      * Collections should be arrays or Traversable objects with name => path pairs
      *
-     * @param iterable $collections
      * @throws Exception\InvalidArgumentException
      */
     public function setCollections(iterable $collections): void
@@ -67,6 +60,9 @@ class CollectionResolver implements ResolverInterface, AggregateResolverAwareInt
 
     /**
      * {@inheritDoc}
+     * @throws Exception\RuntimeException
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
      */
     #[Override]
     public function resolve(string $fileName): ?\Assetic\Contracts\Asset\AssetInterface
@@ -128,8 +124,6 @@ class CollectionResolver implements ResolverInterface, AggregateResolverAwareInt
 
     /**
      * Get the aggregate resolver.
-     *
-     * @return ResolverInterface
      */
     #[Override]
     public function getAggregateResolver(): ResolverInterface
@@ -139,8 +133,6 @@ class CollectionResolver implements ResolverInterface, AggregateResolverAwareInt
 
     /**
      * Set the aggregate resolver.
-     *
-     * @param ResolverInterface $aggregateResolver
      */
     #[Override]
     public function setAggregateResolver(ResolverInterface $aggregateResolver): void
@@ -150,8 +142,6 @@ class CollectionResolver implements ResolverInterface, AggregateResolverAwareInt
 
     /**
      * Get the AssetFilterManager
-     *
-     * @return AssetFilterManager
      */
     #[Override]
     public function getAssetFilterManager(): AssetFilterManager
@@ -161,8 +151,6 @@ class CollectionResolver implements ResolverInterface, AggregateResolverAwareInt
 
     /**
      * Set the AssetFilterManager.
-     *
-     * @param AssetFilterManager $filterManager
      */
     #[Override]
     public function setAssetFilterManager(AssetFilterManager $filterManager): void

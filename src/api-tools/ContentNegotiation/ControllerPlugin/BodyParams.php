@@ -13,6 +13,8 @@ class BodyParams extends AbstractPlugin
 {
     /**
      * Grabs a param from body match after content-negotation
+     *
+     * @throws \ReflectionException
      */
     public function __invoke(): array
     {

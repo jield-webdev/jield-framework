@@ -14,7 +14,6 @@ use function strtoupper;
 
 class HttpMethodListener extends AbstractListenerAggregate
 {
-    /** @var array */
     protected array $allowedMethods = [
         HttpRequest::METHOD_CONNECT,
         HttpRequest::METHOD_DELETE,
@@ -28,7 +27,6 @@ class HttpMethodListener extends AbstractListenerAggregate
         HttpRequest::METHOD_TRACE,
     ];
 
-    /** @var bool */
     protected bool $enabled = true;
 
     /**
@@ -79,9 +77,6 @@ class HttpMethodListener extends AbstractListenerAggregate
         return $response;
     }
 
-    /**
-     * @return array
-     */
     public function getAllowedMethods(): array
     {
         return $this->allowedMethods;
@@ -96,9 +91,6 @@ class HttpMethodListener extends AbstractListenerAggregate
         $this->allowedMethods = $allowedMethods;
     }
 
-    /**
-     * @return bool
-     */
     public function isEnabled(): bool
     {
         return $this->enabled;

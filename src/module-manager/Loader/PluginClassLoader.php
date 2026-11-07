@@ -42,9 +42,8 @@ class PluginClassLoader implements PluginClassLocator
     protected static $staticMap = [];
 
     /**
-     * Constructor
-     *
      * @param  null|array|Traversable $map If provided, seeds the loader with a map
+     * @throws \Exception
      */
     public function __construct($map = null)
     {
@@ -115,7 +114,7 @@ class PluginClassLoader implements PluginClassLocator
      *
      * @param  mixed $map
      * @return PluginClassLoader
-     * @throws Exception\InvalidArgumentException
+     * @throws \Exception
      */
     public function registerPlugins($map)
     {

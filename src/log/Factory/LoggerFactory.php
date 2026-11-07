@@ -21,6 +21,9 @@ use Psr\Container\ContainerInterface;
  */
 final class LoggerFactory
 {
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     public function __invoke(ContainerInterface $container): Logger
     {
         $config = $this->getConfig($container);
@@ -31,6 +34,7 @@ final class LoggerFactory
 
     /**
      * @param MonologConfig $config
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function createLogger(ContainerInterface $container, array $config, string $loggerName): Logger
     {
@@ -57,6 +61,7 @@ final class LoggerFactory
 
     /**
      * @param HandlerConfig $handlerConfig
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     private function createHandler(ContainerInterface $container, array $handlerConfig): ?HandlerInterface
     {
@@ -92,6 +97,7 @@ final class LoggerFactory
 
     /**
      * @param HandlerOptions $options
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     private function createDoctrineDbalHandler(ContainerInterface $container, array $options): HandlerInterface
     {
@@ -107,6 +113,7 @@ final class LoggerFactory
 
     /**
      * @return MonologConfig
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function getConfig(ContainerInterface $container): array
     {

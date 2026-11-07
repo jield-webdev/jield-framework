@@ -38,8 +38,6 @@ class UniqueObject extends ObjectExists implements ObjectManagerAwareInterface
     protected bool $useContext;
 
     /**
-     * Constructor
-     *
      * @param array $options required keys are `object_manager`
      */
     public function __construct(array $options)
@@ -98,7 +96,6 @@ class UniqueObject extends ObjectExists implements ObjectManagerAwareInterface
     /**
      * Gets the identifiers from the matched object.
      *
-     * @return array
      *
      * @throws Exception\RuntimeException
      */
@@ -110,9 +107,8 @@ class UniqueObject extends ObjectExists implements ObjectManagerAwareInterface
     /**
      * Gets the identifiers from the context.
      *
-     * @param array|object $context
+     * @param array<array-key, mixed>|object|null $context
      *
-     * @return array
      *
      * @throws Exception\RuntimeException
      */

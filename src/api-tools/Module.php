@@ -54,6 +54,9 @@ final class Module implements ConfigProviderInterface, BootstrapListenerInterfac
 {
     private ?PrototypeRouteListener $prototypeRouteListener = null;
 
+    /**
+     * @throws \Laminas\ConfigAggregator\InvalidConfigProviderException
+     */
     #[Override]
     public function getConfig(): array
     {
@@ -63,11 +66,18 @@ final class Module implements ConfigProviderInterface, BootstrapListenerInterfac
         ])->getMergedConfig();
     }
 
+    /**
+     * @throws \ReflectionException
+     */
     public function init($moduleManager): void
     {
         $this->getPrototypeRouteListener()->attach(events: Assert::isInstanceOf(Value::call($moduleManager, 'getEventManager'), \Laminas\EventManager\EventManagerInterface::class));
     }
 
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
+     */
     #[Override]
     public function onBootstrap(EventInterface|MvcEvent $e): void
     {
@@ -183,6 +193,9 @@ final class Module implements ConfigProviderInterface, BootstrapListenerInterfac
         $strategy->attach($eventManager, 100);
     }
 
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     public function onRenderMain(MvcEvent $e): void
     {
         /** @mago-var mixed $result */
@@ -197,6 +210,9 @@ final class Module implements ConfigProviderInterface, BootstrapListenerInterfac
         Service::get($services, RenderErrorListener::class)->attach($events);
     }
 
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     public function onRenderApiProblem(MvcEvent $e): void
     {
         $app = $e->getApplication();
@@ -212,6 +228,9 @@ final class Module implements ConfigProviderInterface, BootstrapListenerInterfac
         }
     }
 
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     public function onRenderHal(MvcEvent $e): void
     {
         /** @mago-var mixed $result */

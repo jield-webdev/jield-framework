@@ -16,9 +16,8 @@ class ConfigFactory implements FactoryInterface
     /**
      * Create the application configuration service
      *
-     * @param string $requestedName
-     * @param null|array $options
-     * @return array
+     * @throws \ReflectionException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): array
     {

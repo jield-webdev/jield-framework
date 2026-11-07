@@ -10,6 +10,9 @@ use Psr\Container\ContainerInterface;
 
 class RenderErrorListenerFactory
 {
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     public function __invoke(ContainerInterface $container): RenderErrorListener
     {
         /** @mago-var mixed $config */

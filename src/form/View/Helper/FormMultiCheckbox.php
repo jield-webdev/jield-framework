@@ -26,50 +26,36 @@ class FormMultiCheckbox extends FormInput
 
     /**
      * The attributes applied to option label
-     *
-     * @var null|array
      */
     protected ?array $labelAttributes = null;
 
     /**
      * Where will be label rendered?
-     *
-     * @var string
      */
     protected string $labelPosition = self::LABEL_APPEND;
 
     /**
      * Separator for checkbox elements
-     *
-     * @var string
      */
     protected string $separator = '';
 
     /**
      * Prefixing the element with a hidden element for the unset value?
-     *
-     * @var bool
      */
     protected bool $useHiddenElement = false;
 
     /**
      * The unchecked value used when "UseHiddenElement" is turned on
-     *
-     * @var null|string
      */
     protected ?string $uncheckedValue = null;
 
     /**
      * Form input helper instance
-     *
-     * @var null|FormInput
      */
     protected ?FormInput $inputHelper = null;
 
     /**
      * Form label helper instance
-     *
-     * @var null|FormLabel
      */
     protected ?FormLabel $labelHelper = null;
 
@@ -81,7 +67,7 @@ class FormMultiCheckbox extends FormInput
      * @template T as null|ElementInterface
      * @psalm-param T $element
      * @psalm-return (T is null ? static : string)
-     * @return string|FormMultiCheckbox
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function __invoke(?ElementInterface $element = null, ?string $labelPosition = null): string|static
     {
@@ -100,6 +86,7 @@ class FormMultiCheckbox extends FormInput
      * Render a form <input> element from the provided $element
      *
      * @throws Exception\InvalidArgumentException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function render(ElementInterface $element): string
     {
@@ -136,6 +123,8 @@ class FormMultiCheckbox extends FormInput
 
     /**
      * Render options
+     *
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     protected function renderOptions(
         MultiCheckboxElement $element,
@@ -240,6 +229,8 @@ class FormMultiCheckbox extends FormInput
 
     /**
      * Render a hidden element for empty/unchecked value
+     *
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     protected function renderHiddenElement(MultiCheckboxElement $element): string
     {
@@ -261,8 +252,6 @@ class FormMultiCheckbox extends FormInput
 
     /**
      * Sets the attributes applied to option label.
-     *
-     * @return static
      */
     public function setLabelAttributes(?array $attributes): static
     {
@@ -272,8 +261,6 @@ class FormMultiCheckbox extends FormInput
 
     /**
      * Returns the attributes applied to each option label.
-     *
-     * @return array|null
      */
     public function getLabelAttributes(): ?array
     {
@@ -284,7 +271,6 @@ class FormMultiCheckbox extends FormInput
      * Set value for labelPosition
      *
      * @throws Exception\InvalidArgumentException
-     * @return static
      */
     public function setLabelPosition(string $labelPosition): static
     {
@@ -313,8 +299,6 @@ class FormMultiCheckbox extends FormInput
 
     /**
      * Set separator string for checkbox elements
-     *
-     * @return static
      */
     public function setSeparator(string $separator): static
     {
@@ -333,8 +317,6 @@ class FormMultiCheckbox extends FormInput
     /**
      * Sets the option for prefixing the element with a hidden element
      * for the unset value.
-     *
-     * @return static
      */
     public function setUseHiddenElement(bool $useHiddenElement): static
     {
@@ -353,8 +335,6 @@ class FormMultiCheckbox extends FormInput
 
     /**
      * Sets the unchecked value used when "UseHiddenElement" is turned on.
-     *
-     * @return static
      */
     public function setUncheckedValue(?string $value): static
     {
@@ -397,6 +377,8 @@ class FormMultiCheckbox extends FormInput
 
     /**
      * Retrieve the FormInput helper
+     *
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     protected function getInputHelper(): FormInput
     {
@@ -415,6 +397,8 @@ class FormMultiCheckbox extends FormInput
 
     /**
      * Retrieve the FormLabel helper
+     *
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     protected function getLabelHelper(): FormLabel
     {

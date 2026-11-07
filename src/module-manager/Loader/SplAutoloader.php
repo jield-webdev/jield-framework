@@ -21,8 +21,6 @@ if (interface_exists(SplAutoloader::class)) {
 interface SplAutoloader
 {
     /**
-     * Constructor
-     *
      * Allow configuration of the autoloader via the constructor.
      *
      * @param  null|array|Traversable $options

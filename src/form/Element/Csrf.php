@@ -27,17 +27,13 @@ class Csrf extends Element implements InputProviderInterface, ElementPrepareAwar
         'type' => 'hidden',
     ];
 
-    /** @var array */
     protected array $csrfValidatorOptions = [];
 
-    /** @var null|CsrfValidator */
     protected ?CsrfValidator $csrfValidator = null;
 
     /**
      * Accepted options for Csrf:
      * - csrf_options: an array used in the Csrf
-     *
-     * @return static
      */
     public function setOptions(iterable $options): static
     {
@@ -55,9 +51,6 @@ class Csrf extends Element implements InputProviderInterface, ElementPrepareAwar
         return $this->csrfValidatorOptions;
     }
 
-    /**
-     * @return static
-     */
     public function setCsrfValidatorOptions(array $options): static
     {
         $this->csrfValidatorOptions = $options;
@@ -90,9 +83,6 @@ class Csrf extends Element implements InputProviderInterface, ElementPrepareAwar
         return $this->csrfValidator;
     }
 
-    /**
-     * @return static
-     */
     public function setCsrfValidator(CsrfValidator $validator): static
     {
         $this->csrfValidator = $validator;

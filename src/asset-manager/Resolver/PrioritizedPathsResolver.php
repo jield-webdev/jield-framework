@@ -28,20 +28,15 @@ class PrioritizedPathsResolver implements ResolverInterface, MimeResolverAwareIn
 
     /**
      * Flag indicating whether or not LFI protection for rendering view scripts is enabled
-     *
-     * @var bool
      */
     protected bool $lfiProtectionOn = true;
 
     /**
      * The mime resolver.
-     *
-     * @var MimeResolver
      */
     protected MimeResolver $mimeResolver;
 
     /**
-     * Constructor.
      * Construct object and set a new PriorityQueue.
      */
     public function __construct()
@@ -51,8 +46,6 @@ class PrioritizedPathsResolver implements ResolverInterface, MimeResolverAwareIn
 
     /**
      * Set the mime resolver
-     *
-     * @param MimeResolver $mimeResolver
      */
     #[Override]
     public function setMimeResolver(MimeResolver $mimeResolver): void
@@ -62,8 +55,6 @@ class PrioritizedPathsResolver implements ResolverInterface, MimeResolverAwareIn
 
     /**
      * Get the mime resolver
-     *
-     * @return MimeResolver
      */
     #[Override]
     public function getMimeResolver(): MimeResolver
@@ -73,6 +64,8 @@ class PrioritizedPathsResolver implements ResolverInterface, MimeResolverAwareIn
 
     /**
      * {}
+     *
+     * @throws Exception\InvalidArgumentException
      */
     public function addPath($path): void
     {
@@ -118,9 +111,6 @@ class PrioritizedPathsResolver implements ResolverInterface, MimeResolverAwareIn
 
     /**
      * Add many paths to the stack at once
-     *
-     * @param iterable $paths
-     * @return self
      */
     public function addPaths(iterable $paths): PrioritizedPathsResolver
     {
@@ -135,7 +125,6 @@ class PrioritizedPathsResolver implements ResolverInterface, MimeResolverAwareIn
     /**
      * Rest the path stack to the paths provided
      *
-     * @param iterable $paths
      * @throws Exception\InvalidArgumentException
      */
     public function setPaths(iterable $paths): void
@@ -146,9 +135,6 @@ class PrioritizedPathsResolver implements ResolverInterface, MimeResolverAwareIn
 
     /**
      * Normalize a path for insertion in the stack
-     *
-     * @param string $path
-     * @return string
      */
     protected function normalizePath(string $path): string
     {
@@ -160,9 +146,6 @@ class PrioritizedPathsResolver implements ResolverInterface, MimeResolverAwareIn
 
     /**
      * Set LFI protection flag
-     *
-     * @param bool $flag
-     * @return self
      */
     public function setLfiProtection(bool $flag): PrioritizedPathsResolver
     {
@@ -173,8 +156,6 @@ class PrioritizedPathsResolver implements ResolverInterface, MimeResolverAwareIn
 
     /**
      * Return status of LFI protection flag
-     *
-     * @return bool
      */
     public function isLfiProtectionOn(): bool
     {
@@ -208,6 +189,9 @@ class PrioritizedPathsResolver implements ResolverInterface, MimeResolverAwareIn
         return null;
     }
 
+    /**
+     * @throws Exception\RuntimeException
+     */
     public function collect(): array
     {
         $collection = [];

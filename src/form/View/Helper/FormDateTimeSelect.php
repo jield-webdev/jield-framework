@@ -36,8 +36,6 @@ class FormDateTimeSelect extends AbstractFormDateSelect
 {
     /**
      * Time formatter to use
-     *
-     * @var int
      */
     protected int $timeType;
 
@@ -60,7 +58,8 @@ class FormDateTimeSelect extends AbstractFormDateSelect
      * @template T as null|ElementInterface
      * @psalm-param T $element
      * @psalm-return (T is null ? static : string)
-     * @return string|self
+     * @throws Exception\IntlException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function __invoke(
         ?ElementInterface $element = null,
@@ -87,6 +86,8 @@ class FormDateTimeSelect extends AbstractFormDateSelect
      *
      * @throws Exception\InvalidArgumentException
      * @throws Exception\DomainException
+     * @throws Exception\IntlException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function render(ElementInterface $element): string
     {
@@ -166,9 +167,6 @@ class FormDateTimeSelect extends AbstractFormDateSelect
         return trim(string: $markup);
     }
 
-    /**
-     * @return static
-     */
     public function setTimeType(int $timeType): static
     {
         // The FULL format uses values that are not used
@@ -211,6 +209,8 @@ class FormDateTimeSelect extends AbstractFormDateSelect
 
     /**
      * Parse the pattern
+     *
+     * @throws Exception\IntlException
      */
     protected function parsePattern(bool $renderDelimiters = true): array
     {

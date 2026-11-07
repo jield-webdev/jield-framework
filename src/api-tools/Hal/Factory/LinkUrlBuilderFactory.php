@@ -16,8 +16,7 @@ use Webmozart\Assert\Assert;
 class LinkUrlBuilderFactory
 {
     /**
-     * @param ContainerInterface|ServiceLocatorInterface $container
-     * @return LinkUrlBuilder
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function __invoke(ServiceLocatorInterface|ContainerInterface $container): LinkUrlBuilder
     {

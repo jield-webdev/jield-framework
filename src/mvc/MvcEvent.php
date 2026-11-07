@@ -45,8 +45,6 @@ class MvcEvent extends Event
 
     /**
      * Set application instance
-     *
-     * @return static
      */
     public function setApplication(ApplicationInterface $application): static
     {
@@ -57,8 +55,6 @@ class MvcEvent extends Event
 
     /**
      * Get application instance
-     *
-     * @return ApplicationInterface
      */
     public function getApplication(): ?ApplicationInterface
     {
@@ -67,8 +63,6 @@ class MvcEvent extends Event
 
     /**
      * Get router
-     *
-     * @return RouteStackInterface
      */
     public function getRouter(): RouteStackInterface
     {
@@ -77,8 +71,6 @@ class MvcEvent extends Event
 
     /**
      * Set router
-     *
-     * @return static
      */
     public function setRouter(RouteStackInterface $router): static
     {
@@ -89,8 +81,6 @@ class MvcEvent extends Event
 
     /**
      * Get route match
-     *
-     * @return null|RouteMatch
      */
     public function getRouteMatch(): ?RouteMatch
     {
@@ -99,8 +89,6 @@ class MvcEvent extends Event
 
     /**
      * Set route match
-     *
-     * @return static
      */
     public function setRouteMatch(RouteMatch $matches): static
     {
@@ -111,8 +99,6 @@ class MvcEvent extends Event
 
     /**
      * Get request
-     *
-     * @return Request
      */
     public function getRequest(): Request
     {
@@ -121,8 +107,6 @@ class MvcEvent extends Event
 
     /**
      * Set request
-     *
-     * @return static
      */
     public function setRequest(Request $request): static
     {
@@ -133,8 +117,6 @@ class MvcEvent extends Event
 
     /**
      * Get response
-     *
-     * @return Response
      */
     public function getResponse(): Response
     {
@@ -143,8 +125,6 @@ class MvcEvent extends Event
 
     /**
      * Set response
-     *
-     * @return static
      */
     public function setResponse(Response $response): static
     {
@@ -155,8 +135,6 @@ class MvcEvent extends Event
 
     /**
      * Set the view model
-     *
-     * @return static
      */
     public function setViewModel(Model $viewModel): static
     {
@@ -180,8 +158,6 @@ class MvcEvent extends Event
 
     /**
      * Set result
-     *
-     * @return static
      */
     public function setResult(mixed $result): static
     {
@@ -192,8 +168,6 @@ class MvcEvent extends Event
 
     /**
      * Does the event represent an error response?
-     *
-     * @return bool
      */
     public function isError(): bool
     {
@@ -202,9 +176,6 @@ class MvcEvent extends Event
 
     /**
      * Set the error message (indicating error in handling request)
-     *
-     * @param string $message
-     * @return static
      */
     public function setError(string $message): static
     {
@@ -214,8 +185,6 @@ class MvcEvent extends Event
 
     /**
      * Retrieve the error message, if any
-     *
-     * @return string
      */
     public function getError(): string
     {
@@ -224,8 +193,6 @@ class MvcEvent extends Event
 
     /**
      * Get the currently registered controller name
-     *
-     * @return string
      */
     public function getController(): ?string
     {
@@ -234,9 +201,6 @@ class MvcEvent extends Event
 
     /**
      * Set controller name
-     *
-     * @param string $name
-     * @return static
      */
     public function setController(string $name): static
     {
@@ -246,8 +210,6 @@ class MvcEvent extends Event
 
     /**
      * Get controller class
-     *
-     * @return string
      */
     public function getControllerClass(): ?string
     {
@@ -256,9 +218,6 @@ class MvcEvent extends Event
 
     /**
      * Set controller class
-     *
-     * @param string $class
-     * @return static
      */
     public function setControllerClass(string $class): static
     {

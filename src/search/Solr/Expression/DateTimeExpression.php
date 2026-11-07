@@ -18,9 +18,6 @@ class DateTimeExpression extends Expression implements Stringable
     private readonly DateTime $date;
     private readonly string $format;
 
-    /**
-     * @param DateTimeZone|string $timezone
-     */
     public function __construct(
         DateTime $date,
         ?string $format = null,
@@ -30,6 +27,9 @@ class DateTimeExpression extends Expression implements Stringable
         $this->format = $format ?: static::FORMAT_DEFAULT;
     }
 
+    /**
+     * @throws \DateInvalidTimeZoneException
+     */
     public function __toString(): string
     {
         $date = $this->date;

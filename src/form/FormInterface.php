@@ -23,7 +23,6 @@ interface FormInterface extends FieldsetInterface
      *
      * Typically, also passes data on to the composed input filter.
      *
-     * @return self
      * @throws ExceptionInterface
      */
     public function setData(iterable $data): FormInterface;
@@ -32,15 +31,11 @@ interface FormInterface extends FieldsetInterface
      * Bind an object to the element
      *
      * Allows populating the object with validated values.
-     *
-     * @return mixed
      */
     public function bind(object $object, int $flags = FormInterface::VALUES_NORMALIZED): mixed;
 
     /**
      * Whether or not to bind values to the bound object when validation succeeds
-     *
-     * @return self
      */
     public function setBindOnValidate(int $bindOnValidateFlag): FormInterface;
 
@@ -48,7 +43,6 @@ interface FormInterface extends FieldsetInterface
      * Set input filter
      *
      * @param InputFilterInterface<TFilteredValues> $inputFilter
-     * @return self
      */
     public function setInputFilter(InputFilterInterface $inputFilter): FormInterface;
 
@@ -86,8 +80,6 @@ interface FormInterface extends FieldsetInterface
      * Set the validation group (set of values to validate)
      *
      * Typically, proxies to the composed input filter
-     *
-     * @return self
      */
     public function setValidationGroup(array $group): FormInterface;
 

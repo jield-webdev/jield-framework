@@ -12,6 +12,10 @@ use Psr\Container\ContainerInterface;
 
 final class UpdateSearchHandlerFactory implements FactoryInterface
 {
+    /**
+     * @throws \ReflectionException
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): mixed
     {
         return Value::instantiate($requestedName, [

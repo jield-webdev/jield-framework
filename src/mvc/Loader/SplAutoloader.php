@@ -17,11 +17,7 @@ if (interface_exists(SplAutoloader::class)) {
 interface SplAutoloader
 {
     /**
-     * Constructor
-     *
      * Allow configuration of the autoloader via the constructor.
-     *
-     * @param iterable|null $options
      */
     public function __construct(?iterable $options = null);
 
@@ -31,7 +27,6 @@ interface SplAutoloader
      * In most cases, $options should be either an associative array or
      * Traversable object.
      *
-     * @param iterable $options
      * @return SplAutoloader
      */
     public function setOptions(iterable $options);
@@ -39,7 +34,6 @@ interface SplAutoloader
     /**
      * Autoload a class
      *
-     * @param string $class
      * @return  mixed
      *          False [if unable to load $class]
      *          get_class($class) [if $class is successfully loaded]
@@ -53,8 +47,6 @@ interface SplAutoloader
      * <code>
      * spl_autoload_register(array($this, 'autoload'));
      * </code>
-     *
-     * @return void
      */
     public function register(): void;
 }

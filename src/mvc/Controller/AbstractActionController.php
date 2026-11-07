@@ -18,9 +18,6 @@ use function method_exists;
  */
 abstract class AbstractActionController extends AbstractController
 {
-    /**
-     * {@inheritDoc}
-     */
     protected string|array|null $eventIdentifier = self::class;
 
     /**
@@ -38,7 +35,7 @@ abstract class AbstractActionController extends AbstractController
     /**
      * Action called if matched action does not exist
      *
-     * @return ViewModel
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function notFoundAction(): ViewModel
     {
@@ -53,8 +50,8 @@ abstract class AbstractActionController extends AbstractController
     /**
      * Execute the request
      *
-     * @return mixed
      * @throws Exception\DomainException
+     * @throws \ReflectionException
      */
     public function onDispatch(MvcEvent $e): mixed
     {

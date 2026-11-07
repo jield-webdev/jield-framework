@@ -29,8 +29,6 @@ class ServiceManagerConfig
      *
      * In addition to these, the constructor registers several factories and
      * initializers; see that method for details.
-     *
-     * @var array
      */
     protected array $config = [
         'abstract_factories' => [],
@@ -59,8 +57,6 @@ class ServiceManagerConfig
     ];
 
     /**
-     * Constructor
-     *
      * Merges internal arrays with those passed via configuration, and also
      * defines:
      *
@@ -90,7 +86,7 @@ class ServiceManagerConfig
         );
 
         $this->config['initializers'] = ArrayUtils::merge(\Webmozart\Assert\Assert::isArray($this->config['initializers']), [
-            'EventManagerAwareInitializer' => static function (ContainerInterface $container, mixed $instance): void {
+            'EventManagerAwareInitializer' => /** @throws \Psr\Container\ContainerExceptionInterface */ static function (ContainerInterface $container, mixed $instance): void {
                 if (!$instance instanceof EventManagerAwareInterface) {
                     return;
                 }
@@ -121,7 +117,7 @@ class ServiceManagerConfig
      * Before doing so, it adds a "service" entry for the ServiceManager class,
      * pointing to the provided service container.
      *
-     * @return ServiceManager
+     * @throws \Laminas\ServiceManager\Exception\InvalidServiceException
      */
     public function configureServiceManager(ServiceManager $services): ServiceManager
     {
@@ -140,8 +136,6 @@ class ServiceManagerConfig
 
     /**
      * Return all service configuration
-     *
-     * @return array
      */
     public function toArray(): array
     {

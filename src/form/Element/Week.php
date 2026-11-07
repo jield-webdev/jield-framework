@@ -28,6 +28,8 @@ class Week extends AbstractDateTime
 
     /**
      * Retrieves a DateStep Validator configured for a Week Input type
+     *
+     * @throws \DateMalformedIntervalStringException
      */
     protected function getStepValidator(): ValidatorInterface
     {
@@ -46,6 +48,7 @@ class Week extends AbstractDateTime
      * @see https://bugs.php.net/bug.php?id=74511
      *
      * @return array<ValidatorInterface>
+     * @throws \DateMalformedIntervalStringException
      */
     protected function getValidators(): array
     {

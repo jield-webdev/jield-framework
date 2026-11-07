@@ -19,6 +19,10 @@ final class SyncIndex extends Command
         parent::__construct();
     }
 
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \Exception
+     */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $output->writeln(messages: '<info>Syncing the search engine index</info>');

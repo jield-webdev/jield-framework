@@ -13,14 +13,12 @@ use Webmozart\Assert\Assert;
 
 class Layout extends AbstractPlugin
 {
-    /** @var MvcEvent */
     protected ?MvcEvent $event = null;
 
     /**
      * Set the layout template
      *
      * @param  string $template
-     * @return static
      */
     public function setTemplate($template): static
     {
@@ -36,7 +34,6 @@ class Layout extends AbstractPlugin
      * Otherwise, attempts to set the template for that view model.
      *
      * @param  null|string $template
-     * @return Model|static
      */
     public function __invoke($template = null): Model|static
     {
@@ -49,7 +46,6 @@ class Layout extends AbstractPlugin
     /**
      * Get the event
      *
-     * @return MvcEvent
      * @throws Exception\DomainException If unable to find event.
      */
     protected function getEvent(): MvcEvent
@@ -79,7 +75,6 @@ class Layout extends AbstractPlugin
     /**
      * Retrieve the root view model from the event
      *
-     * @return Model
      * @throws Exception\DomainException
      */
     protected function getViewModel(): Model

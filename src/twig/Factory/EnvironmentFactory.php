@@ -20,6 +20,11 @@ use function sprintf;
 
 class EnvironmentFactory implements FactoryInterface
 {
+    /**
+     * @throws RuntimeException
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
+     */
     public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): Environment
     {
         $moduleOptions = $options === null
@@ -42,7 +47,7 @@ class EnvironmentFactory implements FactoryInterface
 
         if ($moduleOptions->enableFallbackFunctions()) {
             $helperPluginManager = Service::get($container, HelperPluginManager::class, 'ViewHelperManager');
-            $env->registerUndefinedFunctionCallback(static function ($name) use ($helperPluginManager) {
+            $env->registerUndefinedFunctionCallback(/** @throws \Psr\Container\ContainerExceptionInterface */ static function ($name) use ($helperPluginManager) {
                 if ($helperPluginManager->has($name)) {
                     return new TwigFunction($name, Assert::isCallable($helperPluginManager->get($name)), ['is_safe' => [
                         'all',

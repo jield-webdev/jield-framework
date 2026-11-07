@@ -16,6 +16,10 @@ use const PATHINFO_EXTENSION;
 
 class MapLoaderFactory implements FactoryInterface
 {
+    /**
+     * @throws \Twig\Error\LoaderError
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): MapLoader
     {
         $moduleOptions = $options === null

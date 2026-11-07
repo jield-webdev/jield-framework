@@ -17,7 +17,7 @@ class Params extends AbstractPlugin
      * Grabs a param from route match by default.
      *
      * @param string $param
-     * @return mixed
+     * @throws RuntimeException
      */
     public function __invoke($param = null, mixed $default = null): mixed
     {
@@ -27,14 +27,20 @@ class Params extends AbstractPlugin
         return $this->fromRoute($param, $default);
     }
 
-    /** @return mixed All file metadata, a single file, or the default value. */
+    /**
+     * @return mixed All file metadata, a single file, or the default value.
+     * @throws RuntimeException
+     */
     public function fromFiles(?string $name = null, mixed $default = null): mixed
     {
         $request = $this->httpRequest();
         return $name === null ? $request->getFiles()->toArray() : $request->getFiles($name, $default);
     }
 
-    /** @return mixed All headers, a single header, or the default value. */
+    /**
+     * @return mixed All headers, a single header, or the default value.
+     * @throws RuntimeException
+     */
     public function fromHeader(?string $header = null, mixed $default = null): mixed
     {
         $headers = $this->httpRequest()->getHeaders();
@@ -44,18 +50,27 @@ class Params extends AbstractPlugin
         return $headers->has($header) ? $headers->get($header) : $default;
     }
 
+    /**
+     * @throws RuntimeException
+     */
     public function fromPost(?string $param = null, mixed $default = null): mixed
     {
         $request = $this->httpRequest();
         return $param === null ? $request->getPost()->toArray() : $request->getPost($param, $default);
     }
 
+    /**
+     * @throws RuntimeException
+     */
     public function fromQuery(?string $param = null, mixed $default = null): mixed
     {
         $request = $this->httpRequest();
         return $param === null ? $request->getQuery()->toArray() : $request->getQuery($param, $default);
     }
 
+    /**
+     * @throws RuntimeException
+     */
     private function httpRequest(): Request
     {
         $controller = $this->getController();
@@ -74,7 +89,6 @@ class Params extends AbstractPlugin
      *
      * @param string $param Parameter name to retrieve, or null to get all.
      * @param mixed $default Default value to use when the parameter is missing.
-     * @return mixed
      * @throws RuntimeException
      */
     public function fromRoute($param = null, mixed $default = null): mixed

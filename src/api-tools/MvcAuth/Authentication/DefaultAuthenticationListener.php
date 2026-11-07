@@ -43,7 +43,6 @@ class DefaultAuthenticationListener
      *
      * Adds the authentication adapter, and updates the list of supported
      * authentication types based on what the adapter provides.
-     *
      */
     public function attach(AdapterInterface $adapter): void
     {
@@ -65,9 +64,6 @@ class DefaultAuthenticationListener
 
     /**
      * Set the API/version to authentication type map.
-     *
-     * @param array $map
-     * @return void
      */
     public function setAuthMap(array $map): void
     {
@@ -159,7 +155,6 @@ class DefaultAuthenticationListener
 
     /**
      * Determine the authentication type based on request information
-     *
      */
     private function getTypeFromRequest(HttpRequest $request): false|string
     {

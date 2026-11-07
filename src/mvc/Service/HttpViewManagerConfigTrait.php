@@ -15,6 +15,8 @@ trait HttpViewManagerConfigTrait
 {
     /**
      * Retrieve view_manager configuration, if present.
+     *
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     private function getConfig(ContainerInterface $container): array|ArrayAccess
     {

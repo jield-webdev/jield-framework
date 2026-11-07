@@ -38,7 +38,8 @@ class FormElementErrors extends AbstractHelper
      * @template T as null|ElementInterface
      * @psalm-param T $element
      * @psalm-return (T is null ? static : string)
-     * @return string|FormElementErrors
+     * @throws Exception\ExceptionInterface
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function __invoke(?ElementInterface $element = null, array $attributes = []): string|static
     {
@@ -56,7 +57,8 @@ class FormElementErrors extends AbstractHelper
      * composed, messages retrieved from the element will be translated; if
      * either is not the case, they will not.
      *
-     * @throws Exception\DomainException
+     * @throws Exception\ExceptionInterface
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function render(ElementInterface $element, array $attributes = []): string
     {
@@ -96,7 +98,6 @@ class FormElementErrors extends AbstractHelper
      * Set the attributes that will go on the message open format
      *
      * @param  array $attributes key value pairs of attributes
-     * @return static
      */
     public function setAttributes(array $attributes): static
     {
@@ -114,8 +115,6 @@ class FormElementErrors extends AbstractHelper
 
     /**
      * Set the string used to close message representation
-     *
-     * @return static
      */
     public function setMessageCloseString(string $messageCloseString): static
     {
@@ -133,8 +132,6 @@ class FormElementErrors extends AbstractHelper
 
     /**
      * Set the formatted string used to open message representation
-     *
-     * @return static
      */
     public function setMessageOpenFormat(string $messageOpenFormat): static
     {
@@ -152,8 +149,6 @@ class FormElementErrors extends AbstractHelper
 
     /**
      * Set the string used to separate messages
-     *
-     * @return static
      */
     public function setMessageSeparatorString(string $messageSeparatorString): static
     {
@@ -171,8 +166,6 @@ class FormElementErrors extends AbstractHelper
 
     /**
      * Set the flag detailing whether or not to translate error messages.
-     *
-     * @return static
      */
     public function setTranslateMessages(bool $flag): static
     {

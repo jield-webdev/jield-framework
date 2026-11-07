@@ -30,6 +30,7 @@ final readonly class PhpRenderer implements RendererInterface
      * @template T of object
      * @param class-string<T>|null $type
      * @return ($type is null ? mixed : T)
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function plugin(string $name, ?string $type = null): mixed
     {
@@ -40,11 +41,17 @@ final readonly class PhpRenderer implements RendererInterface
         return $this->plugins->get($name);
     }
 
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     public function headLink(): HeadLink
     {
         return $this->plugin('headLink', HeadLink::class);
     }
 
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     public function headScript(): HeadScript
     {
         return $this->plugin('headScript', HeadScript::class);
@@ -55,6 +62,9 @@ final readonly class PhpRenderer implements RendererInterface
         return $this->plugins;
     }
 
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     public function __call(string $name, array $arguments): mixed
     {
         /** @mago-var mixed $helper */

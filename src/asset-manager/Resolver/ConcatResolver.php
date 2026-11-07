@@ -25,9 +25,6 @@ class ConcatResolver implements
     AssetFilterManagerAwareInterface,
     MimeResolverAwareInterface
 {
-    /**
-     * @var null|ResolverInterface
-     */
     protected ?ResolverInterface $aggregateResolver = null;
 
     /**
@@ -46,11 +43,7 @@ class ConcatResolver implements
     protected MimeResolver $mimeResolver;
 
     /**
-     * Constructor
-     *
      * Instantiate and optionally populate concats.
-     *
-     * @param iterable $concats
      */
     public function __construct(iterable $concats = [])
     {
@@ -59,8 +52,6 @@ class ConcatResolver implements
 
     /**
      * Set the mime resolver
-     *
-     * @param MimeResolver $mimeResolver
      */
     #[Override]
     public function setMimeResolver(MimeResolver $mimeResolver): void
@@ -70,8 +61,6 @@ class ConcatResolver implements
 
     /**
      * Get the mime resolver
-     *
-     * @return MimeResolver
      */
     #[Override]
     public function getMimeResolver(): MimeResolver
@@ -84,7 +73,6 @@ class ConcatResolver implements
      *
      * Concats should be arrays or Traversable objects with name => path pairs
      *
-     * @param iterable $concats
      * @throws Exception\InvalidArgumentException
      */
     public function setConcats(iterable $concats): void
@@ -94,8 +82,6 @@ class ConcatResolver implements
 
     /**
      * Set the aggregate resolver.
-     *
-     * @param ResolverInterface $aggregateResolver
      */
     #[Override]
     public function setAggregateResolver(ResolverInterface $aggregateResolver): void
@@ -122,6 +108,9 @@ class ConcatResolver implements
 
     /**
      * {@inheritDoc}
+     * @throws Exception\RuntimeException
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
      */
     #[Override]
     public function resolve(string $fileName): ?\Assetic\Contracts\Asset\AssetInterface
@@ -163,8 +152,6 @@ class ConcatResolver implements
 
     /**
      * Set the AssetFilterManager.
-     *
-     * @param AssetFilterManager $filterManager
      */
     #[Override]
     public function setAssetFilterManager(AssetFilterManager $filterManager): void

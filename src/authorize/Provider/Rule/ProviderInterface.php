@@ -10,8 +10,5 @@ namespace Jield\Authorize\Provider\Rule;
  */
 interface ProviderInterface
 {
-    /**
-     * @return array
-     */
     public function getRules(): array;
 }

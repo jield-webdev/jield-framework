@@ -24,8 +24,6 @@ trait LabelAwareTrait
 
     /**
      * Set the attributes to use with the label
-     *
-     * @return static
      */
     public function setLabelAttributes(array $labelAttributes): static
     {
@@ -46,7 +44,6 @@ trait LabelAwareTrait
      *
      * Implementation will decide if this will overwrite or merge.
      *
-     * @return static
      * @throws Exception\InvalidArgumentException
      */
     public function setLabelOptions(iterable $arrayOrTraversable): static
@@ -71,8 +68,6 @@ trait LabelAwareTrait
 
     /**
      * Clear all label options
-     *
-     * @return static
      */
     public function clearLabelOptions(): static
     {
@@ -82,8 +77,6 @@ trait LabelAwareTrait
 
     /**
      * Remove many attributes at once
-     *
-     * @return static
      */
     public function removeLabelOptions(array $keys): static
     {
@@ -97,8 +90,6 @@ trait LabelAwareTrait
 
     /**
      * Set a single label optionn
-     *
-     * @return static
      */
     public function setLabelOption(string $key, mixed $value): static
     {
@@ -108,8 +99,6 @@ trait LabelAwareTrait
 
     /**
      * Retrieve a single label option
-     *
-     * @return mixed|null
      */
     public function getLabelOption(string $key): mixed
     {
@@ -121,8 +110,6 @@ trait LabelAwareTrait
 
     /**
      * Remove a single label option
-     *
-     * @return static
      */
     public function removeLabelOption(string $key): static
     {

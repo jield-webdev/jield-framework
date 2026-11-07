@@ -11,9 +11,6 @@ namespace Jield\Mvc\Navigation\Service;
  */
 class DefaultNavigationFactory extends AbstractNavigationFactory
 {
-    /**
-     * @return string
-     */
     protected function getName(): string
     {
         return 'default';

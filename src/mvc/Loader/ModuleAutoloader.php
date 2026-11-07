@@ -43,11 +43,7 @@ class ModuleAutoloader implements SplAutoloader
     protected array $moduleClassMap = [];
 
     /**
-     * Constructor
-     *
      * Allow configuration of the autoloader via the constructor.
-     *
-     * @param iterable|null $options
      */
     public function __construct(?iterable $options = null)
     {
@@ -87,9 +83,6 @@ class ModuleAutoloader implements SplAutoloader
      *
      * In most cases, $options should be either an associative array or
      * Traversable object.
-     *
-     * @param iterable $options
-     * @return static
      */
     public function setOptions(iterable $options): static
     {
@@ -99,8 +92,6 @@ class ModuleAutoloader implements SplAutoloader
 
     /**
      * Retrieves the class map for all loaded modules.
-     *
-     * @return array
      */
     public function getModuleClassMap(): array
     {
@@ -109,9 +100,6 @@ class ModuleAutoloader implements SplAutoloader
 
     /**
      * Sets the class map used to speed up the module autoloading.
-     *
-     * @param array $classmap
-     * @return static
      */
     public function setModuleClassMap(array $classmap): static
     {
@@ -123,10 +111,10 @@ class ModuleAutoloader implements SplAutoloader
     /**
      * Autoload a class
      *
-     * @param string $class
      * @return  mixed
      *          False [if unable to load $class]
      *          get_class($class) [if $class is successfully loaded]
+     * @throws \UnexpectedValueException
      */
     public function autoload(string $class): mixed
     {
@@ -238,11 +226,10 @@ class ModuleAutoloader implements SplAutoloader
     /**
      * loadModuleFromDir
      *
-     * @param string $dirPath
-     * @param string $class
      * @return  mixed
      *          False [if unable to load $class]
      *          get_class($class) [if $class is successfully loaded]
+     * @throws \UnexpectedValueException
      */
     protected function loadModuleFromDir(string $dirPath, string $class): mixed
     {
@@ -271,8 +258,6 @@ class ModuleAutoloader implements SplAutoloader
     /**
      * loadModuleFromPhar
      *
-     * @param string $pharPath
-     * @param string $class
      * @return  mixed
      *          False [if unable to load $class]
      *          get_class($class) [if $class is successfully loaded]
@@ -327,8 +312,6 @@ class ModuleAutoloader implements SplAutoloader
 
     /**
      * Register the autoloader with spl_autoload registry
-     *
-     * @return void
      */
     public function register(): void
     {
@@ -338,7 +321,7 @@ class ModuleAutoloader implements SplAutoloader
     /**
      * Unregister the autoloader with spl_autoload registry
      *
-     * @return void
+     * @throws \UnexpectedValueException
      */
     public function unregister(): void
     {
@@ -348,8 +331,6 @@ class ModuleAutoloader implements SplAutoloader
     /**
      * registerPaths
      *
-     * @param Traversable|array $paths
-     * @return static
      * @throws InvalidArgumentException
      */
     public function registerPaths(Traversable|array $paths): static
@@ -372,9 +353,6 @@ class ModuleAutoloader implements SplAutoloader
     /**
      * registerPath
      *
-     * @param string $path
-     * @param bool|string $moduleName
-     * @return static
      * @throws InvalidArgumentException
      */
     public function registerPath(string $path, bool|string $moduleName = false): static
@@ -400,8 +378,6 @@ class ModuleAutoloader implements SplAutoloader
      * getPaths
      *
      * This is primarily for unit testing, but could have other uses.
-     *
-     * @return array
      */
     public function getPaths(): array
     {
@@ -410,9 +386,6 @@ class ModuleAutoloader implements SplAutoloader
 
     /**
      * Returns the base module name from the path to a phar
-     *
-     * @param string $pharPath
-     * @return string
      */
     protected function pharFileToModuleName(string $pharPath): string
     {
@@ -426,9 +399,7 @@ class ModuleAutoloader implements SplAutoloader
     /**
      * Normalize a path for insertion in the stack
      *
-     * @param string $path
      * @param bool $trailingSlash Whether trailing slash should be included
-     * @return string
      */
     public static function normalizePath(string $path, bool $trailingSlash = true): string
     {

@@ -21,6 +21,10 @@ final class TokenExchangeController extends AbstractActionController
         private readonly TokenExchangeInterface $exchange,
     ) {}
 
+    /**
+     * @throws JsonException
+     * @throws \ReflectionException
+     */
     public function tokenAction(): Response
     {
         $request = $this->getRequest();
@@ -76,6 +80,9 @@ final class TokenExchangeController extends AbstractActionController
         }
     }
 
+    /**
+     * @throws JsonException
+     */
     private function json(int $status, array $data): Response
     {
         /** @var Response $response */

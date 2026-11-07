@@ -44,6 +44,9 @@ class Tracker
         return $this->customVariables;
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     public function addCustomVariable(CustomVariable $variable): void
     {
         $index = $variable->getIndex();
@@ -74,6 +77,9 @@ class Tracker
         return $this->transactions;
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     public function addTransaction(Transaction $transaction): void
     {
         $id = $transaction->getId();

@@ -18,11 +18,6 @@ class HttpDefaultRenderingStrategyFactory implements FactoryInterface
 {
     use HttpViewManagerConfigTrait;
 
-    /**
-     * @param  string $requestedName
-     * @param  null|array $options
-     * @return DefaultRenderingStrategy
-     */
     public function __invoke(
         ContainerInterface $container,
         string $requestedName,

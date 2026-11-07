@@ -28,13 +28,10 @@ class MultiCheckbox extends Checkbox
         'type' => 'multi_checkbox',
     ];
 
-    /** @var bool */
     protected bool $disableInArrayValidator = false;
 
-    /** @var bool */
     protected bool $useHiddenElement = false;
 
-    /** @var null|string */
     protected ?string $uncheckedValue = null;
 
     /** @var ValueOptionSpec */
@@ -50,7 +47,6 @@ class MultiCheckbox extends Checkbox
 
     /**
      * @param ValueOptionSpec $options
-     * @return static
      */
     public function setValueOptions(array $options): static
     {
@@ -67,8 +63,6 @@ class MultiCheckbox extends Checkbox
      *
      * This method will only unset a value option when the element was created with a simple array of key-value pairs
      * for value options, for example ['value1' => 'label1', 'value2' => 'label2']
-     *
-     * @return static
      */
     public function unsetValueOption(string $key): static
     {
@@ -129,8 +123,6 @@ class MultiCheckbox extends Checkbox
 
     /**
      * Set the flag to allow for disabling the automatic addition of an InArray validator.
-     *
-     * @return static
      */
     public function setDisableInArrayValidator(bool $disableOption): static
     {

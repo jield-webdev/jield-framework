@@ -26,10 +26,8 @@ use function sprintf;
 /** @final */
 class Factory
 {
-    /** @var null|InputFilterFactory */
     protected ?InputFilterFactory $inputFilterFactory = null;
 
-    /** @var null|FormElementManager */
     protected ?FormElementManager $formElementManager = null;
 
     public function __construct(
@@ -47,8 +45,6 @@ class Factory
 
     /**
      * Set input filter factory to use when creating forms
-     *
-     * @return static
      */
     public function setInputFilterFactory(InputFilterFactory $inputFilterFactory): static
     {
@@ -71,8 +67,6 @@ class Factory
 
     /**
      * Set the form element manager
-     *
-     * @return static
      */
     public function setFormElementManager(FormElementManager $formElementManager): static
     {
@@ -99,8 +93,10 @@ class Factory
      * type is being requested; if none is provided, assumes the spec
      * represents simply an element.
      *
-     * @param Traversable|ArrayAccess|array $spec
-     * @throws Exception\DomainException
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws Exception\ExceptionInterface
+     * @throws \Laminas\InputFilter\Exception\RuntimeException
+     * @throws \ReflectionException
      */
     public function create(Traversable|ArrayAccess|array $spec): ElementInterface
     {
@@ -123,6 +119,11 @@ class Factory
 
     /**
      * Create an element
+     *
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws Exception\ExceptionInterface
+     * @throws \Laminas\InputFilter\Exception\RuntimeException
+     * @throws \ReflectionException
      */
     public function createElement(array $spec): ElementInterface
     {
@@ -133,6 +134,11 @@ class Factory
 
     /**
      * Create a fieldset
+     *
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws Exception\ExceptionInterface
+     * @throws \Laminas\InputFilter\Exception\RuntimeException
+     * @throws \ReflectionException
      */
     public function createFieldset(array $spec): FieldsetInterface
     {
@@ -143,6 +149,11 @@ class Factory
 
     /**
      * Create a form
+     *
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws Exception\ExceptionInterface
+     * @throws \Laminas\InputFilter\Exception\RuntimeException
+     * @throws \ReflectionException
      */
     public function createForm(array $spec): FormInterface
     {
@@ -160,7 +171,6 @@ class Factory
      * - options: an array or Traversable object of element options
      * - attributes: an array or Traversable object of element attributes to assign
      *
-     * @param Traversable|ArrayAccess|array $spec
      * @throws Exception\DomainException
      */
     public function configureElement(ElementInterface $element, Traversable|ArrayAccess|array $spec): ElementInterface
@@ -205,8 +215,10 @@ class Factory
      *   - flags: (optional) array of flags to pass to FieldsetInterface::add()
      *   - spec: the actual element specification, per {@link configureElement()}
      *
-     * @param Traversable|ArrayAccess|array $spec
-     * @throws Exception\DomainException
+     * @throws Exception\ExceptionInterface
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
+     * @throws \Laminas\InputFilter\Exception\RuntimeException
      */
     public function configureFieldset(
         FieldsetInterface $fieldset,
@@ -266,8 +278,10 @@ class Factory
      * - input_filter: input filter instance, named input filter class, or
      *   array specification for the input filter factory
      * - hydrator: hydrator instance or named hydrator class
-     *
-     * @param Traversable|ArrayAccess|array $spec
+     * @throws \Laminas\InputFilter\Exception\RuntimeException
+     * @throws Exception\ExceptionInterface
+     * @throws \ReflectionException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function configureForm(FormInterface $form, Traversable|ArrayAccess|array $spec): FormInterface
     {
@@ -297,9 +311,7 @@ class Factory
      *
      * Ensures we have an array, Traversable, or ArrayAccess object, and returns it.
      *
-     * @param Traversable|ArrayAccess|array $spec
      * @param  string $method Method invoking the validator
-     * @return array|ArrayAccess
      * @throws Exception\InvalidArgumentException For invalid $spec.
      */
     protected function validateSpecification(Traversable|ArrayAccess|array $spec, string $method): ArrayAccess|array
@@ -318,8 +330,11 @@ class Factory
     /**
      * Takes a list of element specifications, creates the elements, and injects them into the provided fieldset
      *
-     * @param Traversable|ArrayAccess|array $elements
      * @param  string $method Method invoking this one (for exception messages)
+     * @throws Exception\ExceptionInterface
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \Laminas\InputFilter\Exception\RuntimeException
+     * @throws \ReflectionException
      */
     protected function prepareAndInjectElements(
         Traversable|ArrayAccess|array $elements,
@@ -351,8 +366,11 @@ class Factory
     /**
      * Takes a list of fieldset specifications, creates the fieldsets, and injects them into the master fieldset
      *
-     * @param Traversable|ArrayAccess|array $fieldsets
      * @param  string $method Method invoking this one (for exception messages)
+     * @throws Exception\ExceptionInterface
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \Laminas\InputFilter\Exception\RuntimeException
+     * @throws \ReflectionException
      */
     public function prepareAndInjectFieldsets(
         Traversable|ArrayAccess|array $fieldsets,
@@ -380,6 +398,7 @@ class Factory
      * by that name, and injects the class instance as the bound object.
      *
      * @throws Exception\DomainException
+     * @throws \ReflectionException
      */
     protected function prepareAndInjectObject(string $objectName, FieldsetInterface $fieldset, string $method): void
     {
@@ -400,9 +419,10 @@ class Factory
      * Takes a string indicating a hydrator class name (or a concrete instance), try first to instantiates the class
      * by pulling it from service manager, and injects the hydrator instance into the form.
      *
-     * @param  string|array|HydratorInterface $hydratorOrName
      * @throws Exception\DomainException If $hydratorOrName is not a string, does not resolve to a known class, or
      *                                   the class does not implement Hydrator\HydratorInterface.
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
      */
     protected function prepareAndInjectHydrator(
         HydratorInterface|array|string $hydratorOrName,
@@ -455,9 +475,10 @@ class Factory
      * Takes a string indicating a factory class name (or a concrete instance), try first to instantiates the class
      * by pulling it from service manager, and injects the factory instance into the fieldset.
      *
-     * @param array|string|Factory $factoryOrName
      * @throws Exception\DomainException If $factoryOrName is not a string, does not resolve to a known class, or
      *                                   the class does not extend Form\Factory.
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
      */
     protected function prepareAndInjectFactory(
         Factory|array|string $factoryOrName,
@@ -501,8 +522,9 @@ class Factory
      * Otherwise, $spec is passed on to the attached InputFilter Factory
      * instance in order to create the input filter.
      *
-     * @param Traversable|array|string $spec
      * @throws Exception\DomainException For unknown InputFilter class or invalid InputFilter instance.
+     * @throws \Laminas\InputFilter\Exception\RuntimeException
+     * @throws \ReflectionException
      */
     protected function prepareAndInjectInputFilter(
         Traversable|array|string $spec,

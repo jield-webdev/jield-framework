@@ -44,9 +44,6 @@ class ContentValidationListenerFactory implements FactoryInterface
      *
      * Looks for api-tools-rest configuration, and creates a list of controller
      * service / identifier name pairs to pass to the listener.
-     *
-     * @param array $config
-     * @return array
      */
     protected function getRestServicesFromConfig(array $config): array
     {

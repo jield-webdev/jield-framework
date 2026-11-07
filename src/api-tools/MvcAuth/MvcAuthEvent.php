@@ -76,11 +76,17 @@ class MvcAuthEvent extends Event
         return $this->mvcEvent;
     }
 
+    /**
+     * @throws \ReflectionException
+     */
     public function getIdentity(): mixed
     {
         return Value::call($this->authentication, 'getIdentity');
     }
 
+    /**
+     * @throws \ReflectionException
+     */
     public function setIdentity(IdentityInterface $identity): static
     {
         Value::call(Value::call($this->authentication, 'getStorage'), 'write', [$identity]);

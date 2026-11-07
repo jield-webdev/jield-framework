@@ -22,7 +22,6 @@ interface ServiceListenerInterface extends ListenerAggregateInterface
      * @param string $key Configuration key
      * @param string $moduleInterface FQCN as string
      * @param string $method Method name
-     * @return ServiceListenerInterface
      */
     public function addServiceManager(
         ServiceManager|AbstractPluginManager|string $serviceManager,
@@ -31,9 +30,5 @@ interface ServiceListenerInterface extends ListenerAggregateInterface
         string $method,
     ): ServiceListenerInterface;
 
-    /**
-     * @param array $configuration
-     * @return ServiceListenerInterface
-     */
     public function setDefaultServiceConfig(array $configuration): ServiceListenerInterface;
 }

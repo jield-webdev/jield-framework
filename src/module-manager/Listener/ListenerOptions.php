@@ -47,8 +47,6 @@ class ListenerOptions extends AbstractOptions
     /**
      * Set an array of paths where modules reside
      *
-     * @param Traversable|array $modulePaths
-     * @return static
      * @throws Exception\InvalidArgumentException
      */
     public function setModulePaths(Traversable|array $modulePaths): static
@@ -59,8 +57,6 @@ class ListenerOptions extends AbstractOptions
 
     /**
      * Get the glob patterns to load additional config files
-     *
-     * @return array
      */
     public function getConfigGlobPaths(): array
     {
@@ -69,8 +65,6 @@ class ListenerOptions extends AbstractOptions
 
     /**
      * Get the static paths to load additional config files
-     *
-     * @return array
      */
     public function getConfigStaticPaths(): array
     {
@@ -80,8 +74,6 @@ class ListenerOptions extends AbstractOptions
     /**
      * Set the glob patterns to use for loading additional config files
      *
-     * @param Traversable|array $configGlobPaths
-     * @return static
      * @throws Exception\InvalidArgumentException
      */
     public function setConfigGlobPaths(Traversable|array $configGlobPaths): static
@@ -93,8 +85,6 @@ class ListenerOptions extends AbstractOptions
     /**
      * Set the static paths to use for loading additional config files
      *
-     * @param Traversable|array $configStaticPaths
-     * @return static
      * @throws Exception\InvalidArgumentException
      */
     public function setConfigStaticPaths(Traversable|array $configStaticPaths): static
@@ -107,8 +97,6 @@ class ListenerOptions extends AbstractOptions
 
     /**
      * Get any extra config to merge in.
-     *
-     * @return array|Traversable
      */
     public function getExtraConfig(): Traversable|array
     {
@@ -119,8 +107,6 @@ class ListenerOptions extends AbstractOptions
      * Add some extra config array to the main config. This is mainly useful
      * for unit testing purposes.
      *
-     * @param Traversable|array $extraConfig
-     * @return static
      * @throws Exception\InvalidArgumentException
      */
     public function setExtraConfig(Traversable|array $extraConfig): static
@@ -131,8 +117,6 @@ class ListenerOptions extends AbstractOptions
 
     /**
      * Check if the config cache is enabled
-     *
-     * @return bool
      */
     public function getConfigCacheEnabled(): bool
     {
@@ -141,9 +125,6 @@ class ListenerOptions extends AbstractOptions
 
     /**
      * Set if the config cache should be enabled or not
-     *
-     * @param bool $enabled
-     * @return static
      */
     public function setConfigCacheEnabled(bool $enabled): static
     {
@@ -153,8 +134,6 @@ class ListenerOptions extends AbstractOptions
 
     /**
      * Get key used to create the cache file name
-     *
-     * @return string
      */
     public function getConfigCacheKey(): string
     {
@@ -165,7 +144,6 @@ class ListenerOptions extends AbstractOptions
      * Set key used to create the cache file name
      *
      * @param string $configCacheKey the value to be set
-     * @return static
      */
     public function setConfigCacheKey(string $configCacheKey): static
     {
@@ -178,8 +156,6 @@ class ListenerOptions extends AbstractOptions
      *
      * Should this be an option, or should the dir option include the
      * filename, or should it simply remain hard-coded? Thoughts?
-     *
-     * @return string
      */
     public function getConfigCacheFile(): string
     {
@@ -192,8 +168,6 @@ class ListenerOptions extends AbstractOptions
 
     /**
      * Get the path where cache file(s) are stored
-     *
-     * @return string|null
      */
     public function getCacheDir(): ?string
     {
@@ -204,7 +178,6 @@ class ListenerOptions extends AbstractOptions
      * Set the path where cache files can be stored
      *
      * @param string|null $cacheDir the value to be set
-     * @return static
      */
     public function setCacheDir(?string $cacheDir): static
     {
@@ -215,8 +188,6 @@ class ListenerOptions extends AbstractOptions
 
     /**
      * Check if the module class map cache is enabled
-     *
-     * @return bool
      */
     public function getModuleMapCacheEnabled(): bool
     {
@@ -225,9 +196,6 @@ class ListenerOptions extends AbstractOptions
 
     /**
      * Set if the module class map cache should be enabled or not
-     *
-     * @param bool $enabled
-     * @return static
      */
     public function setModuleMapCacheEnabled(bool $enabled): static
     {
@@ -237,8 +205,6 @@ class ListenerOptions extends AbstractOptions
 
     /**
      * Get key used to create the cache file name
-     *
-     * @return string
      */
     public function getModuleMapCacheKey(): string
     {
@@ -249,7 +215,6 @@ class ListenerOptions extends AbstractOptions
      * Set key used to create the cache file name
      *
      * @param string $moduleMapCacheKey the value to be set
-     * @return static
      */
     public function setModuleMapCacheKey(string $moduleMapCacheKey): static
     {
@@ -259,8 +224,6 @@ class ListenerOptions extends AbstractOptions
 
     /**
      * Get the path to the module class map cache
-     *
-     * @return string
      */
     public function getModuleMapCacheFile(): string
     {
@@ -273,8 +236,6 @@ class ListenerOptions extends AbstractOptions
 
     /**
      * Set whether to check dependencies during module loading or not
-     *
-     * @return bool
      */
     public function getCheckDependencies(): bool
     {
@@ -285,7 +246,6 @@ class ListenerOptions extends AbstractOptions
      * Set whether to check dependencies during module loading or not
      *
      * @param bool $checkDependencies the value to be set
-     * @return static
      */
     public function setCheckDependencies(bool $checkDependencies): static
     {
@@ -296,8 +256,6 @@ class ListenerOptions extends AbstractOptions
 
     /**
      * Whether or not to use jield-loader to autoload modules.
-     *
-     * @return bool
      */
     public function useLaminasLoader(): bool
     {
@@ -311,9 +269,6 @@ class ListenerOptions extends AbstractOptions
      * other means of autoloading to be used (e.g., Composer).
      *
      * If disabled, the AutoloaderProvider feature will be disabled as well
-     *
-     * @param bool $flag
-     * @return static
      */
     public function setuseModuleLoader(bool $flag): static
     {
@@ -323,9 +278,6 @@ class ListenerOptions extends AbstractOptions
 
     /**
      * Normalize a path for insertion in the stack
-     *
-     * @param string $path
-     * @return string
      */
     public static function normalizePath(string $path): string
     {

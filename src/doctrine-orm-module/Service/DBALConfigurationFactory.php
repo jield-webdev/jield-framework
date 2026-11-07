@@ -27,11 +27,9 @@ class DBALConfigurationFactory implements FactoryInterface
     ) {}
 
     /**
-     * {@inheritDoc}
-     *
-     * @param string $requestedName
-     *
-     * @return Configuration
+     * @throws RuntimeException
+     * @throws \Doctrine\DBAL\Exception
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function __invoke(
         ContainerInterface $container,
@@ -44,6 +42,12 @@ class DBALConfigurationFactory implements FactoryInterface
         return $config;
     }
 
+    /**
+     * @throws RuntimeException
+     * @throws \Doctrine\DBAL\Exception
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws InvalidArgumentException
+     */
     public function setupDBALConfiguration(ContainerInterface $container, Configuration $config): void
     {
         $options = $this->getOptions(container: $container);
@@ -84,7 +88,10 @@ class DBALConfigurationFactory implements FactoryInterface
         }
     }
 
-    /** @throws \RuntimeException */
+    /**
+     * @throws \RuntimeException
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     public function getOptions(ContainerInterface $container): DoctrineORMModuleConfiguration
     {
         /** @mago-var mixed $options */

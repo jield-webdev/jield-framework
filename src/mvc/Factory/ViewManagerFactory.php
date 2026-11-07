@@ -13,10 +13,6 @@ class ViewManagerFactory implements FactoryInterface
 {
     /**
      * Create and return a view manager.
-     *
-     * @param  string $requestedName
-     * @param  null|array $options
-     * @return HttpViewManager
      */
     public function __invoke(
         ContainerInterface $container,

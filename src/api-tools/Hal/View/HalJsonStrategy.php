@@ -24,6 +24,9 @@ class HalJsonStrategy extends AbstractListenerAggregate
         $this->listeners[] = $events->attach(MvcEvent::EVENT_RENDER_ERROR, $this->render(...), $priority);
     }
 
+    /**
+     * @throws \Throwable
+     */
     public function render(MvcEvent $event): void
     {
         /** @mago-var mixed $model */

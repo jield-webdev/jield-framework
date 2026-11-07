@@ -15,6 +15,9 @@ final readonly class TokenExchange
         private array $config = [],
     ) {}
 
+    /**
+     * @throws EntraException
+     */
     public function validateRequest(array $data): void
     {
         if (($data['grant_type'] ?? null) !== self::GRANT_TYPE) {
@@ -41,7 +44,12 @@ final readonly class TokenExchange
         }
     }
 
-    /** Extra claims cannot override the standard token claims. No refresh token is issued. */
+    /**
+     * Extra claims cannot override the standard token claims. No refresh token is issued.
+     *
+     * @throws EntraException
+     * @throws \Random\RandomException
+     */
     public function issueToken(
         string $clientId,
         int|string $subject,

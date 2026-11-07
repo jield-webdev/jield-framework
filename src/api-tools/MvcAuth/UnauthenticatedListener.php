@@ -12,7 +12,6 @@ class UnauthenticatedListener
 {
     /**
      * Determine if we have an authentication failure, and, if so, return a 401 response
-     *
      */
     public function __invoke(MvcAuthEvent $mvcAuthEvent): ?ApiProblemResponse
     {

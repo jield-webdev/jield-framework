@@ -15,6 +15,8 @@ final class UniqueObjectFactory extends AbstractValidatorFactory
 
     /**
      * {@inheritDoc}
+     * @throws Exception\ServiceCreationException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): UniqueObject
     {

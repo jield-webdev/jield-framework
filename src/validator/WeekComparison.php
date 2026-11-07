@@ -17,6 +17,9 @@ final class WeekComparison implements ValidatorInterface
     /** @var array<string, string> */
     private array $messages = [];
 
+    /**
+     * @throws InvalidArgumentException
+     */
     public function __construct(?string $min = null, ?string $max = null)
     {
         $minimum = $min === null ? null : self::date($min);

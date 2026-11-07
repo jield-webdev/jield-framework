@@ -28,6 +28,7 @@ class OptionsListenerFactory implements FactoryInterface
     /**
      * Retrieve api-tools-rest config from the container, if available.
      *
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     private function getConfig(ContainerInterface $container): array
     {

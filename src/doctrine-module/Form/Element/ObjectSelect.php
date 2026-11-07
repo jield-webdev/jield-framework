@@ -19,11 +19,6 @@ class ObjectSelect extends SelectElement
 {
     use GetProxy;
 
-    /**
-     * @param iterable $options
-     *
-     * @return static
-     */
     #[Override]
     public function setOptions(iterable $options): static
     {
@@ -44,6 +39,7 @@ class ObjectSelect extends SelectElement
 
     /**
      * {@inheritDoc}
+     * @throws \RuntimeException
      */
     #[Override]
     public function setValue($value): static
@@ -69,6 +65,7 @@ class ObjectSelect extends SelectElement
      * {@inheritDoc}
      *
      * @return ValueOptions
+     * @throws \Exception
      */
     #[Override]
     public function getValueOptions(): array

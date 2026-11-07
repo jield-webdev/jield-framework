@@ -17,6 +17,10 @@ class EntraTokenValidator
         private readonly array $applicationRoles = [],
     ) {}
 
+    /**
+     * @throws EntraException
+     * @throws \Psr\Cache\InvalidArgumentException
+     */
     public function validate(#[SensitiveParameter] string $token, EntraResourceInterface $service): array
     {
         $tenantId = $service->getTenantId();
@@ -239,6 +243,9 @@ class EntraTokenValidator
         return $claims;
     }
 
+    /**
+     * @throws EntraException
+     */
     protected function invalid(string $standardMessage, string $detail): never
     {
         throw new EntraException(error: 'invalid_grant', description: $standardMessage);
@@ -271,6 +278,9 @@ class EntraTokenValidator
         return array_key_exists(key: $name, array: $claims) ? self::describe($claims[$name]) : '<missing>';
     }
 
+    /**
+     * @throws EntraException
+     */
     protected function signingKeyFailure(EntraException $exception, string $kid): never
     {
         throw $exception;

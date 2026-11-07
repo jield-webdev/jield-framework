@@ -20,13 +20,13 @@ class Time extends AbstractDateTime
 
     /**
      * Default date format
-     *
-     * @var string
      */
     protected string $format = 'H:i:s';
 
     /**
      * Retrieves a DateStepValidator configured for a Date Input type
+     *
+     * @throws \DateMalformedIntervalStringException
      */
     protected function getStepValidator(): ValidatorInterface
     {

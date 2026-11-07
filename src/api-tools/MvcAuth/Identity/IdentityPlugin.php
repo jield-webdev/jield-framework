@@ -9,7 +9,6 @@ use Jield\Mvc\InjectApplicationEventInterface;
 
 class IdentityPlugin extends AbstractPlugin
 {
-    /** @return GuestIdentity|IdentityInterface */
     public function __invoke(): GuestIdentity|IdentityInterface
     {
         $controller = $this->getController();

@@ -11,8 +11,6 @@ class ConfigProvider
 {
     /**
      * Return general-purpose MVC navigation integration configuration.
-     *
-     * @return array
      */
     public function __invoke(): array
     {
@@ -23,8 +21,6 @@ class ConfigProvider
 
     /**
      * Return application-level dependency configuration.
-     *
-     * @return array
      */
     public function getDependencyConfig(): array
     {

@@ -22,7 +22,6 @@ class BooleanExpression extends Expression implements Stringable
     /**
      * Create new expression object
      *
-     * @param string|ExpressionInterface $expr
      * @param bool $useNotNotation use the NOT notation: (*:* NOT <expr>), e.g. (*:* NOT fieldName:*)
      */
     #[Pure]

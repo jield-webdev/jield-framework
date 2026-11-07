@@ -14,7 +14,6 @@ use function sprintf;
 
 class LinkCollectionExtractor implements LinkCollectionExtractorInterface
 {
-    /** @var LinkExtractorInterface */
     protected LinkExtractorInterface $linkExtractor;
 
     public function __construct(LinkExtractorInterface $linkExtractor)
@@ -22,9 +21,6 @@ class LinkCollectionExtractor implements LinkCollectionExtractorInterface
         $this->setLinkExtractor(linkExtractor: $linkExtractor);
     }
 
-    /**
-     * @return LinkExtractorInterface
-     */
     #[Override]
     public function getLinkExtractor(): LinkExtractorInterface
     {
@@ -38,6 +34,7 @@ class LinkCollectionExtractor implements LinkCollectionExtractorInterface
 
     /**
      * @inheritDoc
+     * @throws DomainException
      */
     #[Override]
     public function extract(LinkCollection $collection): array

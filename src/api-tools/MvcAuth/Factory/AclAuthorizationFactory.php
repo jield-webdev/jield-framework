@@ -24,7 +24,6 @@ use function strtr;
  */
 class AclAuthorizationFactory implements FactoryInterface
 {
-    /** @var array */
     protected array $httpMethods = [
         Request::METHOD_DELETE => true,
         Request::METHOD_GET => true,
@@ -37,6 +36,8 @@ class AclAuthorizationFactory implements FactoryInterface
      * Create and return an AclAuthorization instance.
      *
      * @param string $requestedName
+     * @throws \ReflectionException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     #[Override]
     public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): AclAuthorization
@@ -50,8 +51,7 @@ class AclAuthorizationFactory implements FactoryInterface
      *
      * Consumes the AclFactory in order to create the AclAuthorization instance.
      *
-     * @param array $config
-     * @return AclAuthorization
+     * @throws \ReflectionException
      */
     protected function createAclFromConfig(array $config): AclAuthorization
     {
@@ -81,11 +81,6 @@ class AclAuthorizationFactory implements FactoryInterface
      *
      * - Extracts a privilege per action
      * - Extracts privileges for each of "collection" and "entity" configured
-     *
-     * @param string $controllerService
-     * @param array $privileges
-     * @param array $aclConfig
-     * @param bool $denyByDefault
      */
     protected function createAclConfigFromPrivileges(
         string $controllerService,
@@ -137,10 +132,6 @@ class AclAuthorizationFactory implements FactoryInterface
 
     /**
      * Create the list of HTTP methods defining privileges
-     *
-     * @param array $methods
-     * @param bool $denyByDefault
-     * @return array|null
      */
     protected function createPrivilegesFromMethods(array $methods, bool $denyByDefault): ?array
     {
@@ -181,6 +172,7 @@ class AclAuthorizationFactory implements FactoryInterface
      * Attempts to pull the 'config' service, and, further, the
      * api-tools-mvc-auth.authorization segment.
      *
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     private function getConfigFromContainer(ContainerInterface $container): array
     {

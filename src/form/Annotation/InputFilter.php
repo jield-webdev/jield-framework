@@ -33,6 +33,7 @@ final class InputFilter
      * Receive and process the contents of an annotation
      *
      * @param mixed $inputFilter
+     * @throws Exception\DomainException
      */
     public function __construct($inputFilter)
     {

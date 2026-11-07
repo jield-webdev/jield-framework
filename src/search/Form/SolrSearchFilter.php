@@ -24,6 +24,12 @@ use function sprintf;
 
 class SolrSearchFilter extends SearchFilter implements InputFilterProviderInterface
 {
+    /**
+     * @throws \Jield\Form\Exception\ExceptionInterface
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \Laminas\InputFilter\Exception\RuntimeException
+     * @throws \ReflectionException
+     */
     public function __construct(
         private readonly AbstractSearchService $searchService,
         array $fields = [],
@@ -69,6 +75,12 @@ class SolrSearchFilter extends SearchFilter implements InputFilterProviderInterf
         $this->add(elementOrFieldset: $filter);
     }
 
+    /**
+     * @throws \Jield\Form\Exception\ExceptionInterface
+     * @throws RuntimeException
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
+     */
     public function createFacetFormElements(): void
     {
         $facetFieldset = new Fieldset(name: 'facet');
@@ -101,6 +113,10 @@ class SolrSearchFilter extends SearchFilter implements InputFilterProviderInterf
         $this->add(elementOrFieldset: $facetFieldset);
     }
 
+    /**
+     * @throws RuntimeException
+     * @throws \ReflectionException
+     */
     private function getFacetByFacetField(string $fieldName)
     {
         $facetSet = $this->searchService->getResultSet()->getFacetSet();
@@ -162,11 +178,17 @@ class SolrSearchFilter extends SearchFilter implements InputFilterProviderInterf
         return $andOrElement;
     }
 
+    /**
+     * @throws \JsonException
+     */
     public function hasBadges(): bool
     {
         return count(value: $this->getBadges()) > 0;
     }
 
+    /**
+     * @throws \JsonException
+     */
     public function getBadges(): array
     {
         $submittedData = $this->data ?? [];

@@ -59,8 +59,6 @@ class Application implements ApplicationInterface, EventManagerAwareInterface
 
     /**
      * Default application event listeners
-     *
-     * @var array
      */
     protected array $defaultListeners = [
         'RouteListener',
@@ -73,7 +71,7 @@ class Application implements ApplicationInterface, EventManagerAwareInterface
     protected MvcEvent $event;
 
     /**
-     * Constructor
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function __construct(
         protected ContainerInterface $serviceManager,
@@ -99,7 +97,7 @@ class Application implements ApplicationInterface, EventManagerAwareInterface
     /**
      * Retrieve the application configuration
      *
-     * @return array|object
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function getConfig(): object|array
     {
@@ -114,7 +112,8 @@ class Application implements ApplicationInterface, EventManagerAwareInterface
      * event.
      *
      * @param array $listeners List of listeners to attach.
-     * @return static
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
      */
     public function bootstrap(array $listeners = []): static
     {
@@ -154,8 +153,6 @@ class Application implements ApplicationInterface, EventManagerAwareInterface
 
     /**
      * Get the request object
-     *
-     * @return RequestInterface
      */
     public function getRequest(): RequestInterface
     {
@@ -164,8 +161,6 @@ class Application implements ApplicationInterface, EventManagerAwareInterface
 
     /**
      * Get the response object
-     *
-     * @return ResponseInterface
      */
     public function getResponse(): ResponseInterface
     {
@@ -174,8 +169,6 @@ class Application implements ApplicationInterface, EventManagerAwareInterface
 
     /**
      * Get the MVC event instance
-     *
-     * @return MvcEvent
      */
     public function getMvcEvent(): MvcEvent
     {
@@ -184,8 +177,6 @@ class Application implements ApplicationInterface, EventManagerAwareInterface
 
     /**
      * Set the event manager instance
-     *
-     * @return void
      */
     public function setEventManager(EventManagerInterface $eventManager): void
     {
@@ -200,8 +191,6 @@ class Application implements ApplicationInterface, EventManagerAwareInterface
      * Retrieve the event manager
      *
      * Lazy-loads an EventManager instance if none registered.
-     *
-     * @return EventManagerInterface
      */
     public function getEventManager(): EventManagerInterface
     {
@@ -225,7 +214,7 @@ class Application implements ApplicationInterface, EventManagerAwareInterface
      * overridden by modules.
      *
      * @param array $configuration
-     * @return Application
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public static function init($configuration = []): Application
     {
@@ -274,7 +263,6 @@ class Application implements ApplicationInterface, EventManagerAwareInterface
      *           discovered controller, and controller class (if known).
      *           Typically, a handler should return a populated Response object
      *           that can be returned immediately.
-     * @return static
      */
     public function run(): static
     {
@@ -342,8 +330,6 @@ class Application implements ApplicationInterface, EventManagerAwareInterface
      *
      * Triggers "render" and "finish" events, and returns response from
      * event object.
-     *
-     * @return static
      */
     protected function completeRequest(MvcEvent $event): static
     {

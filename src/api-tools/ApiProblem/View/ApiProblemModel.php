@@ -9,7 +9,6 @@ use Jield\Mvc\View\Model\ViewModel;
 
 class ApiProblemModel extends ViewModel
 {
-    /** @var ApiProblem */
     protected ApiProblem $problem;
 
     public function __construct(?ApiProblem $problem = null)
@@ -30,9 +29,6 @@ class ApiProblemModel extends ViewModel
         return $this;
     }
 
-    /**
-     * @return ApiProblem
-     */
     public function getApiProblem(): ApiProblem
     {
         return $this->problem;

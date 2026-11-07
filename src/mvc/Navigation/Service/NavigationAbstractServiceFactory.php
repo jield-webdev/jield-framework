@@ -45,6 +45,7 @@ final class NavigationAbstractServiceFactory implements AbstractFactoryInterface
      *
      * @param string $requestedName Name by which service was requested, must
      *     start with Laminas\Navigation\
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function canCreate(ContainerInterface $container, string $requestedName): bool
     {
@@ -56,12 +57,6 @@ final class NavigationAbstractServiceFactory implements AbstractFactoryInterface
         return $this->hasNamedConfig($requestedName, $config);
     }
 
-    /**
-     * {@inheritDoc}
-     *
-     * @param string $requestedName
-     * @return Navigation
-     */
     public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): Navigation
     {
         $config = $this->getConfig($container);
@@ -73,6 +68,7 @@ final class NavigationAbstractServiceFactory implements AbstractFactoryInterface
      * Get navigation configuration, if any
      *
      * @return array<string, mixed>
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     protected function getConfig(ContainerInterface $container): array
     {
@@ -100,9 +96,6 @@ final class NavigationAbstractServiceFactory implements AbstractFactoryInterface
 
     /**
      * Extract config name from service name
-     *
-     * @param string $name
-     * @return string
      */
     private function getConfigName(string $name): string
     {

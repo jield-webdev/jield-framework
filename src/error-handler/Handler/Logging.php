@@ -134,6 +134,9 @@ final class Logging
         ];
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     public static function getPsrPrioryFromSeverity(int $severity, bool $fromLegacy = true): string
     {
         if ($fromLegacy) {
@@ -205,6 +208,10 @@ final class Logging
         return false;
     }
 
+    /**
+     * @throws \JsonException
+     * @throws \Symfony\Component\Mailer\Exception\TransportExceptionInterface
+     */
     private function sendMail(string $priority, string $errorMessage, array $extra, string $subject): void
     {
         if ($this->mailer === null || $this->emailReceivers === []) {
@@ -218,6 +225,10 @@ final class Logging
         $this->mailer->send($email);
     }
 
+    /**
+     * @throws \JsonException
+     * @throws \Symfony\Component\Mailer\Exception\TransportExceptionInterface
+     */
     public function handleErrorException(Throwable $throwable, ?RequestInterface $request = null): void
     {
         $collectedExceptionData = $this->collectErrorExceptionData($throwable);

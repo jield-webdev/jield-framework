@@ -24,13 +24,10 @@ use function sprintf;
 
 class Forward extends AbstractPlugin
 {
-    /** @var MvcEvent */
     protected ?MvcEvent $event = null;
 
-    /** @var int */
     protected int $maxNestedForwards = 10;
 
-    /** @var int */
     protected int $numNestedForwards = 0;
 
     /** @var array[]|null */
@@ -44,7 +41,6 @@ class Forward extends AbstractPlugin
      * Set maximum number of nested forwards allowed
      *
      * @param  int $maxNestedForwards
-     * @return static
      */
     public function setMaxNestedForwards($maxNestedForwards): static
     {
@@ -84,7 +80,6 @@ class Forward extends AbstractPlugin
      * Set information on listeners that need to be detached before dispatching.
      *
      * @param  array $listeners Listener information; see getListenersToDetach() for details on format.
-     * @return static
      */
     public function setListenersToDetach($listeners): static
     {
@@ -98,9 +93,10 @@ class Forward extends AbstractPlugin
      *
      * @param  string $name Controller name; either a class name or an alias used in the controller manager
      * @param  null|array $params Parameters with which to seed a custom RouteMatch object for the new controller
-     * @return mixed
      * @throws Exception\DomainException If composed controller does not define InjectApplicationEventInterface
      *         or Locator aware; or if the discovered controller is not dispatchable.
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
      */
     public function dispatch($name, ?array $params = null): mixed
     {
@@ -152,7 +148,6 @@ class Forward extends AbstractPlugin
      * allow them to be reattached.
      *
      * @param  SharedEvents $sharedEvents Shared event manager
-     * @return array
      */
     protected function detachProblemListeners(SharedEvents $sharedEvents): array
     {
@@ -216,7 +211,6 @@ class Forward extends AbstractPlugin
      *
      * @param  SharedEvents $sharedEvents Shared event manager
      * @param  array        $listeners    Output of detachProblemListeners()
-     * @return void
      */
     protected function reattachProblemListeners(SharedEvents $sharedEvents, array $listeners): void
     {
@@ -249,7 +243,6 @@ class Forward extends AbstractPlugin
     /**
      * Get the event
      *
-     * @return MvcEvent
      * @throws Exception\DomainException If unable to find event.
      */
     protected function getEvent(): MvcEvent
@@ -285,7 +278,6 @@ class Forward extends AbstractPlugin
      *
      * @param string|int $id
      * @param string $event
-     * @return array
      */
     private function getSharedListenersById($id, $event, SharedEvents $sharedEvents): array
     {
@@ -299,7 +291,6 @@ class Forward extends AbstractPlugin
      *
      * @param string|int $id
      * @param callable $listener
-     * @return void
      */
     private function detachSharedListener($id, $listener, SharedEvents $sharedEvents): void
     {

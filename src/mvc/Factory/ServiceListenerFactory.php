@@ -29,16 +29,12 @@ use function sprintf;
 
 class ServiceListenerFactory implements FactoryInterface
 {
-    /** @var string */
     public const string MISSING_KEY_ERROR = 'Invalid service listener options detected, %s array must contain %s key.';
 
-    /** @var string */
     public const string VALUE_TYPE_ERROR = 'Invalid service listener options detected, %s must be a string, %s given.';
 
     /**
      * Default mvc-related service configuration -- can be overridden by modules.
-     *
-     * @var array
      */
     protected array $defaultServiceConfig = [
         'abstract_factories' => [ViewHelperAbstractFactory::class],
@@ -121,11 +117,9 @@ class ServiceListenerFactory implements FactoryInterface
      * - interface: the name of the interface that modules can implement as string
      * - method: the name of the method that modules have to implement as string
      *
-     * @param string $requestedName
-     * @param null|array $options
-     * @return ServiceListenerInterface
      * @throws ServiceNotCreatedException For invalid ServiceListener service.
      * @throws ServiceNotCreatedException For invalid configurations.
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function __invoke(
         ContainerInterface $container,

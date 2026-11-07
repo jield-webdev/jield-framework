@@ -23,6 +23,9 @@ final class FormCheckbox extends Helper\FormCheckbox
 {
     private readonly FormLabel $formLabel;
 
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     public function __construct(HelperPluginManager $viewHelperManager, TranslatorInterface $translator)
     {
         $this->formLabel = Service::get($viewHelperManager, FormLabel::class, 'formlabel');
@@ -30,6 +33,10 @@ final class FormCheckbox extends Helper\FormCheckbox
         $this->translator = $translator;
     }
 
+    /**
+     * @throws \Jield\Form\Exception\ExceptionInterface
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     public function render(ElementInterface $element): string
     {
         $element->setAttribute(

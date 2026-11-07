@@ -22,6 +22,9 @@ abstract class AbstractEntityJson
     protected EntityManager $entityManager;
     protected mixed $providerInstance;
 
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     public function __construct(
         protected readonly ContainerInterface $container,
     ) {
@@ -29,11 +32,17 @@ abstract class AbstractEntityJson
         $this->providerInstance = $this->container->get($this->provider);
     }
 
+    /** @param array<string, mixed> $criteria Field names and values to match. */
     protected function findCount(array $criteria): int
     {
         return $this->entityManager->getRepository(Value::classString($this->entity))->count(criteria: Value::stringKeyedArray($criteria));
     }
 
+    /**
+     * @param array<string, mixed> $criteria Field names and values to match.
+     * @return list<object>
+     * @throws \UnexpectedValueException
+     */
     protected function findSliced(int $offset, array $criteria = []): array
     {
         return $this->entityManager->getRepository(Value::classString($this->entity))->findBy(
@@ -51,6 +60,8 @@ abstract class AbstractEntityJson
 
     /**
      * @throws JsonException
+     * @throws \ReflectionException
+     * @throws \UnexpectedValueException
      */
     public function getJsonData(): string
     {
@@ -78,7 +89,7 @@ abstract class AbstractEntityJson
     /**
      * Default empty array.
      *
-     * @return array<string, string>
+     * @return array<array-key, string> Names of exports that must run before this export.
      */
     public function getDependencies(): array
     {

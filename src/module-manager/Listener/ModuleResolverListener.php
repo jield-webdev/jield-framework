@@ -25,6 +25,7 @@ class ModuleResolverListener extends AbstractListener
 
     /**
      * @return object|false False if module class does not exist
+     * @throws \ReflectionException
      */
     public function __invoke(ModuleEvent $e): object|false
     {

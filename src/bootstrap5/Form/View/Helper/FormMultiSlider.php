@@ -15,6 +15,10 @@ use function sort;
 
 final class FormMultiSlider extends Helper\FormText
 {
+    /**
+     * @throws \Jield\Form\Exception\ExceptionInterface
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     public function render(ElementInterface $element): string
     {
         $id = md5(string: Assert::string($element->getName()));

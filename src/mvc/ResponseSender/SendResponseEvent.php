@@ -30,9 +30,6 @@ class SendResponseEvent extends Event
 
     protected array $contentSent = [];
 
-    /**
-     * @return static
-     */
     public function setResponse(ResponseInterface $response): static
     {
         $this->setParam('response', $response);
@@ -40,9 +37,6 @@ class SendResponseEvent extends Event
         return $this;
     }
 
-    /**
-     * @return ResponseInterface
-     */
     public function getResponse(): ResponseInterface
     {
         return $this->response;
@@ -50,8 +44,6 @@ class SendResponseEvent extends Event
 
     /**
      * Set content sent for current response
-     *
-     * @return static
      */
     public function setContentSent(): static
     {
@@ -65,9 +57,6 @@ class SendResponseEvent extends Event
         return $this;
     }
 
-    /**
-     * @return bool
-     */
     public function contentSent(): bool
     {
         $response = $this->getResponse();
@@ -79,8 +68,6 @@ class SendResponseEvent extends Event
 
     /**
      * Set headers sent for current response object
-     *
-     * @return static
      */
     public function setHeadersSent(): static
     {
@@ -94,9 +81,6 @@ class SendResponseEvent extends Event
         return $this;
     }
 
-    /**
-     * @return bool
-     */
     public function headersSent(): bool
     {
         $response = $this->getResponse();

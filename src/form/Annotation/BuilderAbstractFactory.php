@@ -31,8 +31,9 @@ final class BuilderAbstractFactory implements AbstractFactoryInterface
 
     /**
      * @param  string $requestedName
-     * @param  null|array $options
      * @throws ServiceNotCreatedException For invalid listener configuration.
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
      */
     public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): AbstractBuilder
     {
@@ -76,6 +77,8 @@ final class BuilderAbstractFactory implements AbstractFactoryInterface
      * array if not found or not an array.
      *
      * Otherwise, returns the `form_annotation_builder` array.
+     *
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     private function marshalConfig(ContainerInterface $container): array
     {
@@ -101,6 +104,7 @@ final class BuilderAbstractFactory implements AbstractFactoryInterface
      * - otherwise attaches it to the event manager
      *
      * @throws ServiceNotCreatedException If any listener is not an event listener aggregate.
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     private function injectListeners(array $config, EventManagerInterface $events, ContainerInterface $container): void
     {
@@ -125,6 +129,8 @@ final class BuilderAbstractFactory implements AbstractFactoryInterface
      * Inject the annotation builder's factory instance with the FormElementManager.
      *
      * Also injects the factory with the InputFilterManager if present.
+     *
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     private function injectFactory(Factory $factory, ContainerInterface $container): void
     {

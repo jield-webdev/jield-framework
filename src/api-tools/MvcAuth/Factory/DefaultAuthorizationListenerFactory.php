@@ -24,6 +24,7 @@ class DefaultAuthorizationListenerFactory implements FactoryInterface
      *
      * @param string $requestedName
      * @throws ServiceNotCreatedException If the AuthorizationInterface service is missing.
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     #[Override]
     public function __invoke(

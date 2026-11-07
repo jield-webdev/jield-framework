@@ -14,11 +14,6 @@ use Psr\Container\ContainerInterface;
 
 class ViewFactory implements FactoryInterface
 {
-    /**
-     * @param string $requestedName
-     * @param null|array $options
-     * @return View
-     */
     public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): View
     {
         return new View(

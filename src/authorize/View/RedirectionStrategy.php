@@ -88,17 +88,11 @@ class RedirectionStrategy implements ListenerAggregateInterface
         $event->setResponse(response: $response);
     }
 
-    /**
-     * @param string $redirectRoute
-     */
     public function setRedirectRoute(string $redirectRoute): void
     {
         $this->redirectRoute = $redirectRoute;
     }
 
-    /**
-     * @param string|null $redirectUri
-     */
     public function setRedirectUri(?string $redirectUri): void
     {
         $this->redirectUri = $redirectUri ?: null;

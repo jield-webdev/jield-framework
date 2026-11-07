@@ -59,8 +59,6 @@ class ModuleAutoloader implements SplAutoloader
     protected $moduleClassMap = [];
 
     /**
-     * Constructor
-     *
      * Allow configuration of the autoloader via the constructor.
      *
      * @param  null|array|Traversable $options
@@ -126,7 +124,6 @@ class ModuleAutoloader implements SplAutoloader
     /**
      * Sets the class map used to speed up the module autoloading.
      *
-     * @param  array $classmap
      * @return ModuleAutoloader
      */
     public function setModuleClassMap(array $classmap)
@@ -143,6 +140,7 @@ class ModuleAutoloader implements SplAutoloader
      * @return  mixed
      *          False [if unable to load $class]
      *          get_class($class) [if $class is successfully loaded]
+     * @throws \UnexpectedValueException
      */
     public function autoload($class)
     {
@@ -256,6 +254,7 @@ class ModuleAutoloader implements SplAutoloader
      * @return  mixed
      *          False [if unable to load $class]
      *          get_class($class) [if $class is successfully loaded]
+     * @throws \UnexpectedValueException
      */
     protected function loadModuleFromDir($dirPath, $class)
     {
@@ -352,6 +351,7 @@ class ModuleAutoloader implements SplAutoloader
      * Unregister the autoloader with spl_autoload registry
      *
      * @return void
+     * @throws \UnexpectedValueException
      */
     public function unregister()
     {

@@ -28,7 +28,7 @@ final class Module implements
         Assert::notNull($manager->getEventManager()->getSharedManager())->attach(
             'doctrine',
             'loadCli.post',
-            listener: static function (EventInterface $event): void {
+            listener: /** @throws \ReflectionException */ static function (EventInterface $event): void {
                 Value::call(
                     Value::call($event->getParam(name: 'ServiceManager'), 'get', [CliConfigurator::class]),
                     'configure',

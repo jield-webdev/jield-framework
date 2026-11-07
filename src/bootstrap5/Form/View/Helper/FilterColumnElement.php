@@ -27,6 +27,11 @@ class FilterColumnElement extends FormElement
 
     protected bool $rendered = false;
 
+    /**
+     * @throws \ReflectionException
+     * @throws \Jield\Form\Exception\ExceptionInterface
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     public function __invoke(
         ?ElementInterface $element = null,
         $type = self::TYPE_HORIZONTAL,
@@ -41,11 +46,18 @@ class FilterColumnElement extends FormElement
         return $this;
     }
 
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     protected function getContainer(string $containerName)
     {
         return $this->getView()->plugin($containerName);
     }
 
+    /**
+     * @throws \ReflectionException
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     private function appendScript(): void
     {
         Value::call($this->getContainer(containerName: self::HEADSCRIPT), 'appendFile', [
@@ -59,6 +71,10 @@ class FilterColumnElement extends FormElement
         );
     }
 
+    /**
+     * @throws \Jield\Form\Exception\ExceptionInterface
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     private function renderFacets(Form $form): string
     {
         if (!$form->has(elementOrFieldset: 'facet')) {
@@ -105,6 +121,10 @@ class FilterColumnElement extends FormElement
         return implode(separator: PHP_EOL, array: $facets);
     }
 
+    /**
+     * @throws \Jield\Form\Exception\ExceptionInterface
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     private function renderRaw(ElementInterface $element): string
     {
         $type = $element->getAttribute(key: 'type');

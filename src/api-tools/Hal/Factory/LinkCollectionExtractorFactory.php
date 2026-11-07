@@ -13,8 +13,7 @@ use Psr\Container\ContainerInterface;
 class LinkCollectionExtractorFactory
 {
     /**
-     * @param ContainerInterface|ServiceLocatorInterface $container
-     * @return LinkCollectionExtractor
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function __invoke(ServiceLocatorInterface|ContainerInterface $container): LinkCollectionExtractor
     {

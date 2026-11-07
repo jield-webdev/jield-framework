@@ -18,10 +18,6 @@ class ViewPrefixPathStackResolverFactory implements FactoryInterface
      *
      * Creates a Laminas\View\Resolver\PrefixPathStackResolver and populates it with the
      * ['view_manager']['prefix_template_path_stack']
-     *
-     * @param  string $requestedName
-     * @param  null|array $options
-     * @return PrefixPathStackResolver
      */
     public function __invoke(
         ContainerInterface $container,

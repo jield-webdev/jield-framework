@@ -52,8 +52,6 @@ class StandardAutoloader implements SplAutoloader
     protected $fallbackAutoloaderFlag = false;
 
     /**
-     * Constructor
-     *
      * @param null|array|Traversable $options
      */
     public function __construct($options = null)

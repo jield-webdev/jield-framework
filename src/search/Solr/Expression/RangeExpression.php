@@ -19,9 +19,6 @@ class RangeExpression extends Expression implements Stringable
 {
     /**
      * Create new range query object
-     *
-     * @param string|int|float|ExpressionInterface|null $start
-     * @param int|float|string|ExpressionInterface|null $end
      */
     public function __construct(
         protected ExpressionInterface|float|int|string|null $start = null,
@@ -43,9 +40,6 @@ class RangeExpression extends Expression implements Stringable
         );
     }
 
-    /**
-     * @param string|int|float|ExpressionInterface|null $value
-     */
     private function cast(ExpressionInterface|int|float|string|null $value): string
     {
         return $value === null ? '*' : Util::sanitize(value: $value);

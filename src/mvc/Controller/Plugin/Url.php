@@ -34,7 +34,7 @@ class Url extends AbstractPlugin
      * @throws RuntimeException
      * @throws InvalidArgumentException
      * @throws DomainException
-     * @return string
+     * @throws \ReflectionException
      */
     public function fromRoute($route = null, $params = [], $options = [], $reuseMatchedParams = false): string
     {

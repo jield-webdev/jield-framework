@@ -11,8 +11,6 @@ class FormSubmit extends FormInput
 {
     /**
      * Attributes valid for the input tag type="submit"
-     *
-     * @var array
      */
     protected array $validTagAttributes = [
         'name' => true,

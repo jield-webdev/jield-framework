@@ -19,7 +19,6 @@ use function sprintf;
 
 final class WarmupCommand extends Command
 {
-    /** @var string */
     protected static string $defaultName = 'assetmanager:warmup';
 
     public function __construct(
@@ -37,6 +36,11 @@ final class WarmupCommand extends Command
         $this->addOption(name: 'purge', shortcut: 'p', mode: InputOption::VALUE_NONE, description: 'Purge index');
     }
 
+    /**
+     * @throws RuntimeException
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
+     */
     #[Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
@@ -99,6 +103,8 @@ final class WarmupCommand extends Command
 
     /**
      * Purges all directories defined as AssetManager cache dir.
+     *
+     * @throws RuntimeException
      */
     private function purgeCache(OutputInterface $output, bool $verbose = false): void
     {
@@ -132,6 +138,8 @@ final class WarmupCommand extends Command
 
     /**
      * Removes given node from filesystem (recursively).
+     *
+     * @throws RuntimeException
      */
     private function recursiveRemove(string $node, OutputInterface $output, bool $verbose = false): void
     {

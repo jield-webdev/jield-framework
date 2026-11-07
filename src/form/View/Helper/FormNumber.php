@@ -11,8 +11,6 @@ class FormNumber extends FormInput
 {
     /**
      * Attributes valid for the input tag type="number"
-     *
-     * @var array
      */
     protected array $validTagAttributes = [
         'name' => true,

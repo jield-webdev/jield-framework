@@ -32,8 +32,8 @@ final class Menu
     ) {}
 
     /**
-     * @param AbstractContainer $container
      * @param array<string, mixed> $options
+     * @throws \Exception
      */
     public function __invoke(AbstractContainer $container, array $options = []): string
     {
@@ -68,6 +68,9 @@ final class Menu
         );
     }
 
+    /**
+     * @throws \Exception
+     */
     private function renderNormalMenu(
         AbstractContainer $container,
         string $ulClass,
@@ -259,6 +262,7 @@ final class Menu
 
     /**
      * @return array{page: AbstractPage, depth: int}|null
+     * @throws \Exception
      */
     private function findActive(AbstractContainer $container, int $minDepth, ?int $maxDepth): ?array
     {

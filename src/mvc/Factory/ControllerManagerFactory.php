@@ -20,10 +20,6 @@ class ControllerManagerFactory implements FactoryInterface
      * matched, the scoped manager will attempt to load the controller.
      * Finally, it will attempt to inject the controller plugin manager
      * if the controller implements a setPluginManager() method.
-     *
-     * @param  string $requestedName
-     * @param  null|array $options
-     * @return ControllerManager
      */
     public function __invoke(
         ContainerInterface $container,

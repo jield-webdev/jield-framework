@@ -18,13 +18,11 @@ use const E_WARNING;
 class FilePathCache implements CacheInterface
 {
     /**
-     * @var string Holds the cachedFile string
+     * Cached path, resolved on first use.
      */
     protected ?string $cachedFile = null;
 
     /**
-     * Constructor
-     *
      * @param string $dir The directory to cache in
      * @param string $filename The filename we'll be caching for.
      */
@@ -56,6 +54,7 @@ class FilePathCache implements CacheInterface
 
     /**
      * {@inheritDoc}
+     * @throws RuntimeException
      */
     #[Override]
     public function get($key): ?string
@@ -72,6 +71,8 @@ class FilePathCache implements CacheInterface
 
     /**
      * {@inheritDoc}
+     * @throws \ErrorException
+     * @throws \RuntimeException
      */
     #[Override]
     public function set($key, $value): void
@@ -113,6 +114,8 @@ class FilePathCache implements CacheInterface
 
     /**
      * {@inheritDoc}
+     * @throws RuntimeException
+     * @throws \ErrorException
      */
     #[Override]
     public function remove($key): bool

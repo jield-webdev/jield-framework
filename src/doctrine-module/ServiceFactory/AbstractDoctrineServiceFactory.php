@@ -19,6 +19,7 @@ final class AbstractDoctrineServiceFactory implements AbstractFactoryInterface
 {
     /**
      * {@inheritDoc}
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function canCreate(ContainerInterface $container, $requestedName): bool
     {
@@ -27,6 +28,8 @@ final class AbstractDoctrineServiceFactory implements AbstractFactoryInterface
 
     /**
      * {@inheritDoc}
+     * @throws \ReflectionException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): mixed
     {
@@ -45,7 +48,9 @@ final class AbstractDoctrineServiceFactory implements AbstractFactoryInterface
         );
     }
 
-    /** @return array|bool */
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     private function getFactoryMapping(ContainerInterface $serviceLocator, string $name): array|bool
     {
         $matches = [];

@@ -22,6 +22,8 @@ abstract class BaseProvidersServiceFactory implements FactoryInterface
      * {@inheritDoc}
      *
      * @see \Laminas\ServiceManager\Factory\FactoryInterface::__invoke()
+     * @throws \ReflectionException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): object|array
     {

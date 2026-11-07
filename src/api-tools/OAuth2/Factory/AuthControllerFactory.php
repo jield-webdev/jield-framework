@@ -35,6 +35,8 @@ class AuthControllerFactory implements FactoryInterface
      *
      * For BC purposes, if the OAuth2Server service returns an actual
      * instance, this will wrap it in a closure before returning it.
+     *
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     private function getOAuth2ServerFactory(ContainerInterface $container): callable
     {
@@ -49,6 +51,8 @@ class AuthControllerFactory implements FactoryInterface
 
     /**
      * Determine whether or not to render API Problem error responses.
+     *
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     private function marshalApiProblemErrorResponse(ContainerInterface $container): bool
     {

@@ -14,6 +14,9 @@ abstract class AbstractHelper implements HelperInterface
 {
     protected ?PhpRenderer $view = null;
 
+    /**
+     * @throws InvalidArgumentException
+     */
     public function setView(RendererInterface $view): static
     {
         if (!$view instanceof PhpRenderer) {
@@ -23,6 +26,9 @@ abstract class AbstractHelper implements HelperInterface
         return $this;
     }
 
+    /**
+     * @throws LogicException
+     */
     public function getView(): PhpRenderer
     {
         return $this->view ?? throw new LogicException('A renderer must be set before using this view helper.');

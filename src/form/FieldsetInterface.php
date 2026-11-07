@@ -28,7 +28,6 @@ interface FieldsetInterface extends
      *                                                               ElementInterface; however, keeping it flexible
      *                                                               to allow a factory-based form
      *                                                               implementation as well
-     * @return self
      * @throws ExceptionInterface
      */
     public function add(Traversable|ElementInterface|array $elementOrFieldset, array $flags = []): FieldsetInterface;
@@ -45,15 +44,11 @@ interface FieldsetInterface extends
 
     /**
      * Remove a named element or fieldset
-     *
-     * @return self
      */
     public function remove(string $elementOrFieldset): FieldsetInterface;
 
     /**
      * Set/change the priority of an element or fieldset
-     *
-     * @return self
      */
     public function setPriority(string $elementOrFieldset, int $priority): FieldsetInterface;
 
@@ -82,16 +77,11 @@ interface FieldsetInterface extends
 
     /**
      * Set the object used by the hydrator
-     *
-     * @param  mixed $object
-     * @return self
      */
     public function setObject(mixed $object): FieldsetInterface;
 
     /**
      * Get the object used by the hydrator
-     *
-     * @return mixed
      */
     public function getObject(): mixed;
 
@@ -102,8 +92,6 @@ interface FieldsetInterface extends
 
     /**
      * Set the hydrator to use when binding an object to the element
-     *
-     * @return self
      */
     public function setHydrator(HydratorInterface $hydrator): FieldsetInterface;
 
@@ -114,8 +102,6 @@ interface FieldsetInterface extends
 
     /**
      * Bind values to the bound object
-     *
-     * @return mixed
      */
     public function bindValues(array $values = [], ?array $validationGroup = null): mixed;
 

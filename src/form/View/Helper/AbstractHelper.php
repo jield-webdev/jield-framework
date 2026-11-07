@@ -35,8 +35,6 @@ abstract class AbstractHelper extends BaseAbstractHelper
 
     /**
      * The default translatable HTML attributes
-     *
-     * @var array
      */
     protected static array $defaultTranslatableHtmlAttributes = [
         'title' => true,
@@ -44,15 +42,11 @@ abstract class AbstractHelper extends BaseAbstractHelper
 
     /**
      * The default translatable HTML attribute prefixes
-     *
-     * @var array
      */
     protected static array $defaultTranslatableHtmlAttributePrefixes = [];
 
     /**
      * Standard boolean attributes, with expected values for enabling/disabling
-     *
-     * @var array
      */
     protected array $booleanAttributes = [
         'autofocus' => ['on' => 'autofocus', 'off' => ''], // https://html.spec.whatwg.org/#attr-fe-autofocus
@@ -77,24 +71,17 @@ abstract class AbstractHelper extends BaseAbstractHelper
 
     /**
      * Prefixes of translatable HTML attributes
-     *
-     * @var array
      */
     protected array $translatableAttributePrefixes = [];
 
-    /** @var null|Doctype */
     protected ?Doctype $doctypeHelper = null;
 
-    /** @var null|EscapeHtml */
     protected ?EscapeHtml $escapeHtmlHelper = null;
 
-    /** @var null|EscapeHtmlAttr */
     protected ?EscapeHtmlAttr $escapeHtmlAttrHelper = null;
 
     /**
      * Attributes globally valid for all tags
-     *
-     * @var array
      */
     protected array $validGlobalAttributes = [
         'accesskey' => true, // https://html.spec.whatwg.org/#the-accesskey-attribute
@@ -186,8 +173,6 @@ abstract class AbstractHelper extends BaseAbstractHelper
 
     /**
      * Attribute prefixes valid for all tags
-     *
-     * @var array
      */
     protected array $validTagAttributePrefixes = [
         'data-', // https://html.spec.whatwg.org/#attr-data-*
@@ -199,15 +184,11 @@ abstract class AbstractHelper extends BaseAbstractHelper
      * Attributes valid for the tag represented by this helper
      *
      * This should be overridden in extending classes
-     *
-     * @var array
      */
     protected array $validTagAttributes = [];
 
     /**
      * Set value for doctype
-     *
-     * @return static
      */
     public function setDoctype(string $doctype): static
     {
@@ -217,6 +198,8 @@ abstract class AbstractHelper extends BaseAbstractHelper
 
     /**
      * Get value for doctype
+     *
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function getDoctype(): string
     {
@@ -229,8 +212,6 @@ abstract class AbstractHelper extends BaseAbstractHelper
 
     /**
      * Set value for character encoding
-     *
-     * @return static
      */
     public function setEncoding(string $encoding): static
     {
@@ -253,6 +234,8 @@ abstract class AbstractHelper extends BaseAbstractHelper
      * Create a string of all attribute/value pairs
      *
      * Escapes all attribute values
+     *
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function createAttributesString(array $attributes): string
     {
@@ -315,6 +298,8 @@ abstract class AbstractHelper extends BaseAbstractHelper
      * Get the closing bracket for an inline tag
      *
      * Closes as either "/>" for XHTML doctypes or ">" otherwise.
+     *
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function getInlineClosingBracket(): string
     {
@@ -327,6 +312,8 @@ abstract class AbstractHelper extends BaseAbstractHelper
 
     /**
      * Retrieve the doctype helper
+     *
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     protected function getDoctypeHelper(): Doctype
     {
@@ -347,6 +334,8 @@ abstract class AbstractHelper extends BaseAbstractHelper
 
     /**
      * Retrieve the escapeHtml helper
+     *
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     protected function getEscapeHtmlHelper(): EscapeHtml
     {
@@ -367,6 +356,8 @@ abstract class AbstractHelper extends BaseAbstractHelper
 
     /**
      * Retrieve the escapeHtmlAttr helper
+     *
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     protected function getEscapeHtmlAttrHelper(): EscapeHtmlAttr
     {
@@ -482,7 +473,6 @@ abstract class AbstractHelper extends BaseAbstractHelper
     /**
      * Adds an HTML attribute to the list of valid attributes
      *
-     * @return static
      * @throws InvalidArgumentException For attribute names that are invalid per the HTML specifications.
      */
     public function addValidAttribute(string $attribute): static
@@ -498,7 +488,6 @@ abstract class AbstractHelper extends BaseAbstractHelper
     /**
      * Adds a prefix to the list of valid attribute prefixes
      *
-     * @return static
      * @throws InvalidArgumentException For attribute prefixes that are invalid
      *                                  per the HTML specifications for attribute names.
      */
@@ -514,8 +503,6 @@ abstract class AbstractHelper extends BaseAbstractHelper
 
     /**
      * Adds an HTML attribute to the list of translatable attributes
-     *
-     * @return static
      */
     public function addTranslatableAttribute(string $attribute): static
     {
@@ -534,8 +521,6 @@ abstract class AbstractHelper extends BaseAbstractHelper
 
     /**
      * Adds an HTML attribute to the list of translatable attributes
-     *
-     * @return static
      */
     public function addTranslatableAttributePrefix(string $prefix): static
     {
@@ -580,7 +565,6 @@ abstract class AbstractHelper extends BaseAbstractHelper
      * @internal
      *
      * @todo Reduce argument to only string in the next major
-     * @param int|string|float|bool $label
      */
     protected function translateLabel(int|string|float|bool $label): string
     {
@@ -592,6 +576,7 @@ abstract class AbstractHelper extends BaseAbstractHelper
      * escape the label
      *
      * @internal
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     protected function escapeLabel(ElementInterface $element, string $label): string
     {

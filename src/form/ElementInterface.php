@@ -13,8 +13,6 @@ interface ElementInterface
      *
      * In most cases, this will proxy to the attributes for storage, but is
      * present to indicate that elements are generally named.
-     *
-     * @return self
      */
     public function setName(string $name): ElementInterface;
 
@@ -25,15 +23,11 @@ interface ElementInterface
 
     /**
      * Set options for an element
-     *
-     * @return self
      */
     public function setOptions(iterable $options): ElementInterface;
 
     /**
      * Set a single option for an element
-     *
-     * @return self
      */
     public function setOption(string $key, mixed $value): ElementInterface;
 
@@ -44,8 +38,6 @@ interface ElementInterface
 
     /**
      * return the specified option
-     *
-     * @return null|mixed
      */
     public function getOption(string $option): mixed;
 
@@ -53,7 +45,6 @@ interface ElementInterface
      * Set a single element attribute
      *
      * @param scalar|null $value
-     * @return self
      */
     public function setAttribute(string $key, mixed $value): ElementInterface;
 
@@ -75,7 +66,6 @@ interface ElementInterface
      * Implementation will decide if this will overwrite or merge.
      *
      * @param iterable<string, scalar|null> $arrayOrTraversable
-     * @return self
      */
     public function setAttributes(iterable $arrayOrTraversable): ElementInterface;
 
@@ -88,22 +78,16 @@ interface ElementInterface
 
     /**
      * Set the value of the element
-     *
-     * @return self
      */
     public function setValue(mixed $value): ElementInterface;
 
     /**
      * Retrieve the element value
-     *
-     * @return mixed
      */
     public function getValue(): mixed;
 
     /**
      * Set the label (if any) used for this element
-     *
-     * @return self
      */
     public function setLabel(?string $label): ElementInterface;
 
@@ -114,8 +98,6 @@ interface ElementInterface
 
     /**
      * Set a list of messages to report when validation fails
-     *
-     * @return self
      */
     public function setMessages(iterable $messages): ElementInterface;
 

@@ -15,7 +15,6 @@ class RendererOptionsFactory
 {
     /**
      * @throws ContainerExceptionInterface
-     * @throws NotFoundExceptionInterface
      */
     public function __invoke(ContainerInterface $container): RendererOptions
     {

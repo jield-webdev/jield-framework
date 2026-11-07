@@ -42,10 +42,10 @@ class AssetFilterManager implements MimeResolverAwareInterface
     /**
      * See if there are filters for the asset, and if so, set them.
      *
-     * @param string $path
-     * @param \Jield\AssetManager\Asset\AssetInterface $asset
      *
      * @throws Exception\RuntimeException on invalid filters
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
      */
     public function setFilters(string $path, \Jield\AssetManager\Asset\AssetInterface $asset): void
     {
@@ -88,9 +88,10 @@ class AssetFilterManager implements MimeResolverAwareInterface
     /**
      * Ensure that the filters as service are set.
      *
-     * @param AssetInterface $asset
      * @param string $service A valid service name.
      * @throws  Exception\RuntimeException
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
      */
     protected function ensureByService(AssetInterface $asset, string $service): void
     {
@@ -100,9 +101,9 @@ class AssetFilterManager implements MimeResolverAwareInterface
     /**
      * Ensure that the filters as filter are set.
      *
-     * @param AssetInterface $asset
      * @param string|FilterInterface $filter Either an instance of FilterInterface or a classname.
      * @throws Exception\RuntimeException
+     * @throws \ReflectionException
      */
     protected function ensureByFilter(AssetInterface $asset, string|FilterInterface $filter): void
     {

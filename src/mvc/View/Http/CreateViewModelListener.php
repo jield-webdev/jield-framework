@@ -23,8 +23,6 @@ class CreateViewModelListener extends AbstractListenerAggregate
 
     /**
      * Inspect the result, and cast it to a ViewModel if an assoc array is detected
-     *
-     * @return void
      */
     public function createViewModelFromArray(MvcEvent $e): void
     {
@@ -40,8 +38,6 @@ class CreateViewModelListener extends AbstractListenerAggregate
 
     /**
      * Inspect the result, and cast it to a ViewModel if null is detected
-     *
-     * @return void
      */
     public function createViewModelFromNull(MvcEvent $e): void
     {

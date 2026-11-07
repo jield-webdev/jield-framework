@@ -27,6 +27,9 @@ final class Module implements InitProviderInterface
 
     /**
      * Register a specification for the FormElementManager with the ServiceListener.
+     *
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
      */
     public function init(ModuleManagerInterface $manager): void
     {

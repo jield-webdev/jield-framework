@@ -13,6 +13,9 @@ use Psr\Container\ContainerInterface;
 
 class SendApiProblemResponseListenerFactory
 {
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     public function __invoke(ContainerInterface $container): SendApiProblemResponseListener
     {
         /** @mago-var mixed $config */

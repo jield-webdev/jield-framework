@@ -34,7 +34,6 @@ class Link implements LinkInterface
 
     protected string $route = '';
 
-    /** @var array */
     protected array $routeOptions = [];
 
     /** @var array<string,mixed> */
@@ -68,6 +67,7 @@ class Link implements LinkInterface
      *     url?: string
      * } $spec
      * @throws Exception\InvalidArgumentException If missing a "rel" or invalid route specifications.
+     * @throws Throwable
      */
     public static function factory(array $spec): Link
     {
@@ -140,7 +140,6 @@ class Link implements LinkInterface
      * "href" will be ignored.
      *
      * @param array<string, mixed> $props
-     * @return static
      */
     public function setProps(array $props): static
     {
@@ -156,6 +155,8 @@ class Link implements LinkInterface
      * Set the route to use when generating the relation URI
      *
      * If any params or options are passed, those will be passed to route assembly.
+     *
+     * @throws DomainException
      */
     public function setRoute(string $route, ?iterable $params = null, ?iterable $options = null): static
     {
@@ -179,8 +180,6 @@ class Link implements LinkInterface
     /**
      * Set route assembly options
      *
-     * @param iterable $options
-     * @return static
      * @throws Exception\InvalidArgumentException
      */
     public function setRouteOptions(iterable $options): static
@@ -197,7 +196,6 @@ class Link implements LinkInterface
      * Set route assembly parameters/substitutions
      *
      * @param Traversable|array<string, mixed> $params
-     * @return static
      * @throws Exception\InvalidArgumentException
      */
     public function setRouteParams(iterable $params): static
@@ -214,10 +212,7 @@ class Link implements LinkInterface
     /**
      * Set an explicit URL for the link relation
      *
-     * @param string $href
-     * @return static
-     * @throws DomainException
-     * @throws Exception\InvalidArgumentException
+     * @throws Throwable
      */
     public function setUrl(string $href): static
     {
@@ -249,9 +244,7 @@ class Link implements LinkInterface
     /**
      * Get additional properties to include in Link representation
      *
-     * @return array
      * @deprecated 1.4.3 Use getAttributes() instead
-     *
      */
     public function getProps(): array
     {
@@ -261,9 +254,7 @@ class Link implements LinkInterface
     /**
      * Retrieve the link relation
      *
-     * @return string
      * @deprecated 1.4.3 Use getRels() and update your code to handle an array of strings
-     *
      */
     public function getRelation(): string
     {
@@ -274,8 +265,6 @@ class Link implements LinkInterface
 
     /**
      * Return the route to be used to generate the link URL, if any
-     *
-     * @return null|string
      */
     public function getRoute(): ?string
     {
@@ -284,8 +273,6 @@ class Link implements LinkInterface
 
     /**
      * Retrieve route assembly options, if any
-     *
-     * @return array
      */
     public function getRouteOptions(): array
     {
@@ -305,9 +292,7 @@ class Link implements LinkInterface
     /**
      * Retrieve the link URL, if set
      *
-     * @return null|string
      * @deprecated 1.4.3 Use getHref() instead
-     *
      */
     public function getUrl(): ?string
     {
@@ -316,8 +301,6 @@ class Link implements LinkInterface
 
     /**
      * Is the link relation complete -- do we have either a URL or a route set?
-     *
-     * @return bool
      */
     public function isComplete(): bool
     {
@@ -326,8 +309,6 @@ class Link implements LinkInterface
 
     /**
      * Does the link have a route set?
-     *
-     * @return bool
      */
     public function hasRoute(): bool
     {
@@ -337,9 +318,7 @@ class Link implements LinkInterface
     /**
      * Does the link have a URL set?
      *
-     * @return bool
      * @deprecated since 1.5.0; no empty URLs will be allowed in the future.
-     *
      */
     public function hasUrl(): bool
     {

@@ -19,11 +19,6 @@ class ObjectMultiCheckbox extends MultiCheckbox
 {
     use GetProxy;
 
-    /**
-     * @param iterable $options
-     *
-     * @return static
-     */
     #[Override]
     public function setOptions(iterable $options): static
     {
@@ -44,6 +39,7 @@ class ObjectMultiCheckbox extends MultiCheckbox
 
     /**
      * {@inheritDoc}
+     * @throws \RuntimeException
      */
     #[Override]
     public function setValue($value): static
@@ -63,6 +59,7 @@ class ObjectMultiCheckbox extends MultiCheckbox
      * {@inheritDoc}
      *
      * @return ValueOptionSpec
+     * @throws \Exception
      */
     #[Override]
     public function getValueOptions(): array

@@ -11,6 +11,9 @@ use Symfony\Component\Mailer\MailerInterface;
 
 final class LoggingFactory
 {
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     public function __invoke(ContainerInterface $container): Logging
     {
         /** @mago-var mixed $config */

@@ -19,7 +19,6 @@ class Color extends Element implements InputProviderInterface
         'type' => 'color',
     ];
 
-    /** @var null|ValidatorInterface */
     protected ?ValidatorInterface $validator = null;
 
     /**

@@ -11,6 +11,10 @@ use function count;
 
 final class FormInput extends Helper\FormInput
 {
+    /**
+     * @throws \Jield\Form\Exception\ExceptionInterface
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     public function render(ElementInterface $element): string
     {
         if (null === $element->getAttribute(key: 'class')) {

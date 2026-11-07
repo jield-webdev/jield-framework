@@ -20,29 +20,21 @@ class RouteNotFoundStrategy extends AbstractListenerAggregate
 {
     /**
      * Whether or not to display exceptions related to the 404 condition
-     *
-     * @var bool
      */
     protected bool $displayExceptions = false;
 
     /**
      * Whether or not to display the reason for a 404
-     *
-     * @var bool
      */
     protected bool $displayNotFoundReason = false;
 
     /**
      * Template to use to report page not found conditions
-     *
-     * @var string
      */
     protected string $notFoundTemplate = 'error';
 
     /**
      * The reason for a not-found condition
-     *
-     * @var false|string
      */
     protected string|false $reason = false;
 
@@ -60,7 +52,6 @@ class RouteNotFoundStrategy extends AbstractListenerAggregate
      * Set value indicating whether or not to display exceptions related to a not-found condition
      *
      * @param  bool $displayExceptions
-     * @return static
      */
     public function setDisplayExceptions($displayExceptions): static
     {
@@ -70,8 +61,6 @@ class RouteNotFoundStrategy extends AbstractListenerAggregate
 
     /**
      * Should we display exceptions related to a not-found condition?
-     *
-     * @return bool
      */
     public function displayExceptions(): bool
     {
@@ -82,7 +71,6 @@ class RouteNotFoundStrategy extends AbstractListenerAggregate
      * Set value indicating whether or not to display the reason for a not-found condition
      *
      * @param  bool $displayNotFoundReason
-     * @return static
      */
     public function setDisplayNotFoundReason($displayNotFoundReason): static
     {
@@ -92,8 +80,6 @@ class RouteNotFoundStrategy extends AbstractListenerAggregate
 
     /**
      * Should we display the reason for a not-found condition?
-     *
-     * @return bool
      */
     public function displayNotFoundReason(): bool
     {
@@ -104,7 +90,6 @@ class RouteNotFoundStrategy extends AbstractListenerAggregate
      * Get template for not found conditions
      *
      * @param  string $notFoundTemplate
-     * @return static
      */
     public function setNotFoundTemplate($notFoundTemplate): static
     {
@@ -114,8 +99,6 @@ class RouteNotFoundStrategy extends AbstractListenerAggregate
 
     /**
      * Get template for not found conditions
-     *
-     * @return string
      */
     public function getNotFoundTemplate(): string
     {
@@ -127,8 +110,6 @@ class RouteNotFoundStrategy extends AbstractListenerAggregate
      *
      * If a "controller not found" or "invalid controller" error type is
      * encountered, sets the response status code to 404.
-     *
-     * @return void
      */
     public function detectNotFoundError(MvcEvent $e): void
     {
@@ -153,8 +134,6 @@ class RouteNotFoundStrategy extends AbstractListenerAggregate
 
     /**
      * Create and return a 404 view model
-     *
-     * @return void
      */
     public function prepareNotFoundViewModel(MvcEvent $e): void
     {
@@ -205,8 +184,6 @@ class RouteNotFoundStrategy extends AbstractListenerAggregate
      * If $displayNotFoundReason is enabled, checks to see if $reason is set,
      * and, if so, injects it into the model. If not, it injects
      * Application::ERROR_CONTROLLER_CANNOT_DISPATCH.
-     *
-     * @return void
      */
     protected function injectNotFoundReason(ViewModel $model): void
     {
@@ -233,7 +210,6 @@ class RouteNotFoundStrategy extends AbstractListenerAggregate
      *
      * @param  ViewModel $model
      * @param  MvcEvent $e
-     * @return void
      */
     protected function injectException($model, $e): void
     {
@@ -265,7 +241,6 @@ class RouteNotFoundStrategy extends AbstractListenerAggregate
      *
      * @param  ViewModel $model
      * @param  MvcEvent $e
-     * @return void
      */
     protected function injectController($model, $e): void
     {

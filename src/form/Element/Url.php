@@ -18,7 +18,6 @@ class Url extends Element implements InputProviderInterface
         'type' => 'url',
     ];
 
-    /** @var null|ValidatorInterface */
     protected ?ValidatorInterface $validator = null;
 
     /**

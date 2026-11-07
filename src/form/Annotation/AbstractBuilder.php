@@ -137,6 +137,10 @@ abstract class AbstractBuilder implements EventManagerAwareInterface, FormFactor
      * Create a form from an object.
      *
      * @param  class-string|object $entity
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws Exception\ExceptionInterface
+     * @throws \Laminas\InputFilter\Exception\RuntimeException
+     * @throws \ReflectionException
      */
     public function createForm($entity): FormInterface
     {
@@ -290,8 +294,6 @@ abstract class AbstractBuilder implements EventManagerAwareInterface, FormFactor
 
     /**
      * Determine if an element is marked to exclude from the definitions
-     *
-     * @return bool
      */
     protected function checkForExclude(AnnotationCollection $annotations): bool
     {

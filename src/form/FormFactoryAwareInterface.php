@@ -8,8 +8,6 @@ interface FormFactoryAwareInterface
 {
     /**
      * Compose a form factory into the object
-     *
-     * @return self
      */
     public function setFormFactory(Factory $formFactory): FormFactoryAwareInterface;
 }

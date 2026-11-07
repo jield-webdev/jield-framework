@@ -16,11 +16,12 @@ class DateTimeLocal extends AbstractDateTime
         'type' => 'datetime-local',
     ];
 
-    /** @inheritDoc */
     protected string $format = 'Y-m-d\TH:i';
 
     /**
      * Retrieves a DateStepValidator configured for a Date Input type
+     *
+     * @throws \DateMalformedIntervalStringException
      */
     protected function getStepValidator(): ValidatorInterface
     {

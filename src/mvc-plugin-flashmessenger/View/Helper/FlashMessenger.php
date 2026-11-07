@@ -53,29 +53,21 @@ class FlashMessenger extends AbstractTranslatorHelper
     ];
 
     protected string $messageCloseString = '</li></ul>';
-    /** @var string */
     protected string $messageOpenFormat = '<ul%s><li>';
-    /** @var string */
     protected string $messageSeparatorString = '</li><li>';
 
     /**
      * Flag whether to escape messages
-     *
-     * @var bool
      */
     protected bool $autoEscape = true;
 
     /**
      * Html escape helper
-     *
-     * @var EscapeHtml|null
      */
     protected ?EscapeHtml $escapeHtmlHelper = null;
 
     /**
      * Flash messenger plugin
-     *
-     * @var PluginFlashMessenger|null
      */
     protected ?PluginFlashMessenger $pluginFlashMessenger = null;
 
@@ -101,7 +93,6 @@ class FlashMessenger extends AbstractTranslatorHelper
     /**
      * Returns the flash messenger plugin controller
      *
-     * @param string|null $namespace
      * @return FlashMessenger|PluginFlashMessenger|array<array-key, string>
      */
     public function __invoke(?string $namespace = null)
@@ -132,7 +123,6 @@ class FlashMessenger extends AbstractTranslatorHelper
     /**
      * Set the flash messenger plugin
      *
-     * @param PluginFlashMessenger $pluginFlashMessenger
      * @return FlashMessenger
      * @throws InvalidArgumentException For an invalid $pluginFlashMessenger.
      */
@@ -145,8 +135,6 @@ class FlashMessenger extends AbstractTranslatorHelper
     /**
      * Proxy the flash messenger plugin controller
      *
-     * @param string $method
-     * @param array $argv
      * @return mixed
      */
     public function __call(string $method, array $argv)
@@ -158,10 +146,10 @@ class FlashMessenger extends AbstractTranslatorHelper
     /**
      * Render Messages
      *
-     * @param string $namespace
      * @param array<array-key, string> $classes
-     * @param bool|null $autoEscape
      * @return string
+     * @throws \ReflectionException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function render(string $namespace = 'default', array $classes = [], ?bool $autoEscape = null)
     {
@@ -173,11 +161,11 @@ class FlashMessenger extends AbstractTranslatorHelper
     /**
      * Render Messages
      *
-     * @param string $namespace
      * @param array<array-key, string> $messages
      * @param array<array-key, string> $classes
-     * @param bool|null $autoEscape
      * @return string
+     * @throws \ReflectionException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     protected function renderMessages(
         string $namespace = 'default',
@@ -201,7 +189,7 @@ class FlashMessenger extends AbstractTranslatorHelper
         $messagesToPrint = [];
         $translator = $this->getTranslator();
         $translatorTextDomain = $this->getTranslatorTextDomain();
-        array_walk_recursive($messages, static function ($item) use (
+        array_walk_recursive($messages, /** @throws \ReflectionException */ static function ($item) use (
             &$messagesToPrint,
             $escapeHtml,
             $autoEscape,
@@ -254,6 +242,7 @@ class FlashMessenger extends AbstractTranslatorHelper
      * Retrieve the escapeHtml helper
      *
      * @return EscapeHtml
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     protected function getEscapeHtmlHelper()
     {
@@ -281,7 +270,6 @@ class FlashMessenger extends AbstractTranslatorHelper
     /**
      * Set the formatted string used to open message representation
      *
-     * @param string $messageOpenFormat
      * @return FlashMessenger
      */
     public function setMessageOpenFormat(string $messageOpenFormat, ?string $namespaceName = null)
@@ -323,7 +311,6 @@ class FlashMessenger extends AbstractTranslatorHelper
     /**
      * Set the string used to separate messages
      *
-     * @param string $messageSeparatorString
      * @return FlashMessenger
      */
     public function setMessageSeparatorString(string $messageSeparatorString, ?string $namespaceName = null)
@@ -357,7 +344,6 @@ class FlashMessenger extends AbstractTranslatorHelper
     /**
      * Set the string used to close message representation
      *
-     * @param string $messageCloseString
      * @return FlashMessenger
      */
     public function setMessageCloseString(string $messageCloseString, ?string $namespaceName = null)
@@ -376,9 +362,9 @@ class FlashMessenger extends AbstractTranslatorHelper
     /**
      * Render Current Messages
      *
-     * @param string $namespace
-     * @param bool|null $autoEscape
      * @return string
+     * @throws \ReflectionException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function renderCurrent(string $namespace = 'default', array $classes = [], ?bool $autoEscape = null)
     {
@@ -400,7 +386,6 @@ class FlashMessenger extends AbstractTranslatorHelper
     /**
      * Set whether or not auto escaping should be used
      *
-     * @param bool $autoEscape
      * @return self
      */
     public function setAutoEscape(bool $autoEscape = true)

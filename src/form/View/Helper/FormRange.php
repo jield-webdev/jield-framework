@@ -11,8 +11,6 @@ class FormRange extends FormInput
 {
     /**
      * Attributes valid for the input tag type="range"
-     *
-     * @var array
      */
     protected array $validTagAttributes = [
         'name' => true,

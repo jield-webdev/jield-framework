@@ -8,6 +8,9 @@ use Psr\Container\ContainerInterface;
 
 class OAuth2ServerFactory
 {
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     public function __invoke(ContainerInterface $container): OAuth2ServerInstanceFactory
     {
         /** @mago-var mixed $config */

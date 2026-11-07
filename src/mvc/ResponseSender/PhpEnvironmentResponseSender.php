@@ -11,7 +11,7 @@ class PhpEnvironmentResponseSender extends HttpResponseSender
     /**
      * Send php environment response
      *
-     * @return void
+     * @throws \ReflectionException
      */
     public function __invoke(SendResponseEvent $event): void
     {

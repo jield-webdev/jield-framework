@@ -12,15 +12,12 @@ interface ModuleManagerInterface extends EventManagerAwareInterface
 
     /**
      * Load the provided modules.
-     *
-     * @return ModuleManagerInterface
      */
     public function loadModules(): ModuleManagerInterface;
 
     /**
      * Load a specific module by name.
      *
-     * @param string $moduleName
      * @return mixed Module's Module class
      */
     public function loadModule(string $moduleName): mixed;
@@ -35,8 +32,6 @@ interface ModuleManagerInterface extends EventManagerAwareInterface
 
     /**
      * Get the array of module names that this manager should load.
-     *
-     * @return array
      */
     public function getModules(): array;
 
@@ -44,7 +39,6 @@ interface ModuleManagerInterface extends EventManagerAwareInterface
      * Set an array or Traversable of module names that this module manager should load.
      *
      * @param mixed $modules array or Traversable of module names
-     * @return ModuleManagerInterface
      */
     public function setModules(mixed $modules): ModuleManagerInterface;
 }

@@ -10,12 +10,8 @@ interface LinkCollectionExtractorInterface
 {
     /**
      * Extract a link collection into a structured set of links.
-     *
      */
     public function extract(LinkCollection $collection): array;
 
-    /**
-     * @return LinkExtractorInterface
-     */
     public function getLinkExtractor(): LinkExtractorInterface;
 }

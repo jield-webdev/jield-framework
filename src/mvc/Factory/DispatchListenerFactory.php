@@ -15,10 +15,6 @@ class DispatchListenerFactory implements FactoryInterface
 {
     /**
      * Create the default dispatch listener.
-     *
-     * @param  string $requestedName
-     * @param  null|array $options
-     * @return DispatchListener
      */
     public function __invoke(
         ContainerInterface $container,

@@ -37,71 +37,51 @@ class Collection extends Fieldset implements CollectionInterface
 
     /**
      * Element used in the collection
-     *
-     * @var null|ElementInterface
      */
     protected ?ElementInterface $targetElement = null;
 
     /**
      * Initial count of target element
-     *
-     * @var int
      */
     protected int $count = 1;
 
     /**
      * Are new elements allowed to be added dynamically ?
-     *
-     * @var bool
      */
     protected bool $allowAdd = true;
 
     /**
      * Are existing elements allowed to be removed dynamically ?
-     *
-     * @var bool
      */
     protected bool $allowRemove = true;
 
     /**
      * Is the template generated ?
-     *
-     * @var bool
      */
     protected bool $shouldCreateTemplate = false;
 
     /**
      * Placeholder used in template content for making your life easier with JavaScript
-     *
-     * @var string
      */
     protected string $templatePlaceholder = CollectionInterface::DEFAULT_TEMPLATE_PLACEHOLDER;
 
     /**
      * Whether or not to create new objects during modify
-     *
-     * @var bool
      */
     protected bool $createNewObjects = false;
 
     /**
      * Element used as a template
-     *
-     * @var null|ElementInterface|FieldsetInterface
      */
     protected ElementInterface|FieldsetInterface|null $templateElement = null;
 
     /**
      * The index of the last child element or fieldset
-     *
-     * @var int
      */
     protected int $lastChildIndex = -1;
 
     /**
      * Should child elements must be created on self::prepareElement()?
-     *
-     * @var bool
      */
     protected bool $shouldCreateChildrenOnPrepareElement = true;
 
@@ -114,7 +94,10 @@ class Collection extends Fieldset implements CollectionInterface
      * - should_create_template: if set to true, a template is generated (inside a <span>)
      * - template_placeholder: placeholder used in the data template
      *
-     * @return static
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws Exception\ExceptionInterface
+     * @throws \Laminas\InputFilter\Exception\RuntimeException
+     * @throws \ReflectionException
      */
     public function setOptions(iterable $options): static
     {
@@ -171,8 +154,6 @@ class Collection extends Fieldset implements CollectionInterface
      * Set the object used by the hydrator
      * In this case the "object" is a collection of objects
      *
-     * @param mixed $object
-     * @return static
      * @throws Exception\InvalidArgumentException
      */
     public function setObject(mixed $object): static
@@ -196,8 +177,10 @@ class Collection extends Fieldset implements CollectionInterface
     /**
      * Populate values
      *
-     * @throws Exception\InvalidArgumentException
-     * @throws Exception\DomainException
+     * @throws Exception\ExceptionInterface
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
+     * @throws \Laminas\InputFilter\Exception\RuntimeException
      */
     public function populateValues(iterable $data): void
     {
@@ -273,7 +256,7 @@ class Collection extends Fieldset implements CollectionInterface
     /**
      * Bind values to the object
      *
-     * @return array|mixed|void
+     * @return list<mixed> Values bound from the collection's elements and fieldsets.
      */
     public function bindValues(array $values = [], ?array $validationGroup = null): mixed
     {
@@ -294,8 +277,6 @@ class Collection extends Fieldset implements CollectionInterface
 
     /**
      * Set the initial count of target element
-     *
-     * @return static
      */
     public function setCount(int $count): static
     {
@@ -314,9 +295,10 @@ class Collection extends Fieldset implements CollectionInterface
     /**
      * Set the target element
      *
-     * @param Traversable|array|ElementInterface $elementOrFieldset
-     * @return static
-     * @throws Exception\InvalidArgumentException
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws Exception\ExceptionInterface
+     * @throws \Laminas\InputFilter\Exception\RuntimeException
+     * @throws \ReflectionException
      */
     public function setTargetElement(Traversable|ElementInterface|array $elementOrFieldset): static
     {
@@ -341,9 +323,6 @@ class Collection extends Fieldset implements CollectionInterface
         return $this->targetElement;
     }
 
-    /**
-     * @return static
-     */
     public function setAllowAdd(bool $allowAdd): static
     {
         $this->allowAdd = $allowAdd;
@@ -358,9 +337,6 @@ class Collection extends Fieldset implements CollectionInterface
         return $this->allowAdd;
     }
 
-    /**
-     * @return static
-     */
     public function setAllowRemove(bool $allowRemove): static
     {
         $this->allowRemove = $allowRemove;
@@ -375,8 +351,6 @@ class Collection extends Fieldset implements CollectionInterface
     /**
      * If set to true, a template prototype is automatically added to the form
      * to ease the creation of dynamic elements through JavaScript
-     *
-     * @return static
      */
     public function setShouldCreateTemplate(bool $shouldCreateTemplate): static
     {
@@ -395,8 +369,6 @@ class Collection extends Fieldset implements CollectionInterface
 
     /**
      * Set the placeholder used in the template generated to help create new elements in JavaScript
-     *
-     * @return static
      */
     public function setTemplatePlaceholder(string $templatePlaceholder): static
     {
@@ -413,9 +385,6 @@ class Collection extends Fieldset implements CollectionInterface
         return $this->templatePlaceholder;
     }
 
-    /**
-     * @return static
-     */
     public function setCreateNewObjects(bool $createNewObjects): static
     {
         $this->createNewObjects = $createNewObjects;
@@ -430,7 +399,7 @@ class Collection extends Fieldset implements CollectionInterface
     /**
      * Get a template element used for rendering purposes only
      *
-     * @return null|ElementInterface|FieldsetInterface
+     * @throws \ReflectionException
      */
     public function getTemplateElement(): FieldsetInterface|ElementInterface|null
     {
@@ -441,6 +410,11 @@ class Collection extends Fieldset implements CollectionInterface
 
     /**
      * Prepare the collection by adding a dummy template element if the user want one
+     *
+     * @throws Exception\ExceptionInterface
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
+     * @throws \Laminas\InputFilter\Exception\RuntimeException
      */
     public function prepareElement(FormInterface $form): void
     {
@@ -469,7 +443,7 @@ class Collection extends Fieldset implements CollectionInterface
      * @throws Exception\InvalidArgumentException
      * @throws InvalidArgumentException
      * @throws Exception\DomainException
-     * @throws Exception\InvalidElementException
+     * @throws \ReflectionException
      */
     public function extract(): array
     {
@@ -524,6 +498,8 @@ class Collection extends Fieldset implements CollectionInterface
 
     /**
      * Create a new instance of the target element
+     *
+     * @throws \ReflectionException
      */
     protected function createNewTargetElementInstance(): ElementInterface
     {
@@ -542,7 +518,10 @@ class Collection extends Fieldset implements CollectionInterface
     /**
      * Add a new instance of the target element
      *
-     * @throws Exception\DomainException
+     * @throws Exception\ExceptionInterface
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
+     * @throws \Laminas\InputFilter\Exception\RuntimeException
      */
     protected function addNewTargetElementInstance(string $name): ElementInterface
     {
@@ -567,7 +546,7 @@ class Collection extends Fieldset implements CollectionInterface
     /**
      * Create a dummy template element
      *
-     * @return null|ElementInterface|FieldsetInterface
+     * @throws \ReflectionException
      */
     protected function createTemplateElement(): FieldsetInterface|ElementInterface|null
     {

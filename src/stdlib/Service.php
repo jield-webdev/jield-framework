@@ -10,7 +10,10 @@ use Psr\Container\ContainerInterface;
 /** Resolve services with an explicit contract at the container boundary. */
 final class Service
 {
-    /** @return array<array-key, mixed> */
+    /**
+     * @return array<array-key, mixed>
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     public static function config(ContainerInterface $container, string $id = 'config'): array
     {
         return Value::array($container->get($id));
@@ -21,6 +24,7 @@ final class Service
      * @template T of object
      * @param class-string<T> $type
      * @return T|false
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public static function getOrFalse(ContainerInterface $container, string $type, ?string $id = null): object|false
     {
@@ -34,6 +38,7 @@ final class Service
      * @template T of object
      * @param class-string<T> $type
      * @return T
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public static function get(ContainerInterface $container, string $type, ?string $id = null): object
     {

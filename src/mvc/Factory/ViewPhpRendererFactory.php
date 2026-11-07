@@ -12,11 +12,6 @@ use Psr\Container\ContainerInterface;
 
 class ViewPhpRendererFactory implements FactoryInterface
 {
-    /**
-     * @param  string $requestedName
-     * @param  null|array $options
-     * @return PhpRenderer
-     */
     public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): PhpRenderer
     {
         return new PhpRenderer(

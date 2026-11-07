@@ -48,6 +48,8 @@ class Route extends AbstractGuard
     /**
      * Event callback to be triggered on dispatch, causes application error triggering
      * in case of failed authorization check
+     *
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function onRoute(MvcEvent $event): mixed
     {

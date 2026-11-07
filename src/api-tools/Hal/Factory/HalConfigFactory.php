@@ -10,6 +10,9 @@ use function is_array;
 
 class HalConfigFactory
 {
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     public function __invoke(ContainerInterface $container): array
     {
         /** @var array<string,mixed> $config */

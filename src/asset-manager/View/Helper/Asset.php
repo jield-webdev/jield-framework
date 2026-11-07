@@ -10,11 +10,6 @@ use Laminas\Cache\Storage\Adapter\AbstractAdapter as AbstractCacheAdapter;
 
 class Asset extends AbstractHelper
 {
-    /**
-     * @param ResolverInterface $assetManagerResolver
-     * @param AbstractCacheAdapter|null $cache
-     * @param array $config
-     */
     public function __construct(
         private readonly ResolverInterface $assetManagerResolver,
         private readonly ?AbstractCacheAdapter $cache,
@@ -23,12 +18,6 @@ class Asset extends AbstractHelper
 
     /**
      * Append timestamp as query param to the filename
-     *
-     * @param string $filename
-     * @param string $queryString
-     * @param int|null $timestamp
-     *
-     * @return string
      */
     private function appendTimestamp(string $filename, string $queryString, ?int $timestamp = null): string
     {
@@ -40,10 +29,6 @@ class Asset extends AbstractHelper
 
     /**
      * find the file and if it exists, append its unix modification time to the filename
-     *
-     * @param string $filename
-     * @param string $queryString
-     * @return string
      */
     private function elaborateFilePath(string $filename, string $queryString): string
     {
@@ -63,10 +48,7 @@ class Asset extends AbstractHelper
     /**
      * Use the cache to get the filePath
      *
-     * @param string $filename
-     * @param string $queryString
-     *
-     * @return mixed
+     * @throws \Laminas\Cache\Exception\ExceptionInterface
      */
     private function getFilePathFromCache(string $filename, string $queryString): mixed
     {
@@ -94,8 +76,7 @@ class Asset extends AbstractHelper
     /**
      * Output the filepath with its unix modification time as query param
      *
-     * @param string $filename
-     * @return string
+     * @throws \Laminas\Cache\Exception\ExceptionInterface
      */
     public function __invoke(string $filename): string
     {

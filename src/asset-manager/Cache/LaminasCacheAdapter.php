@@ -15,8 +15,6 @@ use Webmozart\Assert\Assert;
 class LaminasCacheAdapter implements CacheInterface
 {
     /**
-     * Constructor
-     *
      * @param StorageInterface $jieldCache Jield Configured Cache Storage
      */
     public function __construct(
@@ -25,6 +23,7 @@ class LaminasCacheAdapter implements CacheInterface
 
     /**
      * {@inheritDoc}
+     * @throws \Laminas\Cache\Exception\ExceptionInterface
      */
     #[Override]
     public function has($key)
@@ -34,6 +33,7 @@ class LaminasCacheAdapter implements CacheInterface
 
     /**
      * {@inheritDoc}
+     * @throws \Laminas\Cache\Exception\ExceptionInterface
      */
     #[Override]
     public function get($key)
@@ -43,6 +43,7 @@ class LaminasCacheAdapter implements CacheInterface
 
     /**
      * {@inheritDoc}
+     * @throws \Laminas\Cache\Exception\ExceptionInterface
      */
     #[Override]
     public function set($key, $value)
@@ -52,6 +53,7 @@ class LaminasCacheAdapter implements CacheInterface
 
     /**
      * {@inheritDoc}
+     * @throws \Laminas\Cache\Exception\ExceptionInterface
      */
     #[Override]
     public function remove($key)

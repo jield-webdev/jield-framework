@@ -67,7 +67,6 @@ class ModuleLoaderListener extends AbstractListener implements ListenerAggregate
         }
     }
 
-    /** @return bool */
     protected function hasCachedClassMap(): bool
     {
         return (
@@ -75,7 +74,6 @@ class ModuleLoaderListener extends AbstractListener implements ListenerAggregate
         );
     }
 
-    /** @return array */
     protected function getCachedConfig(): array
     {
         return \Webmozart\Assert\Assert::isArray(include $this->options->getModuleMapCacheFile());
@@ -83,6 +81,10 @@ class ModuleLoaderListener extends AbstractListener implements ListenerAggregate
 
     /**
      * Unregisters the ModuleLoader and generates the module class map cache.
+     *
+     * @throws Exception\ConfigCannotBeCachedException
+     * @throws \Webimpress\SafeWriter\Exception\ExceptionInterface
+     * @throws \UnexpectedValueException
      */
     public function onLoadModulesPost(ModuleEvent $event): void
     {

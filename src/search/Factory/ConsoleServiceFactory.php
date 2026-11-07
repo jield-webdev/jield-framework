@@ -10,6 +10,10 @@ use Psr\Container\ContainerInterface;
 
 final class ConsoleServiceFactory implements FactoryInterface
 {
+    /**
+     * @throws \ReflectionException
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): ConsoleService
     {
         return new ConsoleService(container: $container);

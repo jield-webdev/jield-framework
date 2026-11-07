@@ -8,8 +8,5 @@ interface LinkCollectionAwareInterface
 {
     public function setLinks(LinkCollection $links): mixed;
 
-    /**
-     * @return LinkCollection
-     */
     public function getLinks(): LinkCollection;
 }

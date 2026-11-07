@@ -21,7 +21,6 @@ class AcceptFilterListener extends ContentTypeFilterListener
 {
     /**
      * Test if the accept content-type received is allowable.
-     *
      */
     #[Override]
     public function onRoute(MvcEvent $e): ?ApiProblemResponse
@@ -70,8 +69,6 @@ class AcceptFilterListener extends ContentTypeFilterListener
 
     /**
      * Validate the passed mediatype against the appropriate header
-     *
-     * @param string $match
      */
     protected function validateMediaType(string $match, HttpHeaders $headers): bool
     {

@@ -26,15 +26,14 @@ final class RpcController extends BaseAbstractActionController
     /** @var null|callable */
     protected $wrappedCallable;
 
-    /**
-     * @param callable $wrappedCallable
-     * @return void
-     */
     public function setWrappedCallable(callable $wrappedCallable): void
     {
         $this->wrappedCallable = $wrappedCallable;
     }
 
+    /**
+     * @throws Exception
+     */
     #[Override]
     public function onDispatch(MvcEvent $e): mixed
     {
@@ -84,7 +83,6 @@ final class RpcController extends BaseAbstractActionController
      * Transform an "action" token into a method name
      *
      * @param string $action
-     * @return string
      */
     #[Override]
     public static function getMethodFromAction($action): string

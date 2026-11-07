@@ -134,8 +134,6 @@ class Resource implements ResourceInterface
      * Retrieve event manager
      *
      * Lazy-instantiates an EM instance if none provided.
-     *
-     * @return EventManagerInterface
      */
     #[Override]
     public function getEventManager(): EventManagerInterface
@@ -158,8 +156,6 @@ class Resource implements ResourceInterface
      * $data is returned. If you wish to indicate failure to create, raise a
      * Jield\ApiTools\Rest\Exception\CreationException from a listener.
      *
-     * @param object|array $data
-     * @return array|object
      * @throws Exception\InvalidArgumentException
      */
     #[Override]
@@ -191,9 +187,6 @@ class Resource implements ResourceInterface
      * returned. If you wish to indicate failure to update, raise a
      * Jield\ApiTools\Rest\Exception\UpdateException.
      *
-     * @param int|string $id
-     * @param object|array $data
-     * @return array|object
      * @throws Exception\InvalidArgumentException
      */
     #[Override]
@@ -228,8 +221,6 @@ class Resource implements ResourceInterface
      * returned. If you wish to indicate failure to update, raise a
      * Jield\ApiTools\Rest\Exception\UpdateException.
      *
-     * @param array $data
-     * @return array|object
      * @throws Exception\InvalidArgumentException
      */
     #[Override]
@@ -275,9 +266,6 @@ class Resource implements ResourceInterface
      * returned. If you wish to indicate failure to update, raise a
      * Jield\ApiTools\Rest\Exception\PatchException.
      *
-     * @param int|string $id
-     * @param object|array $data
-     * @return array|object
      * @throws Exception\InvalidArgumentException
      */
     #[Override]
@@ -314,8 +302,6 @@ class Resource implements ResourceInterface
      * if you wish to indicate a failure to create, raise a
      * PhlyRestfully\Exception\CreationException.
      *
-     * @param array $data
-     * @return array|object
      * @throws Exception\InvalidArgumentException
      */
     public function patchList(array $data): object|array
@@ -377,7 +363,6 @@ class Resource implements ResourceInterface
     /**
      * Delete an existing collection of records
      *
-     * @param array $data
      * @return bool|Response
      */
     #[Override]
@@ -400,9 +385,6 @@ class Resource implements ResourceInterface
      * listener will be returned, as long as it is an array or object;
      * otherwise, a boolean false value will be returned, indicating a
      * lookup failure.
-     *
-     * @param int|string $id
-     * @return false|array|object
      */
     #[Override]
     public function fetch(int|string $id): object|false|array
@@ -449,11 +431,6 @@ class Resource implements ResourceInterface
         return $last;
     }
 
-    /**
-     * @param string $name
-     * @param array $args
-     * @return ResponseCollection
-     */
     protected function triggerEvent(string $name, array $args): ResponseCollection
     {
         return $this->getEventManager()->triggerEventUntil(
@@ -474,10 +451,6 @@ class Resource implements ResourceInterface
      * event manager.
      *
      * If an input filter is composed, this, too, is injected into the event.
-     *
-     * @param string $name
-     * @param array $args
-     * @return ResourceEvent
      */
     protected function prepareEvent(string $name, array $args): ResourceEvent
     {
@@ -495,9 +468,6 @@ class Resource implements ResourceInterface
      *
      * Ensures event parameters are created as an array object, allowing them to be modified
      * by listeners and retrieved.
-     *
-     * @param array $args
-     * @return ArrayObject
      */
     protected function prepareEventParams(array $args): ArrayObject
     {

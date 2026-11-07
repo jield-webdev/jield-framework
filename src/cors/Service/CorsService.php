@@ -55,6 +55,8 @@ class CorsService
     /**
      * Check if the HTTP request is a CORS request by checking if the Origin header is present and that the
      * request URI is not the same as the one in the Origin
+     *
+     * @throws InvalidOriginException
      */
     public function isCorsRequest(HttpRequest $request): bool
     {

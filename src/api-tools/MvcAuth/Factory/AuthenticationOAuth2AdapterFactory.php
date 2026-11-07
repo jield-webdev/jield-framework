@@ -20,10 +20,7 @@ final class AuthenticationOAuth2AdapterFactory
     /**
      * Create and return an OAuth2Adapter instance.
      *
-     * @param array|string $type
-     * @param array $config
-     * @param ContainerInterface $container
-     * @return OAuth2Adapter
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public static function factory(array|string $type, array $config, ContainerInterface $container): OAuth2Adapter
     {

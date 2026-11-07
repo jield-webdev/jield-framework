@@ -17,10 +17,8 @@ use Webmozart\Assert\Assert;
  */
 class SendApiProblemResponseListener extends HttpResponseSender
 {
-    /** @var HttpResponse */
     protected HttpResponse $applicationResponse;
 
-    /** @var bool */
     protected bool $displayExceptions = false;
 
     public function setApplicationResponse(HttpResponse $response): static
@@ -32,9 +30,6 @@ class SendApiProblemResponseListener extends HttpResponseSender
 
     /**
      * Set the flag determining whether exception stack traces are included.
-     *
-     * @param bool $flag
-     * @return static
      */
     public function setDisplayExceptions(bool $flag): static
     {
@@ -45,8 +40,6 @@ class SendApiProblemResponseListener extends HttpResponseSender
 
     /**
      * Are exception stack traces included in the response?
-     *
-     * @return bool
      */
     public function displayExceptions(): bool
     {
@@ -58,7 +51,6 @@ class SendApiProblemResponseListener extends HttpResponseSender
      *
      * Sets the composed ApiProblem's flag for including the stack trace in the
      * detail based on the display exceptions flag, and then sends content.
-     *
      */
     #[Override]
     public function sendContent(SendResponseEvent $event): static
@@ -78,7 +70,6 @@ class SendApiProblemResponseListener extends HttpResponseSender
      *
      * If an application response is composed, and is an HTTP response, merges
      * its headers with the ApiProblemResponse headers prior to sending them.
-     *
      */
     #[Override]
     public function sendHeaders(SendResponseEvent $event): static
@@ -96,6 +87,7 @@ class SendApiProblemResponseListener extends HttpResponseSender
     /**
      * Send ApiProblem response.
      *
+     * @throws \ReflectionException
      */
     #[Override]
     public function __invoke(SendResponseEvent $event): void

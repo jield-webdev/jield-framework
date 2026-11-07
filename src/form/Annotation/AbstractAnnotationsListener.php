@@ -50,6 +50,8 @@ abstract class AbstractAnnotationsListener extends AbstractListenerAggregate
 
     /**
      * Discover the fallback name via reflection
+     *
+     * @throws \ReflectionException
      */
     public function discoverFallbackName(EventInterface $e): string
     {

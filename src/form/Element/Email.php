@@ -19,10 +19,8 @@ class Email extends Element implements InputProviderInterface
         'type' => 'email',
     ];
 
-    /** @var null|ValidatorInterface */
     protected ?ValidatorInterface $validator = null;
 
-    /** @var null|ValidatorInterface */
     protected ?ValidatorInterface $emailValidator = null;
 
     /**
@@ -49,8 +47,6 @@ class Email extends Element implements InputProviderInterface
 
     /**
      * Sets the primary validator to use for this element
-     *
-     * @return static
      */
     public function setValidator(ValidatorInterface $validator): static
     {
@@ -87,8 +83,6 @@ class Email extends Element implements InputProviderInterface
     /**
      * Sets the email validator to use for multiple or single
      * email addresses.
-     *
-     * @return static
      */
     public function setEmailValidator(ValidatorInterface $validator): static
     {

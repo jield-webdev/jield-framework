@@ -79,8 +79,6 @@ class ConfigListener extends AbstractListener implements ConfigMergerInterface
 
     /**
      * Pass self to the ModuleEvent object early so everyone has access.
-     *
-     * @return static
      */
     public function onloadModulesPre(ModuleEvent $e): static
     {
@@ -92,7 +90,7 @@ class ConfigListener extends AbstractListener implements ConfigMergerInterface
     /**
      * Merge the config for each module
      *
-     * @return static
+     * @throws \ReflectionException
      */
     public function onLoadModule(ModuleEvent $e): static
     {
@@ -123,6 +121,9 @@ class ConfigListener extends AbstractListener implements ConfigMergerInterface
         return $this;
     }
 
+    /**
+     * @throws \ReflectionException
+     */
     private function resolveConfigProvider(string $moduleName): ?object
     {
         $configProviderClass = sprintf('%s\\ConfigProvider', $moduleName);
@@ -133,6 +134,9 @@ class ConfigListener extends AbstractListener implements ConfigMergerInterface
         return Value::instantiate($configProviderClass);
     }
 
+    /**
+     * @throws \ReflectionException
+     */
     private function getConfigFromProvider(object $provider): mixed
     {
         if (is_callable(value: $provider)) {
@@ -155,7 +159,7 @@ class ConfigListener extends AbstractListener implements ConfigMergerInterface
      *
      * This is only attached if config is not cached.
      *
-     * @return static
+     * @throws \Laminas\Stdlib\Exception\RuntimeException
      */
     public function onMergeConfig(): static
     {
@@ -183,7 +187,9 @@ class ConfigListener extends AbstractListener implements ConfigMergerInterface
      *
      * This is only attached if config is not cached.
      *
-     * @return static
+     * @throws Exception\ConfigCannotBeCachedException
+     * @throws \ReflectionException
+     * @throws \Webimpress\SafeWriter\Exception\ExceptionInterface
      */
     public function onLoadModules(ModuleEvent $e): static
     {
@@ -205,19 +211,12 @@ class ConfigListener extends AbstractListener implements ConfigMergerInterface
         return $this;
     }
 
-    /**
-     * @param bool $returnConfigAsObject
-     * @return mixed
-     */
     #[Override]
     public function getMergedConfig(bool $returnConfigAsObject = true): mixed
     {
         return $this->mergedConfig;
     }
 
-    /**
-     * @return static
-     */
     #[Override]
     public function setMergedConfig(array $config): static
     {
@@ -227,9 +226,6 @@ class ConfigListener extends AbstractListener implements ConfigMergerInterface
 
     /**
      * Add an array of glob paths of config files to merge after loading modules
-     *
-     * @param Traversable|array $globPaths
-     * @return static
      */
     public function addConfigGlobPaths(Traversable|array $globPaths): static
     {
@@ -239,9 +235,6 @@ class ConfigListener extends AbstractListener implements ConfigMergerInterface
 
     /**
      * Add a glob path of config files to merge after loading modules
-     *
-     * @param string $globPath
-     * @return static
      */
     public function addConfigGlobPath(string $globPath): static
     {
@@ -251,9 +244,6 @@ class ConfigListener extends AbstractListener implements ConfigMergerInterface
 
     /**
      * Add an array of static paths of config files to merge after loading modules
-     *
-     * @param Traversable|array $staticPaths
-     * @return static
      */
     public function addConfigStaticPaths(Traversable|array $staticPaths): static
     {
@@ -263,9 +253,6 @@ class ConfigListener extends AbstractListener implements ConfigMergerInterface
 
     /**
      * Add a static path of config files to merge after loading modules
-     *
-     * @param string $staticPath
-     * @return static
      */
     public function addConfigStaticPath(string $staticPath): static
     {
@@ -276,8 +263,6 @@ class ConfigListener extends AbstractListener implements ConfigMergerInterface
     /**
      * Add an array of paths of config files to merge after loading modules
      *
-     * @param Traversable|array $paths
-     * @param string $type
      * @throws Exception\InvalidArgumentException
      */
     protected function addConfigPaths(Traversable|array $paths, string $type): void
@@ -295,9 +280,6 @@ class ConfigListener extends AbstractListener implements ConfigMergerInterface
     /**
      * Add a path of config files to load and merge after loading modules
      *
-     * @param string $path
-     * @param string $type
-     * @return static
      * @throws Exception\InvalidArgumentException
      */
     protected function addConfigPath(string $path, string $type): static
@@ -307,9 +289,6 @@ class ConfigListener extends AbstractListener implements ConfigMergerInterface
     }
 
     /**
-     * @param string $key
-     * @param Traversable|array $config
-     * @return static
      * @throws Exception\InvalidArgumentException
      */
     protected function addConfig(string $key, Traversable|array $config): static
@@ -327,9 +306,7 @@ class ConfigListener extends AbstractListener implements ConfigMergerInterface
      * Given a path (glob or static), fetch the config and add it to the array
      * of configs to merge.
      *
-     * @param string $path
-     * @param string $type
-     * @return static
+     * @throws \Laminas\Stdlib\Exception\RuntimeException
      */
     protected function addConfigByPath(string $path, string $type): static
     {
@@ -351,7 +328,6 @@ class ConfigListener extends AbstractListener implements ConfigMergerInterface
         return $this;
     }
 
-    /** @return bool */
     protected function hasCachedConfig(): bool
     {
         if (
@@ -363,7 +339,6 @@ class ConfigListener extends AbstractListener implements ConfigMergerInterface
         return false;
     }
 
-    /** @return mixed */
     protected function getCachedConfig(): mixed
     {
         return include $this->getOptions()->getConfigCacheFile();

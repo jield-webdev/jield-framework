@@ -13,6 +13,9 @@ use Psr\Container\ContainerInterface;
 
 class AcceptListenerFactory
 {
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     public function __invoke(ContainerInterface $container): AcceptListener
     {
         return new AcceptListener(
@@ -24,6 +27,7 @@ class AcceptListenerFactory
     /**
      * Retrieve or generate the AcceptableViewModelSelector plugin instance.
      *
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     private function getAcceptableViewModelSelector(ContainerInterface $container): AcceptableViewModelSelector
     {

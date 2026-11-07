@@ -17,6 +17,12 @@ use function _;
  */
 class SearchFilter extends Form
 {
+    /**
+     * @throws \Jield\Form\Exception\ExceptionInterface
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \Laminas\InputFilter\Exception\RuntimeException
+     * @throws \ReflectionException
+     */
     public function __construct()
     {
         parent::__construct();

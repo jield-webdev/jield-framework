@@ -46,10 +46,8 @@ class Select extends Element implements InputProviderInterface
         'type' => 'select',
     ];
 
-    /** @var null|ValidatorInterface */
     protected ?ValidatorInterface $validator = null;
 
-    /** @var bool */
     protected bool $disableInArrayValidator = false;
 
     /**
@@ -62,10 +60,8 @@ class Select extends Element implements InputProviderInterface
     /** @var ValueOptions */
     protected array $valueOptions = [];
 
-    /** @var bool */
     protected bool $useHiddenElement = false;
 
-    /** @var string */
     protected string $unselectedValue = '';
 
     /** @return ValueOptions */
@@ -76,7 +72,6 @@ class Select extends Element implements InputProviderInterface
 
     /**
      * @param ValueOptions $options
-     * @return static
      */
     public function setValueOptions(array $options): static
     {
@@ -88,9 +83,6 @@ class Select extends Element implements InputProviderInterface
         return $this;
     }
 
-    /**
-     * @return static
-     */
     public function unsetValueOption(string $key): static
     {
         if (isset($this->valueOptions[$key])) {
@@ -108,7 +100,6 @@ class Select extends Element implements InputProviderInterface
      * - value_options: list of values and labels for the select options
      * - empty_option: should an empty option be prepended to the options ?
      *
-     * @return static
      * @throws InvalidArgumentException
      */
     public function setOptions(iterable $options): static
@@ -167,8 +158,6 @@ class Select extends Element implements InputProviderInterface
 
     /**
      * Set the flag to allow for disabling the automatic addition of an InArray validator.
-     *
-     * @return static
      */
     public function setDisableInArrayValidator(bool $disableOption): static
     {
@@ -189,7 +178,6 @@ class Select extends Element implements InputProviderInterface
      * Set the string for an empty option (can be empty string). If set to null, no option will be added
      *
      * @param EmptyOption|null $emptyOption
-     * @return static
      */
     public function setEmptyOption(array|string|null $emptyOption): static
     {
@@ -229,8 +217,6 @@ class Select extends Element implements InputProviderInterface
 
     /**
      * Do we render hidden element?
-     *
-     * @return static
      */
     public function setUseHiddenElement(bool $useHiddenElement): static
     {
@@ -248,8 +234,6 @@ class Select extends Element implements InputProviderInterface
 
     /**
      * Set the value if the select is not selected
-     *
-     * @return static
      */
     public function setUnselectedValue(string $unselectedValue): static
     {
@@ -331,7 +315,6 @@ class Select extends Element implements InputProviderInterface
     }
 
     /**
-     * @return mixed
      * @param (int|string) $key
      * @psalm-param array-key $key
      */

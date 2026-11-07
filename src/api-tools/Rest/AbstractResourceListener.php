@@ -23,20 +23,15 @@ abstract class AbstractResourceListener implements ListenerAggregateInterface
 {
     use ListenerAggregateTrait;
 
-    /** @var ResourceEvent */
     protected ResourceEvent $event;
 
     /**
      * The entity_class config for the calling controller api-tools-rest config
-     *
-     * @var string
      */
     protected string $entityClass;
 
     /**
      * The collection_class config for the calling controller api-tools-rest config
-     *
-     * @var string
      */
     protected string $collectionClass;
 
@@ -78,8 +73,6 @@ abstract class AbstractResourceListener implements ListenerAggregateInterface
      *
      * Proxies to the resource event to find the identity, if not already
      * composed, and composes it.
-     *
-     * @return null|IdentityInterface
      */
     public function getIdentity(): ?IdentityInterface
     {
@@ -98,8 +91,6 @@ abstract class AbstractResourceListener implements ListenerAggregateInterface
      *
      * Proxies to the resource event to find the input filter, if not already
      * composed, and composes it.
-     *
-     * @return null|InputFilterInterface
      */
     public function getInputFilter(): ?InputFilterInterface
     {
@@ -137,6 +128,7 @@ abstract class AbstractResourceListener implements ListenerAggregateInterface
      *
      * Marshals arguments from the event parameters.
      *
+     * @throws Exception\RuntimeException
      */
     public function dispatch(ResourceEvent $event): mixed
     {
@@ -253,8 +245,6 @@ abstract class AbstractResourceListener implements ListenerAggregateInterface
 
     /**
      * Update a resource
-     *
-     * @return array|ApiProblem
      */
     public function update(int $id, Parameters $data): array|ApiProblem
     {

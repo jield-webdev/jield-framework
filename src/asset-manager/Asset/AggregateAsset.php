@@ -23,12 +23,11 @@ class AggregateAsset extends BaseAsset implements AssetInterface
     private int $lastModified;
 
     /**
-     * Constructor.
-     *
      * @param array $content The array of assets to be merged
      * @param array $filters Filters for the asset
      * @param string|null $sourceRoot The source asset root directory
      * @param string|null $sourcePath The source asset path
+     * @throws Exception\RuntimeException
      */
     public function __construct(
         array $content = [],
@@ -43,7 +42,6 @@ class AggregateAsset extends BaseAsset implements AssetInterface
     /**
      * Loop through assets and merge content
      *
-     * @param array $content
      *
      * @throws Exception\RuntimeException
      */
@@ -72,8 +70,6 @@ class AggregateAsset extends BaseAsset implements AssetInterface
 
     /**
      * get last modified value from asset
-     *
-     * @return int|null
      */
     #[Override]
     public function getLastModified(): ?int

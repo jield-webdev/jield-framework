@@ -24,7 +24,10 @@ final class ListenerConfigProvider
 
     private array $listeners = [];
 
-    /** @param array<string, string> $listenerPaths Namespace prefixes mapped to directories. */
+    /**
+     * @param array<string, string> $listenerPaths Namespace prefixes mapped to directories.
+     * @throws \ReflectionException
+     */
     public function __construct(array $listenerPaths = [])
     {
         foreach ($listenerPaths as $namespace => $directory) {
@@ -32,6 +35,9 @@ final class ListenerConfigProvider
         }
     }
 
+    /**
+     * @throws \ReflectionException
+     */
     private function discover(string $directory, string $namespace): void
     {
         $finder = new Finder();
@@ -118,6 +124,9 @@ final class ListenerConfigProvider
         );
     }
 
+    /**
+     * @throws \ReflectionException
+     */
     private function getReflectionClassFromClassName(string $className): ReflectionClass
     {
         return new ReflectionClass(objectOrClass: Value::classString($className));
@@ -128,6 +137,9 @@ final class ListenerConfigProvider
         $this->listeners[] = $listenerValueObject;
     }
 
+    /**
+     * @throws \ReflectionException
+     */
     private function getConstructorArguments(string $className): array
     {
         $constructor = new ReflectionClass(Value::classString($className))->getConstructor();
@@ -154,6 +166,9 @@ final class ListenerConfigProvider
         return $arguments;
     }
 
+    /**
+     * @throws \ReflectionException
+     */
     public function __invoke(): array
     {
         //Return a merged array of all the listeners (with the toArray method called an all objects)

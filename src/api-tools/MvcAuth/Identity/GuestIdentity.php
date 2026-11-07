@@ -9,7 +9,6 @@ use Override;
 
 class GuestIdentity extends Role implements IdentityInterface
 {
-    /** @var string */
     protected static string $identity = 'guest';
 
     public function __construct()
@@ -17,13 +16,11 @@ class GuestIdentity extends Role implements IdentityInterface
         parent::__construct(name: static::$identity);
     }
 
-    /** @return string */
     public function getRoleId(): string
     {
         return static::$identity;
     }
 
-    /** @return null */
     #[Override]
     public function getAuthenticationIdentity(): null
     {

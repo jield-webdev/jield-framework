@@ -25,6 +25,9 @@ final class Navigation
         private readonly ContainerInterface $services,
     ) {}
 
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     public function __invoke(AbstractContainer|string|null $container = null): self
     {
         $this->container = $this->resolveContainer($container);
@@ -35,8 +38,9 @@ final class Navigation
     /**
      * Render a bootstrap5 menu for the resolved navigation container.
      *
-     * @param AbstractContainer|string|null $container
      * @param array<string, mixed> $options
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \Exception
      */
     public function menu(AbstractContainer|string|null $container = null, array $options = []): string
     {
@@ -52,6 +56,8 @@ final class Navigation
      * Backwards-compatible proxy for "lbs5menu".
      *
      * @param array<int, mixed> $arguments
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
      */
     public function __call(string $name, array $arguments): mixed
     {
@@ -62,6 +68,9 @@ final class Navigation
         return Value::call($proxy, $name === 'lbs5menu' ? 'menu' : $name, $arguments);
     }
 
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     private function resolveContainer(AbstractContainer|string|null $container): ?AbstractContainer
     {
         if ($container instanceof AbstractContainer) {

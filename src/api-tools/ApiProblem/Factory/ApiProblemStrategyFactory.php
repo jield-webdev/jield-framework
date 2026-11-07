@@ -11,6 +11,9 @@ use Psr\Container\ContainerInterface;
 
 class ApiProblemStrategyFactory
 {
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     public function __invoke(ContainerInterface $container): ApiProblemStrategy
     {
         return new ApiProblemStrategy(renderer: Service::get($container, ApiProblemRenderer::class));

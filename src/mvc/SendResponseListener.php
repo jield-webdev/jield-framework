@@ -16,16 +16,12 @@ use Laminas\Stdlib\ResponseInterface as Response;
 
 class SendResponseListener extends AbstractListenerAggregate implements EventManagerAwareInterface
 {
-    /** @var SendResponseEvent */
     protected ?SendResponseEvent $event = null;
 
-    /** @var EventManagerInterface */
     protected ?EventManagerInterface $eventManager = null;
 
     /**
      * Inject an EventManager instance
-     *
-     * @return void
      */
     public function setEventManager(EventManagerInterface $eventManager): void
     {
@@ -41,8 +37,6 @@ class SendResponseListener extends AbstractListenerAggregate implements EventMan
      * Retrieve the event manager
      *
      * Lazy-loads an EventManager instance if none registered.
-     *
-     * @return EventManagerInterface
      */
     public function getEventManager(): EventManagerInterface
     {
@@ -56,7 +50,6 @@ class SendResponseListener extends AbstractListenerAggregate implements EventMan
      * Attach the aggregate to the specified event manager
      *
      * @param  int $priority
-     * @return void
      */
     public function attach(EventManagerInterface $events, $priority = 1): void
     {
@@ -65,8 +58,6 @@ class SendResponseListener extends AbstractListenerAggregate implements EventMan
 
     /**
      * Send the response
-     *
-     * @return void
      */
     public function sendResponse(MvcEvent $e): void
     {
@@ -80,8 +71,6 @@ class SendResponseListener extends AbstractListenerAggregate implements EventMan
 
     /**
      * Get the send response event
-     *
-     * @return SendResponseEvent
      */
     public function getEvent(): SendResponseEvent
     {
@@ -93,8 +82,6 @@ class SendResponseListener extends AbstractListenerAggregate implements EventMan
 
     /**
      * Set the send response event
-     *
-     * @return static
      */
     public function setEvent(SendResponseEvent $e): static
     {

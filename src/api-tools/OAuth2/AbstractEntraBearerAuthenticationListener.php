@@ -29,6 +29,10 @@ abstract class AbstractEntraBearerAuthenticationListener
         Response $response,
     ): AuthenticatedIdentity|Response;
 
+    /**
+     * @throws \JsonException
+     * @throws \ReflectionException
+     */
     public function __invoke(MvcAuthEvent $event): AuthenticatedIdentity|Response|null
     {
         $matches = [];
@@ -99,6 +103,9 @@ abstract class AbstractEntraBearerAuthenticationListener
         return $identity;
     }
 
+    /**
+     * @throws \JsonException
+     */
     protected function deny(Response $response, int $status = 401): Response
     {
         $response->setStatusCode($status);

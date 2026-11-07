@@ -44,7 +44,11 @@ class QueryString implements Stringable
         return $this;
     }
 
-    /** Return string representation */
+    /**
+     * Return string representation
+     *
+     * @throws \DateInvalidTimeZoneException
+     */
     public function __toString(): string
     {
         $replacements = [];

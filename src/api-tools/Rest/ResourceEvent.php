@@ -85,8 +85,6 @@ class ResourceEvent extends Event
      * Retrieve a single query parameter by name
      *
      * If not present, returns the $default value provided.
-     *
-     * @param string $name
      */
     public function getQueryParam(string $name, mixed $default = null): mixed
     {
@@ -104,9 +102,6 @@ class ResourceEvent extends Event
         return $this;
     }
 
-    /**
-     * @return null|RequestInterface
-     */
     public function getRequest(): ?RequestInterface
     {
         return $this->request;
@@ -127,8 +122,6 @@ class ResourceEvent extends Event
      * Retrieve a single route match parameter by name.
      *
      * If not present, returns the $default value provided.
-     *
-     * @param string $name
      */
     public function getRouteParam(string $name, mixed $default = null): mixed
     {

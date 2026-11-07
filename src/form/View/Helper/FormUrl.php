@@ -11,8 +11,6 @@ class FormUrl extends FormInput
 {
     /**
      * Attributes valid for the input tag type="url"
-     *
-     * @var array
      */
     protected array $validTagAttributes = [
         'name' => true,

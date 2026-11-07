@@ -17,7 +17,6 @@ class RouteListener extends AbstractListenerAggregate
      * Attach to an event manager
      *
      * @param  int $priority
-     * @return void
      */
     public function attach(EventManagerInterface $events, $priority = 1): void
     {
@@ -32,7 +31,7 @@ class RouteListener extends AbstractListenerAggregate
      *
      * Seeds the event with the route match on completion.
      *
-     * @return mixed
+     * @throws \ReflectionException
      */
     public function onRoute(MvcEvent $event): mixed
     {

@@ -13,6 +13,9 @@ use Webmozart\Assert\Assert;
 
 class HalJsonRendererFactory
 {
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     public function __invoke(ContainerInterface $container): HalJsonRenderer
     {
         $helpers = Service::get($container, \Laminas\View\HelperPluginManager::class, 'ViewHelperManager');

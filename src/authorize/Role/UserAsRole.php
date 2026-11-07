@@ -19,6 +19,9 @@ class UserAsRole implements RoleInterface, Stringable
         return null !== $this->userAsRole;
     }
 
+    /**
+     * @throws RuntimeException
+     */
     public function getLoggedInUser(): UserAsRoleInterface
     {
         if (null === $this->userAsRole) {

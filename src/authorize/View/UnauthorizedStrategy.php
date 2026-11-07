@@ -27,7 +27,6 @@ use Webmozart\Assert\Assert;
  */
 class UnauthorizedStrategy implements ListenerAggregateInterface
 {
-    /** @var string */
     protected string $template;
 
     /** @var callable[] An array with callback functions or methods. */
@@ -63,22 +62,20 @@ class UnauthorizedStrategy implements ListenerAggregateInterface
         }
     }
 
-    /**
-     * @param string $template
-     */
     public function setTemplate(string $template): void
     {
         $this->template = $template;
     }
 
-    /**
-     * @return string
-     */
     public function getTemplate(): string
     {
         return $this->template;
     }
 
+    /**
+     * @throws \Laminas\Router\Exception\RuntimeException
+     * @throws \ReflectionException
+     */
     public function onDispatchError(MvcEvent $event): \Laminas\Http\PhpEnvironment\Response
     {
         // Do nothing if the result is a response object

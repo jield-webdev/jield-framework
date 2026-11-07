@@ -11,15 +11,11 @@ class MimeResolver
 {
     /**
      * Map for multiple extensions per mime-type, setting a main extension for the mime types.
-     *
-     * @var array
      */
     protected array $mainMimeTypes = ['css' => 'text/css', 'js' => 'application/javascript'];
 
     /**
      * Map between file extensions and mime types.
-     *
-     * @var array
      */
     protected array $mimeTypes = [
         '%' => 'application/x-trash',
@@ -558,7 +554,6 @@ class MimeResolver
     /**
      * Get the mime type from a file extension.
      *
-     * @param string $filename
      * @return string The mime type found. Falls back to text/plain.
      */
     public function getMimeType(string $filename): string
@@ -571,7 +566,6 @@ class MimeResolver
     /**
      * Get the extension that matches given mimetype.
      *
-     * @param string $mimetype
      * @return mixed  null when not found, extension (string) when found.
      */
     public function getExtension(string $mimetype): mixed

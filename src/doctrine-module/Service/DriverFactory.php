@@ -25,9 +25,9 @@ use function str_contains;
 final class DriverFactory extends AbstractFactory
 {
     /**
-     * {@inheritDoc}
-     *
-     * @return MappingDriver
+     * @throws RuntimeException
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
      */
     public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): MappingDriver
     {
@@ -49,7 +49,12 @@ final class DriverFactory extends AbstractFactory
         return Driver::class;
     }
 
-    /** @throws InvalidArgumentException */
+    /**
+     * @throws InvalidArgumentException
+     * @throws RuntimeException
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
+     */
     protected function createDriver(ContainerInterface $container, Driver $options): MappingDriver
     {
         $class = $options->getClass();

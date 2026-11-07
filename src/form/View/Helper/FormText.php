@@ -10,8 +10,6 @@ class FormText extends FormInput
 {
     /**
      * Attributes valid for the input tag type="text"
-     *
-     * @var array
      */
     protected array $validTagAttributes = [
         'name' => true,

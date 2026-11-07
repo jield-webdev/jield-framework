@@ -11,7 +11,6 @@ interface PaginationInjectorInterface
 {
     /**
      * Generate HAL links for a paginated collection
-     *
      */
     public function injectPaginationLinks(Collection $halCollection): bool|ApiProblem;
 }

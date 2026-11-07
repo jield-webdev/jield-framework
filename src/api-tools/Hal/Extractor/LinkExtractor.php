@@ -21,6 +21,8 @@ class LinkExtractor implements LinkExtractorInterface
 
     /**
      * @inheritDoc
+     * @throws \Laminas\View\Exception\RuntimeException
+     * @throws DomainException
      */
     #[Override]
     public function extract(Link $link): array

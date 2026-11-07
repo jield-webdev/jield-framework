@@ -17,6 +17,10 @@ use Webmozart\Assert\Assert;
 
 final class AuthenticationIdentityProviderFactory implements FactoryInterface
 {
+    /**
+     * @throws RuntimeException
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     public function __invoke(
         ContainerInterface $container,
         $requestedName,

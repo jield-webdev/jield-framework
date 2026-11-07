@@ -21,7 +21,11 @@ final class IsCurrentModuleNameConstraint extends LaminasConstraint
         return 'is the actual module name';
     }
 
-    /** @param mixed $other */
+    /**
+     * @param mixed $other
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
+     */
     #[Override]
     public function failureDescription($other): string
     {
@@ -29,7 +33,11 @@ final class IsCurrentModuleNameConstraint extends LaminasConstraint
         return "\"{$other}\" {$this->toString()}, actual module name is \"{$this->getCurrentModuleName()}\"";
     }
 
-    /** @param mixed $other */
+    /**
+     * @param mixed $other
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
+     */
     #[Override]
     public function matches($other): bool
     {
@@ -37,6 +45,10 @@ final class IsCurrentModuleNameConstraint extends LaminasConstraint
         return strtolower($other) === $this->getCurrentModuleName();
     }
 
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
+     */
     public function getCurrentModuleName(): string
     {
         $controllerClass = $this->getControllerFullClassName();

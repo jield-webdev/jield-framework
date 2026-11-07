@@ -19,8 +19,6 @@ use Webmozart\Assert\Assert;
 class DoctrinePaginator implements AdapterInterface, JsonSerializable
 {
     /**
-     * Constructor
-     *
      * @param Paginator<T> $paginator
      */
     public function __construct(
@@ -48,6 +46,7 @@ class DoctrinePaginator implements AdapterInterface, JsonSerializable
      * @param int|null $itemCountPerPage
      *
      * @return Traversable<array-key, T>
+     * @throws \Exception
      */
     public function getItems($offset, $itemCountPerPage): Traversable
     {

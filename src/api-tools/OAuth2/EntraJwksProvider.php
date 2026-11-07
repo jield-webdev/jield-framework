@@ -18,6 +18,10 @@ readonly class EntraJwksProvider
         private CacheItemPoolInterface $cache,
     ) {}
 
+    /**
+     * @throws EntraException
+     * @throws \Psr\Cache\InvalidArgumentException
+     */
     public function getKey(string $tenantId, string $kid): Key
     {
         // The URL is derived exclusively from a validated database tenant ID, never from JWT headers.
@@ -76,6 +80,9 @@ readonly class EntraJwksProvider
         );
     }
 
+    /**
+     * @throws EntraException
+     */
     private function findKey(array $keys, string $tenantId, string $kid): ?Key
     {
         $issuer = 'https://login.microsoftonline.com/' . $tenantId . '/v2.0';

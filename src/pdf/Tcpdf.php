@@ -346,6 +346,16 @@ class Tcpdf
     /** @var array{zoom: int|string, layout: string, mode: string} Viewer display mode storage. */
     protected array $displaymode = ['zoom' => 'fullwidth', 'layout' => 'SinglePage', 'mode' => 'UseNone'];
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Font\Exception
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \Com\Tecnick\File\Exception
+     * @throws \Com\Tecnick\Pdf\Encrypt\Exception
+     * @throws \Com\Tecnick\Pdf\Exception
+     * @throws \Com\Tecnick\Pdf\Graph\Exception
+     * @throws \Random\RandomException
+     * @throws \RuntimeException
+     */
     public function __construct(
         $orientation = 'P',
         $unit = 'mm',
@@ -401,6 +411,9 @@ class Tcpdf
     /**
      * Legacy protected properties historically read by Tcpdf subclasses
      * (e.g. $this->AutoPageBreak, $this->lMargin), mapped to facade state.
+     *
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
      */
     public function __get($name)
     {
@@ -434,7 +447,11 @@ class Tcpdf
         };
     }
 
-    /** @see __get() */
+    /**
+     * @see __get()
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function __isset($name)
     {
         return $this->__get($name) !== null;
@@ -446,6 +463,14 @@ class Tcpdf
 
     /**
      * Create (or re-create) the tc-lib-pdf engine for the given unit.
+     *
+     * @throws \Com\Tecnick\File\Exception
+     * @throws \Com\Tecnick\Pdf\Encrypt\Exception
+     * @throws \Com\Tecnick\Pdf\Exception
+     * @throws \Com\Tecnick\Pdf\Font\Exception
+     * @throws \Com\Tecnick\Pdf\Graph\Exception
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \Random\RandomException
      */
     protected function engineInit(string $unit): void
     {
@@ -458,6 +483,14 @@ class Tcpdf
     /**
      * Build a new engine instance wired to re-emit the facade ambient text
      * state at the start of every page content stream it opens.
+     *
+     * @throws \Com\Tecnick\File\Exception
+     * @throws \Com\Tecnick\Pdf\Encrypt\Exception
+     * @throws \Com\Tecnick\Pdf\Exception
+     * @throws \Com\Tecnick\Pdf\Font\Exception
+     * @throws \Com\Tecnick\Pdf\Graph\Exception
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \Random\RandomException
      */
     private function engineNew(?\Com\Tecnick\Pdf\Encrypt\Encrypt $encrypt = null): CompatibilityEngine
     {
@@ -479,6 +512,8 @@ class Tcpdf
      * content stream: the engine re-emits the current font (carrying its
      * spacing/stretching) when it adds a page, so the facade only needs to
      * carry the legacy text color across page breaks.
+     *
+     * @throws \RuntimeException
      */
     protected function ambientPageContent(): string
     {
@@ -637,6 +672,8 @@ class Tcpdf
 
     /**
      * Return the engine instance.
+     *
+     * @throws \RuntimeException
      */
     protected function engine(): \Com\Tecnick\Pdf\Tcpdf
     {
@@ -649,6 +686,8 @@ class Tcpdf
 
     /**
      * Return the engine instance built by engineNew().
+     *
+     * @throws \RuntimeException
      */
     protected function facadeEngine(): CompatibilityEngine
     {
@@ -661,6 +700,9 @@ class Tcpdf
 
     /**
      * Append raw PDF content to the current page (no-op when no page exists).
+     *
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
      */
     protected function emitToPage(string $content): void
     {
@@ -704,6 +746,9 @@ class Tcpdf
 
     /**
      * Build the engine page data array for a new page.
+     *
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
      */
     protected function buildPageData(mixed $orientation, mixed $format): array
     {
@@ -741,7 +786,7 @@ class Tcpdf
         if ($this->pageregions !== []) {
             // Columns restart at the top margin on every page after the one
             // where they were defined (legacy selectColumn() behavior).
-            $data['region'] = array_map(fn(array $region): array => [
+            $data['region'] = array_map(/** @throws \Com\Tecnick\Pdf\Page\Exception|\RuntimeException */ fn(array $region): array => [
                 'RX' => $region['RX'],
                 'RY' => $this->tmargin,
                 'RW' => $region['RW'],
@@ -1162,6 +1207,8 @@ class Tcpdf
      * current fill color (subsequent shapes inherit them).
      *
      * @return StyleDataOpt
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
      */
     protected function shapeStyleFromLegacy(mixed $linestyle, mixed $fillcolor): array
     {
@@ -1183,6 +1230,8 @@ class Tcpdf
      * Integer 0 entries mean "do not draw this segment".
      *
      * @return array<int|string, StyleDataOpt>
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
      */
     protected function segmentStylesFromLegacy(mixed $linestyle, mixed $fillcolor): array
     {
@@ -1244,6 +1293,7 @@ class Tcpdf
      * @param array{T?: StyleDataOpt, R?: StyleDataOpt, B?: StyleDataOpt, L?: StyleDataOpt, all?: StyleDataOpt} $styles
      *
      * @return array<int|string, array{cssBorderStyle?: string, dashArray: array<array-key, int>, dashPhase: float, fillColor: string, lineCap: string, lineColor: string, lineJoin: string, lineWidth: float, miterLimit: float}>
+     * @throws \RuntimeException
      */
     protected function completeSideStyles(array $styles): array
     {
@@ -1279,6 +1329,8 @@ class Tcpdf
 
     /**
      * Trigger an automatic page break when the given height does not fit.
+     *
+     * @throws \Exception
      */
     protected function breakIfNeeded(float $height): void
     {
@@ -1317,6 +1369,9 @@ class Tcpdf
      *
      * Legacy AcceptPageBreak() flows the content through the remaining
      * columns before adding a page.
+     *
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
      */
     protected function advanceToNextColumn(): bool
     {
@@ -1340,6 +1395,8 @@ class Tcpdf
      * the two columns at the same Y on the start page) still breaks onto the
      * single shared continuation page rather than spawning a fresh one. The
      * current abscissa is preserved across the break, like breakIfNeeded().
+     *
+     * @throws \Exception
      */
     protected function advanceToNextPage(): void
     {
@@ -1373,6 +1430,10 @@ class Tcpdf
      * Legacy $calign cell vertical alignment: the amount (user units) by which
      * the cell box top is shifted UP relative to the current text line. The
      * font-relative modes (A/L/D) depend on $valign, mirroring getCellCode().
+     *
+     * @throws \Com\Tecnick\Pdf\Font\Exception
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
      */
     protected function cellCalignShift(string $calign, string $valign, float $height): float
     {
@@ -1441,6 +1502,8 @@ class Tcpdf
      * Bookmark outline entries collected by the engine.
      *
      * @return array<int, array{t: string, l: int, p: int, y: float, s?: string, c?: string}>
+     * @throws \ReflectionException
+     * @throws \RuntimeException
      */
     protected function engineOutlines(): array
     {
@@ -1459,6 +1522,8 @@ class Tcpdf
      * targets after the TOC pages are relocated).
      *
      * @param array<int, array{t: string, l: int, p: int, y: float, s?: string, c?: string}> $outlines
+     * @throws \ReflectionException
+     * @throws \RuntimeException
      */
     protected function setEngineOutlines(array $outlines): void
     {
@@ -1472,6 +1537,9 @@ class Tcpdf
      * The engine HTML renderer has no shadow support, so the text objects
      * (BT..ET blocks) of the freshly rendered chunks are duplicated into an
      * offset, shadow-colored, alpha-blended layer painted underneath.
+     *
+     * @throws \ReflectionException
+     * @throws \RuntimeException
      */
     protected function applyHtmlTextShadow(int $pid, int $start): void
     {
@@ -1530,6 +1598,10 @@ class Tcpdf
      * placed in the content chunks appended after the given index.
      * Image placements carry their position in the CTM:
      * "w 0 0 h x y cm /IMGn Do" with y = bottom edge in PDF coordinates.
+     *
+     * @throws \ReflectionException
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
      */
     protected function pageContentImageBottom(int $pid, int $start, float $fallback): float
     {
@@ -1566,6 +1638,9 @@ class Tcpdf
 
     /**
      * Number of raw content chunks of the given engine page.
+     *
+     * @throws \ReflectionException
+     * @throws \RuntimeException
      */
     protected function pageContentCount(int $pid): int
     {
@@ -1581,6 +1656,9 @@ class Tcpdf
      * of the page stream, so they paint *behind* the page body. Used for
      * deferred header rendering: the legacy engine painted headers at
      * page-start time, i.e. under the body content.
+     *
+     * @throws \ReflectionException
+     * @throws \RuntimeException
      */
     protected function movePageContentToFront(int $pid, int $start): void
     {
@@ -1604,6 +1682,7 @@ class Tcpdf
      * PDF code for a cell background fill and the requested border sides.
      *
      * @param array{T?: StyleDataOpt, R?: StyleDataOpt, B?: StyleDataOpt, L?: StyleDataOpt, all?: StyleDataOpt} $styles
+     * @throws \RuntimeException
      */
     protected function cellBoxOutput(
         float $posx,
@@ -1651,6 +1730,9 @@ class Tcpdf
      *                      Defaults to the current page; callers pass an
      *                      explicit value when the engine advanced the page
      *                      pointer past the cell's real end (see MultiCell).
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \ReflectionException
+     * @throws \RuntimeException
      */
     protected function drawHtmlCellSegments(
         float $posx,
@@ -1694,6 +1776,9 @@ class Tcpdf
     /**
      * Insert a PDF content chunk at the given position of an engine page
      * content stream, so it paints behind the chunks that follow it.
+     *
+     * @throws \ReflectionException
+     * @throws \RuntimeException
      */
     protected function insertPageContent(int $pid, int $start, string $content): void
     {
@@ -1720,6 +1805,11 @@ class Tcpdf
      * emitted here as self-contained text-state operators.
      *
      * @param array{xoffset: float, yoffset: float, opacity: float, mode: string, color: string}|null $shadow
+     * @throws \Com\Tecnick\Pdf\Font\Exception
+     * @throws \Com\Tecnick\Pdf\Graph\Exception
+     * @throws \Com\Tecnick\Unicode\Exception
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
      */
     protected function stretchedCellText(
         int $mode,
@@ -1803,6 +1893,11 @@ class Tcpdf
      *
      * @param array{margin: array{T: float, R: float, B: float, L: float}, padding: array{T: float, R: float, B: float, L: float}, borderpos: float}|null $engcell
      * @param array<int|string, array<string, mixed>> $styles
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \ReflectionException
+     * @throws \Com\Tecnick\Pdf\Font\Exception
+     * @throws \Com\Tecnick\Unicode\Exception
+     * @throws \RuntimeException
      */
     protected function overflowCellOutput(
         string $txt,
@@ -1853,6 +1948,10 @@ class Tcpdf
      *
      * @param array{margin: array{T: float, R: float, B: float, L: float}, padding: array{T: float, R: float, B: float, L: float}, borderpos: float}|null $cell
      * @param array{xoffset: float, yoffset: float, opacity: float, mode: string, color: string}|null $shadow
+     * @throws \Com\Tecnick\Pdf\Font\Exception
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \Com\Tecnick\Unicode\Exception
+     * @throws \RuntimeException
      */
     protected function cellTextRun(
         string $txt,
@@ -1895,6 +1994,8 @@ class Tcpdf
 
     /**
      * Protected engine method made callable from the facade.
+     *
+     * @throws \ReflectionException
      */
     protected function engineMethod(string $name): \ReflectionMethod
     {
@@ -1909,6 +2010,10 @@ class Tcpdf
     /**
      * Text width in user units measured with the current engine font,
      * including its spacing and stretching.
+     *
+     * @throws \Com\Tecnick\Pdf\Font\Exception
+     * @throws \Com\Tecnick\Unicode\Exception
+     * @throws \RuntimeException
      */
     protected function engineTextWidth(string $txt): float
     {
@@ -1924,6 +2029,9 @@ class Tcpdf
      * current font and emits the matching Tc/Tz operators (with their resets)
      * per text run, so changing them only needs to refresh the stacked font;
      * the font selection (Tf) is unchanged and need not be re-emitted.
+     *
+     * @throws \Com\Tecnick\Pdf\Font\Exception
+     * @throws \RuntimeException
      */
     protected function refreshFontState(): void
     {
@@ -1953,6 +2061,10 @@ class Tcpdf
      * Used by the legacy Cell stretch modes, whose fit math is expressed
      * against the natural glyph widths while the engine font stack already
      * carries the ambient spacing/stretching.
+     *
+     * @throws \Com\Tecnick\Pdf\Font\Exception
+     * @throws \Com\Tecnick\Unicode\Exception
+     * @throws \RuntimeException
      */
     protected function naturalOrdWidth(string $txt): float
     {
@@ -2013,6 +2125,8 @@ class Tcpdf
 
     /**
      * Whether a local file exists inside the engine path allowlist.
+     *
+     * @throws \RuntimeException
      */
     protected function isAllowedLocalFile(string $file): bool
     {
@@ -2021,6 +2135,12 @@ class Tcpdf
 
     /**
      * Register an external link annotation for the given rectangle.
+     *
+     * @throws \Com\Tecnick\File\Exception
+     * @throws \Com\Tecnick\Pdf\Exception
+     * @throws \Com\Tecnick\Pdf\Image\Exception
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
      */
     protected function attachLink(mixed $link, float $posx, float $posy, float $width, float $height): void
     {
@@ -2055,6 +2175,8 @@ class Tcpdf
      * Render the deferred page decorations (headers and footers) on every
      * page. Called once when the document is closed: at that time the total
      * page count is known, so the default footer can print real numbers.
+     *
+     * @throws \Throwable
      */
     protected function decorateAllPages(): void
     {
@@ -2156,6 +2278,9 @@ class Tcpdf
      * column or page.
      *
      * @return array{region: array<int, array{RB: float, RH: float, RL: float, RR: float, RT: float, RW: float, RX: float, RY: float, x: float, y: float}>, columns: int, currentRegion: int, autobreak: bool} Original page layout.
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \ReflectionException
+     * @throws \RuntimeException
      */
     protected function setDecorationPageLayout(int $pid): array
     {
@@ -2197,6 +2322,8 @@ class Tcpdf
      * the data is written directly into the page store.
      *
      * @param array{region: array<int, array{RB: float, RH: float, RL: float, RR: float, RT: float, RW: float, RX: float, RY: float, x: float, y: float}>, columns: int, currentRegion: int, autobreak: bool} $layout
+     * @throws \ReflectionException
+     * @throws \RuntimeException
      */
     protected function setEnginePageLayout(int $pid, array $layout): void
     {
@@ -2216,6 +2343,9 @@ class Tcpdf
     // Document settings.
     // ===================================================================
 
+    /**
+     * @throws \Exception
+     */
     public function setPageUnit($unit)
     {
         if ($this->docstate >= 2) {
@@ -2242,11 +2372,18 @@ class Tcpdf
         }
     }
 
+    /**
+     * @throws \RuntimeException
+     */
     public function setSpacesRE($re = '/[^\S\xa0]/')
     {
         $this->engine()->setSpaceRegexp((string) $re);
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function setRTL($enable, $resetx = true)
     {
         $this->rtlmode = (bool) $enable;
@@ -2333,6 +2470,10 @@ class Tcpdf
         return $this->imgscale;
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function getPageDimensions($pagenum = null)
     {
         $eng = $this->engine();
@@ -2360,6 +2501,8 @@ class Tcpdf
      * @param int|null $pagenum Page number (1-based) or null for the current page.
      *
      * @return float Page width in user units.
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
      */
     public function getPageWidth($pagenum = null)
     {
@@ -2382,6 +2525,8 @@ class Tcpdf
      * @param int|null $pagenum Page number (1-based) or null for the current page.
      *
      * @return float Page height in user units.
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
      */
     public function getPageHeight($pagenum = null)
     {
@@ -2404,6 +2549,8 @@ class Tcpdf
      * @param int|null $pagenum Page number (1-based) or null for the current page.
      *
      * @return float Break margin in user units.
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
      */
     public function getBreakMargin($pagenum = null)
     {
@@ -2463,11 +2610,17 @@ class Tcpdf
         $this->rmargin = (float) $margin;
     }
 
+    /**
+     * @throws \RuntimeException
+     */
     public function setCellPadding($pad)
     {
         $this->setCellPaddings((float) $pad, (float) $pad, (float) $pad, (float) $pad);
     }
 
+    /**
+     * @throws \RuntimeException
+     */
     public function setCellPaddings($left = null, $top = null, $right = null, $bottom = null)
     {
         if ($left !== null && (float) $left >= 0) {
@@ -2502,6 +2655,9 @@ class Tcpdf
         return $this->cellpadding;
     }
 
+    /**
+     * @throws \RuntimeException
+     */
     public function setCellMargins($left = null, $top = null, $right = null, $bottom = null)
     {
         if ($left !== null && (float) $left >= 0) {
@@ -2536,6 +2692,10 @@ class Tcpdf
         return $this->cellmargin;
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function setAutoPageBreak($auto, $margin = 0)
     {
         $this->autopagebreak = (bool) $auto;
@@ -2553,6 +2713,9 @@ class Tcpdf
         return $this->autopagebreak;
     }
 
+    /**
+     * @throws \RuntimeException
+     */
     public function setDisplayMode($zoom, $layout = 'SinglePage', $mode = 'UseNone')
     {
         $zoom = is_numeric($zoom) ? (int) $zoom : (string) $zoom;
@@ -2566,6 +2729,9 @@ class Tcpdf
         // is always enabled there; disabling it is not supported.
     }
 
+    /**
+     * @throws \RuntimeException
+     */
     public function setSRGBmode($mode = false)
     {
         $this->engine()->setSRGB((bool) $mode);
@@ -2576,26 +2742,41 @@ class Tcpdf
         // The engine always encodes document information in Unicode.
     }
 
+    /**
+     * @throws \RuntimeException
+     */
     public function setTitle($title)
     {
         $this->engine()->setTitle((string) $title);
     }
 
+    /**
+     * @throws \RuntimeException
+     */
     public function setSubject($subject)
     {
         $this->engine()->setSubject((string) $subject);
     }
 
+    /**
+     * @throws \RuntimeException
+     */
     public function setAuthor($author)
     {
         $this->engine()->setAuthor((string) $author);
     }
 
+    /**
+     * @throws \RuntimeException
+     */
     public function setKeywords($keywords)
     {
         $this->engine()->setKeywords((string) $keywords);
     }
 
+    /**
+     * @throws \RuntimeException
+     */
     public function setCreator($creator)
     {
         $this->engine()->setCreator((string) $creator);
@@ -2607,6 +2788,9 @@ class Tcpdf
         // the legacy toggle has no effect on the modern engine.
     }
 
+    /**
+     * @throws \Exception
+     */
     public function Error($msg)
     {
         $this->pdfraw = '';
@@ -2625,6 +2809,9 @@ class Tcpdf
         $this->docstate = max(1, $this->docstate);
     }
 
+    /**
+     * @throws \Throwable
+     */
     public function Close()
     {
         if ($this->docstate === 3) {
@@ -2650,6 +2837,9 @@ class Tcpdf
      * fires on its own. Apply it here from the facade, preserving the tracked
      * zoom and layout, unless the user explicitly selected a non-default
      * display mode.
+     *
+     * @throws \ReflectionException
+     * @throws \RuntimeException
      */
     protected function applyBookmarkDisplayMode(): void
     {
@@ -2668,6 +2858,9 @@ class Tcpdf
     // Page handling.
     // ===================================================================
 
+    /**
+     * @throws \Exception
+     */
     public function setPage($pnum, $resetmargins = false)
     {
         $pnum = (int) $pnum;
@@ -2684,6 +2877,9 @@ class Tcpdf
         }
     }
 
+    /**
+     * @throws \Exception
+     */
     public function lastPage($resetmargins = false)
     {
         $this->setPage($this->getNumPages(), $resetmargins);
@@ -2691,6 +2887,7 @@ class Tcpdf
 
     /**
      * @return int Current page number (1-based, 0 when no page exists).
+     * @throws \RuntimeException
      */
     public function getPage()
     {
@@ -2703,6 +2900,7 @@ class Tcpdf
 
     /**
      * @return int Total number of pages.
+     * @throws \RuntimeException
      */
     public function getNumPages()
     {
@@ -2713,6 +2911,9 @@ class Tcpdf
         return count($this->engine()->page->getPages());
     }
 
+    /**
+     * @throws \Exception
+     */
     public function addTOCPage($orientation = '', $format = '', $keepmargins = false)
     {
         $this->AddPage($orientation, $format, $keepmargins, true);
@@ -2723,6 +2924,9 @@ class Tcpdf
         $this->endPage(true);
     }
 
+    /**
+     * @throws \Exception
+     */
     public function AddPage($orientation = '', $format = '', $keepmargins = false, $tocpage = false)
     {
         if ($this->docstate === 3) {
@@ -2748,6 +2952,12 @@ class Tcpdf
         }
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Font\Exception
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \Com\Tecnick\Unicode\Exception
+     * @throws \RuntimeException
+     */
     public function startPage($orientation = '', $format = '', $tocpage = false)
     {
         if ((bool) $tocpage) {
@@ -2774,6 +2984,10 @@ class Tcpdf
         // hook re-emits the facade state (see ambientPageContent()).
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function setPageMark()
     {
         if ($this->docstate === 2) {
@@ -2840,6 +3054,9 @@ class Tcpdf
         $this->printheader = (bool) $val;
     }
 
+    /**
+     * @throws \RuntimeException
+     */
     public function setPrintFooter($val = true)
     {
         $this->printfooter = (bool) $val;
@@ -2877,6 +3094,9 @@ class Tcpdf
         // The facade renders headers directly (no cached XObject template).
     }
 
+    /**
+     * @throws \Throwable
+     */
     public function Header()
     {
         $headerfont = $this->getHeaderFont();
@@ -2935,6 +3155,9 @@ class Tcpdf
         $this->Cell($this->getPageWidth() - $this->orig_lmargin - $this->orig_rmargin, 0, '', 'T', 0, 'C');
     }
 
+    /**
+     * @throws \Exception
+     */
     public function Footer()
     {
         $cur_y = $this->posy;
@@ -2960,6 +3183,7 @@ class Tcpdf
 
     /**
      * @return int Current page number.
+     * @throws \RuntimeException
      */
     public function PageNo()
     {
@@ -2970,11 +3194,18 @@ class Tcpdf
     // Colors.
     // ===================================================================
 
+    /**
+     * @throws \RuntimeException
+     */
     public function getAllSpotColors()
     {
         return $this->engine()->color->getSpotColors();
     }
 
+    /**
+     * @throws \Com\Tecnick\Color\Exception
+     * @throws \RuntimeException
+     */
     public function AddSpotColor($name, $c, $m, $y, $k)
     {
         $cmyk = new \Com\Tecnick\Color\Model\Cmyk([
@@ -2987,6 +3218,10 @@ class Tcpdf
         $this->engine()->color->addSpotColor((string) $name, $cmyk);
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function setSpotColor($type, $name, $tint = 100)
     {
         $eng = $this->engine();
@@ -3012,21 +3247,37 @@ class Tcpdf
         return $cmd;
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function setDrawSpotColor($name, $tint = 100)
     {
         return $this->setSpotColor('draw', $name, $tint);
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function setFillSpotColor($name, $tint = 100)
     {
         return $this->setSpotColor('fill', $name, $tint);
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function setTextSpotColor($name, $tint = 100)
     {
         return $this->setSpotColor('text', $name, $tint);
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function setColorArray($type, $color, $ret = false)
     {
         $color = is_array($color) ? $color : [0, 0, 0];
@@ -3042,21 +3293,37 @@ class Tcpdf
         );
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function setDrawColorArray($color, $ret = false)
     {
         return $this->setColorArray('draw', $color, $ret);
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function setFillColorArray($color, $ret = false)
     {
         return $this->setColorArray('fill', $color, $ret);
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function setTextColorArray($color, $ret = false)
     {
         return $this->setColorArray('text', $color, $ret);
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function setColor($type, $col1 = 0, $col2 = -1, $col3 = -1, $col4 = -1, $ret = false, $name = '')
     {
         $spec = $this->colorSpecFromComponents($col1, $col2, $col3, $col4, (string) $name);
@@ -3090,16 +3357,28 @@ class Tcpdf
         return $cmd;
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function setDrawColor($col1 = 0, $col2 = -1, $col3 = -1, $col4 = -1, $ret = false, $name = '')
     {
         return $this->setColor('draw', $col1, $col2, $col3, $col4, $ret, $name);
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function setFillColor($col1 = 0, $col2 = -1, $col3 = -1, $col4 = -1, $ret = false, $name = '')
     {
         return $this->setColor('fill', $col1, $col2, $col3, $col4, $ret, $name);
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function setTextColor($col1 = 0, $col2 = -1, $col3 = -1, $col4 = -1, $ret = false, $name = '')
     {
         return $this->setColor('text', $col1, $col2, $col3, $col4, $ret, $name);
@@ -3119,6 +3398,9 @@ class Tcpdf
      * @param bool   $getarray  When true return an array of per-character widths.
      *
      * @return float|array<int, float> Total width, or per-character widths.
+     * @throws \Com\Tecnick\Unicode\Exception
+     * @throws \Com\Tecnick\Pdf\Font\Exception
+     * @throws \RuntimeException
      */
     public function GetStringWidth($s, $fontname = '', $fontstyle = '', $fontsize = 0, $getarray = false)
     {
@@ -3141,6 +3423,9 @@ class Tcpdf
      * @param bool   $getarray  When true return an array of per-character widths.
      *
      * @return float|array<int, float> Total width, or per-character widths.
+     * @throws \Com\Tecnick\Pdf\Font\Exception
+     * @throws \Com\Tecnick\Unicode\Exception
+     * @throws \RuntimeException
      */
     public function GetArrStringWidth($sa, $fontname = '', $fontstyle = '', $fontsize = 0, $getarray = false)
     {
@@ -3188,6 +3473,11 @@ class Tcpdf
         return $result;
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Font\Exception
+     * @throws \Com\Tecnick\Unicode\Exception
+     * @throws \RuntimeException
+     */
     public function GetCharWidth($char, $notlast = true)
     {
         $char = is_int($char) ? $char : (string) $char;
@@ -3198,6 +3488,9 @@ class Tcpdf
      * @param int|string $char Character codepoint or string.
      *
      * @return float Character width in user units.
+     * @throws \Com\Tecnick\Pdf\Font\Exception
+     * @throws \Com\Tecnick\Unicode\Exception
+     * @throws \RuntimeException
      */
     public function getRawCharWidth($char)
     {
@@ -3205,11 +3498,19 @@ class Tcpdf
         return $this->engine()->font->getCharWidth($ord) / $this->kratio;
     }
 
+    /**
+     * @throws \Com\Tecnick\Unicode\Exception
+     * @throws \RuntimeException
+     */
     public function GetNumChars($s)
     {
         return count($this->engine()->uniconv->strToOrdArr((string) $s));
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Font\Exception
+     * @throws \RuntimeException
+     */
     public function AddFont($family, $style = '', $fontfile = '', $subset = 'default')
     {
         $eng = $this->engine();
@@ -3232,6 +3533,11 @@ class Tcpdf
         ];
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Font\Exception
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function setFont($family, $style = '', $size = null, $fontfile = '', $subset = 'default', $out = true)
     {
         $eng = $this->engine();
@@ -3288,11 +3594,21 @@ class Tcpdf
         }
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Font\Exception
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function setFontSize($size, $out = true)
     {
         $this->setFont($this->fontfamily, $this->getFontStyle(), (float) $size, '', 'default', $out);
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Font\Exception
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function getFontBBox()
     {
         $metric = $this->currentFontMetric();
@@ -3305,6 +3621,11 @@ class Tcpdf
         return (((float) $s * $this->fontsizept) / 1000.0) / $this->kratio;
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Font\Exception
+     * @throws \Com\Tecnick\Unicode\Exception
+     * @throws \RuntimeException
+     */
     public function getCharBBox($char)
     {
         $ord = is_int($char) ? $char : $this->engine()->uniconv->ord((string) $char);
@@ -3312,6 +3633,10 @@ class Tcpdf
         return array_map(fn(mixed $val): float => $val / $this->kratio, $bbox);
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Font\Exception
+     * @throws \RuntimeException
+     */
     public function getFontDescent($font, $style = '', $size = 0)
     {
         $eng = $this->engine();
@@ -3321,6 +3646,10 @@ class Tcpdf
         return abs($metric['descent']) / $this->kratio;
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Font\Exception
+     * @throws \RuntimeException
+     */
     public function getFontAscent($font, $style = '', $size = 0)
     {
         $eng = $this->engine();
@@ -3330,6 +3659,11 @@ class Tcpdf
         return $metric['ascent'] / $this->kratio;
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Font\Exception
+     * @throws \Com\Tecnick\Unicode\Exception
+     * @throws \RuntimeException
+     */
     public function isCharDefined($char, $font = '', $style = '')
     {
         $eng = $this->engine();
@@ -3347,6 +3681,11 @@ class Tcpdf
         return $defined;
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Font\Exception
+     * @throws \Com\Tecnick\Unicode\Exception
+     * @throws \RuntimeException
+     */
     public function replaceMissingChars($text, $font = '', $style = '', $subs = [])
     {
         $eng = $this->engine();
@@ -3379,6 +3718,9 @@ class Tcpdf
     // Links and annotations.
     // ===================================================================
 
+    /**
+     * @throws \RuntimeException
+     */
     public function AddLink()
     {
         $lid = count($this->internallinks) + 1;
@@ -3389,6 +3731,9 @@ class Tcpdf
         return $lid;
     }
 
+    /**
+     * @throws \RuntimeException
+     */
     public function setLink($link, $y = 0, $page = -1)
     {
         $lid = (int) $link;
@@ -3404,11 +3749,25 @@ class Tcpdf
         ];
     }
 
+    /**
+     * @throws \Com\Tecnick\File\Exception
+     * @throws \Com\Tecnick\Pdf\Exception
+     * @throws \Com\Tecnick\Pdf\Image\Exception
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function Link($x, $y, $w, $h, $link, $spaces = 0)
     {
         $this->attachLink($link, (float) $x, (float) $y, (float) $w, (float) $h);
     }
 
+    /**
+     * @throws \Com\Tecnick\File\Exception
+     * @throws \Com\Tecnick\Pdf\Exception
+     * @throws \Com\Tecnick\Pdf\Image\Exception
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function Annotation($x, $y, $w, $h, $text, $opt = ['Subtype' => 'Text'], $spaces = 0)
     {
         if ($this->docstate !== 2) {
@@ -3438,6 +3797,10 @@ class Tcpdf
         $this->attachAnnotRef($oid);
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Exception
+     * @throws \RuntimeException
+     */
     public function EmbedFile($opt)
     {
         $opt = is_array($opt) ? $opt : ['file' => (string) $opt];
@@ -3454,6 +3817,10 @@ class Tcpdf
         );
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Exception
+     * @throws \RuntimeException
+     */
     public function EmbedFileFromString($filename, $content)
     {
         $this->engine()->addContentAsEmbeddedFile((string) $content, (string) $filename);
@@ -3463,6 +3830,9 @@ class Tcpdf
     // Text rendering.
     // ===================================================================
 
+    /**
+     * @throws \Exception
+     */
     public function Text(
         $x,
         $y,
@@ -3506,6 +3876,9 @@ class Tcpdf
         return $this->autopagebreak;
     }
 
+    /**
+     * @throws \Exception
+     */
     public function Cell(
         $w,
         $h = 0,
@@ -3707,6 +4080,9 @@ class Tcpdf
         }
     }
 
+    /**
+     * @throws \Throwable
+     */
     public function MultiCell(
         $w,
         $h,
@@ -4028,6 +4404,10 @@ class Tcpdf
      * Estimate the number of lines needed to print the given text.
      *
      * @return int Estimated number of lines.
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \Com\Tecnick\Unicode\Exception
+     * @throws \Com\Tecnick\Pdf\Font\Exception
+     * @throws \RuntimeException
      */
     public function getNumLines(
         $txt,
@@ -4056,6 +4436,12 @@ class Tcpdf
         return max(1, $lines);
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \Com\Tecnick\Unicode\Exception
+     * @throws \Com\Tecnick\Pdf\Font\Exception
+     * @throws \RuntimeException
+     */
     public function getStringHeight(
         $w,
         $txt,
@@ -4123,6 +4509,9 @@ class Tcpdf
      *     },
      * } Engine inter-line space in user units and cell definition (in
      *   internal points).
+     * @throws \Com\Tecnick\Pdf\Font\Exception
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
      */
     protected function legacyRowPitch(float $pitch, bool $withpadding = false): array
     {
@@ -4149,6 +4538,9 @@ class Tcpdf
         ];
     }
 
+    /**
+     * @throws \Exception
+     */
     public function Write(
         $h,
         $txt,
@@ -4301,6 +4693,10 @@ class Tcpdf
 
     /**
      * Return the current font metric array (inserting the default when missing).
+     *
+     * @throws \Com\Tecnick\Pdf\Font\Exception
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
      */
     protected function currentFontMetric(): array
     {
@@ -4315,6 +4711,9 @@ class Tcpdf
     // Images.
     // ===================================================================
 
+    /**
+     * @throws \Exception
+     */
     public function Image(
         $file,
         $x = null,
@@ -4487,6 +4886,8 @@ class Tcpdf
      *
      * Mask polarity follows the PDF soft-mask convention used by legacy: a
      * white mask pixel is fully opaque, a black one fully transparent.
+     *
+     * @throws \RuntimeException
      */
     protected function mergeImageAlphaMask(string $basefile, string $maskfile): ?string
     {
@@ -4557,6 +4958,7 @@ class Tcpdf
      * Files outside the path allowlist report an unknown size.
      *
      * @return array{0: int, 1: int} Width and height in pixels (0 when unknown).
+     * @throws \RuntimeException
      */
     protected function imagePixelSize(string $file): array
     {
@@ -4573,6 +4975,10 @@ class Tcpdf
     // Cursor positioning.
     // ===================================================================
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function Ln($h = null, $cell = false)
     {
         $height = $h === null || (string) $h === '' ? $this->lasth : (float) $h;
@@ -4585,6 +4991,8 @@ class Tcpdf
 
     /**
      * @return float Relative X coordinate of the cursor in user units.
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
      */
     public function GetX()
     {
@@ -4607,6 +5015,10 @@ class Tcpdf
         return $this->posy;
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function setX($x, $rtloff = false)
     {
         $posx = (float) $x;
@@ -4618,6 +5030,10 @@ class Tcpdf
         $this->posx = $posx >= 0 ? $posx : $this->getPageWidth() + $posx;
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function setY($y, $resetx = true, $rtloff = false)
     {
         $posy = (float) $y;
@@ -4627,6 +5043,10 @@ class Tcpdf
         }
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function setXY($x, $y, $rtloff = false)
     {
         $this->setY($y, false, $rtloff);
@@ -4667,6 +5087,7 @@ class Tcpdf
      *                     accepted for legacy callers: true is D, false is F.
      *
      * @return string
+     * @throws \Throwable
      */
     public function Output($name = 'doc.pdf', $dest = 'I')
     {
@@ -4737,6 +5158,9 @@ class Tcpdf
         }
     }
 
+    /**
+     * @throws \Throwable
+     */
     public function getPDFData()
     {
         $this->Close();
@@ -4751,22 +5175,35 @@ class Tcpdf
      * which may differ from the name passed in.
      *
      * @return string
+     * @throws \RuntimeException
      */
     public function getPDFFilename()
     {
         return $this->engine()->getPDFFilename();
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Exception
+     * @throws \RuntimeException
+     */
     public function setExtraXMP($xmp)
     {
         $this->engine()->setCustomXMP('tcpdf_extra', (string) $xmp);
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Exception
+     * @throws \RuntimeException
+     */
     public function setExtraXMPRDF($xmp)
     {
         $this->engine()->setCustomXMP('tcpdf_extra_rdf', (string) $xmp);
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Exception
+     * @throws \RuntimeException
+     */
     public function setExtraXMPPdfaextension($xmp)
     {
         $this->engine()->setCustomXMP('tcpdf_extra_pdfaextension', (string) $xmp);
@@ -4828,6 +5265,9 @@ class Tcpdf
         return $this->footerfont;
     }
 
+    /**
+     * @throws \RuntimeException
+     */
     public function setLanguageArray($language)
     {
         $this->langdata = is_array($language) ? $language : [];
@@ -4852,6 +5292,9 @@ class Tcpdf
         $this->tmprtl = false;
     }
 
+    /**
+     * @throws \Exception
+     */
     public function addHtmlLink(
         $url,
         $name,
@@ -4902,6 +5345,9 @@ class Tcpdf
     // Security (Stage 4).
     // ===================================================================
 
+    /**
+     * @throws \Exception
+     */
     public function setProtection(
         $permissions = [
             'print',
@@ -4964,31 +5410,51 @@ class Tcpdf
     // Transformations.
     // ===================================================================
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function StartTransform()
     {
         $this->emitToPage($this->engine()->graph->getStartTransform());
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function StopTransform()
     {
         $this->emitToPage($this->engine()->graph->getStopTransform());
     }
 
+    /**
+     * @throws \Exception
+     */
     public function ScaleX($s_x, $x = '', $y = '')
     {
         $this->Scale($s_x, 100, $x, $y);
     }
 
+    /**
+     * @throws \Exception
+     */
     public function ScaleY($s_y, $x = '', $y = '')
     {
         $this->Scale(100, $s_y, $x, $y);
     }
 
+    /**
+     * @throws \Exception
+     */
     public function ScaleXY($s, $x = '', $y = '')
     {
         $this->Scale($s, $s, $x, $y);
     }
 
+    /**
+     * @throws \Exception
+     */
     public function Scale($s_x, $s_y, $x = null, $y = null)
     {
         $scalex = (float) $s_x;
@@ -5006,16 +5472,31 @@ class Tcpdf
         ));
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Graph\Exception
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function MirrorH($x = null)
     {
         $this->emitToPage($this->engine()->graph->getHorizMirroring($this->coordOrCursor($x, false)));
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Graph\Exception
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function MirrorV($y = null)
     {
         $this->emitToPage($this->engine()->graph->getVertMirroring($this->coordOrCursor($y, true)));
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Graph\Exception
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function MirrorP($x = null, $y = null)
     {
         $this->emitToPage($this->engine()->graph->getPointMirroring(
@@ -5024,6 +5505,11 @@ class Tcpdf
         ));
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Graph\Exception
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function MirrorL($angle = 0, $x = null, $y = null)
     {
         $this->emitToPage($this->engine()->graph->getReflection(
@@ -5033,21 +5519,37 @@ class Tcpdf
         ));
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function TranslateX($t_x)
     {
         $this->Translate($t_x, 0);
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function TranslateY($t_y)
     {
         $this->Translate(0, $t_y);
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function Translate($t_x, $t_y)
     {
         $this->emitToPage($this->engine()->graph->getTranslation((float) $t_x, (float) $t_y));
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function Rotate($angle, $x = null, $y = null)
     {
         $this->emitToPage($this->engine()->graph->getRotation(
@@ -5057,16 +5559,25 @@ class Tcpdf
         ));
     }
 
+    /**
+     * @throws \Exception
+     */
     public function SkewX($angle_x, $x = null, $y = null)
     {
         $this->Skew($angle_x, 0, $x, $y);
     }
 
+    /**
+     * @throws \Exception
+     */
     public function SkewY($angle_y, $x = null, $y = null)
     {
         $this->Skew(0, $angle_y, $x, $y);
     }
 
+    /**
+     * @throws \Exception
+     */
     public function Skew($angle_x, $angle_y, $x = null, $y = null)
     {
         $anglex = (float) $angle_x;
@@ -5088,6 +5599,10 @@ class Tcpdf
     // Graphics.
     // ===================================================================
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function setLineWidth($width)
     {
         $this->linewidth = (float) $width;
@@ -5102,6 +5617,10 @@ class Tcpdf
         return $this->linewidth;
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function setLineStyle($style, $ret = false)
     {
         $style = is_array($style) ? $style : [];
@@ -5123,6 +5642,10 @@ class Tcpdf
         return $cmd;
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function Line($x1, $y1, $x2, $y2, $style = [])
     {
         if ($this->docstate !== 2) {
@@ -5142,6 +5665,10 @@ class Tcpdf
         ));
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function Rect($x, $y, $w, $h, $style = '', $border_style = [], $fill_color = [])
     {
         if ($this->docstate !== 2) {
@@ -5214,6 +5741,10 @@ class Tcpdf
         $this->emitToPage($eng->graph->getBasicRect((float) $x, (float) $y, (float) $w, (float) $h, $mode, $style));
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function Curve(
         $x0,
         $y0,
@@ -5242,6 +5773,10 @@ class Tcpdf
         ));
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function Polycurve($x0, $y0, $segments, $style = '', $line_style = [], $fill_color = [])
     {
         $inputSegments = $segments;
@@ -5264,6 +5799,10 @@ class Tcpdf
         ));
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function Ellipse(
         $x0,
         $y0,
@@ -5297,6 +5836,10 @@ class Tcpdf
         ));
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function Circle(
         $x0,
         $y0,
@@ -5321,6 +5864,10 @@ class Tcpdf
         ));
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function PolyLine($p, $style = '', $line_style = [], $fill_color = [])
     {
         /** @var array<int, float> $points */
@@ -5337,6 +5884,10 @@ class Tcpdf
         ));
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function Polygon($p, $style = '', $line_style = [], $fill_color = [], $closed = true)
     {
         /** @var array<int, float> $points */
@@ -5354,6 +5905,10 @@ class Tcpdf
         ));
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function RegularPolygon(
         $x0,
         $y0,
@@ -5388,6 +5943,10 @@ class Tcpdf
         ));
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function StarPolygon(
         $x0,
         $y0,
@@ -5422,6 +5981,10 @@ class Tcpdf
         ));
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function RoundedRect(
         $x,
         $y,
@@ -5436,6 +5999,10 @@ class Tcpdf
         $this->RoundedRectXY($x, $y, $w, $h, $r, $r, $round_corner, $style, $border_style, $fill_color);
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function RoundedRectXY(
         $x,
         $y,
@@ -5462,6 +6029,10 @@ class Tcpdf
         ));
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function Arrow($x0, $y0, $x1, $y1, $head_style = 0, $arm_size = 5, $arm_angle = 15)
     {
         $this->emitToPage($this->engine()->graph->getArrow(
@@ -5480,6 +6051,9 @@ class Tcpdf
     // Destinations and bookmarks (Stage 4).
     // ===================================================================
 
+    /**
+     * @throws \RuntimeException
+     */
     public function setDestination($name, $y = -1, $page = '', $x = -1)
     {
         if ($this->docstate !== 2) {
@@ -5500,6 +6074,9 @@ class Tcpdf
         return $this->nameddests;
     }
 
+    /**
+     * @throws \RuntimeException
+     */
     public function setBookmark(
         $txt,
         $level = 0,
@@ -5513,6 +6090,9 @@ class Tcpdf
         $this->Bookmark($txt, $level, $y, $page, $style, $color, $x, $link);
     }
 
+    /**
+     * @throws \RuntimeException
+     */
     public function Bookmark(
         $txt,
         $level = 0,
@@ -5547,16 +6127,25 @@ class Tcpdf
     // JavaScript and forms (Stage 4).
     // ===================================================================
 
+    /**
+     * @throws \RuntimeException
+     */
     public function IncludeJS($script)
     {
         $this->engine()->appendRawJavaScript((string) $script);
     }
 
+    /**
+     * @throws \RuntimeException
+     */
     public function addJavascriptObject($script, $onload = false)
     {
         return $this->engine()->addRawJavaScriptObj((string) $script, (bool) $onload);
     }
 
+    /**
+     * @throws \RuntimeException
+     */
     public function setFormDefaultProp($prop = [])
     {
         $this->formdefaultprop = [];
@@ -5644,6 +6233,9 @@ class Tcpdf
      * caller (see Com\Tecnick\Pdf\JavaScript::setAnnotation). An id of 0 means
      * the object was not created (e.g. captured by an XObject template or
      * suppressed in PDF/X mode) and must not be referenced.
+     *
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
      */
     protected function attachAnnotRef(int $oid): void
     {
@@ -5667,6 +6259,15 @@ class Tcpdf
         }
     }
 
+    /**
+     * @throws \Com\Tecnick\File\Exception
+     * @throws \Com\Tecnick\Pdf\Exception
+     * @throws \Com\Tecnick\Pdf\Font\Exception
+     * @throws \Com\Tecnick\Pdf\Image\Exception
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \Com\Tecnick\Unicode\Exception
+     * @throws \RuntimeException
+     */
     public function TextField($name, $w, $h, $prop = [], $opt = [], $x = null, $y = null, $js = false)
     {
         if ($this->docstate !== 2) {
@@ -5686,6 +6287,14 @@ class Tcpdf
         $this->advanceFormFieldX((float) $w);
     }
 
+    /**
+     * @throws \Com\Tecnick\File\Exception
+     * @throws \Com\Tecnick\Pdf\Exception
+     * @throws \Com\Tecnick\Pdf\Font\Exception
+     * @throws \Com\Tecnick\Pdf\Image\Exception
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function RadioButton(
         $name,
         $w,
@@ -5723,6 +6332,15 @@ class Tcpdf
         $this->advanceFormFieldX((float) $w);
     }
 
+    /**
+     * @throws \Com\Tecnick\File\Exception
+     * @throws \Com\Tecnick\Pdf\Exception
+     * @throws \Com\Tecnick\Pdf\Font\Exception
+     * @throws \Com\Tecnick\Pdf\Image\Exception
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \Com\Tecnick\Unicode\Exception
+     * @throws \RuntimeException
+     */
     public function ListBox($name, $w, $h, $values, $prop = [], $opt = [], $x = null, $y = null, $js = false)
     {
         if ($this->docstate !== 2) {
@@ -5752,6 +6370,15 @@ class Tcpdf
         $this->advanceFormFieldX((float) $w);
     }
 
+    /**
+     * @throws \Com\Tecnick\File\Exception
+     * @throws \Com\Tecnick\Pdf\Exception
+     * @throws \Com\Tecnick\Pdf\Font\Exception
+     * @throws \Com\Tecnick\Pdf\Image\Exception
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \Com\Tecnick\Unicode\Exception
+     * @throws \RuntimeException
+     */
     public function ComboBox($name, $w, $h, $values, $prop = [], $opt = [], $x = null, $y = null, $js = false)
     {
         if ($this->docstate !== 2) {
@@ -5781,6 +6408,14 @@ class Tcpdf
         $this->advanceFormFieldX((float) $w);
     }
 
+    /**
+     * @throws \Com\Tecnick\File\Exception
+     * @throws \Com\Tecnick\Pdf\Exception
+     * @throws \Com\Tecnick\Pdf\Font\Exception
+     * @throws \Com\Tecnick\Pdf\Image\Exception
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function CheckBox(
         $name,
         $w,
@@ -5818,6 +6453,16 @@ class Tcpdf
         $this->advanceFormFieldX((float) $w);
     }
 
+    /**
+     * @throws \Com\Tecnick\File\Exception
+     * @throws \Com\Tecnick\Pdf\Encrypt\Exception
+     * @throws \Com\Tecnick\Pdf\Exception
+     * @throws \Com\Tecnick\Pdf\Font\Exception
+     * @throws \Com\Tecnick\Pdf\Image\Exception
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \Com\Tecnick\Unicode\Exception
+     * @throws \RuntimeException
+     */
     public function Button(
         $name,
         $w,
@@ -5881,6 +6526,9 @@ class Tcpdf
     // Signatures and rights (Stage 4).
     // ===================================================================
 
+    /**
+     * @throws \RuntimeException
+     */
     public function setUserRights(
         $enable = true,
         $document = '/FullSave',
@@ -5901,6 +6549,10 @@ class Tcpdf
         ]);
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Exception
+     * @throws \RuntimeException
+     */
     public function setSignature(
         $signing_cert = '',
         $private_key = '',
@@ -5940,6 +6592,10 @@ class Tcpdf
         $this->engine()->setSignature($data);
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function setSignatureAppearance($x = 0, $y = 0, $w = 0, $h = 0, $page = -1, $name = '')
     {
         $this->engine()->setSignatureAppearance(
@@ -5952,6 +6608,10 @@ class Tcpdf
         );
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function addEmptySignatureAppearance($x = 0, $y = 0, $w = 0, $h = 0, $page = -1, $name = '')
     {
         $this->engine()->addEmptySignatureAppearance(
@@ -5964,6 +6624,10 @@ class Tcpdf
         );
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Exception
+     * @throws \RuntimeException
+     */
     public function setTimeStamp(
         $tsa_host = '',
         $tsa_username = '',
@@ -6023,6 +6687,7 @@ class Tcpdf
 
     /**
      * @return string Current page number, or the legacy alias placeholder.
+     * @throws \RuntimeException
      */
     public function getAliasNumPage()
     {
@@ -6035,6 +6700,8 @@ class Tcpdf
 
     /**
      * @return string Total pages in the current group, or the legacy alias placeholder.
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
      */
     public function getPageGroupAlias()
     {
@@ -6058,6 +6725,8 @@ class Tcpdf
 
     /**
      * @return string Page number in the current group, or the legacy alias placeholder.
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
      */
     public function getPageNumGroupAlias()
     {
@@ -6070,6 +6739,8 @@ class Tcpdf
 
     /**
      * @return int Current page number within its page group.
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
      */
     public function getGroupPageNo()
     {
@@ -6097,11 +6768,18 @@ class Tcpdf
         return $num > 0 ? $num : $currentpid + 1;
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function getGroupPageNoFormatted()
     {
         return number_format((float) $this->getGroupPageNo(), 0, '.', ',');
     }
 
+    /**
+     * @throws \RuntimeException
+     */
     public function PageNoFormatted()
     {
         return number_format((float) ($this->PageNo() + $this->startingpagenumber - 1), 0, '.', ',');
@@ -6111,12 +6789,21 @@ class Tcpdf
     // Layers, visibility, transparency (Stage 4).
     // ===================================================================
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Exception
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function startLayer($name = '', $print = true, $view = true, $lock = true)
     {
         $this->openlayers++;
         $this->emitToPage($this->engine()->newLayer((string) $name, [], (bool) $print, (bool) $view, (bool) $lock));
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function endLayer()
     {
         if ($this->openlayers > 0) {
@@ -6125,6 +6812,9 @@ class Tcpdf
         }
     }
 
+    /**
+     * @throws \Exception
+     */
     public function setVisibility($v)
     {
         $this->endLayer();
@@ -6143,6 +6833,10 @@ class Tcpdf
         }
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function setOverprint($stroking = true, $nonstroking = null, $mode = 0)
     {
         $this->overprint = [
@@ -6162,6 +6856,10 @@ class Tcpdf
         return $this->overprint;
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function setAlpha($stroking = 1, $bm = 'Normal', $nonstroking = null, $ais = false)
     {
         $stroking = (float) $stroking;
@@ -6180,6 +6878,8 @@ class Tcpdf
     /**
      * Register the ExtGState referenced by the given command with the open
      * XObject template resource dictionary.
+     *
+     * @throws \RuntimeException
      */
     protected function registerTemplateExtGState(string $cmd): void
     {
@@ -6218,11 +6918,18 @@ class Tcpdf
         return $this->cellheightratio;
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Exception
+     * @throws \RuntimeException
+     */
     public function setPDFVersion($version = '1.7')
     {
         $this->engine()->setPDFVersion((string) $version);
     }
 
+    /**
+     * @throws \RuntimeException
+     */
     public function setViewerPreferences($preferences)
     {
         /** @var array{CenterWindow?: bool, Direction?: string, DisplayDocTitle?: bool, Duplex?: string, FitWindow?: bool, HideMenubar?: bool, HideToolbar?: bool, HideWindowUI?: bool, NonFullScreenPageMode?: string, NumCopies?: int, PickTrayByPDFSize?: bool, PrintArea?: string, PrintClip?: string, PrintPageRange?: array<array-key, int>, PrintScaling?: string, ViewArea?: string, ViewClip?: string} $prefs */
@@ -6234,6 +6941,11 @@ class Tcpdf
     // Prepress marks and gradients (Stage 4).
     // ===================================================================
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Graph\Exception
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function colorRegistrationBar(
         $x,
         $y,
@@ -6282,6 +6994,10 @@ class Tcpdf
         ));
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function cropMark($x, $y, $w, $h, $type = 'T,R,B,L', $color = [100, 100, 100, 100, 'All'])
     {
         $style = $this->currentLineStyle();
@@ -6296,6 +7012,11 @@ class Tcpdf
         ));
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Graph\Exception
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function registrationMark(
         $x,
         $y,
@@ -6313,11 +7034,20 @@ class Tcpdf
         ));
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function registrationMarkCMYK($x, $y, $r)
     {
         $this->emitToPage($this->engine()->graph->getCmykRegistrationMark((float) $x, (float) $y, (float) $r));
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Graph\Exception
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function LinearGradient($x, $y, $w, $h, $col1 = [], $col2 = [], $coords = [0, 0, 1, 0])
     {
         $coords = array_map(
@@ -6335,6 +7065,11 @@ class Tcpdf
         ));
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Graph\Exception
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function RadialGradient($x, $y, $w, $h, $col1 = [], $col2 = [], $coords = [0.5, 0.5, 0.5, 0.5, 1])
     {
         $coords = array_map(
@@ -6352,6 +7087,11 @@ class Tcpdf
         ));
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Graph\Exception
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function CoonsPatchMesh(
         $x,
         $y,
@@ -6476,6 +7216,11 @@ class Tcpdf
         return $out;
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Graph\Exception
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function Gradient($type, $coords, $stops, $background = [], $antialias = false)
     {
         $coords = array_map(
@@ -6507,6 +7252,10 @@ class Tcpdf
         ));
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function PieSector($xc, $yc, $r, $a, $b, $style = 'FD', $cw = true, $o = 90)
     {
         $angs = (float) $a;
@@ -6531,6 +7280,11 @@ class Tcpdf
         ));
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Graph\Exception
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function PieSectorXY($xc, $yc, $rx, $ry, $a, $b, $style = 'FD', $cw = false, $o = 0, $nc = 2)
     {
         // The engine pie sector is circular: elliptical sectors are
@@ -6579,6 +7333,8 @@ class Tcpdf
      * or `mutool convert`) and use ImageSVG() instead. As a convenience,
      * SVG files passed to this method are dispatched to ImageSVG() and
      * raster files to Image(); EPS/AI input is silently skipped.
+     *
+     * @throws \Exception
      */
     public function ImageEps(
         $file,
@@ -6640,6 +7396,9 @@ class Tcpdf
         return $this->docbarcode;
     }
 
+    /**
+     * @throws \Exception
+     */
     public function write1DBarcode(
         $code,
         $type,
@@ -6666,6 +7425,9 @@ class Tcpdf
         );
     }
 
+    /**
+     * @throws \Exception
+     */
     public function write2DBarcode(
         $code,
         $type,
@@ -6697,6 +7459,7 @@ class Tcpdf
      *
      * @param float $xres Width (and height for 2D codes) of a single module
      *                    in user units, used when no explicit size is given.
+     * @throws \Exception
      */
     protected function emitBarcode(
         string $code,
@@ -6774,6 +7537,7 @@ class Tcpdf
      * engine; the box, label and cursor advance mirror write1DBarcode().
      *
      * @param array<array-key, mixed> $style
+     * @throws \Exception
      */
     protected function drawBarcode1D(
         string $type,
@@ -6983,6 +7747,7 @@ class Tcpdf
      * aspect ratio is preserved unless $distort is set. Mirrors write2DBarcode().
      *
      * @param array<array-key, mixed> $style
+     * @throws \Exception
      */
     protected function drawBarcode2D(
         string $type,
@@ -7115,6 +7880,8 @@ class Tcpdf
     /**
      * Move to the next page when a barcode of the given height would not fit
      * below the current Y, preserving the abscissa. Returns the Y to draw at.
+     *
+     * @throws \Exception
      */
     protected function fitBarcodeBlock(float $posx, float $posy, float $boxh): float
     {
@@ -7145,6 +7912,9 @@ class Tcpdf
     /**
      * Left edge of a barcode box for the legacy position keyword (L/C/R or
      * the current abscissa for the empty/default case).
+     *
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
      */
     protected function barcodeBoxX(string $position, float $posx, float $boxw): float
     {
@@ -7167,6 +7937,7 @@ class Tcpdf
      * Background fill and/or border around a barcode box.
      *
      * @param array<array-key, mixed> $style
+     * @throws \RuntimeException
      */
     protected function barcodeBox(float $x, float $y, float $w, float $h, array $style): string
     {
@@ -7188,6 +7959,9 @@ class Tcpdf
 
     /**
      * Advance the cursor next to a drawn barcode for the legacy $align value.
+     *
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
      */
     protected function advanceAfterBarcode(
         string $align,
@@ -7286,6 +8060,10 @@ class Tcpdf
     // HTML rendering.
     // ===================================================================
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Exception
+     * @throws \RuntimeException
+     */
     public function fixHTMLCode($html, $default_css = '', $tagvs = null, $tidy_options = null)
     {
         return $this->engine()->tidyHTML((string) $html, (string) $default_css);
@@ -7361,6 +8139,9 @@ class Tcpdf
         return 'tcpdf://' . ($encoded === false ? '' : urlencode($encoded));
     }
 
+    /**
+     * @throws \Throwable
+     */
     public function writeHTMLCell(
         $w,
         $h,
@@ -7665,6 +8446,7 @@ class Tcpdf
      * - malformed hexadecimal colors, silently coerced by the legacy
      *   parser, are repaired in color attributes and CSS declaration values
      *   (see repairHtmlColors()).
+     * @throws \RuntimeException
      */
     protected function normalizeHtmlMarkup(string $html): string
     {
@@ -7726,7 +8508,7 @@ class Tcpdf
         // Legacy page anchors: href="#N" or href="#N,y" link to page N at ordinate y.
         $html = (string) preg_replace_callback(
             '/(\bhref\s*=\s*["\'])#([0-9]+)(?:,([0-9]*\.?[0-9]*))?(["\'])/i',
-            fn(array $match): string => (
+            /** @throws \RuntimeException */ fn(array $match): string => (
                 ($match[1])
                 . $this->engine()->addInternalLink(max(0, (int) ($match[2]) - 1), (float) ($match[3]))
                 . ($match[4])
@@ -7826,6 +8608,8 @@ class Tcpdf
      * (K_TCPDF_CALLS_IN_HTML feature): the markup is split at the tags,
      * each chunk is rendered normally and each tag invokes the serialized
      * facade method when listed in K_ALLOWED_TCPDF_TAGS.
+     *
+     * @throws \Throwable
      */
     protected function writeHtmlWithTcpdfTags(
         string $html,
@@ -7885,6 +8669,9 @@ class Tcpdf
         }
     }
 
+    /**
+     * @throws \Throwable
+     */
     public function writeHTML($html, $ln = true, $fill = false, $reseth = false, $cell = false, $align = '')
     {
         // Legacy renders the fragment without the current cell padding
@@ -7897,6 +8684,9 @@ class Tcpdf
         }
     }
 
+    /**
+     * @throws \RuntimeException
+     */
     public function setLIsymbol($symbol = '!')
     {
         $this->engine()->setULLIDot((string) $symbol);
@@ -7914,6 +8704,9 @@ class Tcpdf
         }
     }
 
+    /**
+     * @throws \RuntimeException
+     */
     public function setHtmlVSpace($tagvs)
     {
         $inputTagVSpace = $tagvs;
@@ -8001,6 +8794,10 @@ class Tcpdf
     // Page reordering (Stage 4).
     // ===================================================================
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function movePage($frompage, $topage)
     {
         $from = (int) $frompage;
@@ -8013,6 +8810,10 @@ class Tcpdf
         return true;
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function deletePage($page)
     {
         $page = (int) $page;
@@ -8024,6 +8825,12 @@ class Tcpdf
         return true;
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Font\Exception
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \Com\Tecnick\Unicode\Exception
+     * @throws \RuntimeException
+     */
     public function copyPage($page = 0)
     {
         $eng = $this->engine();
@@ -8048,6 +8855,9 @@ class Tcpdf
         return true;
     }
 
+    /**
+     * @throws \Exception
+     */
     public function addTOC(
         $page = null,
         $numbersfont = '',
@@ -8162,6 +8972,9 @@ class Tcpdf
         }
     }
 
+    /**
+     * @throws \Exception
+     */
     public function addHTMLTOC(
         $page = null,
         $toc_name = 'TOC',
@@ -8249,6 +9062,8 @@ class Tcpdf
      * gutters.
      *
      * @return array<int, array{RX: float, RY: float, RW: float, RH: float}>
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
      */
     protected function equalColumnRegions(int $numcols, float $width, float $ypos): array
     {
@@ -8283,6 +9098,9 @@ class Tcpdf
      * page settings) is written directly into the page store.
      *
      * @param array<int, array{RX: float, RY: float, RW: float, RH: float}> $regions
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \ReflectionException
+     * @throws \RuntimeException
      */
     protected function setEnginePageRegions(array $regions): void
     {
@@ -8331,12 +9149,20 @@ class Tcpdf
 
     /**
      * True when the current page is split into multiple column regions.
+     *
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
      */
     protected function inColumnMode(): bool
     {
         return $this->docstate === 2 && count($this->engine()->page->getPage()['region']) > 1;
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \ReflectionException
+     * @throws \RuntimeException
+     */
     public function setEqualColumns($numcols = 0, $width = 0, $y = null)
     {
         $numcols = max(0, (int) $numcols);
@@ -8359,6 +9185,11 @@ class Tcpdf
         $this->selectColumn(0);
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \ReflectionException
+     * @throws \RuntimeException
+     */
     public function resetColumns()
     {
         // Legacy: restore the original margins and disable column mode.
@@ -8381,6 +9212,11 @@ class Tcpdf
         ]);
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \ReflectionException
+     * @throws \RuntimeException
+     */
     public function setColumnsArray($columns)
     {
         $inputColumns = $columns;
@@ -8430,6 +9266,10 @@ class Tcpdf
         }
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function selectColumn($col = null)
     {
         if ($this->docstate !== 2) {
@@ -8464,6 +9304,10 @@ class Tcpdf
         $this->posx = $this->rtlmode ? $region['RX'] + $region['RW'] : $region['RX'];
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function getColumn()
     {
         if ($this->docstate !== 2) {
@@ -8473,6 +9317,10 @@ class Tcpdf
         return (int) $this->engine()->page->getPage()['currentRegion'];
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function getNumberOfColumns()
     {
         if ($this->docstate !== 2) {
@@ -8523,6 +9371,11 @@ class Tcpdf
         return $this->textshadow;
     }
 
+    /**
+     * @throws \Com\Tecnick\File\Exception
+     * @throws \Com\Tecnick\Pdf\Exception
+     * @throws \RuntimeException
+     */
     public function hyphenateText(
         $text,
         $patterns,
@@ -8566,6 +9419,9 @@ class Tcpdf
         // The engine renders vector images natively.
     }
 
+    /**
+     * @throws \RuntimeException
+     */
     public function setFontSubsetting($enable = true)
     {
         $this->fontsubsetting = (bool) $enable;
@@ -8581,26 +9437,43 @@ class Tcpdf
         return $this->fontsubsetting;
     }
 
+    /**
+     * @throws \RuntimeException
+     */
     public function stringLeftTrim($str, $replace = '')
     {
         return $this->engine()->strTrimLeft((string) $str, (string) $replace);
     }
 
+    /**
+     * @throws \RuntimeException
+     */
     public function stringRightTrim($str, $replace = '')
     {
         return $this->engine()->strTrimRight((string) $str, (string) $replace);
     }
 
+    /**
+     * @throws \RuntimeException
+     */
     public function stringTrim($str, $replace = '')
     {
         return $this->engine()->strTrim((string) $str, (string) $replace);
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Font\Exception
+     * @throws \RuntimeException
+     */
     public function isUnicodeFont()
     {
         return $this->engine()->font->isCurrentUnicodeFont();
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Font\Exception
+     * @throws \RuntimeException
+     */
     public function getFontFamilyName($fontfamily)
     {
         return $this->engine()->font->getFontFamilyName((string) $fontfamily);
@@ -8610,6 +9483,9 @@ class Tcpdf
     // Templates (Stage 4).
     // ===================================================================
 
+    /**
+     * @throws \Exception
+     */
     public function startTemplate($w = 0, $h = 0, $group = false)
     {
         if ($this->docstate !== 2) {
@@ -8624,6 +9500,10 @@ class Tcpdf
         return $this->xobjtid;
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function endTemplate()
     {
         if ($this->xobjtid === '') {
@@ -8636,6 +9516,13 @@ class Tcpdf
         return $tid;
     }
 
+    /**
+     * @throws \Com\Tecnick\File\Exception
+     * @throws \Com\Tecnick\Pdf\Exception
+     * @throws \Com\Tecnick\Pdf\Image\Exception
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
+     */
     public function printTemplate(
         $id,
         $x = null,
@@ -8663,6 +9550,10 @@ class Tcpdf
         ));
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Font\Exception
+     * @throws \RuntimeException
+     */
     public function setFontStretching($perc = 100)
     {
         $this->fontstretching = (float) $perc;
@@ -8677,6 +9568,10 @@ class Tcpdf
         return $this->fontstretching;
     }
 
+    /**
+     * @throws \Com\Tecnick\Pdf\Font\Exception
+     * @throws \RuntimeException
+     */
     public function setFontSpacing($spacing = 0)
     {
         $this->fontspacing = (float) $spacing;
@@ -8700,6 +9595,9 @@ class Tcpdf
         return $this->nowriteareas;
     }
 
+    /**
+     * @throws \RuntimeException
+     */
     public function setPageRegions($regions = [])
     {
         // Legacy: empties the current regions, then re-adds each one. The
@@ -8711,6 +9609,9 @@ class Tcpdf
         }
     }
 
+    /**
+     * @throws \RuntimeException
+     */
     public function addPageRegion($region)
     {
         if (!is_array($region)) {
@@ -8759,6 +9660,7 @@ class Tcpdf
      * content area the regions live in.
      *
      * @return array<int, array{xt: float, yt: float, xb: float, yb: float, side: string}>
+     * @throws \RuntimeException
      */
     protected function currentPageNoWriteAreas(): array
     {
@@ -8794,6 +9696,8 @@ class Tcpdf
      * on its own.
      *
      * @return bool True when no-write regions were applied (multi-region flow).
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
      */
     protected function applyNoWriteRegionsForFlow(float $bandheight, float $cursory): bool
     {
@@ -8812,6 +9716,9 @@ class Tcpdf
      * whose vertical span contains $y, so a flow that starts at the cursor
      * begins in the right band. Falls back to the first region when $y sits
      * above them all.
+     *
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \RuntimeException
      */
     protected function selectRegionAtY(float $y): void
     {
@@ -8851,6 +9758,9 @@ class Tcpdf
         return $this->getCellHeight($size, false);
     }
 
+    /**
+     * @throws \Exception
+     */
     public function ImageSVG(
         $file,
         $x = null,

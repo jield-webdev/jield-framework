@@ -142,6 +142,7 @@ class Url extends AbstractHelper
      *
      * @param  mixed $routeMatch
      * @return Url
+     * @throws Exception\InvalidArgumentException
      */
     public function setRouteMatch($routeMatch)
     {

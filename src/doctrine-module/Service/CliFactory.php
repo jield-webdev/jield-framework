@@ -22,6 +22,9 @@ final class CliFactory implements FactoryInterface
 
     protected array $_commands = [];
 
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     public function getEventManager(ContainerInterface $container): EventManagerInterface
     {
         if (!$this->events instanceof \Laminas\EventManager\EventManagerInterface) {
@@ -35,11 +38,6 @@ final class CliFactory implements FactoryInterface
         return $this->events;
     }
 
-    /**
-     * {@inheritDoc}
-     *
-     * @return Application
-     */
     public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): Application
     {
         $cli = new Application();

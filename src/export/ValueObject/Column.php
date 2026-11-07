@@ -59,6 +59,10 @@ final class Column
         return $this->isNullable ? 'Yes' : '';
     }
 
+    /**
+     * @throws \DateInvalidTimeZoneException
+     * @throws InvalidArgumentException
+     */
     public function addRow(int|string|float|bool|DateTime|DateTimeImmutable|null $data): void
     {
         if (!$this->isNullable && $data === null) {

@@ -38,12 +38,6 @@ class AssetManager implements AssetFilterManagerAwareInterface, AssetCacheManage
      */
     protected bool $assetSetOnResponse = false;
 
-    /**
-     * Constructor
-     *
-     * @param ResolverInterface $resolver
-     * @param array $config
-     */
     public function __construct(ResolverInterface $resolver, array $config = [])
     {
         $this->setResolver(resolver: $resolver);
@@ -52,8 +46,6 @@ class AssetManager implements AssetFilterManagerAwareInterface, AssetCacheManage
 
     /**
      * Set the config
-     *
-     * @param array $config
      */
     protected function setConfig(array $config): void
     {
@@ -72,8 +64,6 @@ class AssetManager implements AssetFilterManagerAwareInterface, AssetCacheManage
 
     /**
      * Returns true if this instance of asset manager has at least one asset successfully set on response
-     *
-     * @return bool
      */
     public function assetSetOnResponse(): bool
     {
@@ -82,8 +72,6 @@ class AssetManager implements AssetFilterManagerAwareInterface, AssetCacheManage
 
     /**
      * Set the resolver to use in the asset manager
-     *
-     * @param ResolverInterface $resolver
      */
     public function setResolver(ResolverInterface $resolver): void
     {
@@ -92,8 +80,6 @@ class AssetManager implements AssetFilterManagerAwareInterface, AssetCacheManage
 
     /**
      * Get the resolver used by the asset manager
-     *
-     * @return ResolverInterface
      */
     public function getResolver(): ResolverInterface
     {
@@ -103,9 +89,9 @@ class AssetManager implements AssetFilterManagerAwareInterface, AssetCacheManage
     /**
      * Set the asset on the response, including headers and content.
      *
-     * @param Response $response
-     * @return   Response
      * @throws   Exception\RuntimeException
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
      */
     public function setAssetOnResponse(Response $response): Response
     {
@@ -152,7 +138,6 @@ class AssetManager implements AssetFilterManagerAwareInterface, AssetCacheManage
     /**
      * Resolve the request to a file.
      *
-     * @param RequestInterface $request
      *
      * @return ?AssetInterface AssetInterface when not found, AssetInterface when resolved.
      */
@@ -184,8 +169,6 @@ class AssetManager implements AssetFilterManagerAwareInterface, AssetCacheManage
 
     /**
      * Set the AssetFilterManager.
-     *
-     * @param AssetFilterManager $filterManager
      */
     #[Override]
     public function setAssetFilterManager(AssetFilterManager $filterManager): void
@@ -195,8 +178,6 @@ class AssetManager implements AssetFilterManagerAwareInterface, AssetCacheManage
 
     /**
      * Get the AssetFilterManager
-     *
-     * @return AssetFilterManager
      */
     #[Override]
     public function getAssetFilterManager(): AssetFilterManager
@@ -206,8 +187,6 @@ class AssetManager implements AssetFilterManagerAwareInterface, AssetCacheManage
 
     /**
      * Set the AssetCacheManager.
-     *
-     * @param AssetCacheManager $cacheManager
      */
     #[Override]
     public function setAssetCacheManager(AssetCacheManager $cacheManager): void
@@ -217,8 +196,6 @@ class AssetManager implements AssetFilterManagerAwareInterface, AssetCacheManage
 
     /**
      * Get the AssetCacheManager
-     *
-     * @return AssetCacheManager
      */
     #[Override]
     public function getAssetCacheManager(): AssetCacheManager

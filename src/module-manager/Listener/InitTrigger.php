@@ -11,7 +11,6 @@ use Webmozart\Assert\Assert;
 
 class InitTrigger extends AbstractListener
 {
-    /** @return void */
     public function __invoke(ModuleEvent $e): void
     {
         $module = $e->getModule();

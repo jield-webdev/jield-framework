@@ -46,11 +46,10 @@ final class ConfigurationFactory extends DoctrineConfigurationFactory
     }
 
     /**
-     * {@inheritDoc}
-     *
-     * @param string $requestedName
-     *
-     * @return Configuration
+     * @throws \RuntimeException
+     * @throws \Doctrine\DBAL\Exception
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
      */
     public function __invoke(
         ContainerInterface $container,

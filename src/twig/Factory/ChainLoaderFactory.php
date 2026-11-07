@@ -13,6 +13,10 @@ use Twig\Loader;
 
 class ChainLoaderFactory implements FactoryInterface
 {
+    /**
+     * @throws InvalidArgumentException
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     public function __invoke(
         ContainerInterface $container,
         string $requestedName,

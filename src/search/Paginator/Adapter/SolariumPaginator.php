@@ -35,6 +35,9 @@ class SolariumPaginator implements AdapterInterface
         return $this->count;
     }
 
+    /**
+     * @throws \Exception
+     */
     public function getItems($offset, $itemCountPerPage): iterable
     {
         $this->query->setStart(start: $offset);

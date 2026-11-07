@@ -33,8 +33,6 @@ class LinkCollection implements Countable, IteratorAggregate
 
     /**
      * Return a count of link relations
-     *
-     * @return int
      */
     #[ReturnTypeWillChange]
     #[Override]
@@ -45,8 +43,6 @@ class LinkCollection implements Countable, IteratorAggregate
 
     /**
      * Retrieve internal iterator
-     *
-     * @return ArrayIterator
      */
     #[ReturnTypeWillChange]
     #[Override]
@@ -58,10 +54,8 @@ class LinkCollection implements Countable, IteratorAggregate
     /**
      * Add a link
      *
-     * @param  bool $overwrite
      * @throws Exception\DomainException
      *@deprecated Since 1.5.0; use idempotentAdd() for PSR-13 and RFC 5988 compliance.
-     *
      */
     public function add(Link $link, bool $overwrite = false): static
     {
@@ -112,7 +106,6 @@ class LinkCollection implements Countable, IteratorAggregate
     /**
      * Retrieve a link relation
      *
-     * @param string $relation
      * @return LinkInterface|Link|array<mixed>|null
      */
     public function get(string $relation): Link|array|LinkInterface|null
@@ -126,9 +119,6 @@ class LinkCollection implements Countable, IteratorAggregate
 
     /**
      * Does a given link relation exist?
-     *
-     * @param string $relation
-     * @return bool
      */
     public function has(string $relation): bool
     {
@@ -137,9 +127,6 @@ class LinkCollection implements Countable, IteratorAggregate
 
     /**
      * Remove a given link relation
-     *
-     * @param string $relation
-     * @return bool
      */
     public function remove(string $relation): bool
     {

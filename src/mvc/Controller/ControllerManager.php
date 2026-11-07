@@ -79,7 +79,7 @@ class ControllerManager extends AbstractPluginManager
      * the shared EM injection needs to happen; the conditional will always
      * pass.
      *
-     * @param DispatchableInterface $controller
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function injectEventManager(ContainerInterface $container, DispatchableInterface $controller): void
     {
@@ -97,6 +97,7 @@ class ControllerManager extends AbstractPluginManager
      * Initializer: inject plugin manager
      *
      * @param DispatchableInterface $controller
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function injectPluginManager(ContainerInterface $container, $controller): void
     {

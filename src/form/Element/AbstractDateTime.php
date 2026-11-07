@@ -23,8 +23,6 @@ abstract class AbstractDateTime extends Element implements InputProviderInterfac
 {
     /**
      * A valid format string accepted by date()
-     *
-     * @var string
      */
     protected string $format = 'Y-m-d\TH:iP';
 
@@ -73,8 +71,6 @@ abstract class AbstractDateTime extends Element implements InputProviderInterfac
 
     /**
      * Set value for format
-     *
-     * @return static
      */
     public function setFormat(string $format): static
     {
@@ -94,6 +90,8 @@ abstract class AbstractDateTime extends Element implements InputProviderInterfac
      * Get validators
      *
      * @return array<ValidatorInterface>
+     * @throws \DateMalformedIntervalStringException
+     * @throws InvalidArgumentException
      */
     protected function getValidators(): array
     {
@@ -165,6 +163,8 @@ abstract class AbstractDateTime extends Element implements InputProviderInterfac
 
     /**
      * Retrieves a DateStep Validator configured for a DateTime Input type
+     *
+     * @throws \DateMalformedIntervalStringException
      */
     protected function getStepValidator(): ValidatorInterface
     {
@@ -186,6 +186,7 @@ abstract class AbstractDateTime extends Element implements InputProviderInterfac
      * Attaches default validators for the datetime input.
      *
      * @inheritDoc
+     * @throws \DateMalformedIntervalStringException
      */
     public function getInputSpecification(): array
     {

@@ -18,8 +18,6 @@ class FormButton extends FormInput
 {
     /**
      * Attributes valid for the button tag
-     *
-     * @var array
      */
     protected array $validTagAttributes = [
         'name' => true,
@@ -37,8 +35,6 @@ class FormButton extends FormInput
 
     /**
      * Valid values for the button type
-     *
-     * @var array
      */
     protected array $validTypes = [
         'button' => true,
@@ -54,7 +50,7 @@ class FormButton extends FormInput
      * @template T as null|ElementInterface
      * @psalm-param T $element
      * @psalm-return (T is null ? static : string)
-     * @return string|FormButton
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function __invoke(?ElementInterface $element = null, ?string $buttonContent = null): string|static
     {
@@ -70,6 +66,7 @@ class FormButton extends FormInput
      * using content from $buttonContent or the element's "label" attribute
      *
      * @throws Exception\DomainException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function render(ElementInterface $element, ?string $buttonContent = null): string
     {
@@ -95,9 +92,9 @@ class FormButton extends FormInput
     /**
      * Generate an opening button tag
      *
-     * @param array|ElementInterface|null $attributesOrElement
      * @throws Exception\InvalidArgumentException
      * @throws Exception\DomainException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function openTag(ElementInterface|array|null $attributesOrElement = null): string
     {

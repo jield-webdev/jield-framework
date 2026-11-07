@@ -25,6 +25,11 @@ final class TestIndex extends Command
         $this->addOption(name: 'reset', shortcut: 'r', mode: InputOption::VALUE_NONE, description: 'Reset index');
     }
 
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
+     * @throws \RuntimeException
+     */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         /** @mago-var mixed $reset */

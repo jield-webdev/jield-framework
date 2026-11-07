@@ -37,6 +37,7 @@ final class OAuth2ServerFactory
     /**
      * Create and return a fully configured OAuth2 server instance.
      *
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public static function factory(array $config, ContainerInterface $container): OAuth2Server
     {
@@ -62,6 +63,7 @@ final class OAuth2ServerFactory
      * Create and return an OAuth2 storage adapter instance.
      *
      * @return array|PdoAdapter A PdoAdapter, MongoAdapter, or array of storage instances.
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     private static function createStorage(array $config, ContainerInterface $container): PdoAdapter|array
     {
@@ -86,6 +88,7 @@ final class OAuth2ServerFactory
      * Create an OAuth2 storage instance based on the adapter specified.
      *
      * @param string $adapter One of "pdo" or "mongo".
+     * @throws ServiceNotCreatedException
      */
     private static function createStorageFromAdapter(
         string $adapter,
@@ -102,6 +105,7 @@ final class OAuth2ServerFactory
      * Creates the OAuth2 storage from services.
      *
      * @param string|string[] $storage A string or an array of strings; each MUST be a valid service.
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     private static function createStorageFromServices(array|string $storage, ContainerInterface $container): array
     {
@@ -125,6 +129,8 @@ final class OAuth2ServerFactory
 
     /**
      * Create and return an OAuth2 PDO adapter.
+     *
+     * @throws ServiceNotCreatedException
      */
     private static function createPdoAdapter(array $config): PdoAdapter
     {
@@ -137,8 +143,7 @@ final class OAuth2ServerFactory
     /**
      * Create and return the configuration needed to create a PDO instance.
      *
-     * @param array $config
-     * @return array
+     * @throws ServiceNotCreatedException
      */
     private static function createPdoConfig(array $config): array
     {
@@ -176,9 +181,6 @@ final class OAuth2ServerFactory
 
     /**
      * Marshal OAuth2\Server options from api-tools-oauth2 configuration.
-     *
-     * @param array $config
-     * @return array
      */
     private static function marshalOptions(array $config): array
     {
@@ -204,7 +206,6 @@ final class OAuth2ServerFactory
     /**
      * Inject grant types into the OAuth2\Server instance, based on api-tools-oauth2
      * configuration.
-     *
      */
     private static function injectGrantTypes(
         OAuth2Server $server,

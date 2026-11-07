@@ -62,8 +62,6 @@ final class RestController extends AbstractRestfulController
      * HTTP methods we allow for the collections; used by options()
      *
      * HEAD and OPTIONS are always available.
-     *
-     * @var array
      */
     protected array $collectionHttpMethods = [
         'GET',
@@ -72,8 +70,6 @@ final class RestController extends AbstractRestfulController
 
     /**
      * Name of the collections entry in a Collection
-     *
-     * @var string
      */
     protected string $collectionName = 'items';
 
@@ -111,8 +107,6 @@ final class RestController extends AbstractRestfulController
      * HTTP methods we allow for individual entities; used by options()
      *
      * HEAD and OPTIONS are always available.
-     *
-     * @var array
      */
     protected array $entityHttpMethods = [
         'DELETE',
@@ -127,8 +121,6 @@ final class RestController extends AbstractRestfulController
     protected ?string $route = null;
 
     /**
-     * Constructor
-     *
      * Allows you to set the event identifier, which can be useful to allow multiple
      * instances of this controller to react to different sets of shared events.
      */
@@ -149,8 +141,6 @@ final class RestController extends AbstractRestfulController
 
     /**
      * Set the name to which to assign a collection in a Collection
-     *
-     * @param string $name
      */
     public function setCollectionName(string $name): void
     {
@@ -159,8 +149,6 @@ final class RestController extends AbstractRestfulController
 
     /**
      * Set the minimum page size for paginated responses
-     *
-     * @param int $count
      */
     public function setMinPageSize(int $count): void
     {
@@ -219,8 +207,6 @@ final class RestController extends AbstractRestfulController
      * The true description of getIdentifierName is
      * a route identifier name.  This function corrects
      * this mistake for this controller.
-     *
-     * @return string
      */
     public function getRouteIdentifierName(): string
     {
@@ -238,7 +224,6 @@ final class RestController extends AbstractRestfulController
     /**
      * Returns the resource
      *
-     * @return ResourceInterface
      * @throws DomainException If no resource has been set.
      */
     public function getResource(): ResourceInterface
@@ -255,8 +240,6 @@ final class RestController extends AbstractRestfulController
 
     /**
      * Set the allowed HTTP OPTIONS for a resource
-     *
-     * @param array $methods
      */
     public function setEntityHttpMethods(array $methods): void
     {
@@ -265,8 +248,6 @@ final class RestController extends AbstractRestfulController
 
     /**
      * Inject the route name for this resource.
-     *
-     * @param string $route
      */
     public function setRoute(string $route): void
     {
@@ -287,6 +268,7 @@ final class RestController extends AbstractRestfulController
      * AcceptableViewModelSelector plugin, and the $acceptCriteria property.
      *
      * @throws DomainException
+     * @throws \ReflectionException
      */
     #[Override]
     public function onDispatch(MvcEvent $e): mixed
@@ -328,6 +310,9 @@ final class RestController extends AbstractRestfulController
 
     /**
      * Create a new entity
+     *
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
      */
     #[Override]
     public function create($data): mixed
@@ -428,7 +413,6 @@ final class RestController extends AbstractRestfulController
      * Delete a collection of entities as specified.
      *
      * @param mixed $data Typically an array
-     * @return Response|ApiProblem|ApiProblemResponse
      */
     #[Override]
     public function deleteList($data): Response|ApiProblem|ApiProblemResponse
@@ -463,7 +447,8 @@ final class RestController extends AbstractRestfulController
      * Return single entity
      *
      * @param mixed $id
-     * @return Response|ApiProblem|ApiProblemResponse|HalEntity
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
      */
     #[Override]
     public function get($id): HalEntity|Response|ApiProblem|ApiProblemResponse
@@ -499,6 +484,8 @@ final class RestController extends AbstractRestfulController
      * Return collection of entities
      *
      * @return Response|HalCollection|HalEntity|ApiProblem
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
      */
     #[Override]
     public function getList(): mixed
@@ -569,7 +556,8 @@ final class RestController extends AbstractRestfulController
      * Retrieve HEAD metadata for the entity and/or collection
      *
      * @param mixed $id
-     * @return Response|ApiProblem|ApiProblemResponse|HalEntity|HalCollection
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
      */
     #[Override]
     public function head($id = null): HalEntity|Response|ApiProblem|HalCollection|ApiProblemResponse
@@ -586,7 +574,7 @@ final class RestController extends AbstractRestfulController
      *
      * Uses $options to set the Allow header line and return an empty response.
      *
-     * @return Response
+     * @throws \ReflectionException
      */
     #[Override]
     public function options(): Response
@@ -617,6 +605,9 @@ final class RestController extends AbstractRestfulController
 
     /**
      * Respond to the PATCH method (partial update of existing entity)
+     *
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
      */
     #[Override]
     public function patch($id, $data): HalEntity|Response|ApiProblem|ApiProblemResponse
@@ -652,7 +643,8 @@ final class RestController extends AbstractRestfulController
      *
      * @param mixed $id
      * @param mixed $data
-     * @return Response|ApiProblem|ApiProblemResponse|HalEntity
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
      */
     #[Override]
     public function update($id, $data): HalEntity|Response|ApiProblem|ApiProblemResponse
@@ -685,6 +677,9 @@ final class RestController extends AbstractRestfulController
     /**
      * Respond to the PATCH method (partial update of existing entity) on
      * a collection, i.e. create and/or update multiple entities in a collection.
+     *
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
      */
     #[Override]
     public function patchList($data): HalCollection|ApiProblem|Response
@@ -716,7 +711,8 @@ final class RestController extends AbstractRestfulController
      * Update an existing collection of entities
      *
      * @param mixed $data
-     * @return HalCollection|ApiProblem|Response
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
      */
     #[Override]
     public function replaceList($data): HalCollection|ApiProblem|Response
@@ -755,7 +751,6 @@ final class RestController extends AbstractRestfulController
      *
      * @param RouteMatch $routeMatch
      * @param RequestInterface $request
-     * @return mixed
      */
     #[Override]
     protected function getIdentifier($routeMatch, $request): mixed
@@ -772,9 +767,6 @@ final class RestController extends AbstractRestfulController
 
     /**
      * Creates an ALLOW header with the provided HTTP methods
-     *
-     * @param array $methods
-     * @return Allow
      */
     protected function createAllowHeaderWithAllowedMethods(array $methods): Allow
     {
@@ -788,10 +780,6 @@ final class RestController extends AbstractRestfulController
         return $allow;
     }
 
-    /**
-     * @param Throwable|Exception $e
-     * @return ApiProblem
-     */
     protected function createApiProblemFromException(Throwable|Exception $e): ApiProblem
     {
         return new ApiProblem(status: $this->getHttpStatusCodeFromException(e: $e), detail: $e);
@@ -799,9 +787,6 @@ final class RestController extends AbstractRestfulController
 
     /**
      * Ensure we have a valid HTTP status code for an ApiProblem
-     *
-     * @param Throwable|Exception $e
-     * @return int
      */
     protected function getHttpStatusCodeFromException(Throwable|Exception $e): int
     {
@@ -872,6 +857,10 @@ final class RestController extends AbstractRestfulController
         return $object instanceof ApiProblem || $object instanceof Response;
     }
 
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
+     */
     protected function createHalCollection(mixed $collection): HalCollection|ApiProblem
     {
         if (!$collection instanceof HalCollection) {
@@ -886,6 +875,9 @@ final class RestController extends AbstractRestfulController
 
     /**
      * Prepare a HAL collection with the metadata for the current instance.
+     *
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
      */
     protected function prepareHalCollection(HalCollection $collection): HalCollection|ApiProblem
     {
@@ -917,6 +909,10 @@ final class RestController extends AbstractRestfulController
         return $collection;
     }
 
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
+     */
     protected function createHalEntity(mixed $entity): HalEntity
     {
         if ($entity instanceof HalEntity && ($entity->getLinks()->has(relation: 'self') || !$entity->getId())) {

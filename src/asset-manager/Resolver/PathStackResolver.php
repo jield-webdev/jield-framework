@@ -20,28 +20,18 @@ use Webmozart\Assert\Assert;
  */
 class PathStackResolver implements ResolverInterface, MimeResolverAwareInterface
 {
-    /**
-     * @var SplStack
-     */
     protected SplStack $paths;
 
     /**
      * Flag indicating whether or not LFI protection for rendering view scripts is enabled
-     *
-     * @var bool
      */
     protected bool $lfiProtectionOn = true;
 
     /**
      * The mime resolver.
-     *
-     * @var MimeResolver
      */
     protected MimeResolver $mimeResolver;
 
-    /**
-     * Constructor
-     */
     public function __construct()
     {
         $this->paths = new SplStack();
@@ -49,8 +39,6 @@ class PathStackResolver implements ResolverInterface, MimeResolverAwareInterface
 
     /**
      * Set the mime resolver
-     *
-     * @param MimeResolver $mimeResolver
      */
     #[Override]
     public function setMimeResolver(MimeResolver $mimeResolver): void
@@ -60,8 +48,6 @@ class PathStackResolver implements ResolverInterface, MimeResolverAwareInterface
 
     /**
      * Get the mime resolver
-     *
-     * @return MimeResolver
      */
     #[Override]
     public function getMimeResolver(): MimeResolver
@@ -71,8 +57,6 @@ class PathStackResolver implements ResolverInterface, MimeResolverAwareInterface
 
     /**
      * Add many paths to the stack at once
-     *
-     * @param iterable $paths
      */
     public function addPaths(iterable $paths): void
     {
@@ -85,7 +69,6 @@ class PathStackResolver implements ResolverInterface, MimeResolverAwareInterface
     /**
      * Rest the path stack to the paths provided
      *
-     * @param iterable $paths
      * @throws Exception\InvalidArgumentException
      */
     public function setPaths(iterable $paths): void
@@ -96,9 +79,6 @@ class PathStackResolver implements ResolverInterface, MimeResolverAwareInterface
 
     /**
      * Normalize a path for insertion in the stack
-     *
-     * @param string $path
-     * @return string
      */
     protected function normalizePath(string $path): string
     {
@@ -111,7 +91,6 @@ class PathStackResolver implements ResolverInterface, MimeResolverAwareInterface
     /**
      * Add a single path to the stack
      *
-     * @param string $path
      * @throws Exception\InvalidArgumentException
      */
     public function addPath(string $path): void
@@ -121,8 +100,6 @@ class PathStackResolver implements ResolverInterface, MimeResolverAwareInterface
 
     /**
      * Clear all paths
-     *
-     * @return void
      */
     public function clearPaths(): void
     {
@@ -131,8 +108,6 @@ class PathStackResolver implements ResolverInterface, MimeResolverAwareInterface
 
     /**
      * Returns stack of paths
-     *
-     * @return SplStack
      */
     public function getPaths(): SplStack
     {
@@ -141,9 +116,6 @@ class PathStackResolver implements ResolverInterface, MimeResolverAwareInterface
 
     /**
      * Set LFI protection flag
-     *
-     * @param bool $flag
-     * @return self
      */
     public function setLfiProtection(bool $flag): PathStackResolver
     {
@@ -154,8 +126,6 @@ class PathStackResolver implements ResolverInterface, MimeResolverAwareInterface
 
     /**
      * Return status of LFI protection flag
-     *
-     * @return bool
      */
     public function isLfiProtectionOn(): bool
     {

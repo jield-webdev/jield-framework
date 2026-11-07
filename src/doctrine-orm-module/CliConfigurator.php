@@ -18,6 +18,9 @@ class CliConfigurator
         private readonly ContainerInterface $container,
     ) {}
 
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     public function configure(Application $cli): void
     {
         $arguments = new ArgvInput();

@@ -29,15 +29,10 @@ class ContentTypeListener implements ListenerAggregateInterface
 
     /**
      * Header to examine.
-     *
-     * @var string
      */
     protected string $headerName = 'content-type';
 
     // @codingStandardsIgnoreStart
-    /**
-     * @var array
-     */
     protected array $regexes = [
         '#^application/vnd\.(?P<laminas_ver_vendor>[^.]+)\.v(?P<laminas_ver_version>\d+)(?:\.(?P<laminas_ver_resource>[a-zA-Z0-9_-]+))?(?:\+[a-z]+)?$#',
     ];
@@ -59,9 +54,6 @@ class ContentTypeListener implements ListenerAggregateInterface
 
     /**
      * Add a regular expression to the stack
-     *
-     * @param string $regex
-     * @return static
      */
     public function addRegexp(string $regex): static
     {
@@ -71,7 +63,6 @@ class ContentTypeListener implements ListenerAggregateInterface
 
     /**
      * Match against the Content-Type header and inject into the route matches
-     *
      */
     public function onRoute(MvcEvent $e): void
     {
@@ -102,9 +93,6 @@ class ContentTypeListener implements ListenerAggregateInterface
 
     /**
      * Parse the header for matches against registered regexes
-     *
-     * @param string $value
-     * @return false|array
      */
     protected function parseHeaderForMatches(string $value): false|array
     {
@@ -127,9 +115,6 @@ class ContentTypeListener implements ListenerAggregateInterface
 
     /**
      * Inject regex matches into the route matches
-     *
-     * @param RouteMatch $routeMatches
-     * @param array $matches
      */
     protected function injectRouteMatches(RouteMatch $routeMatches, array $matches): void
     {

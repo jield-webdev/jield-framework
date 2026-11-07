@@ -28,8 +28,6 @@ class InjectViewModelListener extends AbstractListenerAggregate
      * Inspects the MVC result; if it's a view model, it then either (a) adds
      * it as a child to the default, composed view model, or (b) replaces it
      * if the result is marked as terminable.
-     *
-     * @return void
      */
     public function injectViewModel(MvcEvent $e): void
     {

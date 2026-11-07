@@ -74,6 +74,12 @@ trait HeroTrait
         return self::isUncaught(message: $error['message']) || $this->result === '' ? $buffer : $this->result;
     }
 
+    /**
+     * @throws \Laminas\View\Exception\RenderingFailedException
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \JsonException
+     * @throws \Symfony\Component\Mailer\Exception\TransportExceptionInterface
+     */
     public function execOnShutdown(): void
     {
         $error = error_get_last();

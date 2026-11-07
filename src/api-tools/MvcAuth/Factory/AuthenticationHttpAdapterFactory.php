@@ -24,6 +24,7 @@ final class AuthenticationHttpAdapterFactory
      * and the registered AuthenticationService.
      *
      * @param string $type The base "type" the adapter will provide
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public static function factory(string $type, array $config, ContainerInterface $container): HttpAdapter
     {

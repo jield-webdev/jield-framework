@@ -17,8 +17,6 @@ class InjectTemplateListenerFactory implements FactoryInterface
      * {@inheritDoc}
      *
      * Create and return an InjectTemplateListener instance.
-     *
-     * @return InjectTemplateListener
      */
     public function __invoke(
         ContainerInterface $container,

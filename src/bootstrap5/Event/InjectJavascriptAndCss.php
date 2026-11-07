@@ -25,6 +25,9 @@ class InjectJavascriptAndCss extends AbstractListenerAggregate
         );
     }
 
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     public function setHeadScript(): void
     {
         /** @mago-var mixed $injectJquery */

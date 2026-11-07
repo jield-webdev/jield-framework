@@ -72,7 +72,6 @@ abstract class AbstractController implements Dispatchable, EventManagerAwareInte
      * Transform an "action" token into a method name
      *
      * @param string $action
-     * @return string
      */
     public static function getMethodFromAction($action): string
     {
@@ -85,8 +84,6 @@ abstract class AbstractController implements Dispatchable, EventManagerAwareInte
 
     /**
      * Execute the request
-     *
-     * @return mixed
      */
     abstract public function onDispatch(MvcEvent $e): mixed;
 
@@ -94,7 +91,6 @@ abstract class AbstractController implements Dispatchable, EventManagerAwareInte
      * Dispatch a request
      *
      * @events dispatch.pre, dispatch.post
-     * @return Response|mixed
      */
     public function dispatch(Request $request, ?Response $response = null): mixed
     {
@@ -123,8 +119,6 @@ abstract class AbstractController implements Dispatchable, EventManagerAwareInte
      * Get the attached event
      *
      * Will create a new MvcEvent if none provided.
-     *
-     * @return MvcEvent
      */
     public function getEvent(): MvcEvent
     {
@@ -139,8 +133,6 @@ abstract class AbstractController implements Dispatchable, EventManagerAwareInte
      * Set an event to use during dispatch
      *
      * By default, will re-cast to MvcEvent if another event type is provided.
-     *
-     * @return void
      */
     public function setEvent(Event $event): void
     {
@@ -157,8 +149,6 @@ abstract class AbstractController implements Dispatchable, EventManagerAwareInte
      * Retrieve the event manager
      *
      * Lazy-loads an EventManager instance if none registered.
-     *
-     * @return EventManagerInterface
      */
     public function getEventManager(): EventManagerInterface
     {
@@ -171,8 +161,6 @@ abstract class AbstractController implements Dispatchable, EventManagerAwareInte
 
     /**
      * Set the event manager instance used by this context
-     *
-     * @return void
      */
     public function setEventManager(EventManagerInterface $eventManager): void
     {
@@ -201,8 +189,6 @@ abstract class AbstractController implements Dispatchable, EventManagerAwareInte
 
     /**
      * Register the default events for this controller
-     *
-     * @return void
      */
     protected function attachDefaultListeners(): void
     {
@@ -212,8 +198,6 @@ abstract class AbstractController implements Dispatchable, EventManagerAwareInte
 
     /**
      * Get request object
-     *
-     * @return Request
      */
     public function getRequest(): HttpRequest|Request
     {
@@ -226,8 +210,6 @@ abstract class AbstractController implements Dispatchable, EventManagerAwareInte
 
     /**
      * Get response object
-     *
-     * @return Response
      */
     public function getResponse(): HttpResponse|Response
     {
@@ -247,6 +229,7 @@ abstract class AbstractController implements Dispatchable, EventManagerAwareInte
      * @param string $method
      * @param array $params
      * @return mixed
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function __call($method, $params)
     {
@@ -264,7 +247,7 @@ abstract class AbstractController implements Dispatchable, EventManagerAwareInte
      *
      * @param string $name Name of plugin to return
      * @param null|array $options Options to pass to plugin constructor (if not already instantiated)
-     * @return mixed
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function plugin($name, ?array $options = null): mixed
     {
@@ -273,8 +256,6 @@ abstract class AbstractController implements Dispatchable, EventManagerAwareInte
 
     /**
      * Get plugin manager
-     *
-     * @return PluginManager
      */
     public function getPluginManager(): PluginManager
     {
@@ -288,8 +269,6 @@ abstract class AbstractController implements Dispatchable, EventManagerAwareInte
 
     /**
      * Set plugin manager
-     *
-     * @return static
      */
     public function setPluginManager(PluginManager $plugins): static
     {

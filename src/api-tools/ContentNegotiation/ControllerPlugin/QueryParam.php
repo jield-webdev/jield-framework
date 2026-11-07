@@ -15,9 +15,7 @@ class QueryParam extends AbstractPlugin
     /**
      * Grabs a param from route match by default.
      *
-     * @param string|null $param
-     * @param mixed $default
-     * @return mixed
+     * @throws \ReflectionException
      */
     public function __invoke(?string $param = null, mixed $default = null): mixed
     {

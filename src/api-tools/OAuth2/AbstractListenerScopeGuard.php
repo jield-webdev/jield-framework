@@ -14,6 +14,9 @@ use Webmozart\Assert\Assert;
 /** Attach after authentication and HTTP method overrides, before application authorization. */
 abstract class AbstractListenerScopeGuard
 {
+    /**
+     * @throws \JsonException
+     */
     final public function __invoke(MvcEvent $event): ?Response
     {
         $request = $event->getRequest();
@@ -77,7 +80,10 @@ abstract class AbstractListenerScopeGuard
         return ($identity['principal_type'] ?? null) === 'application';
     }
 
-    /** @param list<string> $scopes Accepted alternatives, not a requirement to grant every scope. */
+    /**
+     * @param list<string> $scopes Accepted alternatives, not a requirement to grant every scope.
+     * @throws \JsonException
+     */
     protected function deny(
         MvcEvent $event,
         int $status,

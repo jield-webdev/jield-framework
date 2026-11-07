@@ -32,7 +32,12 @@ final class IsRedirectedRouteNameConstraint extends Constraint
         return 'is the redirected route name';
     }
 
-    /** @param mixed $other */
+    /**
+     * @param mixed $other
+     * @throws RuntimeException
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
+     */
     #[Override]
     public function matches($other): bool
     {
@@ -62,6 +67,10 @@ final class IsRedirectedRouteNameConstraint extends Constraint
         return $headerLocation->getFieldValue() === $urlPlugin->fromRoute($other);
     }
 
+    /**
+     * @throws RuntimeException
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     private function getControllerFullClass(): AbstractController
     {
         $application = $this->activeTestCase->getApplication();

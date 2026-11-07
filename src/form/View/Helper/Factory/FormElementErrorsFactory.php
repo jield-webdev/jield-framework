@@ -12,6 +12,9 @@ use function is_array;
 
 final class FormElementErrorsFactory
 {
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     public function __invoke(ContainerInterface $container): FormElementErrors
     {
         $helper = new FormElementErrors();

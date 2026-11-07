@@ -39,7 +39,6 @@ class HalJsonRenderer extends JsonRenderer
      * Set helper plugin manager instance.
      *
      * Also ensures that the 'Hal' helper is present.
-     *
      */
     public function setHelperPluginManager(HelperPluginManager $helpers): void
     {
@@ -54,6 +53,8 @@ class HalJsonRenderer extends JsonRenderer
 
     /**
      * Lazy-loads a helper plugin manager if none available.
+     *
+     * @throws LogicException
      */
     public function getHelperPluginManager(): ?HelperPluginManager
     {
@@ -64,9 +65,6 @@ class HalJsonRenderer extends JsonRenderer
         return $this->helpers;
     }
 
-    /**
-     * @return ViewEvent|null
-     */
     public function getViewEvent(): ?ViewEvent
     {
         return $this->viewEvent;
@@ -83,7 +81,7 @@ class HalJsonRenderer extends JsonRenderer
      *
      * @param mixed $templateNameOrModel
      * @param iterable<non-empty-string, mixed>|null $variables
-     * @return string
+     * @throws \Throwable
      */
     #[Override]
     public function render($templateNameOrModel, $variables = null): string
@@ -130,6 +128,8 @@ class HalJsonRenderer extends JsonRenderer
      * If a ViewEvent is composed, it passes the ApiProblemModel to it so that
      * the ApiProblemStrategy can be invoked when populating the response.
      *
+     * @throws \Laminas\View\Exception\RenderingFailedException
+     * @throws \JsonException
      */
     protected function renderApiProblem(ApiProblem $problem): string
     {

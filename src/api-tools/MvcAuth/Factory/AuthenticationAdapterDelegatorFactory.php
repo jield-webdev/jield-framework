@@ -58,6 +58,8 @@ class AuthenticationAdapterDelegatorFactory implements DelegatorFactoryInterface
 
     /**
      * Attach an adaper to the listener as described by $type and $data.
+     *
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     private function attachAdapterOfType(
         string $type,

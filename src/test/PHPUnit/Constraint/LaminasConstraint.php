@@ -31,6 +31,8 @@ abstract class LaminasConstraint extends Constraint
 
     /**
      * @psalm-return never
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws ExpectationFailedException
      */
     #[Override]
     final public function fail(mixed $other, string $description, ?ComparisonFailure $comparisonFailure = null): never
@@ -45,6 +47,10 @@ abstract class LaminasConstraint extends Constraint
         }
     }
 
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
+     */
     final public function getControllerFullClassName(): string
     {
         $routeMatch = $this->activeTestCase->getApplication()->getMvcEvent()->getRouteMatch();
@@ -61,6 +67,8 @@ abstract class LaminasConstraint extends Constraint
      * Create a failure message.
      *
      * If traceError is true, appends exception details, if any.
+     *
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     private function createFailureMessage(string $message): string
     {

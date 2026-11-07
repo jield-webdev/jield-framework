@@ -68,15 +68,11 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
 
     /**
      * Boolean to render embedded entities or just include _embedded data
-     *
-     * @var bool
      */
     protected bool $renderEmbeddedEntities = true;
 
     /**
      * Boolean to render collections or just return their _embedded data
-     *
-     * @var bool
      */
     protected bool $renderCollections = true;
 
@@ -92,8 +88,6 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
 
     /**
      * Entities spl hash stack for circular reference detection
-     *
-     * @var array
      */
     protected array $entityHashStack = [];
 
@@ -109,9 +103,6 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
         $this->controller = $controller;
     }
 
-    /**
-     * @return DispatchableInterface
-     */
     #[Override]
     public function getController(): DispatchableInterface
     {
@@ -165,9 +156,6 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
         return $this;
     }
 
-    /**
-     * @return ResourceFactory
-     */
     public function getResourceFactory(): ResourceFactory
     {
         if (!$this->resourceFactory instanceof ResourceFactory) {
@@ -186,9 +174,6 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
         return $this;
     }
 
-    /**
-     * @return EntityHydratorManager
-     */
     public function getEntityHydratorManager(): EntityHydratorManager
     {
         if (!$this->entityHydratorManager instanceof EntityHydratorManager) {
@@ -207,9 +192,6 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
         return $this;
     }
 
-    /**
-     * @return EntityExtractor
-     */
     public function getEntityExtractor(): EntityExtractor
     {
         if (!$this->entityExtractor instanceof EntityExtractor) {
@@ -225,17 +207,11 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
         return $this;
     }
 
-    /**
-     * @return HydratorPluginManager
-     */
     public function getHydratorManager(): HydratorPluginManager
     {
         return $this->hydrators;
     }
 
-    /**
-     * @return MetadataMap
-     */
     public function getMetadataMap(): MetadataMap
     {
         if (!$this->metadataMap instanceof MetadataMap) {
@@ -258,11 +234,9 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
     }
 
     /**
-     * @return never
      * @throws Exception\DeprecatedMethodException
      *
      * @deprecated Since 1.4.0; use setLinkUrlBuilder() instead.
-     *
      */
     public function setServerUrlHelper(callable $helper): never
     {
@@ -277,11 +251,9 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
     }
 
     /**
-     * @return never
      * @throws Exception\DeprecatedMethodException
      *
      * @deprecated Since 1.4.0; use setLinkUrlBuilder() instead.
-     *
      */
     public function setUrlHelper(callable $helper): never
     {
@@ -295,9 +267,6 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
         ));
     }
 
-    /**
-     * @return PaginationInjectorInterface
-     */
     public function getPaginationInjector(): PaginationInjectorInterface
     {
         if (!$this->paginationInjector instanceof PaginationInjectorInterface) {
@@ -313,9 +282,6 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
         return $this;
     }
 
-    /**
-     * @return SelfLinkInjectorInterface
-     */
     public function getSelfLinkInjector(): SelfLinkInjectorInterface
     {
         if (!$this->selfLinkInjector instanceof SelfLinkInjectorInterface) {
@@ -331,9 +297,6 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
         return $this;
     }
 
-    /**
-     * @return LinkCollectionExtractorInterface
-     */
     public function getLinkCollectionExtractor(): LinkCollectionExtractorInterface
     {
         return Assert::isInstanceOf(
@@ -351,9 +314,7 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
     /**
      * Map an entity class to a specific hydrator instance
      *
-     * @param string $class
-     * @param ExtractionInterface $hydrator
-     * @return static
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function addHydrator(string $class, ExtractionInterface $hydrator): static
     {
@@ -363,7 +324,6 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
 
     /**
      * Set the default hydrator to use if none specified for a class.
-     *
      */
     public function setDefaultHydrator(ExtractionInterface $hydrator): static
     {
@@ -374,10 +334,7 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
     /**
      * Set boolean to render embedded entities or just include _embedded data
      *
-     * @param bool $value
-     * @return static
      * @deprecated
-     *
      */
     public function setRenderEmbeddedResources(bool $value): static
     {
@@ -395,9 +352,6 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
 
     /**
      * Set boolean to render embedded entities or just include _embedded data
-     *
-     * @param bool $value
-     * @return static
      */
     public function setRenderEmbeddedEntities(bool $value): static
     {
@@ -408,9 +362,7 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
     /**
      * Get boolean to render embedded resources or just include _embedded data
      *
-     * @return bool
      * @deprecated
-     *
      */
     public function getRenderEmbeddedResources(): bool
     {
@@ -427,8 +379,6 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
 
     /**
      * Get boolean to render embedded entities or just include _embedded data
-     *
-     * @return bool
      */
     public function getRenderEmbeddedEntities(): bool
     {
@@ -437,9 +387,6 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
 
     /**
      * Set boolean to render embedded collections or just include _embedded data
-     *
-     * @param bool $value
-     * @return static
      */
     public function setRenderCollections(bool $value): static
     {
@@ -449,8 +396,6 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
 
     /**
      * Get boolean to render embedded collections or just include _embedded data
-     *
-     * @return bool
      */
     public function getRenderCollections(): bool
     {
@@ -462,10 +407,9 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
      *
      * Please use getHydratorForEntity().
      *
-     * @param object $resource
-     * @return ExtractionInterface|false
      * @deprecated
-     *
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
      */
     public function getHydratorForResource(object $resource): false|ExtractionInterface
     {
@@ -483,8 +427,8 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
      * a default hydrator is present, the default hydrator is returned.
      * Otherwise, a boolean false is returned.
      *
-     * @param object $entity
-     * @return ExtractionInterface|false
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
      */
     public function getHydratorForEntity(object $entity): false|ExtractionInterface
     {
@@ -521,6 +465,7 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
      *
      * @return array|ApiProblem Associative array representing the payload to render;
      *     returns ApiProblem if error in pagination occurs
+     * @throws \Throwable
      */
     public function renderCollection(Collection $halCollection): array|ApiProblem
     {
@@ -577,10 +522,9 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
      * "_links" member. If any members of the entity are themselves
      * Entity objects, they are extracted into an "_embedded" hash.
      *
-     * @param bool $renderEntity
      * @param int $depth depth of the current rendering recursion
      * @param int|null $maxDepth maximum rendering depth for the current metadata
-     * @throws Exception\CircularReferenceException
+     * @throws \Throwable
      */
     public function renderEntity(
         Entity $halEntity,
@@ -688,6 +632,9 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
         return $payload->getArrayCopy();
     }
 
+    /**
+     * @throws \Throwable
+     */
     public function createEntity(mixed $entity, string $route, string $routeIdentifierName): Entity|Collection
     {
         $metadataMap = $this->getMetadataMap();
@@ -742,6 +689,8 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
 
     /**
      * Creates a Collection instance with a static relational link if necessary
+     *
+     * @throws \Throwable
      */
     public function createCollection(Paginator|iterable $collection, ?string $route = null): array|Collection
     {
@@ -784,7 +733,6 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
 
     /**
      * Generate HAL links for a paginated collection
-     *
      */
     protected function injectPaginationLinks(Collection $halCollection): bool|ApiProblem
     {
@@ -797,6 +745,8 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
      *
      * Removes the key from the parent representation, and creates a
      * representation for the key in the _embedded object.
+     *
+     * @throws \Throwable
      */
     protected function extractEmbeddedEntity(
         array &$parent,
@@ -821,9 +771,9 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
      * Removes the key from the parent representation, and creates a
      * representation for the key in the _embedded object.
      *
-     * @param string $key
      * @param int $depth depth of the current rendering recursion
      * @param int|null $maxDepth maximum rendering depth for the current metadata
+     * @throws \Throwable
      */
     protected function extractEmbeddedCollection(
         array &$parent,
@@ -847,6 +797,7 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
      * @param int|null $maxDepth maximum rendering depth for the current metadata
      * @todo   Remove 'resource' from event parameters for 1.0.0
      * @todo   Remove trigger of 'renderCollection.resource' for 1.0.0
+     * @throws \Throwable
      */
     protected function extractCollection(Collection $halCollection, int $depth = 0, ?int $maxDepth = null): array
     {
@@ -984,8 +935,6 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
      * return a non-false, non-null value in order to specify the identifier
      * to use for URL assembly.
      *
-     * @param object|array $entity
-     * @return mixed
      * @todo   Remove 'resource' from parameters sent to event for 1.0.0
      * @todo   Remove trigger of getIdFromResource for 1.0.0
      */
@@ -1024,8 +973,6 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
      *
      * Call this method if you are rendering multiple responses within the same
      * request cycle that may encounter the same entity instances.
-     *
-     * @return void
      */
     public function resetEntityHashStack(): void
     {

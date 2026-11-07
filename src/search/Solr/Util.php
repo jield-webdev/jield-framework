@@ -66,6 +66,8 @@ final class Util
 
     /**
      * Quote a given string
+     *
+     * @throws InvalidArgumentException
      */
     public static function quote(mixed $value): string
     {
@@ -88,8 +90,7 @@ final class Util
      *
      * Puts quotes around a string, treats everything else as a term
      *
-     * @param mixed $value
-     * @return string
+     * @throws InvalidArgumentException
      */
     public static function sanitize(mixed $value): string
     {
@@ -117,6 +118,8 @@ final class Util
 
     /**
      * Escape a string to be safe for Solr queries
+     *
+     * @throws InvalidArgumentException
      */
     public static function escape(mixed $value): string
     {

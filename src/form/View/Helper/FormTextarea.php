@@ -13,8 +13,6 @@ class FormTextarea extends AbstractHelper
 {
     /**
      * Attributes valid for the input tag
-     *
-     * @var array
      */
     protected array $validTagAttributes = [
         'autocomplete' => true,
@@ -42,7 +40,7 @@ class FormTextarea extends AbstractHelper
      * @template T as null|ElementInterface
      * @psalm-param T $element
      * @psalm-return (T is null ? static : string)
-     * @return string|FormTextarea
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function __invoke(?ElementInterface $element = null): string|static
     {
@@ -57,6 +55,7 @@ class FormTextarea extends AbstractHelper
      * Render a form <textarea> element from the provided $element
      *
      * @throws Exception\DomainException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function render(ElementInterface $element): string
     {

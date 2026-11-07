@@ -14,6 +14,8 @@ final class NoObjectExistsFactory extends AbstractValidatorFactory
 
     /**
      * {@inheritDoc}
+     * @throws Exception\ServiceCreationException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): NoObjectExists
     {

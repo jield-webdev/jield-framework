@@ -13,6 +13,9 @@ use function method_exists;
 
 class AutoloaderListener extends AbstractListener
 {
+    /**
+     * @throws \ReflectionException
+     */
     public function __invoke(ModuleEvent $e): void
     {
         $module = $e->getModule();

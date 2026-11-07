@@ -19,7 +19,6 @@ use function method_exists;
 
 class AcceptListener
 {
-    /** @var AcceptableViewModelSelector */
     protected AcceptableViewModelSelector $selector;
 
     protected array $controllerConfig = [];
@@ -39,6 +38,9 @@ class AcceptListener
         }
     }
 
+    /**
+     * @throws \ReflectionException
+     */
     public function __invoke(MvcEvent $e): ?ApiProblemResponse
     {
         $request = $e->getRequest();
@@ -140,8 +142,6 @@ class AcceptListener
      * values/settings/etc from the original.
      *
      * If the result is an array, we pass those values as the view model variables.
-     *
-     * @param array|ViewModel $result
      */
     protected function populateViewModel(ViewModel|array $result, ViewModelInterface $viewModel, MvcEvent $e): void
     {
@@ -179,9 +179,6 @@ class AcceptListener
      * if found, return that criteria.
      *
      * Otherwise, return nothing.
-     *
-     * @param array|string|null $criteria
-     * @return array|null
      */
     protected function getCriteria(array|string|null $criteria = null): ?array
     {

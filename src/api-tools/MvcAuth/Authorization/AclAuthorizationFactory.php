@@ -15,8 +15,7 @@ abstract class AclAuthorizationFactory
     /**
      * Create and return an AclAuthorization instance populated with provided privileges.
      *
-     * @param array $config
-     * @return AclAuthorization
+     * @throws \ReflectionException
      */
     public static function factory(array $config): AclAuthorization
     {
@@ -49,6 +48,7 @@ abstract class AclAuthorizationFactory
      * Inject the ACL with the grants specified in the collection of rules.
      *
      * @param string $grantType Either "allow" or "deny".
+     * @throws \ReflectionException
      */
     private static function injectGrants(AclAuthorization $acl, string $grantType, array $rules): AclAuthorization
     {
@@ -67,7 +67,7 @@ abstract class AclAuthorizationFactory
     /**
      * Inject the ACL with the grant specified by a single rule set.
      *
-     * @param string $grantType
+     * @throws \ReflectionException
      */
     private static function injectGrant(AclAuthorization $acl, string $grantType, array $ruleSet): void
     {

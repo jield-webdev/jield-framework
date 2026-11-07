@@ -19,7 +19,6 @@ class Tel extends Element implements InputProviderInterface
         'type' => 'tel',
     ];
 
-    /** @var null|ValidatorInterface */
     protected ?ValidatorInterface $validator = null;
 
     /**

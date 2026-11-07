@@ -16,6 +16,9 @@ class DefaultAuthorizationListener
         protected AuthorizationInterface $authorization,
     ) {}
 
+    /**
+     * @throws \ReflectionException
+     */
     public function __invoke(MvcAuthEvent $mvcAuthEvent): ?bool
     {
         if ($mvcAuthEvent->isAuthorized()) {

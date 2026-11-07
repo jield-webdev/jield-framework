@@ -21,8 +21,6 @@ class FormCollection extends AbstractHelper
 {
     /**
      * Attributes valid for this tag (form)
-     *
-     * @var array
      */
     protected array $validTagAttributes = [
         'name' => true,
@@ -32,50 +30,36 @@ class FormCollection extends AbstractHelper
 
     /**
      * If set to true, collections are automatically wrapped around a fieldset
-     *
-     * @var bool
      */
     protected bool $shouldWrap = true;
 
     /**
      * This is the default wrapper that the collection is wrapped into
-     *
-     * @var string
      */
     protected string $wrapper = '<fieldset%4$s>%2$s%1$s%3$s</fieldset>';
 
     /**
      * This is the default label-wrapper
-     *
-     * @var string
      */
     protected string $labelWrapper = '<legend>%s</legend>';
 
     /**
      * Where shall the template-data be inserted into
-     *
-     * @var string
      */
     protected string $templateWrapper = '<span data-template="%s"></span>';
 
     /**
      * The name of the default view helper that is used to render sub elements.
-     *
-     * @var string
      */
     protected string $defaultElementHelper = 'formrow';
 
     /**
      * The view helper used to render sub elements.
-     *
-     * @var null|HelperInterface
      */
     protected ?HelperInterface $elementHelper = null;
 
     /**
      * The view helper used to render sub fieldsets.
-     *
-     * @var null|HelperInterface
      */
     protected ?HelperInterface $fieldsetHelper = null;
 
@@ -87,7 +71,8 @@ class FormCollection extends AbstractHelper
      * @template T as null|ElementInterface
      * @psalm-param T $element
      * @psalm-return (T is null ? static : string)
-     * @return string|FormCollection
+     * @throws \Exception
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function __invoke(?ElementInterface $element = null, bool $wrap = true): string|static
     {
@@ -102,6 +87,9 @@ class FormCollection extends AbstractHelper
 
     /**
      * Render a collection by iterating through all fieldsets and elements
+     *
+     * @throws \Exception
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function render(ElementInterface $element): string
     {
@@ -154,6 +142,10 @@ class FormCollection extends AbstractHelper
 
     /**
      * Only render a template
+     *
+     * @throws RuntimeException
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
      */
     public function renderTemplate(CollectionElement $collection): string
     {
@@ -178,8 +170,6 @@ class FormCollection extends AbstractHelper
 
     /**
      * If set to true, collections are automatically wrapped around a fieldset
-     *
-     * @return static
      */
     public function setShouldWrap(bool $wrap): static
     {
@@ -199,7 +189,6 @@ class FormCollection extends AbstractHelper
      * Sets the name of the view helper that should be used to render sub elements.
      *
      * @param  string $defaultSubHelper The name of the view helper to set.
-     * @return static
      */
     public function setDefaultElementHelper(string $defaultSubHelper): static
     {
@@ -219,7 +208,6 @@ class FormCollection extends AbstractHelper
      * Sets the element helper that should be used by this collection.
      *
      * @param  HelperInterface $elementHelper The element helper to use.
-     * @return static
      */
     public function setElementHelper(HelperInterface $elementHelper): static
     {
@@ -231,6 +219,7 @@ class FormCollection extends AbstractHelper
      * Retrieve the element helper.
      *
      * @throws \RuntimeException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     protected function getElementHelper(): HelperInterface
     {
@@ -256,7 +245,6 @@ class FormCollection extends AbstractHelper
      * Sets the fieldset helper that should be used by this collection.
      *
      * @param  HelperInterface $fieldsetHelper The fieldset helper to use.
-     * @return static
      */
     public function setFieldsetHelper(HelperInterface $fieldsetHelper): static
     {
@@ -296,8 +284,6 @@ class FormCollection extends AbstractHelper
      * 3. The template span-tag. This might also be an empty string
      *
      * The preset default is <pre><fieldset>%2$s%1$s%3$s</fieldset></pre>
-     *
-     * @return static
      */
     public function setWrapper(string $wrapper): static
     {
@@ -311,8 +297,6 @@ class FormCollection extends AbstractHelper
      * The string will be passed through sprintf with the label as single
      * parameter
      * This defaults to '<legend>%s</legend>'
-     *
-     * @return static
      */
     public function setLabelWrapper(string $labelWrapper): static
     {
@@ -344,8 +328,6 @@ class FormCollection extends AbstractHelper
      * parameter
      *
      * THis defaults to '<span data-template="%s"></span>'
-     *
-     * @return static
      */
     public function setTemplateWrapper(string $templateWrapper): static
     {

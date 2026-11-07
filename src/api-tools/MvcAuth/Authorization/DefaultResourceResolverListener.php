@@ -63,10 +63,6 @@ class DefaultResourceResolverListener
      * - <controller service name>::<action>
      *
      * If it cannot resolve a controller service name, boolean false is returned.
-     *
-     * @param RouteMatch $routeMatch
-     * @param RequestInterface $request
-     * @return false|string
      */
     public function buildResourceString(RouteMatch $routeMatch, RequestInterface $request): false|string
     {
@@ -106,10 +102,7 @@ class DefaultResourceResolverListener
      * Checks first if the $identifierName is in the route matches, and then
      * as a query string parameter.
      *
-     * @param string $identifierName
      * @param RouteMatch $routeMatch Validated by calling method.
-     * @param RequestInterface $request
-     * @return mixed
      */
     protected function getIdentifier(string $identifierName, RouteMatch $routeMatch, RequestInterface $request): mixed
     {

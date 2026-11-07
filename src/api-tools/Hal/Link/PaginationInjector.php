@@ -17,6 +17,9 @@ use function is_array;
 
 class PaginationInjector implements PaginationInjectorInterface
 {
+    /**
+     * @throws \Throwable
+     */
     #[Override]
     public function injectPaginationLinks(Collection $halCollection): bool|ApiProblem
     {
@@ -54,6 +57,9 @@ class PaginationInjector implements PaginationInjectorInterface
         $collection->setCurrentPageNumber(pageNumber: Assert::positiveInteger($page));
     }
 
+    /**
+     * @throws \Throwable
+     */
     private function injectLinks(Collection $halCollection): void
     {
         $this->injectSelfLink(halCollection: $halCollection);
@@ -63,6 +69,9 @@ class PaginationInjector implements PaginationInjectorInterface
         $this->injectNextLink(halCollection: $halCollection);
     }
 
+    /**
+     * @throws \Throwable
+     */
     private function injectSelfLink(Collection $halCollection): void
     {
         $page = $halCollection->getPage();
@@ -71,12 +80,18 @@ class PaginationInjector implements PaginationInjectorInterface
         $halCollection->getLinks()->idempotentAdd(link: $link);
     }
 
+    /**
+     * @throws \Throwable
+     */
     private function injectFirstLink(Collection $halCollection): void
     {
         $link = $this->createPaginationLink(relation: 'first', halCollection: $halCollection);
         $halCollection->getLinks()->idempotentAdd(link: $link);
     }
 
+    /**
+     * @throws \Throwable
+     */
     private function injectLastLink(Collection $halCollection): void
     {
         $page = $this->countCollection(collection: $halCollection->getCollection());
@@ -84,6 +99,9 @@ class PaginationInjector implements PaginationInjectorInterface
         $halCollection->getLinks()->idempotentAdd(link: $link);
     }
 
+    /**
+     * @throws \Throwable
+     */
     private function injectPrevLink(Collection $halCollection): void
     {
         $page = $halCollection->getPage();
@@ -95,6 +113,9 @@ class PaginationInjector implements PaginationInjectorInterface
         }
     }
 
+    /**
+     * @throws \Throwable
+     */
     private function injectNextLink(Collection $halCollection): void
     {
         $page = $halCollection->getPage();
@@ -108,8 +129,7 @@ class PaginationInjector implements PaginationInjectorInterface
     }
 
     /**
-     * @param string $relation
-     * @param int $page
+     * @throws \Throwable
      */
     private function createPaginationLink(string $relation, Collection $halCollection, int $page = 1): Link
     {

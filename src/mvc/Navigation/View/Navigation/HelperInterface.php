@@ -37,7 +37,7 @@ interface HelperInterface extends BaseHelperInterface
     /**
      * Sets ACL to use when iterating pages
      *
-     * @param Acl\AclInterface $acl |null [optional] ACL instance
+     * @param Acl\AclInterface|null $acl Optional ACL instance.
      * @return HelperInterface
      */
     public function setAcl(?Acl\AclInterface $acl = null);

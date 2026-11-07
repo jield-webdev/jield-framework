@@ -30,6 +30,10 @@ final class ReservedWordsCommand extends Command
         );
     }
 
+    /**
+     * @throws \Doctrine\DBAL\Exception
+     * @throws \RuntimeException
+     */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         /** @mago-var mixed $name */

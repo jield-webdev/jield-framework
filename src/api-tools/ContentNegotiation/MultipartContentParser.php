@@ -36,8 +36,6 @@ class MultipartContentParser
 {
     /**
      * MIME multipart boundary
-     *
-     * @var string
      */
     protected string $boundary;
 
@@ -66,8 +64,6 @@ class MultipartContentParser
      * Queries for the INI upload_tmp_dir setting first, and returns that
      * value if set and a valid directory; otherwise, returns the
      * system_temp_dir().
-     *
-     * @return string
      */
     public static function getUploadTempDir(): string
     {
@@ -84,7 +80,7 @@ class MultipartContentParser
      *
      * Returns any discovered data parameters.
      *
-     * @return array
+     * @throws \RuntimeException
      */
     public function parse(): array
     {
@@ -103,7 +99,6 @@ class MultipartContentParser
      * Parse upload content from a content stream
      *
      * @param resource $stream
-     * @return array
      * @throws Exception\InvalidMultipartContentException
      */
     protected function parseFromStream($stream): array
@@ -303,9 +298,6 @@ class MultipartContentParser
 
     /**
      * Retrieve the part name from the content disposition, if present
-     *
-     * @param array $headers
-     * @return false|string
      */
     protected function getNameFromHeaders(array $headers): false|string
     {
@@ -327,9 +319,6 @@ class MultipartContentParser
 
     /**
      * Retrieve the filename from the content disposition, if present
-     *
-     * @param array $headers
-     * @return false|string
      */
     protected function getFilenameFromHeaders(array $headers): false|string
     {
@@ -351,9 +340,6 @@ class MultipartContentParser
 
     /**
      * Retrieve the MIME type of the MIME part
-     *
-     * @param array $headers
-     * @return string
      */
     protected function getMimeTypeFromHeaders(array $headers): string
     {

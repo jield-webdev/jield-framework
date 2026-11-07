@@ -17,6 +17,9 @@ final class EntityResolverFactory extends AbstractFactory
 {
     /**
      * {@inheritDoc}
+     * @throws \RuntimeException
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
      */
     public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): mixed
     {

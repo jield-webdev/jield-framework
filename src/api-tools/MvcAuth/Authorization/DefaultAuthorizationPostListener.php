@@ -12,7 +12,6 @@ class DefaultAuthorizationPostListener
 {
     /**
      * Determine if we have an authorization failure, and, if so, return a 403 response
-     *
      */
     public function __invoke(MvcAuthEvent $mvcAuthEvent): ?HttpResponse
     {

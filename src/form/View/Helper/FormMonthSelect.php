@@ -24,7 +24,7 @@ class FormMonthSelect extends AbstractFormDateSelect
      * @template T as null|ElementInterface
      * @psalm-param T $element
      * @psalm-return (T is null ? static : string)
-     * @return string|self
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function __invoke(
         ?ElementInterface $element = null,
@@ -49,6 +49,7 @@ class FormMonthSelect extends AbstractFormDateSelect
      *
      * @throws Exception\InvalidArgumentException
      * @throws Exception\DomainException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function render(ElementInterface $element): string
     {

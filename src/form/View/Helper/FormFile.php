@@ -16,8 +16,6 @@ class FormFile extends FormInput
 {
     /**
      * Attributes valid for the input tag type="file"
-     *
-     * @var array
      */
     protected array $validTagAttributes = [
         'name' => true,
@@ -34,6 +32,7 @@ class FormFile extends FormInput
      * Render a form <input> element from the provided $element
      *
      * @throws Exception\DomainException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function render(ElementInterface $element): string
     {

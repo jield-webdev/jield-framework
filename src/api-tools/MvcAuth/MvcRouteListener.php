@@ -18,10 +18,8 @@ use function is_bool;
 
 class MvcRouteListener extends AbstractListenerAggregate
 {
-    /** @var EventManagerInterface */
     protected EventManagerInterface $events;
 
-    /** @var MvcAuthEvent */
     protected MvcAuthEvent $mvcAuthEvent;
 
     public function __construct(
@@ -69,6 +67,8 @@ class MvcRouteListener extends AbstractListenerAggregate
     /**
      * Trigger the authentication event
      *
+     * @throws \Laminas\Authentication\Exception\ExceptionInterface
+     * @throws \ReflectionException
      */
     public function authentication(MvcEvent $mvcEvent): ?Response
     {
@@ -145,8 +145,6 @@ class MvcRouteListener extends AbstractListenerAggregate
 
     /**
      * Trigger the authentication.post event
-     *
-     * @return Response|mixed
      */
     public function authenticationPost(MvcEvent $mvcEvent): mixed
     {
@@ -168,7 +166,6 @@ class MvcRouteListener extends AbstractListenerAggregate
 
     /**
      * Trigger the authorization event
-     *
      */
     public function authorization(MvcEvent $mvcEvent): ?Response
     {
@@ -202,7 +199,6 @@ class MvcRouteListener extends AbstractListenerAggregate
 
     /**
      * Trigger the authorization.post event
-     *
      */
     public function authorizationPost(MvcEvent $mvcEvent): ?Response
     {

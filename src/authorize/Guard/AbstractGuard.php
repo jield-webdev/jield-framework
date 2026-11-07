@@ -25,9 +25,6 @@ abstract class AbstractGuard extends AbstractListenerAggregate implements
     /** @var array[] */
     protected $rules = [];
 
-    /**
-     * @param array $rules
-     */
     public function __construct(array $rules, ContainerInterface $container)
     {
         $this->container = $container;

@@ -35,6 +35,8 @@ class EntityExtractor implements ExtractionInterface
 
     /**
      * @inheritDoc
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
      */
     #[Override]
     public function extract(object $object): array
@@ -48,6 +50,10 @@ class EntityExtractor implements ExtractionInterface
         return $this->serializedEntities->offsetGet($object);
     }
 
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
+     */
     private function extractEntity(object $entity): array
     {
         $hydrator = $this->entityHydratorManager->getHydratorForEntity(entity: $entity);

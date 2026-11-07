@@ -176,6 +176,8 @@ class FormElementManager extends AbstractPluginManager
      * Inject the factory to any element that implements FormFactoryAwareInterface
      *
      * @param mixed $instance Instance to inspect and optionally inject.
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
      */
     public function injectFactory(ContainerInterface $container, mixed $instance): void
     {
@@ -217,8 +219,7 @@ class FormElementManager extends AbstractPluginManager
      * - add a factory mapping $invokableClass to ElementFactory::class
      * - alias $name to $invokableClass
      *
-     * @param string $name
-     * @param string|null $class
+     * @throws InvalidServiceException
      */
     public function setInvokableClass(string $name, ?string $class = null): void
     {
@@ -240,7 +241,6 @@ class FormElementManager extends AbstractPluginManager
      *
      * Validates against `$instanceOf`.
      *
-     * @param mixed $instance
      * @throws InvalidServiceException
      * @psalm-assert ElementInterface $instance
      */
@@ -286,6 +286,8 @@ class FormElementManager extends AbstractPluginManager
      * @param string|class-string<T> $id Service name of plugin to retrieve.
      * @param null|array<mixed> $options Options to use when creating the instance.
      * @return ($id is class-string<ElementInterface> ? T : ElementInterface)
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws Exception\InvalidElementException
      */
     public function get(string $id, ?array $options = null): mixed
     {
@@ -309,9 +311,10 @@ class FormElementManager extends AbstractPluginManager
      * Try to pull hydrator from the creation context, or instantiates it from its name
      *
      * @param string|class-string<HydratorInterface> $hydratorName
-     * @return mixed
      * @psalm-return ($hydratorName is class-string<HydratorInterface> ? HydratorInterface : mixed)
      * @throws Exception\DomainException
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
      */
     public function getHydratorFromName(string $hydratorName): mixed
     {
@@ -341,8 +344,9 @@ class FormElementManager extends AbstractPluginManager
     /**
      * Try to pull factory from the creation context, or instantiates it from its name
      *
-     * @return mixed
      * @throws Exception\DomainException
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
      */
     public function getFactoryFromName(string $factoryName): mixed
     {

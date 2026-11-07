@@ -32,6 +32,10 @@ class OAuth2ServerInstanceFactory
         private readonly ContainerInterface $services,
     ) {}
 
+    /**
+     * @throws Exception\RuntimeException
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     public function __invoke(): ?OAuth2Server
     {
         if ($this->server instanceof \OAuth2\Server) {

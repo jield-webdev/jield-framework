@@ -15,11 +15,6 @@ use function is_array;
 
 class HttpMethodListenerFactory implements FactoryInterface
 {
-    /**
-     * {@inheritdoc}
-     *
-     * @return HttpMethodListener
-     */
     public function __invoke(
         ContainerInterface $container,
         string $requestedName,

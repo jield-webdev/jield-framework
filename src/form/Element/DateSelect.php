@@ -21,8 +21,6 @@ class DateSelect extends MonthSelect
 {
     /**
      * Select form element that contains values for day
-     *
-     * @var Select
      */
     protected Select $dayElement;
 
@@ -75,7 +73,6 @@ class DateSelect extends MonthSelect
      * Set the day attributes
      *
      * @param array<string, scalar|null> $dayAttributes
-     * @return static
      */
     public function setDayAttributes(array $dayAttributes): static
     {
@@ -95,7 +92,6 @@ class DateSelect extends MonthSelect
 
     /**
      * @param  mixed $value
-     * @return static
      * @throws InvalidArgumentException
      */
     public function setValue($value): static

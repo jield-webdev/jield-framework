@@ -18,6 +18,8 @@ class ModuleLoader
 
     /**
      * Load list of modules or application configuration
+     *
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function __construct(array $configuration)
     {
@@ -59,6 +61,7 @@ class ModuleLoader
      * Get the application
      *
      * @return Application
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function getApplication()
     {
@@ -69,6 +72,7 @@ class ModuleLoader
      * Get the module manager
      *
      * @return ModuleManager
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function getModuleManager()
     {
@@ -84,6 +88,7 @@ class ModuleLoader
      *
      * @param string $moduleName
      * @return mixed
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function getModule($moduleName)
     {

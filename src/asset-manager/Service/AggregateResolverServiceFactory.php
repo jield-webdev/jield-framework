@@ -25,6 +25,8 @@ class AggregateResolverServiceFactory implements FactoryInterface
 {
     /**
      * @inheritDoc
+     * @throws Exception\RuntimeException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     #[Override]
     public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): AggregateResolver

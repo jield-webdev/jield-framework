@@ -18,30 +18,19 @@ class EntityHydratorManager
 {
     /**
      * Map of class name/(hydrator instance|name) pairs
-     *
-     * @var array
      */
     protected array $hydratorMap = [];
 
     /**
      * Default hydrator to use if no hydrator found for a specific entity class.
-     *
-     * @var ExtractionInterface
      */
     protected ?ExtractionInterface $defaultHydrator = null;
 
-    /**
-     * @param HydratorPluginManager|HydratorPluginManagerInterface $hydrators
-     * @throws Exception\InvalidArgumentException If $hydrators is of invalid type.
-     */
     public function __construct(
         protected HydratorPluginManagerInterface|HydratorPluginManager $hydrators,
         protected MetadataMap $metadataMap,
     ) {}
 
-    /**
-     * @return HydratorPluginManager|HydratorPluginManagerInterface
-     */
     public function getHydratorManager(): HydratorPluginManager|HydratorPluginManagerInterface
     {
         return $this->hydrators;
@@ -50,9 +39,7 @@ class EntityHydratorManager
     /**
      * Map an entity class to a specific hydrator instance
      *
-     * @param string $class
-     * @param string|ExtractionInterface $hydrator
-     * @return static
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function addHydrator(string $class, ExtractionInterface|string $hydrator): static
     {
@@ -69,7 +56,6 @@ class EntityHydratorManager
 
     /**
      * Set the default hydrator to use if none specified for a class.
-     *
      */
     public function setDefaultHydrator(ExtractionInterface $hydrator): static
     {
@@ -84,8 +70,8 @@ class EntityHydratorManager
      * a default hydrator is present, the default hydrator is returned.
      * Otherwise, a boolean false is returned.
      *
-     * @param object $entity
-     * @return ExtractionInterface|false
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
      */
     public function getHydratorForEntity(object $entity): false|ExtractionInterface
     {

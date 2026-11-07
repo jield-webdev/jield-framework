@@ -11,10 +11,8 @@ use function call_user_func;
 
 class LinkUrlBuilder
 {
-    /** @var ServerUrl */
     protected ServerUrl $serverUrlHelper;
 
-    /** @var Url */
     protected Url $urlHelper;
 
     public function __construct(ServerUrl $serverUrlHelper, Url $urlHelper)
@@ -24,11 +22,7 @@ class LinkUrlBuilder
     }
 
     /**
-     * @param string $route
-     * @param array $params
-     * @param array $options
-     * @param bool $reUseMatchedParams
-     * @return string
+     * @throws \Laminas\View\Exception\RuntimeException
      */
     public function buildLinkUrl(
         string $route,

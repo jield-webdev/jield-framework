@@ -10,6 +10,9 @@ use Throwable;
 /** Add the application's exception chain to a controller assertion failure. */
 final class FailureMessage
 {
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     public static function format(AbstractControllerTestCase $test, string $message): string
     {
         if (!$test->getTraceError()) {

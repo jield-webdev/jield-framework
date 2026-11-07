@@ -25,9 +25,6 @@ interface ResourceInterface extends EventManagerAwareInterface
      */
     public function getEventParams(): array;
 
-    /**
-     * @param string $name
-     */
     public function setEventParam(string $name, mixed $value): mixed;
 
     public function getEventParam(mixed $name, mixed $default = null): mixed;

@@ -17,15 +17,12 @@ abstract class AbstractAdapter implements AdapterInterface
 {
     /**
      * Authorization token types this adapter can fulfill.
-     *
-     * @var array
      */
     protected array $authorizationTokenTypes = [];
 
     /**
      * Determine if the incoming request provides either basic or digest
      * credentials
-     *
      */
     #[Override]
     public function getTypeFromRequest(Request $request): false|string
@@ -48,9 +45,6 @@ abstract class AbstractAdapter implements AdapterInterface
 
     /**
      * Determine the authentication type from the authorization header contents
-     *
-     * @param string $header
-     * @return false|string
      */
     private function getTypeFromAuthorizationHeader(string $header): false|string
     {

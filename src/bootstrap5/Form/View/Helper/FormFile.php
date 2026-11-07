@@ -11,6 +11,10 @@ use function count;
 
 final class FormFile extends Helper\FormFile
 {
+    /**
+     * @throws \Jield\Form\Exception\ExceptionInterface
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     public function render(ElementInterface $element): string
     {
         $element->setAttribute(key: 'class', value: 'form-control');

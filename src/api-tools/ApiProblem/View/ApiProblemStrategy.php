@@ -23,6 +23,10 @@ class ApiProblemStrategy extends AbstractListenerAggregate
         $this->listeners[] = $events->attach(MvcEvent::EVENT_RENDER_ERROR, $this->render(...), $priority);
     }
 
+    /**
+     * @throws \Laminas\View\Exception\RenderingFailedException
+     * @throws \JsonException
+     */
     public function render(MvcEvent $event): void
     {
         /** @mago-var mixed $model */

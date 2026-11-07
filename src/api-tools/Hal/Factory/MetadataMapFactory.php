@@ -18,7 +18,6 @@ class MetadataMapFactory
 {
     /**
      * @throws ContainerExceptionInterface
-     * @throws NotFoundExceptionInterface
      */
     public function __invoke(ContainerInterface $container): Metadata\MetadataMap
     {

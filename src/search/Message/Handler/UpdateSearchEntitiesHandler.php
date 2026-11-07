@@ -20,6 +20,10 @@ final readonly class UpdateSearchEntitiesHandler
         private EntityManager $entityManager,
     ) {}
 
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \RuntimeException
+     */
     public function __invoke(UpdateSearchEntitiesMessage $updateSearchEntitiesMessage): int
     {
         $entityClassName = $updateSearchEntitiesMessage->getEntityClassName();

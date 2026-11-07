@@ -27,6 +27,9 @@ abstract class AbstractAssertion implements AssertionInterface
 
     protected RequestInterface|Request $request;
 
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     public function __construct(
         protected ContainerInterface $container,
     ) {
@@ -68,6 +71,9 @@ abstract class AbstractAssertion implements AssertionInterface
         return $this->authenticationIdentityProvider->hasGeneralPermit(className: $className, privilege: $privilege);
     }
 
+    /**
+     * @throws RuntimeException
+     */
     protected function getIdentity(): UserAsRoleInterface
     {
         if (!$this->authenticationIdentityProvider->hasIdentity()) {
@@ -85,6 +91,9 @@ abstract class AbstractAssertion implements AssertionInterface
         return $this->authenticationIdentityProvider->hasRole(roles: $roles);
     }
 
+    /**
+     * @throws RuntimeException
+     */
     protected function parsePrivilege(?string $privilege): string
     {
         //Short circuit the function in case the privilege is known via the acl

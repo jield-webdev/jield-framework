@@ -9,6 +9,9 @@ use Psr\Container\ContainerInterface;
 
 class ApiProblemListenerFactory
 {
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     public function __invoke(ContainerInterface $container): ApiProblemListener
     {
         $filters = null;

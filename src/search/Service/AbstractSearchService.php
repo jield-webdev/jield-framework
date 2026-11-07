@@ -55,6 +55,10 @@ abstract class AbstractSearchService implements SearchServiceInterface
 
     private string $connection;
 
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \Solarium\Exception\OutOfBoundsException
+     */
     public function __construct(
         protected readonly ContainerInterface $container,
     ) {
@@ -66,6 +70,9 @@ abstract class AbstractSearchService implements SearchServiceInterface
         $this->facetSet = $this->query->getFacetSet();
     }
 
+    /**
+     * @throws \Solarium\Exception\OutOfBoundsException
+     */
     public function getSolrClient(): Client
     {
         if (null === $this->solrClient && defined(constant_name: 'static::SOLR_CONNECTION')) {
@@ -114,6 +121,10 @@ abstract class AbstractSearchService implements SearchServiceInterface
         return Assert::isInstanceOf($this->solrClient, \Solarium\Client::class);
     }
 
+    /**
+     * @throws RuntimeException
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     public function updateEntity(HasSearchInterface $entity): void
     {
         $update = $this->getSolrClient()->createUpdate();
@@ -126,6 +137,10 @@ abstract class AbstractSearchService implements SearchServiceInterface
         $this->getSolrClient()->update(query: $update);
     }
 
+    /**
+     * @throws RuntimeException
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     protected function getSearchDocumentFromEntity(
         \Solarium\QueryType\Update\Query\Query $update,
         HasSearchInterface $entity,
@@ -152,6 +167,10 @@ abstract class AbstractSearchService implements SearchServiceInterface
         );
     }
 
+    /**
+     * @throws RuntimeException
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     public function updateEntities(array|Collection $entities): void
     {
         Assert::allImplementsInterface(value: $entities, interface: HasSearchInterface::class);
@@ -171,6 +190,10 @@ abstract class AbstractSearchService implements SearchServiceInterface
         $this->getSolrClient()->update(query: $update);
     }
 
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \Exception
+     */
     public function updateCollection(
         OutputInterface $output,
         HasSearchInterface $entity,
@@ -242,6 +265,9 @@ abstract class AbstractSearchService implements SearchServiceInterface
         $output->writeln(messages: ['', '<comment>Update done</comment>']);
     }
 
+    /**
+     * @throws \Solarium\Exception\OutOfBoundsException
+     */
     public function clearIndex(bool $optimize = true): Result
     {
         $update = $this->getSolrClient()->createUpdate();
@@ -259,6 +285,7 @@ abstract class AbstractSearchService implements SearchServiceInterface
      * Optimize the current index
      *
      * @see http://wiki.apache.org/solr/SolrPerformanceFactors#Optimization_Considerations
+     * @throws \Solarium\Exception\OutOfBoundsException
      */
     public function optimizeIndex(): Result
     {
@@ -268,6 +295,9 @@ abstract class AbstractSearchService implements SearchServiceInterface
         return $this->getSolrClient()->update(query: $update);
     }
 
+    /**
+     * @throws \Exception
+     */
     protected function removeDeletedItemsFromIndex(
         OutputInterface $output,
         HasSearchInterface $entity,
@@ -311,8 +341,8 @@ abstract class AbstractSearchService implements SearchServiceInterface
 
     /**
      * This function must have an argument so child classes can override it
-     * @param HasSearchInterface|null $entity
-     * @return array
+     *
+     * @throws \Exception
      */
     protected function findAllIdsFromSearchIndex(?HasSearchInterface $entity = null): array
     {
@@ -354,7 +384,11 @@ abstract class AbstractSearchService implements SearchServiceInterface
         );
     }
 
-    /** @param class-string $entity */
+    /**
+     * @param class-string $entity
+     * @throws \Doctrine\ORM\NoResultException
+     * @throws \Doctrine\ORM\NonUniqueResultException
+     */
     protected function findCount(string $entity, array $criteria): int
     {
         $queryBuilder = $this->entityManager->createQueryBuilder();
@@ -372,7 +406,10 @@ abstract class AbstractSearchService implements SearchServiceInterface
         return (int) $queryBuilder->getQuery()->getSingleScalarResult();
     }
 
-    /** @param class-string $entity */
+    /**
+     * @param class-string $entity
+     * @throws \UnexpectedValueException
+     */
     protected function findSliced(string $entity, int $limit, int $offset, array $criteria = []): array
     {
         return $this->entityManager->getRepository(className: $entity)->findBy(
@@ -383,6 +420,9 @@ abstract class AbstractSearchService implements SearchServiceInterface
         );
     }
 
+    /**
+     * @throws \Solarium\Exception\OutOfBoundsException
+     */
     protected function updateIndex(OutputInterface $output, \Solarium\QueryType\Update\Query\Query $update): void
     {
         try {
@@ -415,6 +455,10 @@ abstract class AbstractSearchService implements SearchServiceInterface
         }
     }
 
+    /**
+     * @throws \Exception
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     public function syncIndex(OutputInterface $output, HasSearchInterface $entity, array $criteria = []): void
     {
         $output->writeln(messages: '');
@@ -426,6 +470,10 @@ abstract class AbstractSearchService implements SearchServiceInterface
         $output->writeln(messages: '<comment>Sync done</comment>');
     }
 
+    /**
+     * @throws \Exception
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     private function addMissingItemsToTheIndex(
         OutputInterface $output,
         HasSearchInterface $entity,
@@ -474,6 +522,9 @@ abstract class AbstractSearchService implements SearchServiceInterface
         $output->writeln(messages: sprintf('Added %d items', count(value: $toBeAddedItemsInSearchIndex)));
     }
 
+    /**
+     * @throws \Solarium\Exception\OutOfBoundsException
+     */
     public function deleteDocument(HasSearchInterface $entity, bool $optimize = false): Result
     {
         $update = $this->getSolrClient()->createUpdate();
@@ -496,6 +547,9 @@ abstract class AbstractSearchService implements SearchServiceInterface
         ]);
     }
 
+    /**
+     * @throws \Solarium\Exception\OutOfBoundsException
+     */
     public function getResultSet(): \Solarium\QueryType\Select\Result\Result
     {
         return $this->getSolrClient()->select($this->getQuery());
@@ -524,6 +578,9 @@ abstract class AbstractSearchService implements SearchServiceInterface
         return $this->facets;
     }
 
+    /**
+     * @throws \Solarium\Exception\OutOfBoundsException
+     */
     public function createFacetFilters(array $facets): void
     {
         $key = 0;
@@ -561,6 +618,9 @@ abstract class AbstractSearchService implements SearchServiceInterface
         }
     }
 
+    /**
+     * @throws \Solarium\Exception\OutOfBoundsException
+     */
     private function addFilterQueryFromFacet(
         int $key,
         string $field,
@@ -633,6 +693,11 @@ abstract class AbstractSearchService implements SearchServiceInterface
         return isset($this->facets[$fieldName]);
     }
 
+    /**
+     * @throws RuntimeException
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
+     */
     public function testIndex(OutputInterface $output, HasSearchInterface $entity, bool $clearIndex): void
     {
         $output->writeln(messages: '');
@@ -705,6 +770,9 @@ abstract class AbstractSearchService implements SearchServiceInterface
         }
     }
 
+    /**
+     * @throws \Solarium\Exception\OutOfBoundsException
+     */
     protected function createFacet(FacetField $facetField): void
     {
         $facet = Assert::notNull($this->facetSet)->createFacetField(options: $facetField->getField());

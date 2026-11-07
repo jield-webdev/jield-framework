@@ -63,7 +63,6 @@ final class Value
         return $result;
     }
 
-    /** @return array-key|null */
     public static function nullableKey(mixed $value): int|string|null
     {
         return $value === null ? null : self::key($value);
@@ -137,6 +136,9 @@ final class Value
         return $result;
     }
 
+    /**
+     * @throws \ReflectionException
+     */
     public static function property(mixed $value, string $name): mixed
     {
         $value = self::object($value);
@@ -530,6 +532,7 @@ final class Value
     /**
      * @param array<array-key, mixed> $arguments
      * @param class-string|null $scope Scope of an internal call to a protected/private method.
+     * @throws \ReflectionException
      */
     public static function call(mixed $object, string $method, array $arguments = [], ?string $scope = null): mixed
     {
@@ -560,6 +563,7 @@ final class Value
 
     /** Construct a configured class after resolving its runtime identity.
      * @param array<array-key, mixed> $arguments
+     * @throws \ReflectionException
      */
     public static function instantiate(mixed $class, array $arguments = []): object
     {

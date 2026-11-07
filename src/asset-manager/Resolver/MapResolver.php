@@ -19,9 +19,6 @@ use Webmozart\Assert\Assert;
  */
 class MapResolver implements ResolverInterface, MimeResolverAwareInterface
 {
-    /**
-     * @var array
-     */
     protected array $map = [];
 
     /**
@@ -30,11 +27,7 @@ class MapResolver implements ResolverInterface, MimeResolverAwareInterface
     protected MimeResolver $mimeResolver;
 
     /**
-     * Constructor
-     *
      * Instantiate and optionally populate map.
-     *
-     * @param iterable $map
      */
     public function __construct(iterable $map = [])
     {
@@ -43,8 +36,6 @@ class MapResolver implements ResolverInterface, MimeResolverAwareInterface
 
     /**
      * Retrieve the map
-     *
-     * @return array
      */
     public function getMap(): array
     {
@@ -56,7 +47,6 @@ class MapResolver implements ResolverInterface, MimeResolverAwareInterface
      *
      * Maps should be arrays or Traversable objects with name => path pairs
      *
-     * @param iterable $map
      * @throws Exception\InvalidArgumentException
      */
     public function setMap(iterable $map): void
@@ -95,8 +85,6 @@ class MapResolver implements ResolverInterface, MimeResolverAwareInterface
 
     /**
      * Get the mime resolver
-     *
-     * @return MimeResolver
      */
     #[Override]
     public function getMimeResolver(): MimeResolver
@@ -106,8 +94,6 @@ class MapResolver implements ResolverInterface, MimeResolverAwareInterface
 
     /**
      * Set the mime resolver
-     *
-     * @param MimeResolver $mimeResolver
      */
     #[Override]
     public function setMimeResolver(MimeResolver $mimeResolver): void

@@ -21,6 +21,9 @@ class Module implements BootstrapListenerInterface, ConfigProviderInterface
 {
     /**
      * {@inheritDoc}
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
+     * @throws InvalidArgumentException
      */
     public function onBootstrap(EventInterface $e): void
     {
@@ -53,9 +56,6 @@ class Module implements BootstrapListenerInterface, ConfigProviderInterface
         }
     }
 
-    /**
-     * @return array
-     */
     public function getConfig(): array
     {
         return new ConfigProvider()();

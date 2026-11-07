@@ -13,8 +13,6 @@ class SimpleStreamResponseSender extends AbstractResponseSender
 {
     /**
      * Send the stream
-     *
-     * @return static
      */
     public function sendStream(SendResponseEvent $event): static
     {
@@ -32,7 +30,7 @@ class SimpleStreamResponseSender extends AbstractResponseSender
     /**
      * Send stream response
      *
-     * @return void
+     * @throws \ReflectionException
      */
     public function __invoke(SendResponseEvent $event): void
     {

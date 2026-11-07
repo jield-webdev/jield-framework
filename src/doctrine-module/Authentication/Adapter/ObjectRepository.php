@@ -26,26 +26,18 @@ class ObjectRepository extends AbstractAdapter
     protected AuthenticationOptions $options;
 
     /**
-     * Contains the authentication results.
-     *
-     * @var array
+     * Authentication result fields (code, identity, and messages), initialized by setup().
      */
     protected ?array $authenticationResultInfo = null;
 
     protected Inflector $inflector;
 
-    /**
-     * Constructor
-     *
-     * @param array|AuthenticationOptions $options
-     */
     public function __construct(array|AuthenticationOptions $options = [], ?Inflector $inflector = null)
     {
         $this->setOptions(options: $options);
         $this->inflector = $inflector ?? InflectorFactory::create()->build();
     }
 
-    /** @param array|AuthenticationOptions $options */
     public function setOptions(array|AuthenticationOptions $options): self
     {
         if (!$options instanceof AuthenticationOptions) {
@@ -62,6 +54,11 @@ class ObjectRepository extends AbstractAdapter
         return $this->options;
     }
 
+    /**
+     * @throws \ReflectionException
+     * @throws Exception\RuntimeException
+     * @throws Exception\UnexpectedValueException
+     */
     public function authenticate(): AuthenticationResult
     {
         $this->setup();
@@ -89,6 +86,7 @@ class ObjectRepository extends AbstractAdapter
      * record that matched the identity provided to this adapter.
      *
      * @throws Exception\UnexpectedValueException
+     * @throws \ReflectionException
      */
     protected function validateIdentity(object $identity): AuthenticationResult
     {

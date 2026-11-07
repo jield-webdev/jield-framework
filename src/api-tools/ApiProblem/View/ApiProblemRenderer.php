@@ -11,16 +11,11 @@ class ApiProblemRenderer extends JsonRenderer
 {
     /**
      * Whether or not to render exception stack traces in API-Problem payloads.
-     *
-     * @var bool
      */
     protected bool $displayExceptions = false;
 
     /**
      * Set display_exceptions flag.
-     *
-     * @param bool $flag
-     * @return static
      */
     public function setDisplayExceptions(bool $flag): static
     {
@@ -32,7 +27,6 @@ class ApiProblemRenderer extends JsonRenderer
     /**
      * @param mixed $templateNameOrModel
      * @param iterable<non-empty-string, mixed>|null $variables
-     * @return string
      */
     #[Override]
     public function render($templateNameOrModel, $variables = null): string

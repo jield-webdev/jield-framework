@@ -11,8 +11,6 @@ class HttpResponseSender extends AbstractResponseSender
 {
     /**
      * Send content
-     *
-     * @return static
      */
     public function sendContent(SendResponseEvent $event): static
     {
@@ -28,7 +26,7 @@ class HttpResponseSender extends AbstractResponseSender
     /**
      * Send HTTP response
      *
-     * @return void
+     * @throws \ReflectionException
      */
     public function __invoke(SendResponseEvent $event): void
     {

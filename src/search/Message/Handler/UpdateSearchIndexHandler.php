@@ -22,6 +22,10 @@ final readonly class UpdateSearchIndexHandler
         private EntityManager $entityManager,
     ) {}
 
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \Exception
+     */
     public function __invoke(UpdateSearchIndexMessage $updateSearchIndexMessage): int
     {
         $entityClassName = $updateSearchIndexMessage->getEntityClassName();

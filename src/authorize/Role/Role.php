@@ -14,15 +14,10 @@ use function is_string;
  */
 class Role implements RoleInterface, HierarchicalRoleInterface
 {
-    /** @var string */
     protected string $roleId;
 
     protected ?RoleInterface $parent = null;
 
-    /**
-     * @param string|null $roleId
-     * @param string|RoleInterface|null $parent
-     */
     public function __construct(?string $roleId = null, string|RoleInterface|null $parent = null)
     {
         if (null !== $roleId) {

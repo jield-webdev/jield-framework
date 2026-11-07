@@ -19,9 +19,6 @@ class Config implements ProviderInterface
     /** @var RoleInterface[] */
     protected array $roles = [];
 
-    /**
-     * @param array $config
-     */
     public function __construct(array $config = [])
     {
         $roles = [];

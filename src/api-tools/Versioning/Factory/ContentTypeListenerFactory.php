@@ -10,6 +10,9 @@ use Webmozart\Assert\Assert;
 
 class ContentTypeListenerFactory
 {
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     public function __invoke(ContainerInterface $container): ContentTypeListener
     {
         /** @mago-var mixed $config */

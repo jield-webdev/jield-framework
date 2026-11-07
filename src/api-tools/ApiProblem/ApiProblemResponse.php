@@ -20,8 +20,6 @@ class ApiProblemResponse extends Response
 {
     /**
      * Flags to use with json_encode.
-     *
-     * @var int
      */
     protected int $jsonFlags;
 
@@ -37,9 +35,6 @@ class ApiProblemResponse extends Response
         $this->jsonFlags = JSON_UNESCAPED_SLASHES | JSON_PARTIAL_OUTPUT_ON_ERROR;
     }
 
-    /**
-     * @return ApiProblem
-     */
     public function getApiProblem(): ApiProblem
     {
         return $this->apiProblem;
@@ -50,7 +45,7 @@ class ApiProblemResponse extends Response
      *
      * Serializes the composed ApiProblem instance to JSON.
      *
-     * @return string
+     * @throws \JsonException
      */
     #[Override]
     public function getContent(): string
@@ -63,8 +58,6 @@ class ApiProblemResponse extends Response
      *
      * Proxies to parent class, but then checks if we have an content-type
      * header; if not, sets it, with a value of "application/problem+json".
-     *
-     * @return Headers
      */
     #[Override]
     public function getHeaders(): Headers
@@ -82,8 +75,6 @@ class ApiProblemResponse extends Response
      *
      * If no corresponding reason phrase is available for the current status
      * code, return "Unknown Error".
-     *
-     * @return string
      */
     #[Override]
     public function getReasonPhrase(): string

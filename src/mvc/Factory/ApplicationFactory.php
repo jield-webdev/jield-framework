@@ -20,10 +20,6 @@ class ApplicationFactory implements FactoryInterface
      *
      * Creates a Jield\Mvc\Application service, passing it the configuration
      * service and the service manager instance.
-     *
-     * @param  string $requestedName
-     * @param  null|array $options
-     * @return Application
      */
     public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): Application
     {

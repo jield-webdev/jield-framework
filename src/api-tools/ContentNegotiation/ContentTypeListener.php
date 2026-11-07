@@ -38,7 +38,6 @@ use const JSON_ERROR_UTF8;
 
 class ContentTypeListener
 {
-    /** @var array */
     protected array $jsonErrors = [
         JSON_ERROR_DEPTH => 'Maximum stack depth exceeded',
         JSON_ERROR_STATE_MISMATCH => 'Underflow or the modes mismatch',
@@ -49,8 +48,6 @@ class ContentTypeListener
 
     /**
      * Directory where upload files were written, if any
-     *
-     * @var string
      */
     protected string $uploadTmpDir;
 
@@ -64,6 +61,8 @@ class ContentTypeListener
      * If an error occurs during deserialization, an ApiProblemResponse is
      * returned, indicating an issue with the submission.
      *
+     * @throws \ReflectionException
+     * @throws \RuntimeException
      */
     public function __invoke(MvcEvent $e): ?ApiProblemResponse
     {
@@ -154,7 +153,6 @@ class ContentTypeListener
 
     /**
      * Remove upload files if still present in filesystem
-     *
      */
     public function onFinish(MvcEvent $e): void
     {
@@ -189,9 +187,6 @@ class ContentTypeListener
      *
      * Decodes a JSON string and returns it; if invalid, returns
      * an ApiProblemResponse.
-     *
-     * @param string $json
-     * @return mixed|ApiProblemResponse
      */
     public function decodeJson(string $json): mixed
     {
@@ -244,6 +239,7 @@ class ContentTypeListener
      * Attach the file cleanup listener
      *
      * @param string $uploadTmpDir Directory in which file uploads were made
+     * @throws \ReflectionException
      */
     protected function attachFileCleanupListener(MvcEvent $event, string $uploadTmpDir): void
     {

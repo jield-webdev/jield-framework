@@ -14,8 +14,6 @@ class Month extends AbstractDateTime
 {
     /**
      * A valid format string accepted by date()
-     *
-     * @var string
      */
     protected string $format = '!Y-m';
 
@@ -34,6 +32,8 @@ class Month extends AbstractDateTime
 
     /**
      * Retrieves a DateStep Validator configured for a Month Input type
+     *
+     * @throws \DateMalformedIntervalStringException
      */
     protected function getStepValidator(): ValidatorInterface
     {

@@ -10,7 +10,6 @@ use Laminas\InputFilter\InputFilterInterface;
 
 class InputFilterPlugin extends AbstractPlugin
 {
-    /** @return null|InputFilterInterface */
     public function __invoke(): ?InputFilterInterface
     {
         $controller = $this->getController();

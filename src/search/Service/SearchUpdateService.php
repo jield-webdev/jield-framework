@@ -24,6 +24,11 @@ class SearchUpdateService
         private readonly array $cores,
     ) {}
 
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \Symfony\Component\Messenger\Exception\ExceptionInterface
+     * @throws \RuntimeException
+     */
     public function updateEntity(HasSearchInterface $entity, bool $queued = false): void
     {
         if ($queued) {
@@ -46,6 +51,10 @@ class SearchUpdateService
         }
     }
 
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \Solarium\Exception\OutOfBoundsException
+     */
     public function deleteDocument(HasSearchInterface $entity): void
     {
         $searchServiceNames = $this->findSearchServicesFromEntity(entity: $entity);
@@ -58,6 +67,11 @@ class SearchUpdateService
         }
     }
 
+    /**
+     * @throws \Symfony\Component\Messenger\Exception\ExceptionInterface
+     * @throws \ReflectionException
+     * @throws InvalidArgumentException
+     */
     public function updateEntities(array|Collection $entities): void
     {
         //Always convert to array
@@ -105,6 +119,10 @@ class SearchUpdateService
         ));
     }
 
+    /**
+     * @throws \Symfony\Component\Messenger\Exception\ExceptionInterface
+     * @throws \ReflectionException
+     */
     public function updateIndex(string $entityClassName): void
     {
         //Sometimes we get proxies, then we need to get the real class

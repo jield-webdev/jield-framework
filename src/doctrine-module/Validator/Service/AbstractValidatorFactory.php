@@ -26,15 +26,16 @@ abstract class AbstractValidatorFactory implements FactoryInterface
 {
     public const string DEFAULT_OBJECTMANAGER_KEY = 'doctrine.entitymanager.orm_default';
 
-    /** @var array */
     protected array $creationOptions = [];
 
     protected string $validatorClass;
 
     /**
-     * @param array $options
+     * @param array<array-key, mixed>|null $options
      *
      * @throws ServiceCreationException
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws BadMethodCallException
      */
     protected function getRepository(ContainerInterface $container, ?array $options = null): ObjectRepository
     {
@@ -60,7 +61,10 @@ abstract class AbstractValidatorFactory implements FactoryInterface
         return $objectManager->getRepository(className: Value::classString($targetClassName));
     }
 
-    /** @param array $options */
+    /**
+     * @param array<array-key, mixed>|null $options
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     protected function getObjectManager(ContainerInterface $container, ?array $options = null): ObjectManager
     {
         /** @mago-var mixed $objectManager */
@@ -74,11 +78,6 @@ abstract class AbstractValidatorFactory implements FactoryInterface
         return \Webmozart\Assert\Assert::isInstanceOf($objectManager, \Doctrine\Persistence\ObjectManager::class);
     }
 
-    /**
-     * @param array $options
-     *
-     * @return array
-     */
     protected function getFields(array $options): array
     {
         if (isset($options['fields'])) {
@@ -92,11 +91,6 @@ abstract class AbstractValidatorFactory implements FactoryInterface
      * Helper to merge options array passed to `__invoke`
      * together with the options array created based on the above
      * helper methods.
-     *
-     * @param array $previousOptions
-     * @param array $newOptions
-     *
-     * @return array
      */
     protected function merge(array $previousOptions, array $newOptions): array
     {

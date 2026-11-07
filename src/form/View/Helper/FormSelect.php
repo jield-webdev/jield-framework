@@ -27,8 +27,6 @@ class FormSelect extends AbstractHelper
 {
     /**
      * Attributes valid for select
-     *
-     * @var array
      */
     protected array $validSelectAttributes = [
         'name' => true,
@@ -43,8 +41,6 @@ class FormSelect extends AbstractHelper
 
     /**
      * Attributes valid for options
-     *
-     * @var array
      */
     protected array $validOptionAttributes = [
         'disabled' => true,
@@ -55,8 +51,6 @@ class FormSelect extends AbstractHelper
 
     /**
      * Attributes valid for option groups
-     *
-     * @var array
      */
     protected array $validOptgroupAttributes = [
         'disabled' => true,
@@ -68,7 +62,6 @@ class FormSelect extends AbstractHelper
         'label' => true,
     ];
 
-    /** @var FormHidden|null */
     protected ?FormHidden $formHiddenHelper = null;
 
     /**
@@ -79,7 +72,7 @@ class FormSelect extends AbstractHelper
      * @template T as null|ElementInterface
      * @psalm-param T $element
      * @psalm-return (T is null ? static : string)
-     * @return string|FormSelect
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function __invoke(?ElementInterface $element = null): string|static
     {
@@ -95,6 +88,7 @@ class FormSelect extends AbstractHelper
      *
      * @throws Exception\InvalidArgumentException
      * @throws Exception\DomainException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function render(ElementInterface $element): string
     {
@@ -158,6 +152,7 @@ class FormSelect extends AbstractHelper
      *
      * @param ValueOptions $options
      * @param  array $selectedOptions Option values that should be marked as selected
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function renderOptions(array $options, array $selectedOptions = []): string
     {
@@ -235,6 +230,7 @@ class FormSelect extends AbstractHelper
      * with an array following the specification for renderOptions().
      *
      * @param OptGroup $optgroup
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function renderOptgroup(array $optgroup, array $selectedOptions = []): string
     {
@@ -287,6 +283,9 @@ class FormSelect extends AbstractHelper
         return $value;
     }
 
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     protected function renderHiddenElement(SelectElement $element): string
     {
         $hiddenElement = new Hidden(name: $element->getName());
@@ -295,6 +294,9 @@ class FormSelect extends AbstractHelper
         return $this->getFormHiddenHelper()->__invoke(element: $hiddenElement);
     }
 
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     protected function getFormHiddenHelper(): FormHidden
     {
         if (null !== $this->formHiddenHelper) {

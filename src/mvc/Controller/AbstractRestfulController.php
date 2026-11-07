@@ -39,12 +39,8 @@ abstract class AbstractRestfulController extends AbstractController
 {
     public const string CONTENT_TYPE_JSON = 'json';
 
-    /**
-     * {@inheritDoc}
-     */
     protected string|array|null $eventIdentifier = self::class;
 
-    /** @var array */
     protected array $contentTypes = [
         self::CONTENT_TYPE_JSON => [
             'application/hal+json',
@@ -54,8 +50,6 @@ abstract class AbstractRestfulController extends AbstractController
 
     /**
      * Name of request or query parameter containing identifier
-     *
-     * @var string
      */
     protected string $identifierName = 'id';
 
@@ -67,8 +61,6 @@ abstract class AbstractRestfulController extends AbstractController
      *
      * Override the value in an extending class to set the default behavior
      * for your class.
-     *
-     * @var bool
      */
     protected bool $jsonDecodeType = true;
 
@@ -83,7 +75,6 @@ abstract class AbstractRestfulController extends AbstractController
      * Set the route match/query parameter name containing the identifier
      *
      * @param  string $name
-     * @return static
      */
     public function setIdentifierName($name): static
     {
@@ -93,8 +84,6 @@ abstract class AbstractRestfulController extends AbstractController
 
     /**
      * Retrieve the route match/query parameter name containing the identifier
-     *
-     * @return string
      */
     public function getIdentifierName(): string
     {
@@ -103,8 +92,6 @@ abstract class AbstractRestfulController extends AbstractController
 
     /**
      * Create a new resource
-     *
-     * @return mixed
      */
     public function create(mixed $data): mixed
     {
@@ -117,8 +104,6 @@ abstract class AbstractRestfulController extends AbstractController
 
     /**
      * Delete an existing resource
-     *
-     * @return mixed
      */
     public function delete(mixed $id): mixed
     {
@@ -136,7 +121,6 @@ abstract class AbstractRestfulController extends AbstractController
      * (introduced in 2.1.0); instead, raises an exception if not implemented.
      *
      * @param mixed $data
-     * @return mixed
      */
     public function deleteList($data): mixed
     {
@@ -149,8 +133,6 @@ abstract class AbstractRestfulController extends AbstractController
 
     /**
      * Return single resource
-     *
-     * @return mixed
      */
     public function get(mixed $id): mixed
     {
@@ -163,8 +145,6 @@ abstract class AbstractRestfulController extends AbstractController
 
     /**
      * Return list of resources
-     *
-     * @return mixed
      */
     public function getList(): mixed
     {
@@ -182,7 +162,6 @@ abstract class AbstractRestfulController extends AbstractController
      * (introduced in 2.1.0); instead, raises an exception if not implemented.
      *
      * @param  mixed $id
-     * @return mixed
      */
     public function head($id = null): mixed
     {
@@ -201,8 +180,6 @@ abstract class AbstractRestfulController extends AbstractController
      *
      * Not marked as abstract, as that would introduce a BC break
      * (introduced in 2.1.0); instead, raises an exception if not implemented.
-     *
-     * @return mixed
      */
     public function options(): mixed
     {
@@ -221,7 +198,6 @@ abstract class AbstractRestfulController extends AbstractController
      *
      * @param mixed  $id
      * @param mixed $data
-     * @return mixed
      */
     public function patch($id, $data): mixed
     {
@@ -237,8 +213,6 @@ abstract class AbstractRestfulController extends AbstractController
      *
      * Not marked as abstract, as that would introduce a BC break
      * (introduced in 2.1.0); instead, raises an exception if not implemented.
-     *
-     * @return mixed
      */
     public function replaceList(mixed $data): mixed
     {
@@ -254,8 +228,6 @@ abstract class AbstractRestfulController extends AbstractController
      *
      * Not marked as abstract, as that would introduce a BC break
      * (introduced in 2.2.0); instead, raises an exception if not implemented.
-     *
-     * @return mixed
      */
     public function patchList(mixed $data): mixed
     {
@@ -268,8 +240,6 @@ abstract class AbstractRestfulController extends AbstractController
 
     /**
      * Update an existing resource
-     *
-     * @return mixed
      */
     public function update(mixed $id, mixed $data): mixed
     {
@@ -282,8 +252,6 @@ abstract class AbstractRestfulController extends AbstractController
 
     /**
      * Basic functionality for when a page is not available
-     *
-     * @return array
      */
     public function notFoundAction(): array
     {
@@ -302,7 +270,6 @@ abstract class AbstractRestfulController extends AbstractController
      * to determine how to handle the request, and which method to delegate to.
      *
      * @events dispatch.pre, dispatch.post
-     * @return mixed|Response
      * @throws Exception\InvalidArgumentException
      */
     public function dispatch(Request $request, ?Response $response = null): mixed
@@ -318,8 +285,8 @@ abstract class AbstractRestfulController extends AbstractController
      * Handle the request
      *
      * @todo   try-catch in "patch" for patchList should be removed in the future
-     * @return mixed
      * @throws Exception\DomainException If no route matches in event or invalid HTTP method.
+     * @throws \ReflectionException
      */
     public function onDispatch(MvcEvent $e): mixed
     {
@@ -478,8 +445,8 @@ abstract class AbstractRestfulController extends AbstractController
     /**
      * Process post data and call create
      *
-     * @return mixed
      * @throws Exception\DomainException If a JSON request was made, but no method for parsing JSON is available.
+     * @throws \ReflectionException
      */
     public function processPostData(Request $request): mixed
     {
@@ -497,7 +464,6 @@ abstract class AbstractRestfulController extends AbstractController
      * Check if request has certain content type
      *
      * @param  string|null $contentType
-     * @return bool
      */
     public function requestHasContentType(Request $request, $contentType = ''): bool
     {
@@ -547,7 +513,7 @@ abstract class AbstractRestfulController extends AbstractController
      *
      * @param string $method
      * @param mixed $handler
-     * @return static
+     * @throws InvalidArgumentException
      */
     public function addHttpMethodHandler($method, $handler): static
     {
@@ -570,7 +536,7 @@ abstract class AbstractRestfulController extends AbstractController
      *
      * @param RouteMatch $routeMatch
      * @param  Request $request
-     * @return mixed
+     * @throws \ReflectionException
      */
     protected function getIdentifier($routeMatch, $request): mixed
     {
@@ -603,8 +569,8 @@ abstract class AbstractRestfulController extends AbstractController
      * value, the method assumes that we have non-urlencoded content and
      * returns the raw content; otherwise, the array created is returned.
      *
-     * @return mixed
      * @throws Exception\DomainException If a JSON request was made, but no method for parsing JSON is available.
+     * @throws \ReflectionException
      */
     protected function processBodyContent(mixed $request): mixed
     {
@@ -634,7 +600,6 @@ abstract class AbstractRestfulController extends AbstractController
      * Marked protected to allow usage from extending classes.
      *
      * @param string $string
-     * @return mixed
      */
     protected function jsonDecode($string): mixed
     {

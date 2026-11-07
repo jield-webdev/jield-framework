@@ -18,10 +18,6 @@ class ViewTemplateMapResolverFactory implements FactoryInterface
      *
      * Creates a Laminas\View\Resolver\AggregateResolver and populates it with the
      * ['view_manager']['template_map']
-     *
-     * @param string $requestedName
-     * @param null|array $options
-     * @return ViewResolver\TemplateMapResolver
      */
     public function __invoke(
         ContainerInterface $container,

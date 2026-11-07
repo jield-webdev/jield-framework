@@ -96,6 +96,7 @@ abstract class AbstractControllerTestCase extends TestCase
      *
      * @param string $message
      * @return string
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     protected function createFailureMessage($message)
     {
@@ -161,6 +162,7 @@ abstract class AbstractControllerTestCase extends TestCase
      * Get the application object
      *
      * @return ApplicationInterface
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function getApplication()
     {
@@ -184,6 +186,7 @@ abstract class AbstractControllerTestCase extends TestCase
      * Get the service manager of the application object
      *
      * @return ServiceManager
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function getApplicationServiceLocator()
     {
@@ -194,6 +197,7 @@ abstract class AbstractControllerTestCase extends TestCase
      * Get the application request object
      *
      * @return RequestInterface
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function getRequest()
     {
@@ -204,6 +208,7 @@ abstract class AbstractControllerTestCase extends TestCase
      * Get the application response object
      *
      * @return Response
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function getResponse()
     {
@@ -221,6 +226,8 @@ abstract class AbstractControllerTestCase extends TestCase
      * @param  string|null                $method
      * @param  array|null                 $params
      * @return AbstractControllerTestCase
+     * @throws \ReflectionException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function url($url, $method = HttpRequest::METHOD_GET, $params = [])
     {
@@ -289,6 +296,7 @@ abstract class AbstractControllerTestCase extends TestCase
      * @param bool        $isXmlHttpRequest
      * @return void
      * @throws Exception
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function dispatch($url, $method = null, $params = [], $isXmlHttpRequest = false)
     {
@@ -340,6 +348,7 @@ abstract class AbstractControllerTestCase extends TestCase
      *
      * @param  string                                $eventName
      * @return ResponseCollection
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function triggerApplicationEvent($eventName)
     {
@@ -370,6 +379,8 @@ abstract class AbstractControllerTestCase extends TestCase
      * Assert modules were loaded with the module manager
      *
      * @return void
+     * @throws ExpectationFailedException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function assertModulesLoaded(array $modules)
     {
@@ -391,6 +402,9 @@ abstract class AbstractControllerTestCase extends TestCase
      * Assert modules were not loaded with the module manager
      *
      * @return void
+     * @throws ExpectationFailedException
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
      */
     public function assertNotModulesLoaded(array $modules)
     {
@@ -412,6 +426,7 @@ abstract class AbstractControllerTestCase extends TestCase
      * Retrieve the response status code
      *
      * @return int
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     protected function getResponseStatusCode()
     {
@@ -423,6 +438,8 @@ abstract class AbstractControllerTestCase extends TestCase
      *
      * @param int $code
      * @return void
+     * @throws ExpectationFailedException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function assertResponseStatusCode($code)
     {
@@ -442,6 +459,8 @@ abstract class AbstractControllerTestCase extends TestCase
      *
      * @param int $code
      * @return void
+     * @throws ExpectationFailedException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function assertNotResponseStatusCode($code)
     {
@@ -461,6 +480,7 @@ abstract class AbstractControllerTestCase extends TestCase
      * @param string $type application exception type
      * @param string|null $message application exception message
      * @psalm-return never
+     * @throws Throwable
      */
     public function assertApplicationException($type, $message = null)
     {
@@ -490,6 +510,8 @@ abstract class AbstractControllerTestCase extends TestCase
      * Get the full current controller class name
      *
      * @return string
+     * @throws \PHPUnit\Framework\Exception
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     protected function getControllerFullClassName()
     {
@@ -500,6 +522,8 @@ abstract class AbstractControllerTestCase extends TestCase
      * Get the current controller class
      *
      * @return object
+     * @throws \PHPUnit\Framework\Exception
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     protected function getControllerFullClass()
     {
@@ -533,6 +557,7 @@ abstract class AbstractControllerTestCase extends TestCase
      *
      * @param string $module
      * @return void
+     * @throws ExpectationFailedException
      */
     public function assertModuleName($module)
     {
@@ -544,6 +569,7 @@ abstract class AbstractControllerTestCase extends TestCase
      *
      * @param string $module
      * @return void
+     * @throws ExpectationFailedException
      */
     public function assertNotModuleName($module)
     {
@@ -555,6 +581,8 @@ abstract class AbstractControllerTestCase extends TestCase
      *
      * @param string $controller
      * @return void
+     * @throws \PHPUnit\Framework\Exception
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function assertControllerClass($controller)
     {
@@ -577,6 +605,8 @@ abstract class AbstractControllerTestCase extends TestCase
      *
      * @param string $controller
      * @return void
+     * @throws \PHPUnit\Framework\Exception
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function assertNotControllerClass($controller)
     {
@@ -598,6 +628,8 @@ abstract class AbstractControllerTestCase extends TestCase
      *
      * @param string $controller
      * @return void
+     * @throws ExpectationFailedException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function assertControllerName($controller)
     {
@@ -624,6 +656,8 @@ abstract class AbstractControllerTestCase extends TestCase
      *
      * @param string $controller
      * @return void
+     * @throws ExpectationFailedException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function assertNotControllerName($controller)
     {
@@ -649,6 +683,8 @@ abstract class AbstractControllerTestCase extends TestCase
      *
      * @param string $action
      * @return void
+     * @throws ExpectationFailedException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function assertActionName($action)
     {
@@ -675,6 +711,8 @@ abstract class AbstractControllerTestCase extends TestCase
      *
      * @param string $action
      * @return void
+     * @throws ExpectationFailedException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function assertNotActionName($action)
     {
@@ -700,6 +738,8 @@ abstract class AbstractControllerTestCase extends TestCase
      *
      * @param string $route
      * @return void
+     * @throws ExpectationFailedException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function assertMatchedRouteName($route)
     {
@@ -725,6 +765,8 @@ abstract class AbstractControllerTestCase extends TestCase
      *
      * @param string $route
      * @return void
+     * @throws \PHPUnit\Framework\AssertionFailedError
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function assertNotMatchedRouteName($route)
     {
@@ -755,6 +797,8 @@ abstract class AbstractControllerTestCase extends TestCase
      * Assert that the application did not match any route
      *
      * @return void
+     * @throws \PHPUnit\Framework\AssertionFailedError
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function assertNoMatchedRoute()
     {
@@ -784,6 +828,8 @@ abstract class AbstractControllerTestCase extends TestCase
      *
      * @param string $templateName
      * @return void
+     * @throws \PHPUnit\Framework\AssertionFailedError
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function assertTemplateName($templateName)
     {
@@ -808,6 +854,8 @@ abstract class AbstractControllerTestCase extends TestCase
      *
      * @param string $templateName
      * @return void
+     * @throws ExpectationFailedException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function assertNotTemplateName($templateName)
     {

@@ -29,12 +29,9 @@ class ServiceListener implements ServiceListenerInterface
 
     /**
      * Default service configuration for the application service manager.
-     *
-     * @var array
      */
     protected array $defaultServiceConfig = [];
 
-    /** @var array */
     protected array $serviceManagers = [];
 
     public function __construct(
@@ -49,10 +46,6 @@ class ServiceListener implements ServiceListenerInterface
         }
     }
 
-    /**
-     * @param array $configuration
-     * @return static
-     */
     #[Override]
     public function setDefaultServiceConfig(array $configuration): static
     {
@@ -87,7 +80,6 @@ class ServiceListener implements ServiceListenerInterface
 
     /**
      * @param int $priority
-     * @return void
      */
     #[Override]
     public function attach(EventManagerInterface $events, $priority = 1): void
@@ -102,7 +94,6 @@ class ServiceListener implements ServiceListenerInterface
         );
     }
 
-    /** @return void */
     #[Override]
     public function detach(EventManagerInterface $events): void
     {
@@ -126,7 +117,7 @@ class ServiceListener implements ServiceListenerInterface
      * The interface and method name can be set by adding a new service manager
      * via the addServiceManager() method.
      *
-     * @return void
+     * @throws \ReflectionException
      */
     public function onLoadModule(ModuleEvent $e): void
     {
@@ -184,8 +175,9 @@ class ServiceListener implements ServiceListenerInterface
      * key, it will be passed to a ServiceManager Config object, and
      * used to configure the service manager.
      *
-     * @return void
      * @throws Exception\RuntimeException
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
      */
     public function onLoadModulesPost(ModuleEvent $e): void
     {
@@ -237,7 +229,8 @@ class ServiceListener implements ServiceListenerInterface
      * Extracts the various service configuration arrays.
      *
      * @param string $config class name resolving to one.
-     * @return array
+     * @throws Exception\RuntimeException
+     * @throws \ReflectionException
      */
     protected function serviceConfigToArray(string $config): array
     {
@@ -284,6 +277,8 @@ class ServiceListener implements ServiceListenerInterface
      * @param array $metadata Service manager metadata
      * @param array $config Merged configuration
      * @return array Service manager-specific configuration
+     * @throws Exception\RuntimeException
+     * @throws \ReflectionException
      */
     private function mergeServiceConfiguration(string $key, array $metadata, array $config): array
     {

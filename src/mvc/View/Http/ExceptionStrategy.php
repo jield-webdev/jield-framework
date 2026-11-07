@@ -16,15 +16,11 @@ class ExceptionStrategy extends AbstractListenerAggregate
 {
     /**
      * Display exceptions?
-     *
-     * @var bool
      */
     protected bool $displayExceptions = false;
 
     /**
      * Name of exception template
-     *
-     * @var string
      */
     protected string $exceptionTemplate = 'error';
 
@@ -41,7 +37,6 @@ class ExceptionStrategy extends AbstractListenerAggregate
      * Flag: display exceptions in error pages?
      *
      * @param  bool $displayExceptions
-     * @return static
      */
     public function setDisplayExceptions($displayExceptions): static
     {
@@ -51,8 +46,6 @@ class ExceptionStrategy extends AbstractListenerAggregate
 
     /**
      * Should we display exceptions in error pages?
-     *
-     * @return bool
      */
     public function displayExceptions(): bool
     {
@@ -63,7 +56,6 @@ class ExceptionStrategy extends AbstractListenerAggregate
      * Set the exception template
      *
      * @param  string $exceptionTemplate
-     * @return static
      */
     public function setExceptionTemplate($exceptionTemplate): static
     {
@@ -73,8 +65,6 @@ class ExceptionStrategy extends AbstractListenerAggregate
 
     /**
      * Retrieve the exception template
-     *
-     * @return string
      */
     public function getExceptionTemplate(): string
     {
@@ -89,7 +79,6 @@ class ExceptionStrategy extends AbstractListenerAggregate
      *         priority dispatch.error event (or goto a render event) to ensure
      *         rendering occurs, and that munging of view models occurs when
      *         expected.
-     * @return void
      */
     public function prepareExceptionViewModel(MvcEvent $e): void
     {

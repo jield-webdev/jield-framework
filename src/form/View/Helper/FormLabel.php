@@ -21,8 +21,6 @@ class FormLabel extends AbstractHelper
 
     /**
      * Attributes valid for the label tag
-     *
-     * @var array
      */
     protected array $validTagAttributes = [
         'for' => true,
@@ -39,7 +37,7 @@ class FormLabel extends AbstractHelper
      * @psalm-param T $element
      * @psalm-return (T is null ? static : string)
      * @throws Exception\DomainException
-     * @return string|FormLabel
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function __invoke(
         ?ElementInterface $element = null,
@@ -88,9 +86,9 @@ class FormLabel extends AbstractHelper
     /**
      * Generate an opening label tag
      *
-     * @param array|ElementInterface|null $attributesOrElement
      * @throws Exception\InvalidArgumentException
      * @throws Exception\DomainException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function openTag(ElementInterface|array|null $attributesOrElement = null): string
     {

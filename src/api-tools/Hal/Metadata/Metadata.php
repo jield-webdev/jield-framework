@@ -24,15 +24,11 @@ class Metadata
 {
     /**
      * Class this metadata applies to
-     *
-     * @var string
      */
     protected string $class;
 
     /**
      * Name of the field representing the collection
-     *
-     * @var string
      */
     protected string $collectionName = 'items';
 
@@ -50,22 +46,16 @@ class Metadata
 
     /**
      * Route for entities composed in a collection
-     *
-     * @var string
      */
     protected ?string $entityRoute = null;
 
     /**
      * Name of the route parameter identifier for the entity
-     *
-     * @var string
      */
     protected string $routeIdentifierName;
 
     /**
      * Does the class represent a collection?
-     *
-     * @var bool
      */
     protected bool $isCollection = false;
 
@@ -85,22 +75,16 @@ class Metadata
     /**
      * Whether to force the existance of a "self" link. The HAl specification encourages it but it is not strictly
      * required.
-     *
-     * @var bool
      */
     protected bool $forceSelfLink = true;
 
     /**
      * Route to use to generate a static link for this entity
-     *
-     * @var string
      */
     protected ?string $route = null;
 
     /**
      * Additional options to use when generating a static link for this entity
-     *
-     * @var array
      */
     protected array $routeOptions = [];
 
@@ -113,26 +97,23 @@ class Metadata
 
     /**
      * URL to use for this entity (instead of a route)
-     *
-     * @var string
      */
     protected ?string $url = null;
 
     /**
      * Maximum number of nesting levels
-     *
-     * @var int
      */
     protected int $maxDepth;
 
     /**
-     * Constructor
-     *
      * Sets the class, and passes any options provided to the appropriate
      * setter methods, after first converting them to lowercase and stripping
      * underscores.
      *
      * If the class does not exist, raises an exception.
+     *
+     * @throws \ReflectionException
+     * @throws Exception\InvalidArgumentException
      */
     public function __construct(string $class, array $options = [], ?HydratorPluginManagerInterface $hydrators = null)
     {
@@ -208,8 +189,6 @@ class Metadata
 
     /**
      * Retrieve the class this metadata is associated with
-     *
-     * @return string
      */
     public function getClass(): string
     {
@@ -218,8 +197,6 @@ class Metadata
 
     /**
      * Retrieve the collection name
-     *
-     * @return string
      */
     public function getCollectionName(): string
     {
@@ -228,8 +205,6 @@ class Metadata
 
     /**
      * Retrieve the hydrator to associate with this class, if any
-     *
-     * @return null|ExtractionInterface
      */
     public function getHydrator(): ?ExtractionInterface
     {
@@ -238,8 +213,6 @@ class Metadata
 
     /**
      * Retrieve the entity identifier name
-     *
-     * @return string
      */
     public function getEntityIdentifierName(): string
     {
@@ -248,8 +221,6 @@ class Metadata
 
     /**
      * Retrieve the route identifier name
-     *
-     * @return string
      */
     public function getRouteIdentifierName(): string
     {
@@ -276,8 +247,6 @@ class Metadata
      * Retrieve the entity route
      *
      * If not set, uses the route or url, depending on which is present.
-     *
-     * @return null|string
      */
     public function getEntityRoute(): ?string
     {
@@ -294,8 +263,6 @@ class Metadata
 
     /**
      * Retrieve the route to use for URL generation
-     *
-     * @return null|string
      */
     public function getRoute(): ?string
     {
@@ -304,8 +271,6 @@ class Metadata
 
     /**
      * Retrieve an route options to use in URL generation
-     *
-     * @return array
      */
     public function getRouteOptions(): array
     {
@@ -324,8 +289,6 @@ class Metadata
 
     /**
      * Retrieve the URL to use for this entity, if present
-     *
-     * @return null|string
      */
     public function getUrl(): ?string
     {
@@ -334,8 +297,6 @@ class Metadata
 
     /**
      * Retrieve the maximum number of nesting levels
-     *
-     * @return int
      */
     public function getMaxDepth(): int
     {
@@ -344,8 +305,6 @@ class Metadata
 
     /**
      * Is a hydrator associated with this class?
-     *
-     * @return bool
      */
     public function hasHydrator(): bool
     {
@@ -354,8 +313,6 @@ class Metadata
 
     /**
      * Is a route present for this class?
-     *
-     * @return bool
      */
     public function hasRoute(): bool
     {
@@ -364,8 +321,6 @@ class Metadata
 
     /**
      * Is a URL set for this class?
-     *
-     * @return bool
      */
     public function hasUrl(): bool
     {
@@ -374,8 +329,6 @@ class Metadata
 
     /**
      * Does this class represent a collection?
-     *
-     * @return bool
      */
     public function isCollection(): bool
     {
@@ -384,9 +337,6 @@ class Metadata
 
     /**
      * Set the collection name
-     *
-     * @param string $collectionName
-     * @return static
      */
     public function setCollectionName(string $collectionName): static
     {
@@ -397,9 +347,9 @@ class Metadata
     /**
      * Set the hydrator to use with this class
      *
-     * @param string|ExtractionInterface $hydrator
-     * @return static
      * @throws Exception\InvalidArgumentException If the class or hydrator does not implement ExtractionInterface.
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
      */
     public function setHydrator(ExtractionInterface|string $hydrator): static
     {
@@ -428,9 +378,6 @@ class Metadata
 
     /**
      * Set the entity identifier name
-     *
-     * @param string $identifier
-     * @return static
      */
     public function setEntityIdentifierName(string $identifier): static
     {
@@ -440,9 +387,6 @@ class Metadata
 
     /**
      * Set the route identifier name
-     *
-     * @param string $identifier
-     * @return static
      */
     public function setRouteIdentifierName(string $identifier): static
     {
@@ -452,9 +396,6 @@ class Metadata
 
     /**
      * Set the flag indicating collection status
-     *
-     * @param bool $flag
-     * @return static
      */
     public function setIsCollection(bool $flag): static
     {
@@ -491,9 +432,6 @@ class Metadata
 
     /**
      * Set the entity route (for embedded entities in collections)
-     *
-     * @param string $route
-     * @return static
      */
     public function setEntityRoute(string $route): static
     {
@@ -506,10 +444,7 @@ class Metadata
      *
      * Deprecated; please use setEntityRoute().
      *
-     * @param string $route
-     * @return static
      * @deprecated
-     *
      */
     public function setResourceRoute(string $route): static
     {
@@ -522,9 +457,6 @@ class Metadata
 
     /**
      * Set the route for URL generation
-     *
-     * @param string $route
-     * @return static
      */
     public function setRoute(string $route): static
     {
@@ -534,9 +466,6 @@ class Metadata
 
     /**
      * Set route options for URL generation
-     *
-     * @param array $options
-     * @return static
      */
     public function setRouteOptions(array $options): static
     {
@@ -548,7 +477,6 @@ class Metadata
      * Set route parameters for URL generation
      *
      * @param array<string,mixed> $params
-     * @return static
      */
     public function setRouteParams(array $params): static
     {
@@ -558,9 +486,6 @@ class Metadata
 
     /**
      * Set the URL to use with this entity
-     *
-     * @param string $url
-     * @return static
      */
     public function setUrl(string $url): static
     {
@@ -570,9 +495,6 @@ class Metadata
 
     /**
      * Set the maximum number of nesting levels
-     *
-     * @param int $maxDepth
-     * @return static
      */
     public function setMaxDepth(int $maxDepth): static
     {
@@ -582,8 +504,6 @@ class Metadata
 
     /**
      * Returns true if this entity should be forced to have a "self" link.
-     *
-     * @return bool
      */
     public function getForceSelfLink(): bool
     {
@@ -594,7 +514,6 @@ class Metadata
      * Set whether to force the existance of "self" links.
      *
      * @param bool $forceSelfLink A truthy value
-     * @return static
      */
     public function setForceSelfLink(bool $forceSelfLink): static
     {
@@ -603,7 +522,6 @@ class Metadata
     }
 
     /**
-     * @param HydratorPluginManager|HydratorPluginManagerInterface $hydrators
      * @throws Exception\InvalidArgumentException If $hydrators is an invaild type.
      */
     private function setHydrators(HydratorPluginManager|HydratorPluginManagerInterface $hydrators): void

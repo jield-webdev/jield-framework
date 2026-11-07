@@ -21,8 +21,6 @@ class ContentTypeFilterListener extends AbstractListenerAggregate
 {
     /**
      * Whitelist configuration
-     *
-     * @var array
      */
     protected array $config = [];
 
@@ -41,9 +39,6 @@ class ContentTypeFilterListener extends AbstractListenerAggregate
 
     /**
      * Set whitelist configuration
-     *
-     * @param  array $config
-     * @return static
      */
     public function setConfig(array $config): static
     {
@@ -54,6 +49,7 @@ class ContentTypeFilterListener extends AbstractListenerAggregate
     /**
      * Test if the content-type received is allowable.
      *
+     * @throws \ReflectionException
      */
     public function onRoute(MvcEvent $e): ?ApiProblemResponse
     {

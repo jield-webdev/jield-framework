@@ -15,13 +15,6 @@ use Psr\Container\ContainerInterface;
  */
 final class ObjectMultiCheckboxFactory implements FactoryInterface
 {
-    /**
-     * {@inheritDoc}
-     *
-     * @param string $requestedName
-     *
-     * @return ObjectMultiCheckbox
-     */
     public function __invoke(
         ContainerInterface $container,
         string $requestedName,

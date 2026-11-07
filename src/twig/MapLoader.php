@@ -19,6 +19,9 @@ class MapLoader implements Loader\LoaderInterface
 {
     protected array $map = [];
 
+    /**
+     * @throws Error\LoaderError
+     */
     public function add(string $name, string $path): self
     {
         if ($this->exists($name)) {

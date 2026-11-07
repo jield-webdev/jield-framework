@@ -36,7 +36,6 @@ class Fieldset extends Element implements FieldsetInterface
     /** @var array<array-key, FieldsetInterface> */
     protected array $fieldsets = [];
 
-    /** @var array */
     protected array $messages = [];
 
     /** @var PriorityList<string, ElementInterface> */
@@ -44,8 +43,6 @@ class Fieldset extends Element implements FieldsetInterface
 
     /**
      * Hydrator to use with bound object
-     *
-     * @var null|Hydrator\HydratorInterface
      */
     protected ?HydratorInterface $hydrator = null;
 
@@ -58,8 +55,6 @@ class Fieldset extends Element implements FieldsetInterface
 
     /**
      * Should this fieldset be used as a base fieldset in the parent form ?
-     *
-     * @var bool
      */
     protected bool $useAsBaseFieldset = false;
 
@@ -121,7 +116,13 @@ class Fieldset extends Element implements FieldsetInterface
         return $this->factory;
     }
 
-    /** @inheritDoc */
+    /**
+     * @inheritDoc
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws Exception\ExceptionInterface
+     * @throws \Laminas\InputFilter\Exception\RuntimeException
+     * @throws \ReflectionException
+     */
     public function add(Traversable|ElementInterface|array $elementOrFieldset, array $flags = []): static
     {
         if (
@@ -171,7 +172,7 @@ class Fieldset extends Element implements FieldsetInterface
     /**
      * Retrieve a named element or fieldset
      *
-     * @return FieldsetInterface|ElementInterface
+     * @throws Exception\InvalidElementException
      */
     public function get(string $elementOrFieldset): ElementInterface
     {
@@ -203,7 +204,10 @@ class Fieldset extends Element implements FieldsetInterface
         return $this;
     }
 
-    /** @inheritDoc */
+    /**
+     * @inheritDoc
+     * @throws \Exception
+     */
     public function setPriority(string $elementOrFieldset, int $priority): static
     {
         $this->iterator->setPriority(name: $elementOrFieldset, priority: $priority);
@@ -353,8 +357,6 @@ class Fieldset extends Element implements FieldsetInterface
     /**
      * Set the object used by the hydrator
      *
-     * @param mixed $object
-     * @return static
      * @throws Exception\InvalidArgumentException
      */
     public function setObject(mixed $object): static
@@ -373,8 +375,6 @@ class Fieldset extends Element implements FieldsetInterface
 
     /**
      * Get the object used by the hydrator
-     *
-     * @return mixed
      */
     public function getObject(): mixed
     {
@@ -405,6 +405,7 @@ class Fieldset extends Element implements FieldsetInterface
      * Checks if the object can be set in this fieldset
      *
      * @param object|array $object
+     * @throws \ReflectionException
      */
     public function allowObjectBinding($object): bool
     {
@@ -422,8 +423,6 @@ class Fieldset extends Element implements FieldsetInterface
 
     /**
      * Set the hydrator to use when binding an object to the element
-     *
-     * @return static
      */
     public function setHydrator(HydratorInterface $hydrator): static
     {
@@ -439,6 +438,8 @@ class Fieldset extends Element implements FieldsetInterface
      *
      * @throws Exception\DomainException If hydrator is not found in hydrator
      *                                   manager or service manager.
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
      */
     public function setHydratorByName(string $hydratorName): void
     {
@@ -483,8 +484,7 @@ class Fieldset extends Element implements FieldsetInterface
     /**
      * Bind values to the bound object
      *
-     * @param  array|null $validationGroup
-     * @return mixed
+     * @throws \ReflectionException
      */
     public function bindValues(array $values = [], ?array $validationGroup = null): mixed
     {
@@ -536,8 +536,6 @@ class Fieldset extends Element implements FieldsetInterface
 
     /**
      * Set if this fieldset is used as a base fieldset
-     *
-     * @return static
      */
     public function setUseAsBaseFieldset(bool $useAsBaseFieldset): static
     {
@@ -555,6 +553,8 @@ class Fieldset extends Element implements FieldsetInterface
 
     /**
      * Extract values from the bound object
+     *
+     * @throws \ReflectionException
      */
     protected function extract(): array
     {

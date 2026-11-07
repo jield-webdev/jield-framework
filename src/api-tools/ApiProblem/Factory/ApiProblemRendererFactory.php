@@ -10,6 +10,9 @@ use Psr\Container\ContainerInterface;
 
 class ApiProblemRendererFactory
 {
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     public function __invoke(ContainerInterface $container): ApiProblemRenderer
     {
         /** @mago-var mixed $config */

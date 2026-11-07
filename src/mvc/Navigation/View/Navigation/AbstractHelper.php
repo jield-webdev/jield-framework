@@ -50,81 +50,59 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
     EventManagerAwareInterface,
     HelperInterface
 {
-    /** @var EventManagerInterface */
     protected ?EventManagerInterface $events = null;
 
     /**
      * AbstractContainer to operate on by default
-     *
-     * @var AbstractContainer
      */
     protected ?AbstractContainer $container = null;
 
     /**
      * The minimum depth a page must have to be included when rendering
-     *
-     * @var int
      */
     protected ?int $minDepth = null;
 
     /**
      * The maximum depth a page can have to be included when rendering
-     *
-     * @var int
      */
     protected ?int $maxDepth = null;
 
     /**
      * Indentation string
-     *
-     * @var string
      */
     protected string $indent = '';
 
     /**
      * ACL to use when iterating pages
-     *
-     * @var AclInterface|null
      */
     protected ?AclInterface $acl = null;
 
     /**
      * Whether invisible items should be rendered by this helper
-     *
-     * @var bool
      */
     protected bool $renderInvisible = false;
 
     /**
      * ACL role to use when iterating pages
-     *
-     * @var string|Acl\Role\RoleInterface|null
      */
     protected Acl\Role\RoleInterface|string|null $role = null;
 
-    /** @var ContainerInterface|null */
     protected ?ContainerInterface $serviceLocator = null;
 
     /**
      * Whether ACL should be used for filtering out pages
-     *
-     * @var bool
      */
     protected bool $useAcl = true;
 
     /**
      * Default ACL to use when iterating pages if not explicitly set in the
      * instance by calling {@link setAcl()}
-     *
-     * @var AclInterface
      */
     protected static ?AclInterface $defaultAcl = null;
 
     /**
      * Default ACL role to use when iterating pages if not explicitly set in the
      * instance by calling {@link setRole()}
-     *
-     * @var string|Acl\Role\RoleInterface|null
      */
     protected static Acl\Role\RoleInterface|string|null $defaultRole = null;
 
@@ -148,8 +126,7 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
      * an exception to be thrown.
      *
      * Implements {@link HelperInterface::__toString()}.
-     *
-     * @return string
+     * @throws Exception\ExceptionInterface
      */
     public function __toString(): string
     {
@@ -176,6 +153,7 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
      *                                          the values 'depth' and
      *                                          'page', or an empty array
      *                                          if not found
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function findActive(AbstractContainer $container, ?int $minDepth = null, ?int $maxDepth = -1): array
     {
@@ -230,10 +208,9 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
     /**
      * Verifies container and eventually fetches it from service locator if it is a string
      *
-     * @param string|AbstractContainer|null $container
-     * @return void
      * @param-out AbstractContainer|null $container
      * @throws Exception\InvalidArgumentException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     protected function parseContainer(AbstractContainer|string|null &$container = null): void
     {
@@ -323,9 +300,6 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
 
     /**
      * Determines whether a page should be allowed given certain parameters
-     *
-     * @param array $params
-     * @return  bool
      */
     protected function isAllowed(array $params): bool
     {
@@ -338,9 +312,6 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
 
     /**
      * Retrieve whitespace representation of $indent
-     *
-     * @param int|string $indent
-     * @return string
      */
     protected function getWhitespace(int|string $indent): string
     {
@@ -358,7 +329,7 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
      *
      * @param array $attribs an array where each key-value pair is converted
      *                         to an attribute name and value
-     * @return string
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     protected function htmlAttribs(array $attribs): string
     {
@@ -380,6 +351,7 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
      *
      * @param AbstractPage $page page to generate HTML for
      * @return string              HTML string (<a href="…">Label</a>)
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function htmlify(AbstractPage $page): string
     {
@@ -409,7 +381,7 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
     /**
      * Translate a message (for label, title, …)
      *
-     * @param string $message ID of the message to translate
+     * @param string|null $message ID of the message to translate; null produces an empty string.
      * @param string|null $textDomain Text domain (category name for the translations)
      * @return string             Translated message
      */
@@ -434,9 +406,6 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
      * Normalize an ID
      *
      * Overrides {@link View\Helper\AbstractHtmlElement::normalizeId()}.
-     *
-     * @param string $value
-     * @return string
      */
     protected function normalizeId(string $value): string
     {
@@ -451,8 +420,7 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
      *
      * Implements {@link HelperInterface::setAcl()}.
      *
-     * @param AclInterface $acl ACL object.
-     * @return static
+     * @param AclInterface|null $acl ACL object, or null to disable ACL checks.
      */
     public function setAcl(?AclInterface $acl = null): static
     {
@@ -481,8 +449,6 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
      * Checks if the helper has an ACL instance
      *
      * Implements {@link HelperInterface::hasAcl()}.
-     *
-     * @return bool
      */
     public function hasAcl(): bool
     {
@@ -495,8 +461,6 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
 
     /**
      * Set the event manager.
-     *
-     * @return void
      */
     public function setEventManager(EventManagerInterface $eventManager): void
     {
@@ -517,8 +481,6 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
      *
      * Internally, the helper will lazy-load an EM instance the first time it
      * requires one, but ideally it should be injected during instantiation.
-     *
-     * @return EventManagerInterface
      */
     public function getEventManager(): EventManagerInterface
     {
@@ -530,7 +492,7 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
      * Implements {@link HelperInterface::setContainer()}.
      *
      * @param string|AbstractContainer|null $container Default is null, meaning container will be reset.
-     * @return static
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function setContainer(Navigation\AbstractContainer|string|null $container = null): static
     {
@@ -559,8 +521,6 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
      * Checks if the helper has a container
      *
      * Implements {@link HelperInterface::hasContainer()}.
-     *
-     * @return bool
      */
     public function hasContainer(): bool
     {
@@ -570,9 +530,6 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
     /**
      * Set the indentation string for using in {@link render()}, optionally a
      * number of spaces to indent with
-     *
-     * @param int|string $indent
-     * @return static
      */
     public function setIndent(int|string $indent): static
     {
@@ -582,8 +539,6 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
 
     /**
      * Returns indentation
-     *
-     * @return string
      */
     public function getIndent(): string
     {
@@ -594,7 +549,6 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
      * Sets the maximum depth a page can have to be included when rendering
      *
      * @param int|numeric-string|null $maxDepth Default is null, which sets no maximum depth.
-     * @return static
      */
     public function setMaxDepth(int|string|null $maxDepth = null): static
     {
@@ -609,8 +563,6 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
 
     /**
      * Returns maximum depth a page can have to be included when rendering
-     *
-     * @return int|null
      */
     public function getMaxDepth(): ?int
     {
@@ -621,7 +573,6 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
      * Sets the minimum depth a page must have to be included when rendering
      *
      * @param int|numeric-string|null $minDepth Default is null, which sets no minimum depth.
-     * @return static
      */
     public function setMinDepth(int|string|null $minDepth = null): static
     {
@@ -636,8 +587,6 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
 
     /**
      * Returns minimum depth a page must have to be included when rendering
-     *
-     * @return int|null
      */
     public function getMinDepth(): ?int
     {
@@ -650,9 +599,6 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
 
     /**
      * Render invisible items?
-     *
-     * @param bool $renderInvisible
-     * @return static
      */
     public function setRenderInvisible(bool $renderInvisible = true): static
     {
@@ -662,8 +608,6 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
 
     /**
      * Return renderInvisible flag
-     *
-     * @return bool
      */
     public function getRenderInvisible(): bool
     {
@@ -678,7 +622,6 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
      * @param mixed $role [optional] role to set. Expects a string, an
      *                     instance of type {@link Acl\Role\RoleInterface}, or null. Default
      *                     is null, which will set no role.
-     * @return static
      * @throws Exception\InvalidArgumentException
      */
     public function setRole(mixed $role = null): static
@@ -700,8 +643,6 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
      * using {@link setRole()} or {@link setDefaultRole()}
      *
      * Implements {@link HelperInterface::getRole()}.
-     *
-     * @return string|Acl\Role\RoleInterface|null
      */
     public function getRole(): string|Acl\Role\RoleInterface|null
     {
@@ -716,8 +657,6 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
      * Checks if the helper has an ACL role
      *
      * Implements {@link HelperInterface::hasRole()}.
-     *
-     * @return bool
      */
     public function hasRole(): bool
     {
@@ -737,8 +676,6 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
      * Set the service locator.
      *
      * Used internally to pull named navigation containers to render.
-     *
-     * @return static
      */
     public function setServiceLocator(ContainerInterface $serviceLocator): static
     {
@@ -750,8 +687,6 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
      * Get the service locator.
      *
      * Used internally to pull named navigation containers to render.
-     *
-     * @return ContainerInterface|null
      */
     public function getServiceLocator(): ?ContainerInterface
     {
@@ -762,9 +697,6 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
      * Sets whether ACL should be used
      *
      * Implements {@link HelperInterface::setUseAcl()}.
-     *
-     * @param bool $useAcl
-     * @return static
      */
     public function setUseAcl(bool $useAcl = true): static
     {
@@ -776,8 +708,6 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
      * Returns whether ACL should be used
      *
      * Implements {@link HelperInterface::getUseAcl()}.
-     *
-     * @return bool
      */
     public function getUseAcl(): bool
     {
@@ -789,9 +719,8 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
     /**
      * Sets default ACL to use if another ACL is not explicitly set
      *
-     * @param AclInterface $acl [optional] ACL object. Default is null, which
+     * @param AclInterface|null $acl [optional] ACL object. Default is null, which
      *                      sets no ACL object.
-     * @return void
      */
     public static function setDefaultAcl(?AclInterface $acl = null): void
     {
@@ -805,7 +734,6 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
      * @param mixed $role [optional] role to set. Expects null, string, or an
      *                     instance of {@link Acl\Role\RoleInterface}. Default is null, which
      *                     sets no default role.
-     * @return void
      * @throws Exception\InvalidArgumentException If role is invalid.
      */
     public static function setDefaultRole(mixed $role = null): void
@@ -822,8 +750,6 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
 
     /**
      * Attaches default ACL listeners, if ACLs are in use
-     *
-     * @return void
      */
     protected function setDefaultListeners(): void
     {
@@ -846,8 +772,6 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
      *
      * Ensures that the returned event manager has a shared manager
      * composed.
-     *
-     * @return EventManager
      */
     private function createEventManager(): EventManager
     {

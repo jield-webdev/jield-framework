@@ -39,6 +39,10 @@ final class UpdateIndex extends Command
         );
     }
 
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \Exception
+     */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         /** @mago-var mixed $index */

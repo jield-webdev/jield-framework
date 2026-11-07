@@ -13,6 +13,9 @@ use Jield\Mvc\MvcEvent;
 
 class RouteParams extends AbstractPlugin
 {
+    /**
+     * @throws RuntimeException
+     */
     public function __invoke(): array
     {
         $controller = $this->getController();

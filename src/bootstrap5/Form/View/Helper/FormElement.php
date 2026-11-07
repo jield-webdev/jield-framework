@@ -65,6 +65,9 @@ class FormElement extends Helper\FormElement
 
     private ?Helper\FormElementErrors $formElementErrors = null;
 
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     public function __construct(HelperPluginManager $viewHelperManager, TranslatorInterface $translator)
     {
         parent::__construct($viewHelperManager);
@@ -80,6 +83,10 @@ class FormElement extends Helper\FormElement
         $this->translator = $translator;
     }
 
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \Jield\Form\Exception\ExceptionInterface
+     */
     public function __invoke(
         ?ElementInterface $element = null,
         string|bool $type = self::TYPE_HORIZONTAL,
@@ -105,6 +112,10 @@ class FormElement extends Helper\FormElement
         return $this;
     }
 
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \Jield\Form\Exception\ExceptionInterface
+     */
     public function render(ElementInterface $element): string
     {
         if ($element->getAttribute(key: 'type') === 'select') {
@@ -173,6 +184,10 @@ class FormElement extends Helper\FormElement
         return parent::render(element: $element);
     }
 
+    /**
+     * @throws \Jield\Form\Exception\ExceptionInterface
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     protected function renderType(ElementInterface $element): ?string
     {
         $type = $element->getAttribute(key: 'type');
@@ -249,11 +264,19 @@ class FormElement extends Helper\FormElement
         return Assert::notNull($this->formDescription)->__invoke(element: $element);
     }
 
+    /**
+     * @throws \Jield\Form\Exception\ExceptionInterface
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     protected function hasFormElementError(ElementInterface $element): bool
     {
         return '' !== $this->parseFormElementError(element: $element);
     }
 
+    /**
+     * @throws \Jield\Form\Exception\ExceptionInterface
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     protected function parseFormElementError(ElementInterface $element): string
     {
         Assert::notNull($this->formElementErrors)->setMessageOpenFormat(
@@ -339,6 +362,9 @@ class FormElement extends Helper\FormElement
         };
     }
 
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     protected function parseLabel(ElementInterface $element): string
     {
         $label = $this->findLabel(element: $element);

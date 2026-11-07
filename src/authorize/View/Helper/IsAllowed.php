@@ -15,11 +15,6 @@ class IsAllowed
         protected Authorize $authorizeService,
     ) {}
 
-    /**
-     * @param mixed $resource
-     * @param mixed $privilege
-     * @return bool
-     */
     public function __invoke(mixed $resource, mixed $privilege = null): bool
     {
         return $this->authorizeService->isAllowed(resource: \Jield\Stdlib\Value::instanceOrString($resource, \Laminas\Permissions\Acl\Resource\ResourceInterface::class), privilege: \Webmozart\Assert\Assert::nullOrString($privilege));

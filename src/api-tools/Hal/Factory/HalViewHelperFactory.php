@@ -20,6 +20,10 @@ use function sprintf;
 
 class HalViewHelperFactory
 {
+    /**
+     * @throws Exception\DomainException
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     public function __invoke(ContainerInterface $container): Plugin\Hal
     {
         $rendererOptions = Service::get($container, RendererOptions::class);

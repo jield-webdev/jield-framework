@@ -65,8 +65,6 @@ class FormElement extends AbstractHelper
 
     /**
      * Default helper name
-     *
-     * @var string
      */
     protected string $defaultHelper = self::DEFAULT_HELPER;
 
@@ -82,7 +80,7 @@ class FormElement extends AbstractHelper
      * @template T as null|ElementInterface
      * @psalm-param T $element
      * @psalm-return (T is null ? static : string)
-     * @return string|self
+     * @throws \Laminas\ServiceManager\Exception\InvalidServiceException
      */
     public function __invoke(?ElementInterface $element = null): string|static
     {
@@ -98,6 +96,8 @@ class FormElement extends AbstractHelper
      *
      * Introspects the element type and attributes to determine which
      * helper to utilize when rendering.
+     *
+     * @throws \Laminas\ServiceManager\Exception\InvalidServiceException
      */
     public function render(ElementInterface $element): string
     {
@@ -118,8 +118,6 @@ class FormElement extends AbstractHelper
 
     /**
      * Set default helper name
-     *
-     * @return static
      */
     public function setDefaultHelper(string $name): static
     {
@@ -130,8 +128,6 @@ class FormElement extends AbstractHelper
 
     /**
      * Add form element type to plugin map
-     *
-     * @return static
      */
     public function addType(string $type, string $plugin): static
     {
@@ -144,7 +140,6 @@ class FormElement extends AbstractHelper
      * Add instance class to plugin map
      *
      * @param class-string<ElementInterface> $class
-     * @return static
      */
     public function addClass(string $class, string $plugin): static
     {
@@ -155,6 +150,8 @@ class FormElement extends AbstractHelper
 
     /**
      * Render element by helper name
+     *
+     * @throws \Laminas\ServiceManager\Exception\InvalidServiceException
      */
     protected function renderHelper(string $name, ElementInterface $element): string
     {
@@ -166,6 +163,8 @@ class FormElement extends AbstractHelper
 
     /**
      * Render element by instance map
+     *
+     * @throws \Laminas\ServiceManager\Exception\InvalidServiceException
      */
     protected function renderInstance(ElementInterface $element): ?string
     {
@@ -180,6 +179,8 @@ class FormElement extends AbstractHelper
 
     /**
      * Render element by type map
+     *
+     * @throws \Laminas\ServiceManager\Exception\InvalidServiceException
      */
     protected function renderType(ElementInterface $element): ?string
     {

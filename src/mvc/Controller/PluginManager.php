@@ -38,8 +38,6 @@ class PluginManager extends AbstractPluginManager
 {
     /**
      * Plugins must be of this type.
-     *
-     * @var string
      */
     protected string $instanceOf = PluginInterface::class;
 
@@ -87,6 +85,7 @@ class PluginManager extends AbstractPluginManager
      * @param string $id
      * @param null|array $options Options to use when creating the instance.
      * @return PluginInterface
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function get($id, ?array $options = null): mixed
     {
@@ -99,8 +98,6 @@ class PluginManager extends AbstractPluginManager
 
     /**
      * Set controller
-     *
-     * @return static
      */
     public function setController(DispatchableInterface $controller): static
     {
@@ -111,8 +108,6 @@ class PluginManager extends AbstractPluginManager
 
     /**
      * Retrieve controller instance
-     *
-     * @return null|DispatchableInterface
      */
     public function getController(): ?DispatchableInterface
     {
@@ -121,9 +116,6 @@ class PluginManager extends AbstractPluginManager
 
     /**
      * Inject a helper instance with the registered controller
-     *
-     * @param object $plugin
-     * @return void
      */
     public function injectController(object $plugin): void
     {

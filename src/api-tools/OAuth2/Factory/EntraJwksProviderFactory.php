@@ -11,6 +11,9 @@ use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 
 final class EntraJwksProviderFactory
 {
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     public function __invoke(ContainerInterface $container): EntraJwksProvider
     {
         /** @mago-var mixed $config */

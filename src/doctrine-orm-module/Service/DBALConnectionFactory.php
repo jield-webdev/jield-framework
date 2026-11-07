@@ -25,11 +25,10 @@ use function is_string;
 final class DBALConnectionFactory extends AbstractFactory
 {
     /**
-     * {@inheritDoc}
-     *
-     * @param string $requestedName
-     *
-     * @return Connection
+     * @throws \Doctrine\DBAL\Exception
+     * @throws \RuntimeException
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
      */
     public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): Connection
     {

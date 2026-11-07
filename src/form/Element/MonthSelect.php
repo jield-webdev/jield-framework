@@ -24,49 +24,36 @@ class MonthSelect extends Element implements InputProviderInterface, ElementPrep
 {
     /**
      * Select form element that contains values for month
-     *
-     * @var Select
      */
     protected Select $monthElement;
 
     /**
      * Select form element that contains values for year
-     *
-     * @var Select
      */
     protected Select $yearElement;
 
     /**
      * Min year to use for the select (default: current year - 100)
-     *
-     * @var int
      */
     protected int $minYear;
 
     /**
      * Max year to use for the select (default: current year)
-     *
-     * @var int
      */
     protected int $maxYear;
 
     /**
      * If set to true, it will generate an empty option for every select (this is mainly needed by most JavaScript
      * libraries to allow to have a placeholder)
-     *
-     * @var bool
      */
     protected bool $createEmptyOption = false;
 
     /**
      * If set to true, view helpers will render delimiters between <select> elements, according to the
      * specified locale
-     *
-     * @var bool
      */
     protected bool $renderDelimiters = true;
 
-    /** @var null|ValidatorInterface */
     protected ?ValidatorInterface $validator = null;
 
     /**
@@ -153,7 +140,6 @@ class MonthSelect extends Element implements InputProviderInterface, ElementPrep
      * Set the month attributes
      *
      * @param array<string, scalar|null> $monthAttributes
-     * @return static
      */
     public function setMonthAttributes(array $monthAttributes): static
     {
@@ -175,7 +161,6 @@ class MonthSelect extends Element implements InputProviderInterface, ElementPrep
      * Set the year attributes
      *
      * @param array<string, scalar|null> $yearAttributes
-     * @return static
      */
     public function setYearAttributes(array $yearAttributes): static
     {
@@ -193,9 +178,6 @@ class MonthSelect extends Element implements InputProviderInterface, ElementPrep
         return $this->yearElement->getAttributes();
     }
 
-    /**
-     * @return static
-     */
     public function setMinYear(int $minYear): static
     {
         $this->minYear = $minYear;
@@ -207,9 +189,6 @@ class MonthSelect extends Element implements InputProviderInterface, ElementPrep
         return $this->minYear;
     }
 
-    /**
-     * @return static
-     */
     public function setMaxYear(int $maxYear): static
     {
         $this->maxYear = $maxYear;
@@ -221,9 +200,6 @@ class MonthSelect extends Element implements InputProviderInterface, ElementPrep
         return $this->maxYear;
     }
 
-    /**
-     * @return static
-     */
     public function setShouldCreateEmptyOption(bool $createEmptyOption): static
     {
         $this->createEmptyOption = $createEmptyOption;
@@ -235,9 +211,6 @@ class MonthSelect extends Element implements InputProviderInterface, ElementPrep
         return $this->createEmptyOption;
     }
 
-    /**
-     * @return static
-     */
     public function setShouldRenderDelimiters(bool $renderDelimiters): static
     {
         $this->renderDelimiters = $renderDelimiters;
@@ -252,6 +225,7 @@ class MonthSelect extends Element implements InputProviderInterface, ElementPrep
     /**
      * @inheritDoc
      * @param mixed $value
+     * @throws InvalidArgumentException
      */
     public function setValue($value): static
     {

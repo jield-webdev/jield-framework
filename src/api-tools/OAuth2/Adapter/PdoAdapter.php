@@ -28,6 +28,9 @@ class PdoAdapter extends OAuth2Pdo
         }
     }
 
+    /**
+     * @throws RuntimeException
+     */
     #[Override]
     public function checkClientCredentials($client_id, #[SensitiveParameter] $client_secret = null): bool
     {

@@ -38,7 +38,7 @@ final class Module implements ConfigProviderInterface, BootstrapListenerInterfac
         $sm = $app->getServiceManager();
         $em = $app->getEventManager();
 
-        $em->attach(MvcEvent::EVENT_RENDER, static function (MvcEvent $e) use ($sm): void {
+        $em->attach(MvcEvent::EVENT_RENDER, /** @throws \Psr\Container\ContainerExceptionInterface */ static function (MvcEvent $e) use ($sm): void {
             $view = Service::get($sm, HelperPluginManager::class, 'ViewHelperManager');
             /** @var GoogleAnalytics $plugin */
             $plugin = $view->get('googleAnalytics');

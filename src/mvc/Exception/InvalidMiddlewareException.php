@@ -15,7 +15,6 @@ class InvalidMiddlewareException extends RuntimeException
 
     /**
      * @param string $middlewareName
-     * @return self
      */
     public static function fromMiddlewareName($middlewareName): InvalidMiddlewareException
     {
@@ -24,17 +23,11 @@ class InvalidMiddlewareException extends RuntimeException
         return $instance;
     }
 
-    /**
-     * @return self
-     */
     public static function fromNull(): InvalidMiddlewareException
     {
         return new self('Middleware name cannot be null');
     }
 
-    /**
-     * @return string
-     */
     public function toMiddlewareName(): string
     {
         return $this->middlewareName ?? '';

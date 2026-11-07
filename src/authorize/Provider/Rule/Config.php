@@ -9,9 +9,6 @@ namespace Jield\Authorize\Provider\Rule;
  */
 class Config implements ProviderInterface
 {
-    /**
-     * @param array $rules
-     */
     public function __construct(
         protected array $rules = [],
     ) {}

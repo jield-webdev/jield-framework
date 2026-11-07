@@ -31,6 +31,7 @@ final class HttpAdapterFactory
     /**
      * Create an HttpAuth instance based on the configuration passed.
      *
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public static function factory(array $config, ?ContainerInterface $container = null): HttpAuth
     {

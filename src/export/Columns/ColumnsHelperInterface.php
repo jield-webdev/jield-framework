@@ -15,5 +15,6 @@ interface ColumnsHelperInterface
 
     public function getName(): string;
 
+    /** @return array<array-key, string> Names of exports that must run before this export. */
     public function getDependencies(): array;
 }

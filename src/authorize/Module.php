@@ -21,6 +21,9 @@ use Webmozart\Assert\Assert;
  */
 class Module implements BootstrapListenerInterface, ConfigProviderInterface, DependencyIndicatorInterface
 {
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     public function onBootstrap(EventInterface $e): void
     {
         /** @var ApplicationInterface $app */

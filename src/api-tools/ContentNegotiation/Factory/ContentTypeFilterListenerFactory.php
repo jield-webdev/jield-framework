@@ -11,6 +11,9 @@ use Psr\Container\ContainerInterface;
 
 class ContentTypeFilterListenerFactory
 {
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     public function __invoke(ContainerInterface $container): ContentTypeFilterListener
     {
         $listener = new ContentTypeFilterListener();

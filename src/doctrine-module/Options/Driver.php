@@ -22,8 +22,6 @@ final class Driver extends AbstractOptions
      * All drivers (except DriverChain) require paths to work on. You
      * may set this value as a string (for a single path) or an array
      * for multiple paths.
-     *
-     * @var array
      */
     protected array $paths = [];
 
@@ -37,8 +35,6 @@ final class Driver extends AbstractOptions
      * Set the driver keys to use which are assembled as
      * "doctrine.driver.{key}" and pulled from the service
      * locator. This option is only valid for DriverChain.
-     *
-     * @var array
      */
     protected array $drivers = [];
 
@@ -52,19 +48,16 @@ final class Driver extends AbstractOptions
         return $this->class;
     }
 
-    /** @param array $drivers */
     public function setDrivers(array $drivers): void
     {
         $this->drivers = $drivers;
     }
 
-    /** @return array */
     public function getDrivers(): array
     {
         return $this->drivers;
     }
 
-    /** @param null $extension */
     public function setExtension(null $extension): void
     {
         $this->extension = $extension;
@@ -75,13 +68,11 @@ final class Driver extends AbstractOptions
         return $this->extension;
     }
 
-    /** @param array $paths */
     public function setPaths(array $paths): void
     {
         $this->paths = $paths;
     }
 
-    /** @return array */
     public function getPaths(): array
     {
         return $this->paths;

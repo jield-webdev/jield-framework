@@ -32,7 +32,9 @@ class Module implements ConfigProviderInterface, BootstrapListenerInterface
     /**
      * Callback method for dispatch and dispatch.error events.
      *
-     * @param MvcEvent $event
+     * @throws Exception\RuntimeException
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
      */
     public function onDispatch(MvcEvent $event): ?Response
     {
@@ -58,6 +60,7 @@ class Module implements ConfigProviderInterface, BootstrapListenerInterface
 
     /**
      * {@inheritDoc}
+     * @throws \ReflectionException
      */
     #[Override]
     public function onBootstrap(EventInterface $e): void

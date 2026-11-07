@@ -37,6 +37,7 @@ class Request extends BaseRequest
      * preventing situations of memory exhaustion.
      *
      * @return resource Stream
+     * @throws RuntimeException
      */
     public function getContentAsStream()
     {

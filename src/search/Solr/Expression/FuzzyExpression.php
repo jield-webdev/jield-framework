@@ -21,8 +21,6 @@ class FuzzyExpression extends Expression implements Stringable
 
     /**
      * Create new fuzzy query object
-     *
-     * @param string|ExpressionInterface $expr
      */
     #[Pure]
     public function __construct(ExpressionInterface|string $expr, ?float $similarity = null)

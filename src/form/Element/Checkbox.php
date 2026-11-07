@@ -16,16 +16,12 @@ class Checkbox extends Element implements InputProviderInterface
         'type' => 'checkbox',
     ];
 
-    /** @var null|ValidatorInterface */
     protected ?ValidatorInterface $validator = null;
 
-    /** @var bool */
     protected bool $useHiddenElement = true;
 
-    /** @var null|string */
     protected ?string $uncheckedValue = '0';
 
-    /** @var string */
     protected string $checkedValue = '1';
 
     /**
@@ -57,8 +53,6 @@ class Checkbox extends Element implements InputProviderInterface
 
     /**
      * Do we render hidden element?
-     *
-     * @return static
      */
     public function setUseHiddenElement(bool $useHiddenElement): static
     {
@@ -76,8 +70,6 @@ class Checkbox extends Element implements InputProviderInterface
 
     /**
      * Set the value to use when checkbox is unchecked
-     *
-     * @return static
      */
     public function setUncheckedValue(?string $uncheckedValue): static
     {
@@ -95,8 +87,6 @@ class Checkbox extends Element implements InputProviderInterface
 
     /**
      * Set the value to use when checkbox is checked
-     *
-     * @return static
      */
     public function setCheckedValue(string $checkedValue): static
     {
@@ -163,7 +153,6 @@ class Checkbox extends Element implements InputProviderInterface
      * Checks or unchecks the checkbox.
      *
      * @param bool $value The flag to set.
-     * @return static
      */
     public function setChecked(bool $value): static
     {

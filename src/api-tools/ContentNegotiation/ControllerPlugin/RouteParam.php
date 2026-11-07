@@ -14,6 +14,9 @@ use Webmozart\Assert\Assert;
 
 class RouteParam extends AbstractPlugin
 {
+    /**
+     * @throws RuntimeException
+     */
     public function __invoke(?string $param = null, mixed $default = null): mixed
     {
         $controller = $this->getController();

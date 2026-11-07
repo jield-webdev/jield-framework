@@ -35,6 +35,7 @@ class Module implements BootstrapListenerInterface, ConfigProviderInterface
 {
     /**
      * {@inheritDoc}
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function onBootstrap(EventInterface $e): void
     {

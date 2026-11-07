@@ -29,8 +29,6 @@ class ModuleManager implements ModuleManagerInterface
 
     /**
      * True if modules have already been loaded
-     *
-     * @var bool
      */
     protected bool $modulesAreLoaded = false;
 
@@ -45,7 +43,7 @@ class ModuleManager implements ModuleManagerInterface
     /**
      * Handle the loadModules event
      *
-     * @return void
+     * @throws Exception\RuntimeException
      */
     public function onLoadModules(): void
     {
@@ -66,7 +64,6 @@ class ModuleManager implements ModuleManagerInterface
      *
      * @triggers loadModules
      * @triggers loadModules.post
-     * @return static
      */
     #[Override]
     public function loadModules(): static
@@ -96,7 +93,6 @@ class ModuleManager implements ModuleManagerInterface
     /**
      * Load a specific module by name.
      *
-     * @param string $moduleName
      * @return mixed Module's Module class
      * @throws Exception\RuntimeException
      * @triggers loadModule.resolve
@@ -185,9 +181,6 @@ class ModuleManager implements ModuleManagerInterface
 
     /**
      * Get an instance of a module class by the module name
-     *
-     * @param string $moduleName
-     * @return mixed
      */
     public function getModule(string $moduleName): mixed
     {
@@ -196,8 +189,6 @@ class ModuleManager implements ModuleManagerInterface
 
     /**
      * Get the array of module names that this manager should load.
-     *
-     * @return array
      */
     #[Override]
     public function getModules(): array
@@ -209,7 +200,6 @@ class ModuleManager implements ModuleManagerInterface
      * Set an array or Traversable of module names that this module manager should load.
      *
      * @param mixed $modules array or Traversable of module names
-     * @return static
      * @throws Exception\InvalidArgumentException
      */
     #[Override]
@@ -229,8 +219,6 @@ class ModuleManager implements ModuleManagerInterface
 
     /**
      * Get the module event
-     *
-     * @return ModuleEvent
      */
     public function getEvent(): ModuleEvent
     {
@@ -242,8 +230,6 @@ class ModuleManager implements ModuleManagerInterface
 
     /**
      * Set the module event
-     *
-     * @return static
      */
     public function setEvent(ModuleEvent $event): static
     {
@@ -254,8 +240,6 @@ class ModuleManager implements ModuleManagerInterface
 
     /**
      * Set the event manager instance used by this module manager.
-     *
-     * @return void
      */
     #[Override]
     public function setEventManager(EventManagerInterface $eventManager): void
@@ -273,8 +257,6 @@ class ModuleManager implements ModuleManagerInterface
      * Retrieve the event manager
      *
      * Lazy-loads an EventManager instance if none registered.
-     *
-     * @return EventManagerInterface
      */
     #[Override]
     public function getEventManager(): EventManagerInterface
@@ -287,8 +269,6 @@ class ModuleManager implements ModuleManagerInterface
 
     /**
      * Register the default event listeners
-     *
-     * @param EventManagerInterface $events
      */
     protected function attachDefaultListeners(EventManagerInterface $events): void
     {

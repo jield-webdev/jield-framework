@@ -13,6 +13,9 @@ use Webmozart\Assert\Assert;
 
 final class EntraTokenValidatorFactory
 {
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     public function __invoke(ContainerInterface $container): EntraTokenValidator
     {
         $keys = Service::get($container, EntraJwksProvider::class);

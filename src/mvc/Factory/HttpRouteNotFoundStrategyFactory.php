@@ -16,11 +16,6 @@ class HttpRouteNotFoundStrategyFactory implements FactoryInterface
 {
     use HttpViewManagerConfigTrait;
 
-    /**
-     * @param  string $requestedName
-     * @param  null|array $options
-     * @return RouteNotFoundStrategy
-     */
     public function __invoke(
         ContainerInterface $container,
         string $requestedName,

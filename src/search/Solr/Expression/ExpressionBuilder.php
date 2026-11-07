@@ -63,8 +63,6 @@ class ExpressionBuilder
 
     /**
      * Create boost expression: <expr>^<boost>
-     *
-     * @param string|ExpressionInterface|null $expr
      */
     #[Pure]
     public function boost(ExpressionInterface|string|null $expr, ?float $boost): ?ExpressionInterface
@@ -79,7 +77,7 @@ class ExpressionBuilder
     /**
      * Create proximity match expression: "<word1> <word2>"~<proximity>
      *
-     * @param mixed $proximity
+     * @throws InvalidArgumentException
      */
     public function prx(ExpressionInterface|string|null $word = null, mixed $proximity = null): ?ExpressionInterface
     {
@@ -131,8 +129,7 @@ class ExpressionBuilder
     /**
      * Create fuzzy expression: <expr>~<similarity>
      *
-     * @param string|ExpressionInterface|null $expr
-     * @param float $similarity Similarity between 0.0 und 1.0
+     * @param float|null $similarity Similarity between 0.0 and 1.0, or null to omit the expression.
      */
     #[Pure]
     public function fzz(ExpressionInterface|string|null $expr, ?float $similarity = null): ?ExpressionInterface
@@ -157,8 +154,6 @@ class ExpressionBuilder
 
     /**
      * Create wildcard expression: <prefix>?, <prefix>*, <prefix>?<suffix> or <prefix>*<suffix>
-     *
-     * @param ExpressionInterface|string $suffix
      */
     public function wild(?string $wildcard = '*', ExpressionInterface|string $suffix = '*'): ?ExpressionInterface
     {
@@ -179,7 +174,6 @@ class ExpressionBuilder
      * Create bool, prohibited expression using the NOT notation, usable in OR/AND expressions:
      * (*:* NOT <expr>), e.g. (*:* NOT fieldName:*)
      *
-     * @param string|ExpressionInterface|null $expr
      * @return ExpressionInterface|null
      */
     #[Pure]
@@ -203,7 +197,6 @@ class ExpressionBuilder
      *      false => prohibited (-)
      *      null => neutral (<empty>)
      *
-     * @param string|ExpressionInterface|null $expr
      * @param bool|null $operator @codingStandardsIgnoreLine
      * @return ExpressionInterface|string|null
      */
@@ -225,7 +218,6 @@ class ExpressionBuilder
     /**
      * Create bool, required expression: +<expr>
      *
-     * @param string|ExpressionInterface|null $expr
      * @return ExpressionInterface|null
      */
     #[Pure]
@@ -241,7 +233,6 @@ class ExpressionBuilder
     /**
      * Create bool, prohibited expression: -<expr>
      *
-     * @param string|ExpressionInterface|null $expr
      * @return ExpressionInterface|null
      */
     #[Pure]
@@ -313,8 +304,6 @@ class ExpressionBuilder
 
     /**
      * Returns a query "*:*" which means find all if $expr is empty
-     *
-     * @param string|ExpressionInterface|null $expr
      */
     public function all(ExpressionInterface|string|null $expr = null): mixed
     {
@@ -361,7 +350,6 @@ class ExpressionBuilder
      * Create grouped expression: (<expr1> <expr2> <expr3>)
      *
      * @param array<array-key, mixed>|ExpressionInterface|string|null $expr
-     * @param string|null $type
      */
     #[Pure]
     public function grp(
@@ -377,8 +365,6 @@ class ExpressionBuilder
 
     /**
      * Return string treated as literal (unescaped, unquoted)
-     *
-     * @param string|ExpressionInterface|null $expr
      */
     #[Pure]
     public function lit(ExpressionInterface|string|null $expr): ?ExpressionInterface
@@ -402,8 +388,6 @@ class ExpressionBuilder
 
     /**
      * Create term expression: <expr>
-     *
-     * @param string|ExpressionInterface|null $expr
      */
     #[Pure]
     public function eq(ExpressionInterface|string|null $expr): ?ExpressionInterface
@@ -421,8 +405,6 @@ class ExpressionBuilder
 
     /**
      * Create a date expression for a specific day
-     *
-     * @param mixed $date
      */
     #[Pure]
     public function day(mixed $date = null): ?ExpressionInterface
@@ -521,8 +503,6 @@ class ExpressionBuilder
      * Create a function expression of name $function
      *
      * You can either pass an array of parameters, a single parameter or a ParameterExpression
-     *
-     * @param array|ExpressionInterface|string|null $parameters
      */
     #[Pure]
     public function func(
@@ -544,7 +524,7 @@ class ExpressionBuilder
 
     /**
      * @param mixed|mixed[] $params
-     * @param mixed $shortForm
+     * @throws InvalidArgumentException
      */
     public function localParams(string $type, mixed $params = [], mixed $shortForm = true): ?ExpressionInterface
     {
@@ -617,7 +597,6 @@ class ExpressionBuilder
         return new GeolocationExpression(latitude: $latitude, longitude: $longitude, precision: $precision);
     }
 
-    /** @param string|ExpressionInterface|null $expr */
     public function noCache(ExpressionInterface|string|null $expr = null): ?ExpressionInterface
     {
         if ($this->ignore(expr: $expr)) {
@@ -633,7 +612,6 @@ class ExpressionBuilder
         return new LocalParamsExpression(type: $tag, params: [$tag => $value], shortForm: true);
     }
 
-    /** @param string|ExpressionInterface|null $expr */
     public function tag(string $tagName, ExpressionInterface|string|null $expr = null): ?ExpressionInterface
     {
         if ($this->ignore(expr: $expr)) {
@@ -643,7 +621,6 @@ class ExpressionBuilder
         return $this->comp(expr: [$this->shortLocalParams(tag: 'tag', value: $tagName), $expr], type: null);
     }
 
-    /** @param string|ExpressionInterface|null $expr */
     public function excludeTag(string $tagName, ExpressionInterface|string|null $expr = null): ?ExpressionInterface
     {
         if ($this->ignore(expr: $expr)) {
@@ -658,7 +635,7 @@ class ExpressionBuilder
      * - Strings between quotes are searched as full phrases
      * - Non-quoted parts are searched as individual words
      *
-     * @param string $searchQuery The search query string
+     * @param string $searchQuery The search query string.
      * @return ExpressionInterface|null The resulting expression
      */
     public function searchQuery(string $searchQuery): ?ExpressionInterface
@@ -737,7 +714,7 @@ class ExpressionBuilder
     /**
      * Create an advanced search query expression with field-specific search, wildcard options, and boosting
      *
-     * @param string $searchQuery The search query string
+     * @param string|null $searchQuery Query string; null or a wildcard matches every document.
      * @param list<string> $fields Fields to search on
      * @param array<string, float> $boostFields Field boosting values
      * @return ExpressionInterface|null The resulting expression

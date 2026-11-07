@@ -25,8 +25,6 @@ class MetadataMap
     protected array $map = [];
 
     /**
-     * Constructor
-     *
      * If provided, will pass $map to setMap().
      * If provided, will pass $hydrators to setHydratorManager().
      */
@@ -67,7 +65,6 @@ class MetadataMap
      * of options used to define a Metadata instance.
      *
      * @param array<array-key, mixed> $map
-     * @return static
      * @throws Exception\InvalidArgumentException
      */
     public function setMap(array $map): static
@@ -119,6 +116,7 @@ class MetadataMap
      * Lazy-loads the Metadata instance if one is not present for a matching class.
      *
      * @psalm-param object|class-string $class Object or classname for which to retrieve metadata
+     * @throws \ReflectionException
      */
     public function get($class): Metadata|false
     {
@@ -140,6 +138,7 @@ class MetadataMap
      * Retrieve a metadata instance.
      *
      * @psalm-param class-string $class
+     * @throws \ReflectionException
      */
     private function getMetadataInstance($class): Metadata
     {

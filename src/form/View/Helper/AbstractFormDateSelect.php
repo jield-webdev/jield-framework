@@ -23,29 +23,21 @@ abstract class AbstractFormDateSelect extends AbstractHelper
 {
     /**
      * FormSelect helper
-     *
-     * @var null|FormSelect
      */
     protected ?FormSelect $selectHelper = null;
 
     /**
      * Date formatter to use
-     *
-     * @var int
      */
     protected int $dateType;
 
     /**
      * Pattern to use for Date rendering
-     *
-     * @var null|string
      */
     protected ?string $pattern = null;
 
     /**
      * Locale to use
-     *
-     * @var null|string
      */
     protected ?string $locale = null;
 
@@ -115,8 +107,6 @@ abstract class AbstractFormDateSelect extends AbstractHelper
 
     /**
      * Set date formatter
-     *
-     * @return static
      */
     public function setDateType(int $dateType): static
     {
@@ -144,8 +134,6 @@ abstract class AbstractFormDateSelect extends AbstractHelper
 
     /**
      * Set locale
-     *
-     * @return static
      */
     public function setLocale(string $locale): static
     {
@@ -217,6 +205,8 @@ abstract class AbstractFormDateSelect extends AbstractHelper
 
     /**
      * Retrieve the FormSelect helper
+     *
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     protected function getSelectElementHelper(): FormSelect
     {

@@ -43,15 +43,12 @@ class Proxy implements ObjectManagerAwareInterface
 
     protected ?string $targetClass = null;
 
-    /** @var array */
     protected array $valueOptions = [];
 
-    /** @var array */
     protected array $findMethod = [];
 
     protected mixed $property = null;
 
-    /** @var array */
     protected array $optionAttributes = [];
 
     /** @var callable $labelGenerator A callable used to create a label based on an item in the collection an Entity */
@@ -76,7 +73,6 @@ class Proxy implements ObjectManagerAwareInterface
         $this->inflector = $inflector ?? InflectorFactory::create()->build();
     }
 
-    /** @param iterable $options */
     public function setOptions(iterable $options): void
     {
         if ($options instanceof Traversable) {
@@ -130,6 +126,9 @@ class Proxy implements ObjectManagerAwareInterface
         $this->setOptgroupDefault(optgroupDefault: Assert::string($options['optgroup_default']));
     }
 
+    /**
+     * @throws \Exception
+     */
     public function getValueOptions(): mixed
     {
         if ($this->valueOptions === []) {
@@ -139,6 +138,9 @@ class Proxy implements ObjectManagerAwareInterface
         return $this->valueOptions;
     }
 
+    /**
+     * @throws \Exception
+     */
     public function getObjects(): mixed
     {
         $this->loadObjects();
@@ -161,13 +163,11 @@ class Proxy implements ObjectManagerAwareInterface
         return $this->emptyItemLabel;
     }
 
-    /** @return array */
     public function getOptionAttributes(): array
     {
         return $this->optionAttributes;
     }
 
-    /** @param array $optionAttributes */
     public function setOptionAttributes(array $optionAttributes): void
     {
         $this->optionAttributes = $optionAttributes;
@@ -198,6 +198,8 @@ class Proxy implements ObjectManagerAwareInterface
 
     /**
      * Get the object manager
+     *
+     * @throws RuntimeException
      */
     public function getObjectManager(): ObjectManager
     {
@@ -222,6 +224,7 @@ class Proxy implements ObjectManagerAwareInterface
      * Get the target class
      *
      * @return class-string
+     * @throws RuntimeException
      */
     public function getTargetClass(): string
     {
@@ -298,8 +301,6 @@ class Proxy implements ObjectManagerAwareInterface
     }
 
     /** Set the findMethod property to specify the method to use on repository
-     *
-     * @param array $findMethod
      */
     public function setFindMethod(array $findMethod): static
     {
@@ -310,8 +311,6 @@ class Proxy implements ObjectManagerAwareInterface
 
     /**
      * Get findMethod definition
-     *
-     * @return array
      */
     public function getFindMethod(): array
     {
@@ -327,7 +326,10 @@ class Proxy implements ObjectManagerAwareInterface
         return Value::nullableString(call_user_func(Assert::isCallable($this->getLabelGenerator()), $targetEntity));
     }
 
-    /** @throws \RuntimeException */
+    /**
+     * @throws \RuntimeException
+     * @throws BadMethodCallException
+     */
     public function getValue(mixed $value): mixed
     {
         $metadata = $this->getObjectManager()->getClassMetadata(className: $this->getTargetClass());
@@ -366,8 +368,7 @@ class Proxy implements ObjectManagerAwareInterface
     /**
      * Load objects
      *
-     * @throws \RuntimeException
-     * @throws Exception\InvalidRepositoryResultException
+     * @throws \Exception
      */
     protected function loadObjects(): void
     {
@@ -433,7 +434,7 @@ class Proxy implements ObjectManagerAwareInterface
     /**
      * Load value options
      *
-     * @throws \RuntimeException
+     * @throws \Exception
      */
     protected function loadValueOptions(): void
     {

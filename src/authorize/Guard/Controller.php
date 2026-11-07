@@ -59,6 +59,9 @@ final class Controller extends AbstractGuard
         return sprintf('controller/%s', $controller);
     }
 
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     public function onDispatch(MvcEvent $event): mixed
     {
         $service = Service::get($this->container, AuthorizeService::class);

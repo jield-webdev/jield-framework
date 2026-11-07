@@ -10,6 +10,9 @@ use Psr\Container\ContainerInterface;
 
 final class LoggerAbstractFactory implements AbstractFactoryInterface
 {
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     public function canCreate(ContainerInterface $container, string $requestedName): bool
     {
         if (!str_starts_with($requestedName, Logger::class . '.')) {

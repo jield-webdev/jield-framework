@@ -19,8 +19,6 @@ class DefaultRenderingStrategy extends AbstractListenerAggregate
 {
     /**
      * Layout template - template used in root ViewModel of MVC event.
-     *
-     * @var string
      */
     protected string $layoutTemplate = 'layout';
 
@@ -44,7 +42,6 @@ class DefaultRenderingStrategy extends AbstractListenerAggregate
      * Set layout template value
      *
      * @param string $layoutTemplate
-     * @return static
      */
     public function setLayoutTemplate($layoutTemplate): static
     {
@@ -54,8 +51,6 @@ class DefaultRenderingStrategy extends AbstractListenerAggregate
 
     /**
      * Get layout template value
-     *
-     * @return string
      */
     public function getLayoutTemplate(): string
     {
@@ -65,7 +60,6 @@ class DefaultRenderingStrategy extends AbstractListenerAggregate
     /**
      * Render the view
      *
-     * @return Response|null
      * @throws Exception|Throwable
      */
     public function render(MvcEvent $e): ?Response

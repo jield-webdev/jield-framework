@@ -14,11 +14,6 @@ class ObjectRadio extends RadioElement
 {
     use GetProxy;
 
-    /**
-     * @param iterable $options
-     *
-     * @return static
-     */
     #[Override]
     public function setOptions(iterable $options): static
     {
@@ -39,6 +34,7 @@ class ObjectRadio extends RadioElement
 
     /**
      * {@inheritDoc}
+     * @throws \RuntimeException
      */
     #[Override]
     public function setValue($value): static
@@ -50,6 +46,7 @@ class ObjectRadio extends RadioElement
      * {@inheritDoc}
      *
      * @return ValueOptionSpec
+     * @throws \Exception
      */
     #[Override]
     public function getValueOptions(): array

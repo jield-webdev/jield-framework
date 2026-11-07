@@ -10,7 +10,6 @@ interface UserIdProviderInterface
 {
     /**
      * Return the current authenticated user identifier.
-     *
      */
     public function __invoke(RequestInterface $request): mixed;
 }

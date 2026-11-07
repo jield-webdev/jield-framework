@@ -19,7 +19,6 @@ class Element implements ElementAttributeRemovalInterface, ElementInterface, Ini
     /** @var array<string, scalar|null>  */
     protected array $attributes = [];
 
-    /** @var null|string */
     protected ?string $label = null;
 
     /** @var array Validation error messages */
@@ -28,10 +27,8 @@ class Element implements ElementAttributeRemovalInterface, ElementInterface, Ini
     /** @var array custom options */
     protected array $options = [];
 
-    /** @var mixed */
     protected mixed $value = null;
 
-    /** @var boolean */
     protected bool $hasValue = false;
 
     /**
@@ -53,8 +50,6 @@ class Element implements ElementAttributeRemovalInterface, ElementInterface, Ini
     /**
      * This function is automatically called when creating element with factory. It
      * allows to perform various operations (add elements...)
-     *
-     * @return void
      */
     public function init(): void {}
 
@@ -80,7 +75,6 @@ class Element implements ElementAttributeRemovalInterface, ElementInterface, Ini
      * - label_attributes: attributes to use when the label is rendered
      * - label_options: label specific options
      *
-     * @return static
      * @throws Exception\InvalidArgumentException
      */
     public function setOptions(iterable $options): static
@@ -116,8 +110,6 @@ class Element implements ElementAttributeRemovalInterface, ElementInterface, Ini
 
     /**
      * Return the specified option
-     *
-     * @return null|mixed
      */
     public function getOption(string $option): mixed
     {
@@ -130,9 +122,6 @@ class Element implements ElementAttributeRemovalInterface, ElementInterface, Ini
 
     /**
      * Set a single option for an element
-     *
-     * @param  mixed $value
-     * @return static
      */
     public function setOption(string $key, mixed $value): static
     {
@@ -164,8 +153,6 @@ class Element implements ElementAttributeRemovalInterface, ElementInterface, Ini
 
     /**
      * Remove a single attribute
-     *
-     * @return static
      */
     public function removeAttribute(string $key): static
     {
@@ -203,7 +190,6 @@ class Element implements ElementAttributeRemovalInterface, ElementInterface, Ini
      * Remove many attributes at once
      *
      * @param list<string> $keys
-     * @return static
      */
     public function removeAttributes(array $keys): static
     {
@@ -216,8 +202,6 @@ class Element implements ElementAttributeRemovalInterface, ElementInterface, Ini
 
     /**
      * Clear all attributes
-     *
-     * @return static
      */
     public function clearAttributes(): static
     {

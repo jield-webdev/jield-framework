@@ -11,8 +11,6 @@ class FormTel extends FormInput
 {
     /**
      * Attributes valid for the input tag type="tel"
-     *
-     * @var array
      */
     protected array $validTagAttributes = [
         'name' => true,

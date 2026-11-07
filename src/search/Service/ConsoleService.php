@@ -17,6 +17,11 @@ class ConsoleService
 {
     private array $services = [];
 
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
+     * @throws InvalidArgumentException
+     */
     public function __construct(
         private readonly ContainerInterface $container,
     ) {
@@ -42,6 +47,10 @@ class ConsoleService
         }
     }
 
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \Exception
+     */
     public function resetIndex(
         OutputInterface $output,
         string $index,
@@ -103,6 +112,10 @@ class ConsoleService
         );
     }
 
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \Exception
+     */
     public function syncIndex(OutputInterface $output): void
     {
         /** @mago-var mixed $service */
@@ -125,6 +138,11 @@ class ConsoleService
         }
     }
 
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
+     * @throws \RuntimeException
+     */
     public function testIndex(OutputInterface $output, bool $clearIndex = false): void
     {
         /** @mago-var mixed $service */

@@ -34,6 +34,7 @@ class RpcControllerFactory implements AbstractFactoryInterface
      * Determine if we can create a service with name
      *
      * @param string $requestedName
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     #[Override]
     public function canCreate(ContainerInterface $container, $requestedName): bool
@@ -64,6 +65,8 @@ class RpcControllerFactory implements AbstractFactoryInterface
      * @param string $requestedName
      * @throws ServiceNotCreatedException If the callable configuration value
      *     associated with the controller is not callable.
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
      */
     #[Override]
     public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): RpcController
@@ -93,6 +96,8 @@ class RpcControllerFactory implements AbstractFactoryInterface
      *
      * @param mixed $string String of the form class::method
      * @return callable
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
      */
     private function marshalCallable(mixed $string, ContainerInterface $container): callable|array
     {
@@ -131,6 +136,8 @@ class RpcControllerFactory implements AbstractFactoryInterface
 
     /**
      * Attempt to marshal a callable from a container.
+     *
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     private function marshalCallableFromContainer(
         string $class,

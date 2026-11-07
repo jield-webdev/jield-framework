@@ -11,6 +11,9 @@ use Psr\Container\ContainerInterface;
 
 final class ViewHelperAbstractFactory implements AbstractFactoryInterface
 {
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     public function canCreate(ContainerInterface $container, string $requestedName): bool
     {
         return (

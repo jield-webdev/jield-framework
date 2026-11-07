@@ -23,13 +23,13 @@ class Date extends DateTimeElement
     /**
      * Date format to use for DateTime values. By default, this is RFC-3339,
      * full-date (Y-m-d), which is what HTML5 dictates.
-     *
-     * @var string
      */
     protected string $format = 'Y-m-d';
 
     /**
      * Retrieves a DateStep Validator configured for a Date Input type
+     *
+     * @throws \DateMalformedIntervalStringException
      */
     protected function getStepValidator(): ValidatorInterface
     {

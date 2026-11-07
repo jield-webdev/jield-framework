@@ -14,7 +14,10 @@ class JsonRenderer implements RendererInterface
         return $this;
     }
 
-    /** @param mixed $templateNameOrModel JSON payload or view model. */
+    /**
+     * @param mixed $templateNameOrModel JSON payload or view model.
+     * @throws \JsonException
+     */
     public function render($templateNameOrModel, $variables = null): string
     {
         if (is_object($templateNameOrModel) && method_exists($templateNameOrModel, 'serialize')) {

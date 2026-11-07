@@ -34,15 +34,11 @@ class InjectTemplateListener extends AbstractListenerAggregate
 {
     /**
      * Array of controller namespace -> template mappings
-     *
-     * @var array
      */
     protected array $controllerMap = [];
 
     /**
      * Flag to force the use of the route match controller param
-     *
-     * @var boolean
      */
     protected bool $preferRouteMatchController = false;
 
@@ -59,8 +55,6 @@ class InjectTemplateListener extends AbstractListenerAggregate
      *
      * Template is derived from the controller found in the route match, and,
      * optionally, the action, if present.
-     *
-     * @return void
      */
     public function injectTemplate(MvcEvent $e): void
     {
@@ -107,8 +101,6 @@ class InjectTemplateListener extends AbstractListenerAggregate
 
     /**
      * Set map of controller namespace -> template pairs
-     *
-     * @return static
      */
     public function setControllerMap(array $map): static
     {
@@ -166,7 +158,6 @@ class InjectTemplateListener extends AbstractListenerAggregate
      * Inlines the logic from laminas-filter's Word\CamelCaseToDash filter.
      *
      * @param  string $name
-     * @return string
      */
     protected function inflectName($name): string
     {
@@ -188,7 +179,6 @@ class InjectTemplateListener extends AbstractListenerAggregate
      * Strip the namespace, and the suffix "Controller" if present.
      *
      * @param  string $controller
-     * @return string
      */
     protected function deriveControllerClass($controller): string
     {
@@ -214,9 +204,6 @@ class InjectTemplateListener extends AbstractListenerAggregate
         $this->preferRouteMatchController = $preferRouteMatchController;
     }
 
-    /**
-     * @return boolean
-     */
     public function isPreferRouteMatchController(): bool
     {
         return $this->preferRouteMatchController;

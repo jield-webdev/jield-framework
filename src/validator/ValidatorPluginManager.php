@@ -39,6 +39,7 @@ final class ValidatorPluginManager extends AbstractSingleInstancePluginManager
 
     /**
      * @param ServiceManagerConfiguration $config
+     * @throws \Laminas\ServiceManager\Exception\InvalidServiceException
      */
     public function __construct(ContainerInterface $creationContext, array $config = [])
     {

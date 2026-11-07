@@ -15,7 +15,6 @@ use function key;
 class LocalParamsExpression extends Expression implements Stringable
 {
     /**
-     * @param string|ExpressionInterface $type
      * @param mixed[] $params
      */
     public function __construct(

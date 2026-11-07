@@ -11,6 +11,9 @@ use Psr\Container\ContainerInterface;
 
 class AcceptFilterListenerFactory
 {
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     public function __invoke(ContainerInterface $container): AcceptFilterListener
     {
         $listener = new AcceptFilterListener();

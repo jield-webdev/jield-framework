@@ -15,7 +15,6 @@ class ObjectRepository implements StorageInterface
 {
     protected AuthenticationOptions $options;
 
-    /** @param array|AuthenticationOptions $options */
     public function setOptions(array|AuthenticationOptions $options): ObjectRepository
     {
         if (!$options instanceof AuthenticationOptions) {
@@ -27,11 +26,6 @@ class ObjectRepository implements StorageInterface
         return $this;
     }
 
-    /**
-     * Constructor
-     *
-     * @param array|AuthenticationOptions $options
-     */
     public function __construct(array|AuthenticationOptions $options = [])
     {
         $this->setOptions(options: $options);
@@ -60,6 +54,8 @@ class ObjectRepository implements StorageInterface
     /**
      * Will return the key of the identity. If only the key is needed, this avoids an
      * unnecessary db call
+     *
+     * @throws \Laminas\Authentication\Exception\ExceptionInterface
      */
     public function readKeyOnly(): mixed
     {

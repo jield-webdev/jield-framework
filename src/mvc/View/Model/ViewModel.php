@@ -217,7 +217,10 @@ class ViewModel implements ModelInterface, ClearableModelInterface, RetrievableC
         return $children;
     }
 
-    /** @param string $capture */
+    /**
+     * @param string $capture Capture target; an empty string is rejected.
+     * @throws InvalidArgumentException If the capture target is empty.
+     */
     public function setCaptureTo(string $capture): static
     {
         /** @psalm-suppress TypeDoesNotContainType Adding a defensive check here regardless of documented types */

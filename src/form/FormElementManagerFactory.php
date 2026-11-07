@@ -17,8 +17,6 @@ final class FormElementManagerFactory implements FactoryInterface
     /**
      * @inheritDoc
      * @param string|null $requestedName
-     * @param array|null $options
-     * @return AbstractPluginManager
      */
     public function __invoke(
         ContainerInterface $container,

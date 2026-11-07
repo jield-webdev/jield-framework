@@ -27,7 +27,6 @@ class JsonModel extends BaseJsonModel
      *
      * @param array|Traversable|JsonSerializable $variables
      * @param bool $overwrite
-     * @return static
      */
     #[Override]
     public function setVariables($variables, $overwrite = false): static
@@ -46,7 +45,6 @@ class JsonModel extends BaseJsonModel
      * Becomes a no-op; this model should always be terminal.
      *
      * @param bool $terminate
-     * @return static
      */
     #[Override]
     public function setTerminal($terminate): static
@@ -65,8 +63,6 @@ class JsonModel extends BaseJsonModel
      * A further check is done to see if we have a Jield\ApiTools\Hal\Entity or
      * Jield\ApiTools\Hal\Collection, and, if so, we pull the top-level entity or
      * collection and serialize that.
-     *
-     * @return string
      */
     #[Override]
     public function serialize(): string

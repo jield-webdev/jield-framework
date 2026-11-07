@@ -47,11 +47,12 @@ final class MigrationsCommandFactory implements FactoryInterface
     /**
      * {@inheritDoc}
      *
-     * @param string $requestedName
      *
-     * @return DoctrineCommand
      *
      * @throws InvalidArgumentException
+     * @throws RuntimeException
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
      */
     public function __invoke(
         ContainerInterface $container,

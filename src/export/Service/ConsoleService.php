@@ -53,6 +53,10 @@ class ConsoleService
         }
     }
 
+    /**
+     * @throws \ReflectionException
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     public function generateDocumentation(OutputInterface $output): void
     {
         $tempImageFile = __DIR__ . '/../../../../../data/documentation.md';
@@ -86,6 +90,10 @@ class ConsoleService
         fclose(stream: $handle);
     }
 
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
+     */
     private function collectDocumentationEntities(string $entityColumnsName, array &$entities): void
     {
         if (array_key_exists($entityColumnsName, $entities)) {
@@ -101,6 +109,10 @@ class ConsoleService
         }
     }
 
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
+     */
     private function getEntityColumnsClass(string $entityColumnsName): AbstractEntityColumns
     {
         if ($this->container->has($entityColumnsName)) {
@@ -140,10 +152,12 @@ class ConsoleService
     }
 
     /**
-     * @param OutputInterface $output
-     * @param string $entity
      * @param StorageLocationInterface[] $storageLocations
-     * @return void
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \JsonException
+     * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
+     * @throws \ReflectionException
+     * @throws \UnexpectedValueException
      */
     public function sendEntity(OutputInterface $output, string $entity, array $storageLocations): void
     {
@@ -185,6 +199,14 @@ class ConsoleService
         }
     }
 
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \JsonException
+     * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
+     * @throws \ReflectionException
+     * @throws InvalidArgumentException
+     * @throws \UnexpectedValueException
+     */
     private function handleEntity(
         StorageLocationInterface $storageLocation,
         string $columnOrJsonClass,
@@ -265,6 +287,10 @@ class ConsoleService
         }
     }
 
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws InvalidArgumentException
+     */
     private function createParquetAndCreateBlob(
         StorageLocationInterface $storageLocation,
         ColumnsHelperInterface $columnsHelper,
@@ -300,6 +326,13 @@ class ConsoleService
         );
     }
 
+    /**
+     * @throws \JsonException
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
+     * @throws \UnexpectedValueException
+     * @throws InvalidArgumentException
+     */
     private function createJson(StorageLocationInterface $storageLocation, AbstractEntityJson $jsonHelper): void
     {
         if (!$storageLocation->getExportFileType()->isJson()) {
@@ -319,6 +352,11 @@ class ConsoleService
         );
     }
 
+    /**
+     * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws InvalidArgumentException
+     */
     private function createExcel(
         StorageLocationInterface $storageLocation,
         ColumnsHelperInterface $columnsHelper,
@@ -398,6 +436,10 @@ class ConsoleService
         return sprintf('%s/%s.%s', sys_get_temp_dir(), $name, $storageLocation->getExportFileType()->parseExtension());
     }
 
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws InvalidArgumentException
+     */
     private function getBlobClient(): \AzureOSS\Storage\Blob\BlobRestProxy
     {
         if (!isset($this->blobClient)) {
@@ -419,7 +461,11 @@ class ConsoleService
         return $this->entities;
     }
 
-    /** @return array<array-key, StorageLocationInterface> */
+    /**
+     * @return array<array-key, StorageLocationInterface>
+     * @throws \UnexpectedValueException
+     * @throws \ReflectionException
+     */
     public function getStorageLocationsForExport(): array
     {
         if (null === $this->storageLocations) {

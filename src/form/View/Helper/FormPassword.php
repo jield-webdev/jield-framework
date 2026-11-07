@@ -11,8 +11,6 @@ class FormPassword extends FormInput
 {
     /**
      * Attributes valid for the input tag type="password"
-     *
-     * @var array
      */
     protected array $validTagAttributes = [
         'name' => true,

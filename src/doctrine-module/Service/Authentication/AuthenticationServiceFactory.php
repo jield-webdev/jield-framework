@@ -37,6 +37,9 @@ final class AuthenticationServiceFactory extends AbstractFactory
         );
     }
 
+    /**
+     * @throws BadMethodCallException
+     */
     public function getOptionsClass(): string
     {
         throw new BadMethodCallException(message: 'Not implemented');

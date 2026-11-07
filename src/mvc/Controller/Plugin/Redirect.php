@@ -17,9 +17,7 @@ use function method_exists;
 
 class Redirect extends AbstractPlugin
 {
-    /** @var MvcEvent|null */
     protected ?MvcEvent $event = null;
-    /** @var Response|null */
     protected ?Response $response = null;
 
     /**
@@ -29,9 +27,9 @@ class Redirect extends AbstractPlugin
      * @param  array $params Parameters to use in url generation, if any
      * @param array|bool $options RouteInterface-specific options to use in url generation, if any
      * @param  bool $reuseMatchedParams Whether to reuse matched parameters
-     * @return Response
      * @throws Exception\DomainException If composed controller does not implement InjectApplicationEventInterface, or
      *         router cannot be found in controller event.
+     * @throws \ReflectionException
      */
     public function toRoute($route = null, $params = [], $options = [], $reuseMatchedParams = false): Response
     {
@@ -58,7 +56,6 @@ class Redirect extends AbstractPlugin
      * Generate redirect response based on given URL
      *
      * @param  string $url
-     * @return Response
      */
     public function toUrl($url): Response
     {
@@ -71,7 +68,7 @@ class Redirect extends AbstractPlugin
     /**
      * Refresh to current route
      *
-     * @return Response
+     * @throws \ReflectionException
      */
     public function refresh(): Response
     {
@@ -81,7 +78,6 @@ class Redirect extends AbstractPlugin
     /**
      * Get the response
      *
-     * @return Response
      * @throws Exception\DomainException If unable to find response.
      */
     protected function getResponse(): Response

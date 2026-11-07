@@ -23,54 +23,39 @@ class FormRow extends AbstractHelper
 
     /**
      * The class that is added to element that have errors
-     *
-     * @var string
      */
     protected string $inputErrorClass = 'input-error';
 
     /**
      * The attributes for the row label
-     *
-     * @var array
      */
     protected array $labelAttributes = [];
 
     /**
      * Where will be label rendered?
-     *
-     * @var string
      */
     protected string $labelPosition = self::LABEL_PREPEND;
 
     /**
      * Are the errors are rendered by this helper?
-     *
-     * @var bool
      */
     protected bool $renderErrors = true;
 
     /**
      * Form label helper instance
-     *
-     * @var null|FormLabel
      */
     protected ?FormLabel $labelHelper = null;
 
     /**
      * Form element helper instance
-     *
-     * @var null|FormElement
      */
     protected ?FormElement $elementHelper = null;
 
     /**
      * Form element errors helper instance
-     *
-     * @var null|FormElementErrors
      */
     protected ?FormElementErrors $elementErrorsHelper = null;
 
-    /** @var null|string */
     protected ?string $partial = null;
 
     /**
@@ -81,7 +66,9 @@ class FormRow extends AbstractHelper
      * @template T as null|ElementInterface
      * @psalm-param T $element
      * @psalm-return (T is null ? static : string)
-     * @return string|FormRow
+     * @throws Exception\ExceptionInterface
+     * @throws \Laminas\View\Exception\RenderingFailedException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function __invoke(
         ?ElementInterface $element = null,
@@ -109,7 +96,9 @@ class FormRow extends AbstractHelper
     /**
      * Utility form helper that renders a label (if it exists), an element and errors
      *
-     * @throws Exception\DomainException
+     * @throws Exception\ExceptionInterface
+     * @throws \Laminas\View\Exception\RenderingFailedException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function render(ElementInterface $element, ?string $labelPosition = null): string
     {
@@ -224,8 +213,6 @@ class FormRow extends AbstractHelper
 
     /**
      * Set the class that is added to element that have errors
-     *
-     * @return static
      */
     public function setInputErrorClass(string $inputErrorClass): static
     {
@@ -243,8 +230,6 @@ class FormRow extends AbstractHelper
 
     /**
      * Set the attributes for the row label
-     *
-     * @return static
      */
     public function setLabelAttributes(array $labelAttributes): static
     {
@@ -264,7 +249,6 @@ class FormRow extends AbstractHelper
      * Set the label position
      *
      * @throws Exception\InvalidArgumentException
-     * @return static
      */
     public function setLabelPosition(string $labelPosition): static
     {
@@ -293,8 +277,6 @@ class FormRow extends AbstractHelper
 
     /**
      * Set if the errors are rendered by this helper
-     *
-     * @return static
      */
     public function setRenderErrors(bool $renderErrors): static
     {
@@ -312,8 +294,6 @@ class FormRow extends AbstractHelper
 
     /**
      * Set a partial view script to use for rendering the row
-     *
-     * @return static
      */
     public function setPartial(?string $partial): static
     {
@@ -331,6 +311,8 @@ class FormRow extends AbstractHelper
 
     /**
      * Retrieve the FormLabel helper
+     *
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     protected function getLabelHelper(): FormLabel
     {
@@ -355,6 +337,8 @@ class FormRow extends AbstractHelper
 
     /**
      * Retrieve the FormElement helper
+     *
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     protected function getElementHelper(): FormElement
     {
@@ -375,6 +359,8 @@ class FormRow extends AbstractHelper
 
     /**
      * Retrieve the FormElementErrors helper
+     *
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     protected function getElementErrorsHelper(): FormElementErrors
     {

@@ -18,9 +18,6 @@ class FieldExpression extends Expression implements Stringable
 {
     /**
      * Create new field query
-     *
-     * @param string|ExpressionInterface $field
-     * @param string|ExpressionInterface $expr
      */
     #[Pure]
     public function __construct(

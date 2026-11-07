@@ -50,7 +50,6 @@ class DispatchListener extends AbstractListenerAggregate
      * Attach listeners to an event manager
      *
      * @param int $priority
-     * @return void
      */
     public function attach(EventManagerInterface $events, $priority = 1): void
     {
@@ -59,8 +58,6 @@ class DispatchListener extends AbstractListenerAggregate
 
     /**
      * Listen to the "dispatch" event
-     *
-     * @return mixed
      */
     public function onDispatch(MvcEvent $e): mixed
     {
@@ -151,8 +148,6 @@ class DispatchListener extends AbstractListenerAggregate
 
     /**
      * Complete the dispatch
-     *
-     * @return mixed
      */
     protected function complete(mixed $return, MvcEvent $event): mixed
     {
@@ -165,11 +160,6 @@ class DispatchListener extends AbstractListenerAggregate
 
     /**
      * Marshal a controller not found exception event
-     *
-     * @param string $type
-     * @param string $controllerName
-     * @param Throwable|Exception|null $exception
-     * @return mixed
      */
     protected function marshalControllerNotFoundEvent(
         string $type,
@@ -199,10 +189,6 @@ class DispatchListener extends AbstractListenerAggregate
 
     /**
      * Marshal a bad controller exception event
-     *
-     * @param string $controllerName
-     * @param Throwable|Exception $exception
-     * @return mixed
      */
     protected function marshalBadControllerEvent(
         string $controllerName,

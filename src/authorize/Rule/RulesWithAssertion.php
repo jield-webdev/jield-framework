@@ -26,6 +26,10 @@ class RulesWithAssertion extends Route
         );
     }
 
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws InvalidArgumentException
+     */
     public function onRoute(MvcEvent $event): mixed
     {
         //Grab the ACL from the authorize service

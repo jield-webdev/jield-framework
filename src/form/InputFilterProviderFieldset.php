@@ -40,7 +40,6 @@ final class InputFilterProviderFieldset extends Fieldset implements InputFilterP
      * Set options for a fieldset. Accepted options are:
      * - input_filter_spec: specification to be returned by getInputFilterSpecification
      *
-     * @return static
      * @throws Exception\InvalidArgumentException
      */
     public function setOptions(iterable $options): static

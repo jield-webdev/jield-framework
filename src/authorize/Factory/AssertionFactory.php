@@ -12,6 +12,9 @@ use Webmozart\Assert\Assert;
 
 final class AssertionFactory implements FactoryInterface
 {
+    /**
+     * @throws \ReflectionException
+     */
     public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): AbstractAssertion
     {
         return Assert::isInstanceOf(

@@ -13,10 +13,6 @@ class RequestFactory implements FactoryInterface
 {
     /**
      * Create and return a request instance.
-     *
-     * @param  string $requestedName
-     * @param  null|array $options
-     * @return HttpRequest
      */
     public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): HttpRequest
     {

@@ -11,8 +11,6 @@ class FormColor extends FormInput
 {
     /**
      * Attributes valid for the input tag type="color"
-     *
-     * @var array
      */
     protected array $validTagAttributes = [
         'name' => true,

@@ -31,6 +31,9 @@ abstract class BaseLoggingCommand extends Command
         return true;
     }
 
+    /**
+     * @throws Throwable
+     */
     protected function handleShutdownException(ErrorException $exception): void
     {
         $this->exceptionError($exception);

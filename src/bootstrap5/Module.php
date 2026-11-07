@@ -20,6 +20,10 @@ final class Module implements ConfigProviderInterface, BootstrapListenerInterfac
         return new ConfigProvider()();
     }
 
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
+     */
     public function onBootstrap(EventInterface $e): void
     {
         /** @mago-var mixed $app */

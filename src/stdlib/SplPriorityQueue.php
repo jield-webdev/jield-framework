@@ -42,7 +42,6 @@ class SplPriorityQueue extends \SplPriorityQueue implements Serializable
      *
      * @param TValue $value
      * @param TPriority|InternalPriority $priority
-     * @return true
      */
     public function insert(mixed $value, mixed $priority): true
     {
@@ -95,6 +94,9 @@ class SplPriorityQueue extends \SplPriorityQueue implements Serializable
         return $data;
     }
 
+    /**
+     * @throws UnexpectedValueException
+     */
     public function unserialize(string $data): void
     {
         /** @mago-var mixed $toUnserialize */
@@ -113,6 +115,7 @@ class SplPriorityQueue extends \SplPriorityQueue implements Serializable
      * Magic method used to rebuild an instance.
      *
      * @param array<array-key, mixed> $data Untrusted serialized queue contents.
+     * @throws UnexpectedValueException
      */
     public function __unserialize(array $data): void
     {

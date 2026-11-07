@@ -12,6 +12,9 @@ use Webmozart\Assert\Assert;
 
 class HalJsonStrategyFactory
 {
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     public function __invoke(ContainerInterface $container): HalJsonStrategy
     {
         $renderer = Service::get($container, HalJsonRenderer::class);

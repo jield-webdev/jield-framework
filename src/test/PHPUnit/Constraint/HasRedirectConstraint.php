@@ -22,7 +22,10 @@ final class HasRedirectConstraint extends Constraint
         return 'has a redirect';
     }
 
-    /** @param mixed $other */
+    /**
+     * @param mixed $other
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     #[Override]
     public function matches($other): bool
     {

@@ -16,11 +16,8 @@ use Psr\Container\ContainerInterface;
 final class MappingCollectorFactory extends AbstractFactory
 {
     /**
-     * {@inheritDoc}
-     *
-     * @param string $requestedName
-     *
-     * @return object
+     * @throws \ReflectionException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): object
     {
@@ -40,6 +37,9 @@ final class MappingCollectorFactory extends AbstractFactory
         ]);
     }
 
+    /**
+     * @throws BadMethodCallException
+     */
     public function getOptionsClass(): string
     {
         throw new BadMethodCallException();

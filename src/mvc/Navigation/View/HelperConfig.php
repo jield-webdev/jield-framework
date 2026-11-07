@@ -71,6 +71,8 @@ class HelperConfig
      * service, registers a delegator that seeds the proxy helper's own plugin
      * manager, and applies the resulting configuration to the view helper
      * plugin manager.
+     *
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function configureServiceManager(HelperPluginManager $viewHelpers, ContainerInterface $appContainer): void
     {
@@ -198,7 +200,7 @@ class HelperConfig
 
         $config = $this->config;
 
-        $this->navigationDelegatorFactory = static function (
+        $this->navigationDelegatorFactory = /** @throws \ReflectionException */ static function (
             ContainerInterface $container,
             string $name,
             callable $callback,

@@ -20,6 +20,7 @@ class FormFileUploadProgress extends FormInput
      * Invoke helper as functor
      *
      * Proxies to {@link render()}.
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function __invoke(?ElementInterface $element = null): string
     {
@@ -28,6 +29,8 @@ class FormFileUploadProgress extends FormInput
 
     /**
      * Render a hidden form <input> element with the progress id
+     *
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function renderHiddenId(): string
     {

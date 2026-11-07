@@ -34,10 +34,6 @@ class ModuleManagerFactory implements FactoryInterface
      * Module manager is instantiated and provided with an EventManager, to which
      * the default listener aggregate is attached. The ModuleEvent is also created
      * and attached to the module manager.
-     *
-     * @param  string $requestedName
-     * @param  null|array $options
-     * @return ModuleManager
      */
     public function __invoke(
         ContainerInterface $container,

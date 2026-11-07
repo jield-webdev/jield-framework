@@ -20,8 +20,7 @@ final class ElementFactory implements FactoryInterface
     /**
      * Create an instance of the requested class name.
      *
-     * @param string $requestedName
-     * @param null|array $options
+     * @throws \ReflectionException
      */
     public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): object
     {

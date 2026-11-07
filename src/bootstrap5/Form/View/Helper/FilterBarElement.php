@@ -15,6 +15,10 @@ use function sprintf;
 
 class FilterBarElement extends FormElement
 {
+    /**
+     * @throws \Jield\Form\Exception\ExceptionInterface
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     public function __invoke(
         ?ElementInterface $element = null,
         $type = false,
@@ -27,6 +31,10 @@ class FilterBarElement extends FormElement
         return $this;
     }
 
+    /**
+     * @throws \Jield\Form\Exception\ExceptionInterface
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     private function renderFilterBar(Form $element): string
     {
         $wrapper = '
@@ -83,6 +91,10 @@ class FilterBarElement extends FormElement
         );
     }
 
+    /**
+     * @throws \Jield\Form\Exception\ExceptionInterface
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     private function renderFacets(Form $form): string
     {
         $facets = [];
@@ -150,6 +162,10 @@ class FilterBarElement extends FormElement
         return implode(separator: PHP_EOL, array: $facets);
     }
 
+    /**
+     * @throws \Jield\Form\Exception\ExceptionInterface
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     private function renderRaw(ElementInterface $element): string
     {
         $type = $element->getAttribute(key: 'type');

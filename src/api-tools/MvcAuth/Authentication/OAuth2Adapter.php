@@ -71,9 +71,6 @@ class OAuth2Adapter extends AbstractAdapter
     /**
      * Attempt to match a requested authentication type
      * against what the adapter provides.
-     *
-     * @param string $type
-     * @return bool
      */
     #[Override]
     public function matches(string $type): bool
@@ -83,7 +80,6 @@ class OAuth2Adapter extends AbstractAdapter
 
     /**
      * Determine if the given request is a type (oauth2) that we recognize
-     *
      */
     #[Override]
     public function getTypeFromRequest(Request $request): false|string
@@ -126,6 +122,8 @@ class OAuth2Adapter extends AbstractAdapter
 
     /**
      * Attempt to authenticate the current request.
+     *
+     * @throws Throwable
      */
     #[Override]
     public function authenticate(
@@ -181,6 +179,7 @@ class OAuth2Adapter extends AbstractAdapter
     /**
      * Handle a invalid Token.
      *
+     * @throws \ReflectionException
      */
     private function processInvalidToken(Response $response): Response|Identity\GuestIdentity
     {
@@ -209,8 +208,6 @@ class OAuth2Adapter extends AbstractAdapter
 
     /**
      * Merge the OAuth2\Response instance's status and headers into the current Laminas\Http\Response.
-     *
-     * @param int $status
      */
     private function mergeOAuth2Response(int $status, Response $response, OAuth2Response $oauth2Response): Response
     {
@@ -220,7 +217,6 @@ class OAuth2Adapter extends AbstractAdapter
 
     /**
      * Merge the OAuth2\Response headers into the current Laminas\Http\Response.
-     *
      */
     private function mergeOAuth2ResponseHeaders(Response $response, array $oauth2Headers): Response
     {

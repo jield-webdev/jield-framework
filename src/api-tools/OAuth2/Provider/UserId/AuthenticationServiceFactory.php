@@ -10,6 +10,9 @@ use Psr\Container\ContainerInterface;
 
 class AuthenticationServiceFactory
 {
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     public function __invoke(ContainerInterface $container): AuthenticationService
     {
         /** @mago-var mixed $config */
@@ -28,8 +31,7 @@ class AuthenticationServiceFactory
     /**
      * Provided for backwards compatibility; proxies to __invoke().
      *
-     * @param ServiceLocatorInterface $container
-     * @return AuthenticationService
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function createService(ServiceLocatorInterface $container): AuthenticationService
     {

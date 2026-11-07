@@ -30,50 +30,36 @@ class Menu extends AbstractHelper
 {
     /**
      * Whether page class should be applied to <li> element.
-     *
-     * @var bool
      */
     protected bool $addClassToListItem = false;
 
     /**
      * Whether labels should be escaped.
-     *
-     * @var bool
      */
     protected bool $escapeLabels = true;
 
     /**
      * Whether only active branch should be rendered.
-     *
-     * @var bool
      */
     protected bool $onlyActiveBranch = false;
 
     /**
      * Partial view script to use for rendering menu.
-     *
-     * @var string|array|null
      */
     protected string|array|null $partial = null;
 
     /**
      * Whether parents should be rendered when only rendering active branch.
-     *
-     * @var bool
      */
     protected bool $renderParents = true;
 
     /**
      * CSS class to use for the ul element.
-     *
-     * @var string
      */
     protected string $ulClass = 'navigation';
 
     /**
      * CSS class to use for the active li element.
-     *
-     * @var string
      */
     protected string $liActiveClass = 'active';
 
@@ -84,6 +70,7 @@ class Menu extends AbstractHelper
      *
      * @param AbstractContainer|null $container [optional] container to operate on
      * @return self
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function __invoke(?AbstractContainer $container = null)
     {
@@ -108,7 +95,8 @@ class Menu extends AbstractHelper
      * @return string
      * @see renderPartial()
      * @see renderMenu()
-     *
+     * @throws \Exception
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function render($container = null): Partial|string
     {
@@ -133,6 +121,7 @@ class Menu extends AbstractHelper
      * @param bool $addClassToListItem Whether or not page class applied to <li> element
      * @param string $liActiveClass CSS class for active LI
      * @return string
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     protected function renderDeepestMenu(
         AbstractContainer $container,
@@ -207,6 +196,8 @@ class Menu extends AbstractHelper
      *     Default is to use the container retrieved from {@link getContainer()}.
      * @param array $options [optional] options for controlling rendering
      * @return string
+     * @throws \Exception
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function renderMenu(?AbstractContainer $container = null, array $options = [])
     {
@@ -252,7 +243,8 @@ class Menu extends AbstractHelper
      * @param bool $escapeLabels Whether or not to escape the labels
      * @param bool $addClassToListItem Whether or not page class applied to <li> element
      * @param string $liActiveClass CSS class for active LI
-     * @return string
+     * @throws \Exception
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     protected function renderNormalMenu(
         AbstractContainer $container,
@@ -399,6 +391,7 @@ class Menu extends AbstractHelper
      * @return string
      * @throws Exception\RuntimeException         If no partial provided.
      * @throws Exception\InvalidArgumentException If partial is invalid array.
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function renderPartial(?AbstractContainer $container = null, array|string|null $partial = null)
     {
@@ -422,6 +415,7 @@ class Menu extends AbstractHelper
      * @return string
      * @throws Exception\RuntimeException         If no partial provided.
      * @throws Exception\InvalidArgumentException If partial is invalid array.
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function renderPartialWithParams(
         array $params = [],
@@ -457,6 +451,8 @@ class Menu extends AbstractHelper
      * @param string|null $liActiveClass [optional] CSS class to use for UL
      *     element. Default is to use the value from {@link getUlClass()}.
      * @return string
+     * @throws \Exception
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function renderSubMenu(
         ?AbstractContainer $container = null,
@@ -486,7 +482,7 @@ class Menu extends AbstractHelper
      * @param AbstractPage $page page to generate HTML for
      * @param bool $escapeLabel Whether or not to escape the label
      * @param bool $addClassToListItem Whether or not to add the page class to the list item
-     * @return string
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function htmlify(AbstractPage $page, bool $escapeLabel = true, bool $addClassToListItem = false): string
     {
@@ -744,11 +740,10 @@ class Menu extends AbstractHelper
     /**
      * Render a partial with the given "model".
      *
-     * @param AbstractContainer|null $container
-     * @param array|string|null $partial
      * @return string
      * @throws Exception\RuntimeException         If no partial provided.
      * @throws Exception\InvalidArgumentException If partial is invalid array.
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     protected function renderPartialModel(array $params, ?AbstractContainer $container, array|string|null $partial)
     {

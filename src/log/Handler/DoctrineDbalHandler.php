@@ -29,6 +29,9 @@ final class DoctrineDbalHandler extends AbstractProcessingHandler
         parent::__construct($level, $bubble);
     }
 
+    /**
+     * @throws \Doctrine\DBAL\Exception
+     */
     protected function write(LogRecord $record): void
     {
         $this->connection->insert(

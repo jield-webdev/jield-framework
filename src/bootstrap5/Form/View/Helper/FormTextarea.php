@@ -15,6 +15,10 @@ use function count;
  */
 final class FormTextarea extends Helper\FormTextarea
 {
+    /**
+     * @throws \Jield\Form\Exception\ExceptionInterface
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     public function render(ElementInterface $element): string
     {
         if (null === $element->getAttribute(key: 'class')) {

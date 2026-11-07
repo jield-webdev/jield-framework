@@ -26,16 +26,12 @@ class ModuleEvent extends Event
 
     protected object $module;
 
-    /** @var string */
     protected string $moduleName;
 
-    /** @var Listener\ConfigMergerInterface */
     protected Listener\ConfigMergerInterface $configListener;
 
     /**
      * Get the name of a given module
-     *
-     * @return string
      */
     public function getModuleName(): string
     {
@@ -45,8 +41,6 @@ class ModuleEvent extends Event
     /**
      * Set the name of a given module
      *
-     * @param string $moduleName
-     * @return static
      * @throws Exception\InvalidArgumentException
      */
     public function setModuleName(string $moduleName): static
@@ -59,8 +53,6 @@ class ModuleEvent extends Event
 
     /**
      * Get module object
-     *
-     * @return null|object
      */
     public function getModule(): ?object
     {
@@ -70,8 +62,6 @@ class ModuleEvent extends Event
     /**
      * Set module object to compose in this event
      *
-     * @param object $module
-     * @return static
      * @throws Exception\InvalidArgumentException
      */
     public function setModule(object $module): static
@@ -84,8 +74,6 @@ class ModuleEvent extends Event
 
     /**
      * Get the config listener
-     *
-     * @return null|Listener\ConfigMergerInterface
      */
     public function getConfigListener(): ?Listener\ConfigMergerInterface
     {
@@ -94,8 +82,6 @@ class ModuleEvent extends Event
 
     /**
      * Set module object to compose in this event
-     *
-     * @return static
      */
     public function setConfigListener(Listener\ConfigMergerInterface $configListener): static
     {

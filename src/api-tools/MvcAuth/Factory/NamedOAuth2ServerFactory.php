@@ -19,6 +19,9 @@ use Webmozart\Assert\Assert;
  */
 class NamedOAuth2ServerFactory
 {
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     public function __invoke(ContainerInterface $container): callable
     {
         /** @mago-var mixed $config */
@@ -34,7 +37,7 @@ class NamedOAuth2ServerFactory
             /** @var array<array-key, Server> */
             public array $api = [];
         };
-        return static function ($type = null) use ($oauth2Config, $mvcAuthConfig, $container, $servers) {
+        return /** @throws \Jield\ApiTools\OAuth2\Controller\Exception\RuntimeException|\Psr\Container\ContainerExceptionInterface */ static function ($type = null) use ($oauth2Config, $mvcAuthConfig, $container, $servers) {
             // Empty type == legacy configuration.
             if (empty($type)) {
                 if (null !== $servers->application) {

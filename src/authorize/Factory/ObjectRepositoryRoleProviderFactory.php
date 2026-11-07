@@ -17,6 +17,10 @@ use Webmozart\Assert\Assert;
  */
 class ObjectRepositoryRoleProviderFactory implements FactoryInterface
 {
+    /**
+     * @throws InvalidArgumentException
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     public function __invoke(
         ContainerInterface $container,
         $requestedName,

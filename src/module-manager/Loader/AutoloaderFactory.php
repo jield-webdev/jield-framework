@@ -59,6 +59,7 @@ abstract class AutoloaderFactory
      * @throws Exception\InvalidArgumentException For invalid options.
      * @throws Exception\InvalidArgumentException For unloadable autoloader classes.
      * @throws Exception\DomainException For autoloader classes not implementing SplAutoloader.
+     * @throws \ReflectionException
      */
     public static function factory($options = null)
     {

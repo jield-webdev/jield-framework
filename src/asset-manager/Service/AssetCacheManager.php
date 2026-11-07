@@ -20,9 +20,6 @@ class AssetCacheManager
 {
     /**
      * Construct the AssetCacheManager
-     *
-     * @param ServiceLocatorInterface $container
-     * @param array $config
      */
     public function __construct(
         protected ContainerInterface $container,
@@ -34,8 +31,8 @@ class AssetCacheManager
      *
      * @param string $path Path to asset
      * @param AssetInterface $asset Assetic Asset Interface
-     *
-     * @return AssetInterface|AssetCache
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
      */
     public function setCache(string $path, AssetInterface $asset): AssetInterface|AssetCache
     {
@@ -56,6 +53,9 @@ class AssetCacheManager
      * Get the cache provider.  First checks to see if the provider is callable,
      * then will attempt to get it from the service locator, finally will fallback
      * to a class mapper.
+     *
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
      */
     private function getProvider(string $path)
     {
@@ -112,10 +112,6 @@ class AssetCacheManager
 
     /**
      * Class mapper to provide backwards compatibility
-     *
-     * @param string $class
-     *
-     * @return string
      */
     private function classMapper(string $class): string
     {

@@ -36,8 +36,6 @@ abstract class AbstractNavigationFactory implements FactoryInterface
     /**
      * Create and return a new Navigation instance (v3).
      *
-     * @param string $requestedName
-     * @param null|array $options
      * @return Navigation
      */
     public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): mixed
@@ -47,13 +45,13 @@ abstract class AbstractNavigationFactory implements FactoryInterface
 
     /**
      * @abstract
-     * @return string
      */
     abstract protected function getName(): string;
 
     /**
      * @return array<array-key, array<string, mixed>>
      * @throws InvalidArgumentException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     protected function getPages(ContainerInterface $container): ?array
     {
@@ -86,6 +84,7 @@ abstract class AbstractNavigationFactory implements FactoryInterface
      * @param array<array-key, array<string, mixed>> $pages
      * @return array<array-key, array<string, mixed>>
      * @throws InvalidArgumentException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     protected function preparePages(ContainerInterface $container, array $pages): array
     {
@@ -105,7 +104,6 @@ abstract class AbstractNavigationFactory implements FactoryInterface
     }
 
     /**
-     * @param mixed $config
      * @return array<array-key, array<string, mixed>>
      * @throws InvalidArgumentException
      */
@@ -122,9 +120,6 @@ abstract class AbstractNavigationFactory implements FactoryInterface
 
     /**
      * @param array<array-key, array<string, mixed>> $pages
-     * @param RouteMatch|null $routeMatch
-     * @param Router|null $router
-     * @param Request|null $request
      * @return array<array-key, array<string, mixed>>
      */
     protected function injectComponents(

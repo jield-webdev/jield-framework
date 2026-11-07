@@ -34,6 +34,12 @@ class CompatibilityEngine extends \Com\Tecnick\Pdf\Tcpdf
      */
     public ?\Closure $pagecontexthook = null;
 
+    /**
+     * @throws \ReflectionException
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \Com\Tecnick\Pdf\Font\Exception
+     * @throws \Com\Tecnick\Unicode\Exception
+     */
     public function setPageContext(int $pid = -1): void
     {
         $this->anchorPageRegionsToContentTop($pid);
@@ -116,6 +122,9 @@ class CompatibilityEngine extends \Com\Tecnick\Pdf\Tcpdf
      * columns restart at the top margin (legacy selectColumn() behavior).
      * The region list of an existing page has no mutator, so the adjusted
      * data is written directly into the page store.
+     *
+     * @throws \Com\Tecnick\Pdf\Page\Exception
+     * @throws \ReflectionException
      */
     protected function anchorPageRegionsToContentTop(int $pid): void
     {

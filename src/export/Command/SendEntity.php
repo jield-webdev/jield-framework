@@ -22,6 +22,10 @@ final class SendEntity extends Command
         parent::__construct();
     }
 
+    /**
+     * @throws \UnexpectedValueException
+     * @throws \ReflectionException
+     */
     protected function configure(): void
     {
         $cores = implode(separator: ', ', array: array_merge(
@@ -55,6 +59,13 @@ final class SendEntity extends Command
         );
     }
 
+    /**
+     * @throws \UnexpectedValueException
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
+     * @throws \JsonException
+     * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
+     */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         /** @mago-var mixed $memoryLimit */

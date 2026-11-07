@@ -14,9 +14,6 @@ trait LinkCollectionAwareTrait
         return $this;
     }
 
-    /**
-     * @return LinkCollection
-     */
     public function getLinks(): LinkCollection
     {
         if (!$this->links instanceof LinkCollection) {

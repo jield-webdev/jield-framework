@@ -11,8 +11,6 @@ class FormHidden extends FormInput
 {
     /**
      * Attributes valid for the input tag type="hidden"
-     *
-     * @var array
      */
     protected array $validTagAttributes = [
         'name' => true,

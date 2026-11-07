@@ -25,8 +25,7 @@ abstract class AutoloaderFactory
     protected static array $loaders = [];
 
     /**
-     * @var ModuleAutoloader ModuleAutoloader instance for resolving
-     * autoloader classes via the include_path
+     * Module autoloader used to resolve classes via the include_path, initialized on first use.
      */
     protected static ?ModuleAutoloader $moduleAutoloader = null;
 
@@ -55,6 +54,7 @@ abstract class AutoloaderFactory
      * @throws InvalidArgumentException For invalid options.
      * @throws InvalidArgumentException For unloadable autoloader classes.
      * @throws DomainException For autoloader classes not implementing SplAutoloader.
+     * @throws \ReflectionException
      */
     public static function factory(?iterable $options = null)
     {

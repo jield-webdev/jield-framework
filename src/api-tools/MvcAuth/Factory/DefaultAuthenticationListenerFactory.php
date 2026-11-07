@@ -31,6 +31,8 @@ class DefaultAuthenticationListenerFactory implements FactoryInterface
      * Create and return a DefaultAuthenticationListener.
      *
      * @param string $requestedName
+     * @throws RuntimeException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     #[Override]
     public function __invoke(
@@ -61,8 +63,7 @@ class DefaultAuthenticationListenerFactory implements FactoryInterface
     }
 
     /**
-     * @param ContainerInterface $container
-     * @return false|HttpAdapter
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     protected function retrieveHttpAdapter(ContainerInterface $container): false|HttpAdapter
     {
@@ -90,6 +91,8 @@ class DefaultAuthenticationListenerFactory implements FactoryInterface
     /**
      * Create an OAuth2 server by introspecting the config service
      *
+     * @throws RuntimeException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     protected function createOAuth2Server(ContainerInterface $container): false|OAuth2Adapter
     {
@@ -141,6 +144,7 @@ class DefaultAuthenticationListenerFactory implements FactoryInterface
     /**
      * Retrieve custom authentication types
      *
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     protected function getAuthenticationTypes(ContainerInterface $container): false|array
     {
@@ -160,6 +164,9 @@ class DefaultAuthenticationListenerFactory implements FactoryInterface
         return $config['api-tools-mvc-auth']['authentication']['types'];
     }
 
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     protected function getAuthenticationMap(ContainerInterface $container): array
     {
         if (!$container->has('config')) {

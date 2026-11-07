@@ -91,7 +91,6 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
      *
      * Sets the event manager identifiers to the current class, this class, and
      * the resource interface.
-     *
      */
     #[Override]
     public function setEventManager(EventManagerInterface $eventManager): void
@@ -108,8 +107,6 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
      * Retrieve event manager
      *
      * Lazy-instantiates an EM instance if none provided.
-     *
-     * @return EventManagerInterface
      */
     #[Override]
     public function getEventManager(): EventManagerInterface
@@ -124,7 +121,6 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
     /**
      * @param int $priority
      * @see   ListenerAggregateInterface
-     *
      */
     #[Override]
     public function attach(EventManagerInterface $events, $priority = 1): void
@@ -152,6 +148,8 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
      * - Invalid input filter service name
      * - Missing ParameterDataContainer (i.e., ContentNegotiation is not registered)
      *
+     * @throws \Laminas\InputFilter\Exception\RuntimeException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function onRoute(MvcEvent $e): ?ApiProblemResponse
     {
@@ -355,19 +353,12 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
 
     /**
      * Add HTTP Method without body content
-     *
-     * @param string $method
-     * @return void
      */
     public function addMethodWithoutBody(string $method): void
     {
         $this->methodsWithoutBodies[] = $method;
     }
 
-    /**
-     * @param string $controllerService
-     * @return boolean
-     */
     protected function allowsOnlyFieldsInFilter(string $controllerService): bool
     {
         if (isset($this->config[$controllerService]['allows_only_fields_in_filter'])) {
@@ -377,10 +368,6 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
         return false;
     }
 
-    /**
-     * @param string $controllerService
-     * @return bool
-     */
     protected function useRawData(string $controllerService): bool
     {
         return (
@@ -389,10 +376,6 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
         );
     }
 
-    /**
-     * @param string $controllerService
-     * @return bool
-     */
     protected function shouldRemoveEmptyData(string $controllerService): bool
     {
         return (
@@ -405,7 +388,6 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
      * @param array $data Data to filter null values from
      * @param array $compareTo Original data, send along to preserve
      *     keys/values in $data which are intentional
-     * @return array
      */
     protected function removeEmptyData(array $data, array $compareTo = []): array
     {
@@ -480,11 +462,6 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
      * secondarily for a general one.
      *
      * If neither are present, return boolean false.
-     *
-     * @param string $controllerService
-     * @param string $method
-     * @param bool $isCollection
-     * @return string|false
      */
     protected function getInputFilterService(
         string $controllerService,
@@ -509,8 +486,7 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
     /**
      * Determine if we have an input filter matching the service name
      *
-     * @param string $inputFilterService
-     * @return bool
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     protected function hasInputFilter(string $inputFilterService): bool
     {
@@ -534,9 +510,6 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
 
     /**
      * Retrieve the named input filter service
-     *
-     * @param string $inputFilterService
-     * @return InputFilterInterface
      */
     protected function getInputFilter(string $inputFilterService): InputFilterInterface
     {
@@ -545,10 +518,6 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
 
     /**
      * Does the request represent a collection?
-     *
-     * @param string $serviceName
-     * @param array $data
-     * @param RouteMatch $matches
      */
     protected function isCollection(string $serviceName, array $data, RouteMatch $matches, HttpRequest $request): bool
     {
@@ -571,9 +540,6 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
 
     /**
      * Validate a PATCH request
-     *
-     * @param object|array $data
-     * @param bool $isCollection
      */
     protected function validatePatch(
         InputFilterInterface $inputFilter,

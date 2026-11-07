@@ -18,6 +18,7 @@ final class InputFilterValidator
      * @param array<array-key, mixed>|null $group
      * @param array<array-key, mixed> $context
      * @return InputFilterValidationResult<array<array-key, mixed>>
+     * @throws InvalidArgumentException
      */
     public static function validate(
         InputFilterInterface $filter,

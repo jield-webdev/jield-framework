@@ -33,8 +33,6 @@ class ApiProblem
 
     /**
      * URL describing the problem type; defaults to HTTP status codes.
-     *
-     * @var string
      */
     protected string $type = 'https://datatracker.ietf.org/doc/html/rfc7231#section-6';
 
@@ -58,8 +56,6 @@ class ApiProblem
 
     /**
      * Normalized property names for overloading.
-     *
-     * @var array
      */
     protected array $normalizedProperties = [
         'type' => 'type',
@@ -70,8 +66,6 @@ class ApiProblem
 
     /**
      * Status titles for common problems.
-     *
-     * @var array
      */
     protected array $problemStatusTitles = [
         // CLIENT ERROR
@@ -164,7 +158,6 @@ class ApiProblem
     /**
      * Retrieve properties.
      *
-     * @param string $name
      * @return mixed
      * @throws InvalidArgumentException
      */
@@ -197,8 +190,6 @@ class ApiProblem
 
     /**
      * Cast to an array.
-     *
-     * @return array
      */
     public function toArray(): array
     {
@@ -215,9 +206,6 @@ class ApiProblem
     /**
      * Set the flag indicating whether an exception detail should include a
      * stack trace and previous exception information.
-     *
-     * @param bool $flag
-     * @return static
      */
     public function setDetailIncludesStackTrace(bool $flag): static
     {
@@ -268,8 +256,6 @@ class ApiProblem
      * string 'Unknown'.
      *
      * Otherwise, use the title provided.
-     *
-     * @return string
      */
     public function getTitle(): ?string
     {
@@ -293,8 +279,6 @@ class ApiProblem
 
     /**
      * Create detail message from an exception.
-     *
-     * @return string
      */
     protected function createDetailFromException(): string
     {
@@ -328,8 +312,6 @@ class ApiProblem
 
     /**
      * Create HTTP status from an exception.
-     *
-     * @return int|string
      */
     protected function createStatusFromException(): int|string
     {

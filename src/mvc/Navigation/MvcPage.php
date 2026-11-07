@@ -504,6 +504,7 @@ class MvcPage extends AbstractPage
      *
      * @param  mixed $router Router
      * @return MvcPage Fluent interface, returns self
+     * @throws Exception\InvalidArgumentException
      */
     public function setRouter($router)
     {

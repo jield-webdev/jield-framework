@@ -23,14 +23,11 @@ class LocatorRegistrationListener extends AbstractListener implements ListenerAg
 {
     use ListenerAggregateTrait;
 
-    /** @var array */
     protected array $modules = [];
 
     /**
      * Check each loaded module to see if it implements LocatorRegistered. If it
      * does, we add it to an internal array for later.
-     *
-     * @return void
      */
     public function onLoadModule(ModuleEvent $e): void
     {
@@ -40,7 +37,7 @@ class LocatorRegistrationListener extends AbstractListener implements ListenerAg
     /**
      * Once all the modules are loaded, loop
      *
-     * @return void
+     * @throws \ReflectionException
      */
     public function onLoadModules(ModuleEvent $e): void
     {
@@ -89,7 +86,6 @@ class LocatorRegistrationListener extends AbstractListener implements ListenerAg
      *
      * @TODO: Check the application / locator / etc a bit better to make sure
      * the env looks how we're expecting it to?
-     * @return void
      */
     public function onBootstrap(MvcEvent $e): void
     {

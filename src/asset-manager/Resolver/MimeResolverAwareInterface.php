@@ -15,8 +15,6 @@ interface MimeResolverAwareInterface
 
     /**
      * Get the MimeResolver
-     *
-     * @return MimeResolver
      */
     public function getMimeResolver(): MimeResolver;
 }

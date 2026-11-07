@@ -19,9 +19,6 @@ interface AdapterInterface
     /**
      * Attempt to match a requested authentication type
      * against what the adapter provides.
-     *
-     * @param string $type
-     * @return bool
      */
     public function matches(string $type): bool;
 
@@ -30,7 +27,6 @@ interface AdapterInterface
      *
      * Allows an adapter to have custom logic for detecting if a request
      * might be providing credentials it's interested in.
-     *
      */
     public function getTypeFromRequest(Request $request): false|string;
 
@@ -45,8 +41,6 @@ interface AdapterInterface
 
     /**
      * Attempt to authenticate the current request.
-     *
-     * @return IdentityInterface|Response
      */
     public function authenticate(
         Request $request,

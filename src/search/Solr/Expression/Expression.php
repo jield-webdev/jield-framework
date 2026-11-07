@@ -17,8 +17,6 @@ class Expression implements ExpressionInterface, Stringable
 {
     /**
      * Create new expression object
-     *
-     * @param string|ExpressionInterface $expr
      */
     public function __construct(
         protected ExpressionInterface|string $expr,

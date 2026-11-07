@@ -19,6 +19,10 @@ final class RenderDocumentation extends Command
         parent::__construct();
     }
 
+    /**
+     * @throws \ReflectionException
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $output->writeln(messages: '<info>Write documentation</info>');

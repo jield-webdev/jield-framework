@@ -44,6 +44,11 @@ class TwigStrategy implements ListenerAggregateInterface
 
     /**
      * Render the view model when the template is a Twig template.
+     *
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Laminas\View\Exception\RenderingFailedException
      */
     public function render(MvcEvent $e): void
     {

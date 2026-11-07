@@ -71,12 +71,10 @@ class AuthorizeService
 
     private readonly AuthenticationIdentityProvider $authenticationIdentityProvider;
 
-    /** @var array */
     protected array $config;
 
     /**
      * @throws ContainerExceptionInterface
-     * @throws NotFoundExceptionInterface
      */
     public function __construct(
         private readonly ContainerInterface $container,
@@ -160,9 +158,6 @@ class AuthorizeService
         return $this->guards;
     }
 
-    /**
-     * @return Acl
-     */
     public function getAcl(): Acl
     {
         $this->loaded && Value::truthy($this->loaded->__invoke());
@@ -170,11 +165,6 @@ class AuthorizeService
         return Assert::isInstanceOf($this->acl, \Laminas\Permissions\Acl\Acl::class);
     }
 
-    /**
-     * @param string|ResourceInterface $resource
-     * @param string|null $privilege
-     * @return bool
-     */
     public function isAllowed(ResourceInterface|string $resource, ?string $privilege = null): bool
     {
         $this->loaded && Value::truthy($this->loaded->__invoke());
@@ -190,6 +180,10 @@ class AuthorizeService
         }
     }
 
+    /**
+     * @throws \Laminas\Cache\Exception\ExceptionInterface
+     * @throws ContainerExceptionInterface
+     */
     public function load(): void
     {
         if (null === $this->loaded) {
@@ -244,6 +238,9 @@ class AuthorizeService
         }
     }
 
+    /**
+     * @throws \InvalidArgumentException
+     */
     protected function loadResource($resources, $parent = null): void
     {
         if (!is_array(value: $resources) && !$resources instanceof Traversable) {
@@ -274,6 +271,9 @@ class AuthorizeService
         }
     }
 
+    /**
+     * @throws \InvalidArgumentException
+     */
     protected function loadRule(array $rule, $type): void
     {
         $privileges = null;
@@ -329,6 +329,9 @@ class AuthorizeService
         return $this->authenticationIdentityProvider->getIdentityRoles();
     }
 
+    /**
+     * @throws ContainerExceptionInterface
+     */
     private function loadAcl(): void
     {
         $this->acl = new Acl();

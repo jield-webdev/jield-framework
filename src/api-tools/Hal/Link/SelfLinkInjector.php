@@ -14,6 +14,7 @@ class SelfLinkInjector implements SelfLinkInjectorInterface
 {
     /**
      * {@inheritDoc}
+     * @throws \Throwable
      */
     #[Override]
     public function injectSelfLink(
@@ -34,11 +35,10 @@ class SelfLinkInjector implements SelfLinkInjectorInterface
     }
 
     /**
-     * @param array|Collection|Entity|LinkCollectionAwareInterface|null $resource
      * @psalm-param string|array{
      *     name:string,params:string|array<array-key,mixed>,options:string|array<array-key,mixed>
      * } $route
-     * @param string $routeIdentifier
+     * @throws \Throwable
      */
     private function createSelfLink(
         Entity|array|Collection|LinkCollectionAwareInterface|null $resource,
@@ -77,8 +77,6 @@ class SelfLinkInjector implements SelfLinkInjectorInterface
     }
 
     /**
-     * @param array|Collection|Entity|null $resource
-     * @param string $routeIdentifier
      * @return array<array-key, mixed>
      */
     private function getRouteParams(Entity|array|Collection|null $resource, string $routeIdentifier): array
@@ -99,7 +97,6 @@ class SelfLinkInjector implements SelfLinkInjectorInterface
     }
 
     /**
-     * @param array|Collection|Entity|null $resource
      * @return array<array-key, mixed>
      */
     private function getRouteOptions(Entity|array|Collection|null $resource): array

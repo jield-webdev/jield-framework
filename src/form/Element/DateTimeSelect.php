@@ -22,29 +22,21 @@ class DateTimeSelect extends DateSelect
 {
     /**
      * Select form element that contains values for hour
-     *
-     * @var Select
      */
     protected Select $hourElement;
 
     /**
      * Select form element that contains values for minute
-     *
-     * @var Select
      */
     protected Select $minuteElement;
 
     /**
      * Select form element that contains values for second
-     *
-     * @var Select
      */
     protected Select $secondElement;
 
     /**
      * Is the seconds select shown when the element is rendered?
-     *
-     * @var bool
      */
     protected bool $shouldShowSeconds = false;
 
@@ -127,7 +119,6 @@ class DateTimeSelect extends DateSelect
      * Set the hour attributes
      *
      * @param array<string, scalar|null> $hourAttributes
-     * @return static
      */
     public function setHourAttributes(array $hourAttributes): static
     {
@@ -149,7 +140,6 @@ class DateTimeSelect extends DateSelect
      * Set the minute attributes
      *
      * @param array<string, scalar|null> $minuteAttributes
-     * @return static
      */
     public function setMinuteAttributes(array $minuteAttributes): static
     {
@@ -171,7 +161,6 @@ class DateTimeSelect extends DateSelect
      * Set the second attributes
      *
      * @param array<string, scalar|null> $secondAttributes
-     * @return static
      */
     public function setSecondAttributes(array $secondAttributes): static
     {
@@ -192,8 +181,6 @@ class DateTimeSelect extends DateSelect
     /**
      * If set to true, this indicate that the second select is shown. If set to true, the seconds will be
      * assumed to always be 00
-     *
-     * @return static
      */
     public function setShouldShowSeconds(bool $shouldShowSeconds): static
     {
@@ -208,7 +195,6 @@ class DateTimeSelect extends DateSelect
 
     /**
      * @param  mixed $value
-     * @return static
      * @throws InvalidArgumentException
      */
     public function setValue($value): static

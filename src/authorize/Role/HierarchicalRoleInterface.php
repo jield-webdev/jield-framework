@@ -13,8 +13,6 @@ interface HierarchicalRoleInterface extends RoleInterface
 {
     /**
      * Get the parent role
-     *
-     * @return RoleInterface|null
      */
     public function getParent(): ?RoleInterface;
 }

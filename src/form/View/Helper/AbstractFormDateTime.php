@@ -8,8 +8,6 @@ abstract class AbstractFormDateTime extends FormInput
 {
     /**
      * Attributes valid for the input tag type="datetime"
-     *
-     * @var array
      */
     protected array $validTagAttributes = [
         'name' => true,

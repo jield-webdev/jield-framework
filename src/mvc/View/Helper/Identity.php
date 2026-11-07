@@ -30,6 +30,7 @@ class Identity extends AbstractHelper
      * If none available, returns null.
      *
      * @return mixed|null
+     * @throws RuntimeException
      */
     public function __invoke()
     {

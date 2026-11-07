@@ -16,7 +16,6 @@ use function is_string;
 
 final class FormAbstractServiceFactory implements AbstractFactoryInterface
 {
-    /** @var null|array */
     private ?array $config = null;
 
     /** @var string Top-level configuration key indicating forms configuration */
@@ -28,8 +27,10 @@ final class FormAbstractServiceFactory implements AbstractFactoryInterface
     /**
      * Create a form (v3)
      *
-     * @param string $requestedName
-     * @param array|null $options
+     * @throws Exception\ExceptionInterface
+     * @throws \Laminas\InputFilter\Exception\RuntimeException
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
      */
     public function __invoke(
         ContainerInterface $container,
@@ -47,7 +48,7 @@ final class FormAbstractServiceFactory implements AbstractFactoryInterface
     /**
      * Can we create the requested service? (v3)
      *
-     * @param string $requestedName
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function canCreate(ContainerInterface $container, string $requestedName): bool
     {
@@ -70,6 +71,8 @@ final class FormAbstractServiceFactory implements AbstractFactoryInterface
 
     /**
      * Get forms configuration, if any
+     *
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     protected function getConfig(ContainerInterface $container): array
     {
@@ -95,6 +98,8 @@ final class FormAbstractServiceFactory implements AbstractFactoryInterface
 
     /**
      * Retrieve the form factory, creating it if necessary
+     *
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     protected function getFormFactory(ContainerInterface $container): Factory
     {
@@ -119,6 +124,8 @@ final class FormAbstractServiceFactory implements AbstractFactoryInterface
      *   retrieves it and resets the specification to the instance.
      * - otherwise, pulls the input filter factory from the form factory, and
      *   attaches the FilterManager and ValidatorManager to it.
+     *
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     protected function marshalInputFilter(array &$config, ContainerInterface $container, Factory $formFactory): void
     {

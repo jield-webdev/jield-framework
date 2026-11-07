@@ -33,6 +33,8 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
      *
      * @param  string $header
      * @return HeaderInterface|ArrayIterator|false
+     * @throws UnexpectedValueException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     protected function getResponseHeader($header)
     {
@@ -43,6 +45,10 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
         throw new UnexpectedValueException('Invalid response header.');
     }
 
+    /**
+     * @throws UnexpectedValueException
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     private function getSingleResponseHeader(string $header): HeaderInterface|false
     {
         $result = $this->getResponseHeader($header);
@@ -58,6 +64,8 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
      *
      * @param string $phrase
      * @return void
+     * @throws ExpectationFailedException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function assertResponseReasonPhrase($phrase)
     {
@@ -69,6 +77,9 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
      *
      * @param string $header
      * @return void
+     * @throws ExpectationFailedException
+     * @throws UnexpectedValueException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function assertHasResponseHeader($header)
     {
@@ -87,6 +98,9 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
      *
      * @param string $header
      * @return void
+     * @throws ExpectationFailedException
+     * @throws UnexpectedValueException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function assertNotHasResponseHeader($header)
     {
@@ -106,6 +120,9 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
      * @param string $header
      * @param string $match
      * @return void
+     * @throws \PHPUnit\Framework\Exception
+     * @throws UnexpectedValueException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function assertResponseHeaderContains($header, $match)
     {
@@ -128,6 +145,9 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
      * @param string $header
      * @param string $match
      * @return void
+     * @throws \PHPUnit\Framework\Exception
+     * @throws UnexpectedValueException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function assertNotResponseHeaderContains($header, $match)
     {
@@ -145,6 +165,9 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
      * @param string $header
      * @param string $pattern
      * @return void
+     * @throws ExpectationFailedException
+     * @throws UnexpectedValueException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function assertResponseHeaderRegex($header, $pattern)
     {
@@ -164,7 +187,12 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
         ));
     }
 
-    /** @return list<string> */
+    /**
+     * @return list<string>
+     * @throws ExpectationFailedException
+     * @throws UnexpectedValueException
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     private function responseHeaderValues(string $header): array
     {
         $responseHeader = $this->getResponseHeader($header);
@@ -185,6 +213,9 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
      * @param string $header
      * @param string $pattern
      * @return void
+     * @throws ExpectationFailedException
+     * @throws UnexpectedValueException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function assertNotResponseHeaderRegex($header, $pattern)
     {
@@ -225,6 +256,9 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
      * Assert that response is a redirect
      *
      * @return void
+     * @throws ExpectationFailedException
+     * @throws UnexpectedValueException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function assertRedirect()
     {
@@ -242,6 +276,9 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
      * Assert that response is NOT a redirect
      *
      * @return void
+     * @throws ExpectationFailedException
+     * @throws UnexpectedValueException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function assertNotRedirect()
     {
@@ -260,6 +297,9 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
      *
      * @param string $url
      * @return void
+     * @throws ExpectationFailedException
+     * @throws UnexpectedValueException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function assertRedirectTo($url)
     {
@@ -285,6 +325,9 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
      *
      * @param string $url
      * @return void
+     * @throws ExpectationFailedException
+     * @throws UnexpectedValueException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function assertNotRedirectTo($url)
     {
@@ -306,6 +349,8 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
 
     /**
      * Assert that response redirects to given route
+     *
+     * @throws \PHPUnit\Framework\Exception
      */
     final public function assertRedirectToRoute(string $route): void
     {
@@ -317,6 +362,8 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
 
     /**
      * Assert that response does not redirect to given route
+     *
+     * @throws \PHPUnit\Framework\Exception
      */
     final public function assertNotRedirectToRoute(string $route): void
     {
@@ -334,6 +381,9 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
      *
      * @param string $pattern
      * @return void
+     * @throws ExpectationFailedException
+     * @throws UnexpectedValueException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function assertRedirectRegex($pattern)
     {
@@ -359,6 +409,9 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
      *
      * @param string $pattern
      * @return void
+     * @throws ExpectationFailedException
+     * @throws UnexpectedValueException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function assertNotRedirectRegex($pattern)
     {
@@ -395,6 +448,7 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
      * @param  string $path
      * @param  bool $useXpath
      * @return Crawler
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     private function query($path, $useXpath = false)
     {
@@ -414,6 +468,7 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
      * Execute a xpath query
      *
      * @param string $path
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     private function xpathQuery($path): Crawler
     {
@@ -425,6 +480,7 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
      *
      * @param  string $path
      * @return int
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     private function queryCount($path)
     {
@@ -436,6 +492,7 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
      *
      * @param  string $path
      * @return int
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     private function xpathQueryCount($path)
     {
@@ -445,6 +502,7 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
     /**
      * @param string $path
      * @param bool $useXpath
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     private function queryCountOrxpathQueryCount($path, $useXpath = false): int
     {
@@ -460,6 +518,8 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
      *
      * @param string $path
      * @param bool $useXpath
+     * @throws ExpectationFailedException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     private function queryAssertion($path, $useXpath = false): void
     {
@@ -478,6 +538,8 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
      *
      * @param string $path CSS selector path
      * @return void
+     * @throws ExpectationFailedException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function assertQuery($path)
     {
@@ -489,6 +551,8 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
      *
      * @param string $path XPath path
      * @return void
+     * @throws ExpectationFailedException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function assertXpathQuery($path)
     {
@@ -500,6 +564,8 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
      *
      * @param string $path CSS selector path
      * @param bool $useXpath
+     * @throws ExpectationFailedException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     private function notQueryAssertion($path, $useXpath = false): void
     {
@@ -518,6 +584,8 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
      *
      * @param string $path CSS selector path
      * @return void
+     * @throws ExpectationFailedException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function assertNotQuery($path)
     {
@@ -529,6 +597,8 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
      *
      * @param string $path XPath path
      * @return void
+     * @throws ExpectationFailedException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function assertNotXpathQuery($path)
     {
@@ -541,6 +611,8 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
      * @param string $path CSS selector path
      * @param int $count Number of nodes that should match
      * @param bool $useXpath
+     * @throws ExpectationFailedException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     private function queryCountAssertion($path, $count, $useXpath = false): void
     {
@@ -562,6 +634,8 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
      * @param string $path CSS selector path
      * @param int $count Number of nodes that should match
      * @return void
+     * @throws ExpectationFailedException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function assertQueryCount($path, $count)
     {
@@ -574,6 +648,8 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
      * @param string $path XPath path
      * @param int $count Number of nodes that should match
      * @return void
+     * @throws ExpectationFailedException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function assertXpathQueryCount($path, $count)
     {
@@ -586,6 +662,8 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
      * @param string $path CSS selector path
      * @param int $count Number of nodes that should NOT match
      * @param bool $useXpath
+     * @throws ExpectationFailedException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     private function notQueryCountAssertion($path, $count, $useXpath = false): void
     {
@@ -606,6 +684,8 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
      * @param string $path CSS selector path
      * @param int $count Number of nodes that should NOT match
      * @return void
+     * @throws ExpectationFailedException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function assertNotQueryCount($path, $count)
     {
@@ -618,6 +698,8 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
      * @param string $path XPath path
      * @param int $count Number of nodes that should NOT match
      * @return void
+     * @throws ExpectationFailedException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function assertNotXpathQueryCount($path, $count)
     {
@@ -630,6 +712,8 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
      * @param string $path CSS selector path
      * @param int $count Minimum number of nodes that should match
      * @param bool $useXpath
+     * @throws ExpectationFailedException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     private function queryCountMinAssertion($path, $count, $useXpath = false): void
     {
@@ -651,6 +735,8 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
      * @param string $path CSS selector path
      * @param int $count Minimum number of nodes that should match
      * @return void
+     * @throws ExpectationFailedException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function assertQueryCountMin($path, $count)
     {
@@ -663,6 +749,8 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
      * @param string $path XPath path
      * @param int $count Minimum number of nodes that should match
      * @return void
+     * @throws ExpectationFailedException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function assertXpathQueryCountMin($path, $count)
     {
@@ -675,6 +763,8 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
      * @param string $path CSS selector path
      * @param int $count Maximum number of nodes that should match
      * @param bool $useXpath
+     * @throws ExpectationFailedException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     private function queryCountMaxAssertion($path, $count, $useXpath = false): void
     {
@@ -696,6 +786,8 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
      * @param string $path CSS selector path
      * @param int $count Maximum number of nodes that should match
      * @return void
+     * @throws ExpectationFailedException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function assertQueryCountMax($path, $count)
     {
@@ -708,6 +800,8 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
      * @param string $path XPath path
      * @param int $count Maximum number of nodes that should match
      * @return void
+     * @throws ExpectationFailedException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function assertXpathQueryCountMax($path, $count)
     {
@@ -720,6 +814,8 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
      * @param string $path CSS selector path
      * @param string $match content that should be contained in matched nodes
      * @param bool $useXpath
+     * @throws ExpectationFailedException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     private function queryContentContainsAssertion($path, $match, $useXpath = false): void
     {
@@ -759,6 +855,8 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
      * @param string $path CSS selector path
      * @param string $match content that should be contained in matched nodes
      * @return void
+     * @throws ExpectationFailedException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function assertQueryContentContains($path, $match)
     {
@@ -771,6 +869,8 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
      * @param string $path XPath path
      * @param string $match content that should be contained in matched nodes
      * @return void
+     * @throws ExpectationFailedException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function assertXpathQueryContentContains($path, $match)
     {
@@ -783,6 +883,8 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
      * @param string $path CSS selector path
      * @param string $match content that should NOT be contained in matched nodes
      * @param bool $useXpath
+     * @throws ExpectationFailedException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     private function notQueryContentContainsAssertion($path, $match, $useXpath = false): void
     {
@@ -813,6 +915,8 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
      * @param string $path CSS selector path
      * @param string $match content that should NOT be contained in matched nodes
      * @return void
+     * @throws ExpectationFailedException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function assertNotQueryContentContains($path, $match)
     {
@@ -825,6 +929,8 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
      * @param string $path XPath path
      * @param string $match content that should NOT be contained in matched nodes
      * @return void
+     * @throws ExpectationFailedException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function assertNotXpathQueryContentContains($path, $match)
     {
@@ -837,6 +943,8 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
      * @param string $path CSS selector path
      * @param string $pattern Pattern that should be contained in matched nodes
      * @param bool $useXpath
+     * @throws ExpectationFailedException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     private function queryContentRegexAssertion($path, $pattern, $useXpath = false): void
     {
@@ -877,6 +985,8 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
      * @param string $path CSS selector path
      * @param string $pattern Pattern that should be contained in matched nodes
      * @return void
+     * @throws ExpectationFailedException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function assertQueryContentRegex($path, $pattern)
     {
@@ -889,6 +999,8 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
      * @param string $path XPath path
      * @param string $pattern Pattern that should be contained in matched nodes
      * @return void
+     * @throws ExpectationFailedException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function assertXpathQueryContentRegex($path, $pattern)
     {
@@ -901,6 +1013,8 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
      * @param string $path CSS selector path
      * @param string $pattern pattern that should NOT be contained in matched nodes
      * @param bool $useXpath
+     * @throws ExpectationFailedException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     private function notQueryContentRegexAssertion($path, $pattern, $useXpath = false): void
     {
@@ -930,6 +1044,8 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
      * @param string $path CSS selector path
      * @param string $pattern pattern that should NOT be contained in matched nodes
      * @return void
+     * @throws ExpectationFailedException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function assertNotQueryContentRegex($path, $pattern)
     {
@@ -942,6 +1058,8 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
      * @param string $path XPath path
      * @param string $pattern pattern that should NOT be contained in matched nodes
      * @return void
+     * @throws ExpectationFailedException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function assertNotXpathQueryContentRegex($path, $pattern)
     {

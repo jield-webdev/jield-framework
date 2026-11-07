@@ -19,8 +19,8 @@ class ViewFeedStrategyFactory implements FactoryInterface
      *
      * It then attaches the strategy to the View service, at a priority of 100.
      *
-     * @param  string $requestedName
-     * @param  null|array $options
+     * @throws \ReflectionException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): mixed
     {

@@ -27,6 +27,7 @@ class DoctrineCachedORMAdapter extends AbstractDoctrinePaginator implements Adap
     /**
      * @param int $offset
      * @param int $itemCountPerPage
+     * @throws \Laminas\Cache\Exception\ExceptionInterface
      */
     #[Override]
     public function getItems($offset, $itemCountPerPage): array

@@ -121,6 +121,8 @@ final class ElementAnnotationsListener extends AbstractAnnotationsListener
 
     /**
      * Allow creating fieldsets from composed entity properties
+     *
+     * @throws \ReflectionException
      */
     public function handleComposedObjectAnnotation(EventInterface $e): void
     {

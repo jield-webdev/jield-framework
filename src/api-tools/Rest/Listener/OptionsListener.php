@@ -26,9 +26,6 @@ class OptionsListener implements ListenerAggregateInterface
 {
     use ListenerAggregateTrait;
 
-    /**
-     * @param array $config
-     */
     public function __construct(
         protected array $config,
     ) {}
@@ -97,7 +94,6 @@ class OptionsListener implements ListenerAggregateInterface
      *
      * Ensure all options in the array are UPPERCASE.
      *
-     * @param array|string $methods
      * @return array
      */
     protected function normalizeMethods(array|string $methods): array|string
@@ -112,7 +108,6 @@ class OptionsListener implements ListenerAggregateInterface
 
     /**
      * Create the Allow header
-     *
      */
     protected function createAllowHeader(array $options, Response $response): void
     {
@@ -124,7 +119,6 @@ class OptionsListener implements ListenerAggregateInterface
      * Prepare and return an OPTIONS response
      *
      * Creates an empty response with an Allow header.
-     *
      */
     protected function getOptionsResponse(MvcEvent $event, array $options): Response
     {
@@ -136,7 +130,6 @@ class OptionsListener implements ListenerAggregateInterface
 
     /**
      * Prepare a 405 response
-     *
      */
     protected function get405Response(MvcEvent $event, array $options): Response
     {
@@ -153,8 +146,6 @@ class OptionsListener implements ListenerAggregateInterface
      *
      * If an entity request was detected, but no entity configuration exists, returns
      * empty array.
-     *
-     * @param RouteMatch $matches
      */
     protected function getConfigForControllerAndMatches(array $config, RouteMatch $matches): array
     {

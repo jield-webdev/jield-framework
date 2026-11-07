@@ -26,7 +26,6 @@ abstract class AbstractListener
 
     /**
      * @param ListenerOptions $options the value to be set
-     * @return static
      */
     public function setOptions(ListenerOptions $options): static
     {
@@ -37,9 +36,8 @@ abstract class AbstractListener
     /**
      * Write a simple array of scalars to a file
      *
-     * @param string $filePath
-     * @param array $array
-     * @return static
+     * @throws ConfigCannotBeCachedException
+     * @throws \Webimpress\SafeWriter\Exception\ExceptionInterface
      */
     protected function writeArrayToFile(string $filePath, array $array): static
     {

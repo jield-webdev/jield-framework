@@ -12,6 +12,9 @@ use Psr\Container\ContainerInterface;
 
 final class BaseLoggingCommandInitializer implements InitializerInterface
 {
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     #[Override]
     public function __invoke(ContainerInterface $container, mixed $instance): void
     {

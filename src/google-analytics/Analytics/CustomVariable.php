@@ -58,6 +58,9 @@ class CustomVariable
         return $this;
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     public function setScope(int $scope): CustomVariable
     {
         $allowed = [self::SCOPE_VISITOR, self::SCOPE_SESSION, self::SCOPE_PAGE_LEVEL];

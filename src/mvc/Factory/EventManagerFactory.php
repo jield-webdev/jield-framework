@@ -18,10 +18,6 @@ class EventManagerFactory implements FactoryInterface
      *
      * Creates a new EventManager instance, seeding it with a shared instance
      * of SharedEventManager.
-     *
-     * @param string $requestedName
-     * @param null|array $options
-     * @return EventManager
      */
     public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): EventManager
     {

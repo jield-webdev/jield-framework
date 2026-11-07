@@ -30,6 +30,7 @@ final class ContinueIfEmpty
      * Receive and process the contents of an annotation
      *
      * @param bool|string $continueIfEmpty
+     * @throws \Laminas\Filter\Exception\RuntimeException
      */
     public function __construct($continueIfEmpty = true)
     {

@@ -26,6 +26,7 @@ class AclListener
      *      - Page is accepted if ACL allows page's resource or privilege.
      *
      * @return bool
+     * @throws \ReflectionException
      */
     public static function accept(Event $event)
     {

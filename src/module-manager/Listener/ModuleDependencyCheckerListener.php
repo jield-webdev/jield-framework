@@ -18,7 +18,10 @@ class ModuleDependencyCheckerListener
     /** @var array of already loaded modules, indexed by module name */
     protected array $loaded = [];
 
-    /** @throws Exception\MissingDependencyModuleException */
+    /**
+     * @throws Exception\MissingDependencyModuleException
+     * @throws \ReflectionException
+     */
     public function __invoke(ModuleEvent $e): void
     {
         $module = $e->getModule();

@@ -23,8 +23,6 @@ class Form extends AbstractHelper
 {
     /**
      * Attributes valid for this tag (form)
-     *
-     * @var array
      */
     protected array $validTagAttributes = [
         'accept-charset' => true,
@@ -43,7 +41,8 @@ class Form extends AbstractHelper
      * @template T as null|FormInterface
      * @psalm-param T $form
      * @psalm-return (T is null ? static : string)
-     * @return Form|string
+     * @throws \ReflectionException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function __invoke(?FormInterface $form = null): string|static
     {
@@ -56,6 +55,9 @@ class Form extends AbstractHelper
 
     /**
      * Render a form from the provided $form,
+     *
+     * @throws \ReflectionException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function render(FormInterface $form): string
     {
@@ -79,6 +81,8 @@ class Form extends AbstractHelper
 
     /**
      * Generate an opening form tag
+     *
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function openTag(?FormInterface $form = null): string
     {

@@ -25,6 +25,10 @@ final class EventManagerFactory extends AbstractFactory
 {
     /**
      * {@inheritDoc}
+     * @throws RuntimeException
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \ReflectionException
+     * @throws InvalidArgumentException
      */
     public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): EventManager
     {

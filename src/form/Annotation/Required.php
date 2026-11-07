@@ -32,6 +32,7 @@ final class Required
      * Receive and process the contents of an annotation
      *
      * @param bool|string $required
+     * @throws \Laminas\Filter\Exception\RuntimeException
      */
     public function __construct($required = true)
     {

@@ -13,7 +13,7 @@ use Psr\Container\ContainerInterface;
 class SendResponseListenerFactory
 {
     /**
-     * @return SendResponseListener
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function __invoke(ContainerInterface $container): SendResponseListener
     {

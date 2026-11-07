@@ -30,6 +30,7 @@ final class AllowEmpty
      * Receive and process the contents of an annotation
      *
      * @param bool|string $allowEmpty
+     * @throws \Laminas\Filter\Exception\RuntimeException
      */
     public function __construct($allowEmpty = true)
     {

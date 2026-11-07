@@ -11,6 +11,9 @@ use function is_array;
 
 class ContentNegotiationOptionsFactory
 {
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     public function __invoke(ContainerInterface $container): ContentNegotiationOptions
     {
         return new ContentNegotiationOptions(options: \Jield\Stdlib\Value::options($this->getConfig(container: $container)));
@@ -24,6 +27,7 @@ class ContentNegotiationOptionsFactory
      * - Validates that the api-tools-content-negotiation key exists, and evaluates
      *   to an array; if not,returns an empty array.
      *
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     private function getConfig(ContainerInterface $container): array
     {

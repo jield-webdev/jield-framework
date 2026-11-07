@@ -21,8 +21,6 @@ class AuthenticationService implements UserIdProviderInterface
 
     /**
      *  Set authentication service
-     *
-     * @param array $config
      */
     public function __construct(
         private readonly ?AuthenticationServiceInterface $authenticationService = null,
@@ -36,6 +34,7 @@ class AuthenticationService implements UserIdProviderInterface
     /**
      * Use implementation of Laminas\Authentication\AuthenticationServiceInterface to fetch the identity.
      *
+     * @throws \ReflectionException
      */
     #[Override]
     public function __invoke(RequestInterface $request): mixed

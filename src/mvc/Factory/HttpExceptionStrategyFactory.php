@@ -16,11 +16,6 @@ class HttpExceptionStrategyFactory implements FactoryInterface
 {
     use HttpViewManagerConfigTrait;
 
-    /**
-     * @param  string $requestedName
-     * @param  null|array $options
-     * @return ExceptionStrategy
-     */
     public function __invoke(
         ContainerInterface $container,
         string $requestedName,

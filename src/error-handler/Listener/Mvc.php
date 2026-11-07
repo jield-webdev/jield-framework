@@ -37,6 +37,12 @@ final class Mvc extends AbstractListenerAggregate
         return false;
     }
 
+    /**
+     * @throws \Laminas\View\Exception\RenderingFailedException
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \JsonException
+     * @throws \Symfony\Component\Mailer\Exception\TransportExceptionInterface
+     */
     protected function handleShutdownException(ErrorException $exception): void
     {
         $event = Assert::notNull($this->mvcEvent);
@@ -44,10 +50,8 @@ final class Mvc extends AbstractListenerAggregate
         $this->exceptionError($event);
     }
 
-    /** @var string */
     private const string DISPLAY_SETTINGS = 'display-settings';
 
-    /** @var string */
     private const string MESSAGE = 'message';
 
     public function __construct(
@@ -81,6 +85,12 @@ final class Mvc extends AbstractListenerAggregate
         $this->listeners[] = $events->attach(eventName: MvcEvent::EVENT_BOOTSTRAP, listener: $this->phpError(...));
     }
 
+    /**
+     * @throws \Laminas\View\Exception\RenderingFailedException
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \JsonException
+     * @throws \Symfony\Component\Mailer\Exception\TransportExceptionInterface
+     */
     public function exceptionError(MvcEvent $mvcEvent): void
     {
         /** @mago-var mixed $exception */
@@ -111,6 +121,10 @@ final class Mvc extends AbstractListenerAggregate
         $this->showDefaultView(mvcEvent: $mvcEvent, request: $request);
     }
 
+    /**
+     * @throws \Laminas\View\Exception\RenderingFailedException
+     * @throws \Psr\Container\ContainerExceptionInterface
+     */
     private function showDefaultView(MvcEvent $mvcEvent, RequestInterface $request): void
     {
         Assert::isInstanceOf(value: $request, class: Request::class);

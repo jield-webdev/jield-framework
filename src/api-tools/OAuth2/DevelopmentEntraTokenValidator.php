@@ -6,11 +6,17 @@ namespace Jield\ApiTools\OAuth2;
 
 final class DevelopmentEntraTokenValidator extends EntraTokenValidator
 {
+    /**
+     * @throws EntraException
+     */
     protected function invalid(string $standardMessage, string $detail): never
     {
         throw new EntraException('invalid_grant', $standardMessage . ': ' . $detail);
     }
 
+    /**
+     * @throws EntraException
+     */
     protected function signingKeyFailure(EntraException $exception, string $kid): never
     {
         throw new EntraException(

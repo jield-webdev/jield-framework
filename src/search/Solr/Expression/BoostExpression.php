@@ -16,9 +16,6 @@ use Stringable;
  */
 class BoostExpression extends Expression implements Stringable
 {
-    /**
-     * @param string|ExpressionInterface|null $expr
-     */
     #[Pure]
     public function __construct(
         private readonly float $boost,

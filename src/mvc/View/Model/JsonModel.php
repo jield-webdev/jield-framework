@@ -29,6 +29,9 @@ class JsonModel extends ViewModel
         return $this->options[$name] ?? $default;
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     public function setJsonpCallback(?string $callback): static
     {
         if ($callback !== null && !preg_match('/^[a-zA-Z_$][a-zA-Z0-9_$.]*$/D', $callback)) {
@@ -43,6 +46,9 @@ class JsonModel extends ViewModel
         return $this->jsonpCallback;
     }
 
+    /**
+     * @throws \JsonException
+     */
     public function serialize(): string
     {
         $json = json_encode($this->getVariables(), JSON_THROW_ON_ERROR);

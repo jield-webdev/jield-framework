@@ -15,8 +15,6 @@ class InjectRoutematchParamsListener extends AbstractListenerAggregate
 {
     /**
      * Should request params overwrite existing request params?
-     *
-     * @var bool
      */
     protected bool $overwrite = true;
 
@@ -30,8 +28,6 @@ class InjectRoutematchParamsListener extends AbstractListenerAggregate
 
     /**
      * Take parameters from RouteMatch and inject them into the request.
-     *
-     * @return void
      */
     public function injectParams(MvcEvent $e): void
     {
@@ -75,9 +71,6 @@ class InjectRoutematchParamsListener extends AbstractListenerAggregate
         $this->overwrite = $overwrite;
     }
 
-    /**
-     * @return bool
-     */
     public function getOverwrite(): bool
     {
         return $this->overwrite;

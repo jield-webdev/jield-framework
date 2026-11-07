@@ -11,6 +11,9 @@ use Jield\Stdlib\Value;
 
 class QueryParams extends AbstractPlugin
 {
+    /**
+     * @throws \ReflectionException
+     */
     public function __invoke(): array
     {
         $controller = $this->getController();

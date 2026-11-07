@@ -30,9 +30,6 @@ class ConstructedNavigationFactory extends AbstractNavigationFactory
         return $this->pages;
     }
 
-    /**
-     * @return string
-     */
     public function getName(): string
     {
         return 'constructed';
