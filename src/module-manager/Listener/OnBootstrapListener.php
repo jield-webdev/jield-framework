@@ -8,8 +8,9 @@ use Jield\ModuleManager\Feature\BootstrapListenerInterface;
 use Jield\ModuleManager\ModuleEvent;
 use Jield\ModuleManager\ModuleManager;
 use Jield\Mvc\Application;
-
 use Jield\Stdlib\Value;
+use Webmozart\Assert\Assert;
+
 use function method_exists;
 
 class OnBootstrapListener extends AbstractListener
@@ -20,16 +21,13 @@ class OnBootstrapListener extends AbstractListener
         $module = $e->getModule();
         if (
             !$module instanceof BootstrapListenerInterface
-            && !method_exists(object_or_class: Value::objectOrString($module), method: 'onBootstrap')
+            && !method_exists(object_or_class: $module, method: 'onBootstrap')
         ) {
             return;
         }
 
         $moduleManager = $e->getTarget();
-        $events = Value::call(
-            Value::present(Value::object($moduleManager)),
-            'getEventManager',
-        );
+        $events = Value::call(Assert::object($moduleManager), 'getEventManager');
         $sharedEvents = Value::call($events, 'getSharedManager');
         Value::call($sharedEvents, 'attach', [
             Application::class,

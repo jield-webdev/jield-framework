@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Jield\ModuleManager\Listener\Exception;
 
 use Brick\VarExporter\ExportException;
-use Jield\Stdlib\Value;
 use RuntimeException;
 use Throwable;
 
@@ -26,7 +25,7 @@ final class ConfigCannotBeCachedException extends RuntimeException
                 'Cannot export config into a cache file. Config contains uncacheable entries: %s',
                 $exportException->getMessage(),
             ),
-            code: Value::int($exportException->getCode()),
+            code: $exportException->getCode(),
             previous: $exportException,
         );
     }

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Jield\Search\Command;
 
 use Jield\Search\Service\ConsoleService;
-use Jield\Stdlib\Value;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -32,7 +31,7 @@ final class TestIndex extends Command
 
         $output->writeln(messages: '<info>Testing the search engine index</info>');
 
-        $this->consoleService->testIndex(output: $output, clearIndex: Value::bool($reset));
+        $this->consoleService->testIndex(output: $output, clearIndex: $reset);
 
         $output->writeln(messages: '');
         $output->writeln(messages: '<info>Test the search engine index completed</info>');

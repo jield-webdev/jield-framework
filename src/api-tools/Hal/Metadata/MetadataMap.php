@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Jield\ApiTools\Hal\Metadata;
 
 use Jield\ApiTools\Hal\Exception;
-use Jield\Stdlib\Value;
 use Laminas\Hydrator\HydratorPluginManager;
 use Laminas\Hydrator\HydratorPluginManagerInterface;
 use Laminas\ServiceManager\ServiceManager;
@@ -82,9 +81,7 @@ class MetadataMap
                 ));
             }
 
-            $this->map[Value::classString($class)] = $metadata instanceof Metadata
-                ? $metadata
-                : Value::stringKeyedArray($metadata);
+            $this->map[$class] = $metadata instanceof Metadata ? $metadata : $metadata;
         }
 
         return $this;

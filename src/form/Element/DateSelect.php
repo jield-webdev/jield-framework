@@ -9,7 +9,6 @@ use DateTimeInterface;
 use Exception;
 use Jield\Form\Exception\InvalidArgumentException;
 use Jield\Form\FormInterface;
-use Jield\Stdlib\Value;
 use Laminas\Validator\Date as DateValidator;
 use Laminas\Validator\ValidatorInterface;
 
@@ -51,7 +50,7 @@ class DateSelect extends MonthSelect
         parent::setOptions(options: $options);
 
         if (isset($this->options['day_attributes'])) {
-            $this->setDayAttributes(dayAttributes: Value::scalarMap($this->options['day_attributes']));
+            $this->setDayAttributes(dayAttributes: $this->options['day_attributes']);
         }
 
         return $this;
@@ -146,12 +145,7 @@ class DateSelect extends MonthSelect
             return null;
         }
 
-        return sprintf(
-            '%04d-%02d-%02d',
-            Value::scalar($year),
-            Value::scalar($month),
-            Value::scalar($day),
-        );
+        return sprintf('%04d-%02d-%02d', $year, $month, $day);
     }
 
     /**

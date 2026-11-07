@@ -12,6 +12,7 @@ use Laminas\View\Helper\EscapeHtml;
 use Laminas\View\Helper\EscapeHtmlAttr;
 use Laminas\View\Helper\HtmlAttributes;
 use RecursiveIteratorIterator;
+use Webmozart\Assert\Assert;
 
 use function implode;
 use function is_int;
@@ -36,34 +37,26 @@ final class Menu
      */
     public function __invoke(AbstractContainer $container, array $options = []): string
     {
-        /** @var mixed $ulClass */
         $ulClass = $options['ulClass'] ?? $this->ulClass;
-        /** @var mixed $indent */
         $indent = $options['indent'] ?? '';
-        /** @var mixed $minDepth */
         $minDepth = $options['minDepth'] ?? 0;
-        /** @var mixed $maxDepth */
         $maxDepth = $options['maxDepth'] ?? null;
-        /** @var mixed $onlyActive */
         $onlyActive = $options['onlyActive'] ?? false;
-        /** @var mixed $escapeLabels */
         $escapeLabels = $options['escapeLabels'] ?? true;
-        /** @var mixed $addClassToListItem */
         $addClassToListItem = $options['addClassToListItem'] ?? false;
-        /** @var mixed $liActiveClass */
         $liActiveClass = $options['liActiveClass'] ?? 'active';
         $this->renderInvisible = Value::truthy($options['renderInvisible'] ?? $this->renderInvisible);
 
         return $this->renderNormalMenu(
             container: $container,
-            ulClass: Value::string($ulClass),
-            indent: Value::string($indent),
-            minDepth: Value::int($minDepth),
-            maxDepth: Value::nullableInt($maxDepth),
-            onlyActive: Value::bool($onlyActive),
-            escapeLabels: Value::bool($escapeLabels),
-            addClassToListItem: Value::bool($addClassToListItem),
-            liActiveClass: Value::string($liActiveClass),
+            ulClass: $ulClass,
+            indent: $indent,
+            minDepth: $minDepth,
+            maxDepth: $maxDepth,
+            onlyActive: $onlyActive,
+            escapeLabels: $escapeLabels,
+            addClassToListItem: $addClassToListItem,
+            liActiveClass: $liActiveClass,
         );
     }
 
@@ -136,19 +129,18 @@ final class Menu
             }
 
             $depth -= $minDepth;
-            $myIndent = $indent . str_repeat('        ', Value::nonNegativeInt($depth));
+            $myIndent = $indent . str_repeat('        ', Assert::notNegativeInteger($depth));
 
             if ($depth > $prevDepth) {
                 if ($ulClass !== '' && $depth === 0) {
-                    $ulClass =
-                        ' class="' . Value::stringify($this->escapeHtmlAttr->__invoke($ulClass)) . '"';
+                    $ulClass = ' class="' . Value::stringify($this->escapeHtmlAttr->__invoke($ulClass)) . '"';
                 } else {
                     $ulClass = ' class="dropdown-menu" aria-labelledby="' . $key . '"';
                 }
                 $html .= $myIndent . '<ul' . $ulClass . '>' . PHP_EOL;
             } elseif ($prevDepth > $depth) {
                 for ($i = $prevDepth; $i > $depth; $i--) {
-                    $ind = $indent . str_repeat('        ', Value::nonNegativeInt($i));
+                    $ind = $indent . str_repeat('        ', Assert::notNegativeInteger($i));
                     $html .= $ind . '    </li>' . PHP_EOL;
                     $html .= $ind . '</ul>' . PHP_EOL;
                 }
@@ -171,10 +163,7 @@ final class Menu
                 $liClasses[] = $page->getClass();
             }
 
-            $liClass =
-                ' class="'
-                . Value::stringify($this->escapeHtmlAttr->__invoke(implode(' ', $liClasses)))
-                . '"';
+            $liClass = ' class="' . Value::stringify($this->escapeHtmlAttr->__invoke(implode(' ', $liClasses))) . '"';
             $html .=
                 $myIndent
                 . '    <li'
@@ -208,13 +197,13 @@ final class Menu
         ];
 
         if (null !== $page->get('role')) {
-            $attribs['role'] = Value::plainScalar($page->get('role'));
+            $attribs['role'] = $page->get('role');
         }
         if (null !== $page->get('data-bs-toggle')) {
-            $attribs['data-bs-toggle'] = Value::plainScalar($page->get('data-bs-toggle'));
+            $attribs['data-bs-toggle'] = $page->get('data-bs-toggle');
         }
         if (null !== $page->get('aria-expanded')) {
-            $attribs['aria-expanded'] = Value::plainScalar($page->get('aria-expanded'));
+            $attribs['aria-expanded'] = $page->get('aria-expanded');
         }
 
         if (!$addClassToListItem) {

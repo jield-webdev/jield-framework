@@ -29,7 +29,7 @@ class AuthenticationService implements UserIdProviderInterface
         array $config = [],
     ) {
         if (isset($config['api-tools-oauth2']['user_id'])) {
-            $this->userId = Value::string($config['api-tools-oauth2']['user_id']);
+            $this->userId = $config['api-tools-oauth2']['user_id'];
         }
     }
 

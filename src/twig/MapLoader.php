@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Jield\Twig;
 
-use Jield\Stdlib\Value;
 use Twig\Error;
 use Twig\Loader;
 use Twig\Source;
+use Webmozart\Assert\Assert;
 
 use function array_key_exists;
 use function file_exists;
@@ -38,17 +38,10 @@ class MapLoader implements Loader\LoaderInterface
         if (!$this->exists($name)) {
             throw new Error\LoaderError(sprintf('Unable to find template "%s" from template map', $name));
         }
-        if (!file_exists(Value::string($this->map[$name]))) {
-            throw new Error\LoaderError(sprintf(
-                'Unable to open file "%s" from template map',
-                Value::scalar($this->map[$name]),
-            ));
+        if (!file_exists($this->map[$name])) {
+            throw new Error\LoaderError(sprintf('Unable to open file "%s" from template map', $this->map[$name]));
         }
-        return new Source(
-            Value::string(file_get_contents(Value::string($this->map[$name]))),
-            $name,
-            Value::string($this->map[$name]),
-        );
+        return new Source(Assert::string(file_get_contents($this->map[$name])), $name, $this->map[$name]);
     }
 
     public function getCacheKey(string $name): string
@@ -58,7 +51,7 @@ class MapLoader implements Loader\LoaderInterface
 
     public function isFresh(string $name, int $time): bool
     {
-        $modified = filemtime(Value::string($this->map[$name]));
+        $modified = filemtime($this->map[$name]);
         return $modified !== false && $modified <= $time;
     }
 }

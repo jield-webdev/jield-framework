@@ -15,6 +15,7 @@ use Laminas\Http\Request;
 use Laminas\Http\Response;
 use SensitiveParameter;
 use Throwable;
+use Webmozart\Assert\Assert;
 
 abstract class AbstractEntraBearerAuthenticationListener
 {
@@ -38,14 +39,12 @@ abstract class AbstractEntraBearerAuthenticationListener
             return null;
         }
 
-        $header = Value::instance($request->getHeaders(), Headers::class)->get(
-            'Authorization',
-        );
+        $header = Assert::isInstanceOf($request->getHeaders(), Headers::class)->get('Authorization');
         if (
             !$header
             || !preg_match(
                 '/^Bearer (\S+)$/iD',
-                Value::instance($header, HeaderInterface::class)->getFieldValue(),
+                Assert::isInstanceOf($header, HeaderInterface::class)->getFieldValue(),
                 $matches,
             )
         ) {
@@ -70,9 +69,7 @@ abstract class AbstractEntraBearerAuthenticationListener
             return null;
         }
 
-        /** @var mixed $tenantId */
         $tenantId = $unverified['tid'] ?? null;
-        /** @var mixed $audience */
         $audience = $unverified['aud'] ?? null;
         if (
             !is_string($tenantId)
@@ -108,7 +105,7 @@ abstract class AbstractEntraBearerAuthenticationListener
             'WWW-Authenticate',
             'Bearer error="' . ($status === 403 ? 'insufficient_scope' : 'invalid_token') . '"',
         );
-        return Value::instance(
+        return Assert::isInstanceOf(
             $response->setContent(json_encode([
                 'error' => $status === 403 ? 'insufficient_scope' : 'invalid_token',
                 'error_description' => $status === 503

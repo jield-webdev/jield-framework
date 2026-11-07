@@ -18,14 +18,11 @@ class ConfigServiceFactory implements FactoryInterface
     {
         $config = $container->get('config');
 
-        $bjyAuthorizeConfig = Value::accessible($config)['bjyauthorize'];
-        $jieldAuthorizeConfig = Value::accessible($config)['jield_authorize'];
+        $bjyAuthorizeConfig = $config['bjyauthorize'];
+        $jieldAuthorizeConfig = $config['jield_authorize'];
 
         //Check if the role entity class implements the RoleInterface
-        Assert::implementsInterface(
-            value: Value::accessible($jieldAuthorizeConfig)['role_entity_class'],
-            interface: RoleInterface::class,
-        );
+        Assert::implementsInterface(value: $jieldAuthorizeConfig['role_entity_class'], interface: RoleInterface::class);
 
         //Inject the role_provider
         Value::setPath(
@@ -34,39 +31,23 @@ class ConfigServiceFactory implements FactoryInterface
             [
                 ObjectRepositoryProvider::class => [
                     'object_manager' => EntityManager::class,
-                    'role_entity_class' => Value::accessible($jieldAuthorizeConfig)['role_entity_class'],
+                    'role_entity_class' => $jieldAuthorizeConfig['role_entity_class'],
                 ],
             ],
         );
 
         //Override the cache_enabled
-        Value::setPath(
-            $bjyAuthorizeConfig,
-            ['cache_enabled'],
-            Value::accessible($jieldAuthorizeConfig)['cache_enabled'],
-        );
+        Value::setPath($bjyAuthorizeConfig, ['cache_enabled'], $jieldAuthorizeConfig['cache_enabled']);
 
         //Override the default role
-        Value::setPath(
-            $bjyAuthorizeConfig,
-            ['default_role'],
-            Value::accessible($jieldAuthorizeConfig)['default_role'],
-        );
+        Value::setPath($bjyAuthorizeConfig, ['default_role'], $jieldAuthorizeConfig['default_role']);
 
         Value::setPath($bjyAuthorizeConfig, ['cache_key'], 'jield-authorize-cache');
 
         //Override the authenticated role
-        Value::setPath(
-            $bjyAuthorizeConfig,
-            ['authenticated_role'],
-            Value::accessible($jieldAuthorizeConfig)['authenticated_role'],
-        );
+        Value::setPath($bjyAuthorizeConfig, ['authenticated_role'], $jieldAuthorizeConfig['authenticated_role']);
 
-        Value::setPath(
-            $bjyAuthorizeConfig,
-            ['login_route'],
-            $jieldAuthorizeConfig['login_route'] ?? 'user/login',
-        );
+        Value::setPath($bjyAuthorizeConfig, ['login_route'], $jieldAuthorizeConfig['login_route'] ?? 'user/login');
 
         return $bjyAuthorizeConfig;
     }

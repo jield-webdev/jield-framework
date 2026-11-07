@@ -9,6 +9,7 @@ use Laminas\ServiceManager\Factory\FactoryInterface;
 use Laminas\Stdlib\AbstractOptions;
 use Psr\Container\ContainerInterface;
 use RuntimeException;
+use Webmozart\Assert\Assert;
 
 use function sprintf;
 
@@ -53,16 +54,13 @@ abstract class AbstractFactory implements FactoryInterface
         $name ??= $this->getName();
 
         $options = $container->get('config');
-        /** @var mixed $options */
-        $options = Value::accessible($options)['doctrine'];
+        $options = $options['doctrine'];
 
         $mappingType = $this->getMappingType();
         if ($mappingType !== '' && $mappingType !== '0') {
-            /** @var mixed $options */
-            $options = Value::accessible($options)[$mappingType];
+            $options = $options[$mappingType];
         }
 
-        /** @var mixed $options */
         $options = $options[$key][$name] ?? null;
 
         if ($options === null) {
@@ -75,7 +73,7 @@ abstract class AbstractFactory implements FactoryInterface
 
         $optionsClass = $this->getOptionsClass();
 
-        return Value::instance(
+        return Assert::isInstanceOf(
             Value::instantiate($optionsClass, [$options]),
             \Laminas\Stdlib\AbstractOptions::class,
         );

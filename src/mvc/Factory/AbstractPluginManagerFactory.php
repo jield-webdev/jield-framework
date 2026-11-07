@@ -10,6 +10,7 @@ use Laminas\ServiceManager\AbstractPluginManager;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Laminas\ServiceManager\ServiceManager;
 use Psr\Container\ContainerInterface;
+use Webmozart\Assert\Assert;
 
 /** @psalm-import-type ServiceManagerConfiguration from ServiceManager */
 abstract class AbstractPluginManagerFactory implements FactoryInterface
@@ -36,7 +37,7 @@ abstract class AbstractPluginManagerFactory implements FactoryInterface
         $pluginManagerClass = static::PLUGIN_MANAGER_CLASS;
         /** @var ServiceManagerConfiguration $managerConfiguration */
         $managerConfiguration = $options;
-        return Value::instance(
+        return Assert::isInstanceOf(
             Value::instantiate($pluginManagerClass, [$container, $managerConfiguration]),
             AbstractPluginManager::class,
         );

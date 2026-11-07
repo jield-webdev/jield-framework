@@ -8,7 +8,6 @@ use Jield\Form\Element\Hidden;
 use Jield\Form\Element\Select as SelectElement;
 use Jield\Form\ElementInterface;
 use Jield\Form\Exception;
-use Jield\Stdlib\Value;
 use Stringable;
 
 use function array_key_exists;
@@ -222,7 +221,7 @@ class FormSelect extends AbstractHelper
             $optionStrings[] = sprintf(
                 $template,
                 $this->createAttributesString(attributes: $attributes),
-                Value::scalar($escapeHtml(value: $label)),
+                $escapeHtml(value: $label),
             );
         }
 

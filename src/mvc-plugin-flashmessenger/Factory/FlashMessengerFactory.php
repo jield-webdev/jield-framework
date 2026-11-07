@@ -19,11 +19,7 @@ class FlashMessengerFactory implements FactoryInterface
         string $requestedName,
         ?array $options = null,
     ): FlashMessenger {
-        $controllerPluginManager = Service::get(
-            $container,
-            PluginManager::class,
-            'ControllerPluginManager',
-        );
+        $controllerPluginManager = Service::get($container, PluginManager::class, 'ControllerPluginManager');
         /** @var \Jield\Mvc\Plugin\FlashMessenger\FlashMessenger $flashMessenger */
         $flashMessenger = $controllerPluginManager->get('flashmessenger');
 

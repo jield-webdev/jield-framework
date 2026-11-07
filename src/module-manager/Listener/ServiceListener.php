@@ -12,6 +12,7 @@ use Laminas\ServiceManager\ServiceManager;
 use Laminas\Stdlib\ArrayUtils;
 use Override;
 use Traversable;
+use Webmozart\Assert\Assert;
 
 use function class_exists;
 use function is_array;
@@ -106,7 +107,7 @@ class ServiceListener implements ServiceListenerInterface
     public function detach(EventManagerInterface $events): void
     {
         foreach ($this->listeners as $key => $listener) {
-            $events->detach(listener: Value::callback($listener));
+            $events->detach(listener: $listener);
 
             unset($this->listeners[$key]);
         }
@@ -128,31 +129,25 @@ class ServiceListener implements ServiceListenerInterface
      */
     public function onLoadModule(ModuleEvent $e): void
     {
-        $module = Value::object($e->getModule());
+        $module = Assert::object($e->getModule());
 
         foreach ($this->serviceManagers as $key => $sm) {
-            $moduleClassInterface = Value::string(Value::accessible($sm)['module_class_interface']);
+            $moduleClassInterface = Assert::string($sm['module_class_interface']);
             if (
                 !$module instanceof $moduleClassInterface
-                && !method_exists(
-                    object_or_class: Value::objectOrString($module),
-                    method: Value::string(Value::accessible($sm)['module_class_method']),
-                )
+                && !method_exists(object_or_class: $module, method: $sm['module_class_method'])
             ) {
                 continue;
             }
 
-            $config = Value::call($module, Value::string(Value::accessible($sm)['module_class_method']));
+            $config = Value::call($module, $sm['module_class_method']);
 
             if (is_object(value: $config)) {
                 if (method_exists(object_or_class: $config, method: '__invoke')) {
-                    /** @var mixed $config */
                     $config = $config();
                 } elseif (method_exists(object_or_class: $config, method: 'getConfig')) {
-                    /** @var mixed $config */
                     $config = $config->getConfig();
                 } elseif (method_exists(object_or_class: $config, method: 'toArray')) {
-                    /** @var mixed $config */
                     $config = $config->toArray();
                 }
             }
@@ -169,11 +164,7 @@ class ServiceListener implements ServiceListenerInterface
             // We are keeping track of which modules provided which configuration to which service managers.
             // The actual merging takes place later. Doing it this way will enable us to provide more powerful
             // debugging tools for showing which modules overrode what.
-            $fullname =
-                $e->getModuleName()
-                . '::'
-                . Value::stringify(Value::accessible($sm)['module_class_method'])
-                . '()';
+            $fullname = $e->getModuleName() . '::' . Value::stringify($sm['module_class_method']) . '()';
             /** @codingStandardsIgnoreLine */
             Value::setPath($this->serviceManagers, [$key, 'configuration', $fullname], $config);
         }
@@ -192,15 +183,10 @@ class ServiceListener implements ServiceListenerInterface
     public function onLoadModulesPost(ModuleEvent $e): void
     {
         $configListener = $e->getConfigListener();
-        /** @var mixed $config */
-        $config = Value::present($configListener)->getMergedConfig(returnConfigAsObject: false);
+        $config = Assert::notNull($configListener)->getMergedConfig(returnConfigAsObject: false);
 
         foreach ($this->serviceManagers as $key => $sm) {
-            $smConfig = $this->mergeServiceConfiguration(
-                key: Value::string($key),
-                metadata: Value::array($sm),
-                config: Value::array($config),
-            );
+            $smConfig = $this->mergeServiceConfiguration(key: Assert::string($key), metadata: $sm, config: $config);
 
             $manager = $sm['service_manager'];
             if (is_string($manager)) {
@@ -215,7 +201,7 @@ class ServiceListener implements ServiceListenerInterface
             if (!$manager instanceof ServiceManager && !$manager instanceof AbstractPluginManager) {
                 throw new Exception\RuntimeException(message: sprintf(
                     'Could not find a valid ServiceManager for %s',
-                    Value::scalar($sm['service_manager']),
+                    $sm['service_manager'],
                 ));
             }
 
@@ -255,13 +241,10 @@ class ServiceListener implements ServiceListenerInterface
         $instance = Value::instantiate($className);
 
         if (method_exists(object_or_class: $instance, method: '__invoke')) {
-            /** @var mixed $config */
             $config = $instance();
         } elseif (method_exists(object_or_class: $instance, method: 'getConfig')) {
-            /** @var mixed $config */
             $config = $instance->getConfig();
         } elseif (method_exists(object_or_class: $instance, method: 'toArray')) {
-            /** @var mixed $config */
             $config = $instance->toArray();
         } elseif ($instance instanceof Traversable) {
             $config = ArrayUtils::iteratorToArray(iterator: $instance);
@@ -303,18 +286,13 @@ class ServiceListener implements ServiceListenerInterface
 
         // Merge all of the things!
         $serviceConfig = [];
-        foreach (Value::iterable(
-            Value::accessible($this->serviceManagers[$key])['configuration'],
-        ) as $configs) {
+        foreach (Assert::isIterable($this->serviceManagers[$key]['configuration']) as $configs) {
             if (isset($configs['configuration_classes'])) {
-                foreach (Value::iterable($configs['configuration_classes']) as $class) {
-                    $configs = ArrayUtils::merge(
-                        a: $configs,
-                        b: $this->serviceConfigToArray(config: Value::string($class)),
-                    );
+                foreach (Assert::isIterable($configs['configuration_classes']) as $class) {
+                    $configs = ArrayUtils::merge(a: $configs, b: $this->serviceConfigToArray(config: $class));
                 }
             }
-            $serviceConfig = ArrayUtils::merge(a: $serviceConfig, b: Value::array($configs));
+            $serviceConfig = ArrayUtils::merge(a: $serviceConfig, b: $configs);
         }
 
         return $serviceConfig;

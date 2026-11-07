@@ -9,7 +9,6 @@ use Doctrine\ORM\Mapping\EntityListenerResolver;
 use Doctrine\ORM\Mapping\NamingStrategy;
 use Doctrine\ORM\Mapping\QuoteStrategy;
 use Doctrine\ORM\Repository\RepositoryFactory;
-use Jield\Stdlib\Value;
 
 /**
  * Configuration options for an ORM Configuration
@@ -465,9 +464,7 @@ final class Configuration extends DBALConfiguration
     /** @param  mixed[] $secondLevelCache */
     public function setSecondLevelCache(array $secondLevelCache): self
     {
-        $this->secondLevelCache = new SecondLevelCacheConfiguration(options: Value::stringKeyedArray(
-            $secondLevelCache,
-        ));
+        $this->secondLevelCache = new SecondLevelCacheConfiguration(options: $secondLevelCache);
 
         return $this;
     }

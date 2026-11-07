@@ -8,8 +8,8 @@ use Jield\Mvc\Exception;
 use Jield\Mvc\Exception\DomainException;
 use Jield\Mvc\InjectApplicationEventInterface;
 use Jield\Mvc\MvcEvent;
-use Jield\Stdlib\Value;
 use Laminas\View\Model\ModelInterface as Model;
+use Webmozart\Assert\Assert;
 
 class Layout extends AbstractPlugin
 {
@@ -25,7 +25,7 @@ class Layout extends AbstractPlugin
     public function setTemplate($template): static
     {
         $viewModel = $this->getViewModel();
-        $viewModel->setTemplate(Value::nonEmptyString($template));
+        $viewModel->setTemplate(Assert::stringNotEmpty($template));
         return $this;
     }
 

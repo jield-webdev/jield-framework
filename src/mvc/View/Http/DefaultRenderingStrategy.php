@@ -7,13 +7,13 @@ namespace Jield\Mvc\View\Http;
 use Exception;
 use Jield\Mvc\Application;
 use Jield\Mvc\MvcEvent;
-use Jield\Stdlib\Value;
 use Laminas\EventManager\AbstractListenerAggregate;
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\Stdlib\ResponseInterface as Response;
 use Laminas\View\Model\ModelInterface as ViewModel;
 use Laminas\View\View;
 use Throwable;
+use Webmozart\Assert\Assert;
 
 class DefaultRenderingStrategy extends AbstractListenerAggregate
 {
@@ -96,7 +96,7 @@ class DefaultRenderingStrategy extends AbstractListenerAggregate
             }
 
             $application = $e->getApplication();
-            $events = Value::present($application)->getEventManager();
+            $events = Assert::notNull($application)->getEventManager();
 
             $e->setError(Application::ERROR_EXCEPTION);
             $e->setParam('exception', $caughtException);

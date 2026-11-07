@@ -187,15 +187,12 @@ class FormElementManager extends AbstractPluginManager
             return;
         }
 
-        /** @var mixed $factory */
         $factory = $instance->getFormFactory();
         Value::call($factory, 'setFormElementManager', [$this]);
 
         if ($container->has(InputFilterPluginManager::class)) {
             $inputFilters = Service::get($container, InputFilterPluginManager::class);
-            Value::call($factory, 'setInputFilterFactory', [\Jield\Form\InputFilterFactory::create(
-                $container,
-            )]);
+            Value::call($factory, 'setInputFilterFactory', [\Jield\Form\InputFilterFactory::create($container)]);
         }
     }
 

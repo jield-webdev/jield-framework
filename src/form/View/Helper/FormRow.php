@@ -9,8 +9,8 @@ use Jield\Form\Element\MonthSelect;
 use Jield\Form\ElementInterface;
 use Jield\Form\Exception;
 use Jield\Form\LabelAwareInterface;
-
 use Jield\Stdlib\Value;
+
 use function in_array;
 use function method_exists;
 use function sprintf;
@@ -200,8 +200,7 @@ class FormRow extends AbstractHelper
 
         if (
             $label !== '' && !$element->hasAttribute(key: 'id')
-            || $element instanceof LabelAwareInterface
-            && Value::truthy($element->getLabelOption(key: 'always_wrap'))
+            || $element instanceof LabelAwareInterface && Value::truthy($element->getLabelOption(key: 'always_wrap'))
         ) {
             $label = '<span>' . $label . '</span>';
         }
@@ -211,11 +210,7 @@ class FormRow extends AbstractHelper
             $labelOpen = $labelClose = $label = '';
         }
 
-        if (
-            $element instanceof LabelAwareInterface
-            && Value::truthy($element->getLabelOption(key: 'label_position'))
-        ) {
-            /** @var mixed $labelPosition */
+        if ($element instanceof LabelAwareInterface && Value::truthy($element->getLabelOption(key: 'label_position'))) {
             $labelPosition = $element->getLabelOption(key: 'label_position');
         }
 

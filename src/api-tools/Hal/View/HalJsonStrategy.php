@@ -6,11 +6,11 @@ namespace Jield\ApiTools\Hal\View;
 
 use Jield\ApiTools\ApiProblem\View\ApiProblemModel;
 use Jield\Mvc\MvcEvent;
-use Jield\Stdlib\Value;
 use Laminas\EventManager\AbstractListenerAggregate;
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\Http\AbstractMessage;
 use Laminas\Http\Response;
+use Webmozart\Assert\Assert;
 
 class HalJsonStrategy extends AbstractListenerAggregate
 {
@@ -39,12 +39,12 @@ class HalJsonStrategy extends AbstractListenerAggregate
         $response = $event->getResponse();
         if ($problem instanceof ApiProblemModel) {
             $status = $problem->getApiProblem()->getStatus();
-            Value::instance($response, Response::class)->setStatusCode(
+            Assert::isInstanceOf($response, Response::class)->setStatusCode(
                 $status >= 100 && $status <= 599 ? $status : 500,
             );
         }
         $response->setContent($body);
-        Value::instance($response, AbstractMessage::class)
+        Assert::isInstanceOf($response, AbstractMessage::class)
             ->getHeaders()
             ->addHeaderLine(
                 'Content-Type',

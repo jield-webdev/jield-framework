@@ -18,20 +18,12 @@ final class ViewHelperAbstractFactory implements AbstractFactoryInterface
                 str_starts_with($requestedName, 'Laminas\\View\\Helper\\')
                 || str_starts_with($requestedName, 'Jield\\Bootstrap5\\Form\\View\\Helper\\')
             )
-            && Service::get(
-                $container,
-                HelperPluginManager::class,
-                'ViewHelperManager',
-            )->has($requestedName)
+            && Service::get($container, HelperPluginManager::class, 'ViewHelperManager')->has($requestedName)
         );
     }
 
     public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): mixed
     {
-        return Service::get(
-            $container,
-            HelperPluginManager::class,
-            'ViewHelperManager',
-        )->get($requestedName);
+        return Service::get($container, HelperPluginManager::class, 'ViewHelperManager')->get($requestedName);
     }
 }

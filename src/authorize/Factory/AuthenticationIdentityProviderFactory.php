@@ -9,7 +9,6 @@ use Jield\Authorize\Provider\Identity\AuthenticationIdentityProvider;
 use Jield\Authorize\Service\AccessRolesByUserInterface;
 use Jield\Authorize\Service\HasPermitInterface;
 use Jield\Stdlib\Service;
-use Jield\Stdlib\Value;
 use Laminas\Authentication\AuthenticationService;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Psr\Container\ContainerInterface;
@@ -23,7 +22,6 @@ final class AuthenticationIdentityProviderFactory implements FactoryInterface
         $requestedName,
         ?array $options = null,
     ): AuthenticationIdentityProvider {
-        /** @var mixed $config */
         $config = $container->get('config')['jield_authorize'] ?? [];
 
         if (!isset($config['access_service'])) {
@@ -45,14 +43,14 @@ final class AuthenticationIdentityProviderFactory implements FactoryInterface
             accessOrUserService: Service::get(
                 $container,
                 AccessRolesByUserInterface::class,
-                Value::string($config['access_service']),
+                Assert::string($config['access_service']),
             ),
             permitService: Service::get(
                 $container,
                 HasPermitInterface::class,
-                Value::string($config['permit_service']),
+                Assert::string($config['permit_service']),
             ),
-            authorizeConfig: Value::array($container->get(Config::class)),
+            authorizeConfig: $container->get(Config::class),
         );
     }
 }

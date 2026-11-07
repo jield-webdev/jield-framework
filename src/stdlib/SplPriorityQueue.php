@@ -123,7 +123,6 @@ class SplPriorityQueue extends \SplPriorityQueue implements Serializable
             PHP_INT_MAX,
         ];
 
-        /** @var mixed $item */
         foreach ($data as $item) {
             if (!is_array($item)) {
                 throw new UnexpectedValueException(sprintf(

@@ -14,6 +14,7 @@ use Phar;
 use PharFileInfo;
 use SplFileInfo;
 use Traversable;
+use Webmozart\Assert\Assert;
 
 use function array_map;
 use function class_exists;
@@ -151,26 +152,18 @@ class ModuleAutoloader implements SplAutoloader
         }
 
         if (isset($this->moduleClassMap[$class])) {
-            require_once Value::string($this->moduleClassMap[$class]);
+            require_once Assert::string($this->moduleClassMap[$class]);
             return $class;
         }
 
         $moduleName = substr($class, 0, -7);
         if (isset($this->explicitPaths[$moduleName])) {
-            /** @var mixed $classLoaded */
-            $classLoaded = $this->loadModuleFromDir(
-                Value::string($this->explicitPaths[$moduleName]),
-                $class,
-            );
+            $classLoaded = $this->loadModuleFromDir(Assert::string($this->explicitPaths[$moduleName]), $class);
             if ($classLoaded) {
                 return $classLoaded;
             }
 
-            /** @var mixed $classLoaded */
-            $classLoaded = $this->loadModuleFromPhar(
-                Value::string($this->explicitPaths[$moduleName]),
-                $class,
-            );
+            $classLoaded = $this->loadModuleFromPhar(Assert::string($this->explicitPaths[$moduleName]), $class);
             if ($classLoaded) {
                 return $classLoaded;
             }
@@ -178,24 +171,19 @@ class ModuleAutoloader implements SplAutoloader
 
         if (count($this->namespacedPaths) >= 1) {
             foreach ($this->namespacedPaths as $namespace => $path) {
-                if (!str_contains($moduleName, Value::string($namespace))) {
+                if (!str_contains($moduleName, Assert::string($namespace))) {
                     continue;
                 }
 
                 $moduleNameBuffer = str_replace($namespace . "\\", '', $moduleName);
-                $path =
-                    Value::stringify($path) . (
-                        DIRECTORY_SEPARATOR . $moduleNameBuffer . DIRECTORY_SEPARATOR
-                    );
+                $path = Value::stringify($path) . (DIRECTORY_SEPARATOR . $moduleNameBuffer . DIRECTORY_SEPARATOR);
 
-                /** @var mixed $classLoaded */
-                $classLoaded = $this->loadModuleFromDir(Value::string($path), $class);
+                $classLoaded = $this->loadModuleFromDir($path, $class);
                 if ($classLoaded) {
                     return $classLoaded;
                 }
 
-                /** @var mixed $classLoaded */
-                $classLoaded = $this->loadModuleFromPhar(Value::string($path), $class);
+                $classLoaded = $this->loadModuleFromPhar($path, $class);
                 if ($classLoaded) {
                     return $classLoaded;
                 }
@@ -212,11 +200,7 @@ class ModuleAutoloader implements SplAutoloader
         foreach ($this->paths as $path) {
             $path = Value::stringify($path) . $moduleClassPath;
 
-            if (
-                $path === '.'
-                || str_starts_with(Value::string($path), './')
-                || str_starts_with(Value::string($path), '.\\')
-            ) {
+            if ($path === '.' || str_starts_with($path, './') || str_starts_with($path, '.\\')) {
                 if (!($basePath = $this->pharBasePath)) {
                     $basePath = realpath('.');
                 }
@@ -225,13 +209,10 @@ class ModuleAutoloader implements SplAutoloader
                     $basePath = getcwd();
                 }
 
-                $path =
-                    rtrim(Value::string($basePath), '\/\\')
-                    . substr(Value::string($path), 1);
+                $path = rtrim(Assert::string($basePath), '\/\\') . substr($path, 1);
             }
 
-            /** @var mixed $classLoaded */
-            $classLoaded = $this->loadModuleFromDir(Value::string($path), $class);
+            $classLoaded = $this->loadModuleFromDir($path, $class);
             if ($classLoaded) {
                 return $classLoaded;
             }
@@ -248,7 +229,6 @@ class ModuleAutoloader implements SplAutoloader
                         continue;
                     }
 
-                    /** @var mixed $classLoaded */
                     $classLoaded = $this->loadModuleFromPhar($entry->getPathname(), $class);
                     if ($classLoaded) {
                         return $classLoaded;
@@ -313,7 +293,7 @@ class ModuleAutoloader implements SplAutoloader
         $fileRealPath = $file->getRealPath();
 
         // Phase 0: Check for executable phar with Module class in stub
-        if (str_contains(Value::string($fileRealPath), '.phar')) {
+        if (str_contains(Assert::string($fileRealPath), '.phar')) {
             // First see if the stub makes the Module class available
             require_once $fileRealPath;
             if (class_exists($class)) {
@@ -336,7 +316,7 @@ class ModuleAutoloader implements SplAutoloader
         // Phase 2: Check for nested module directory within archive
         // Checks for /path/to/MyModule.tar/MyModule/Module.php
         // (shell-integrated zip/tar utilities wrap directories like this)
-        $pharBaseName = $this->pharFileToModuleName(Value::string($fileRealPath));
+        $pharBaseName = $this->pharFileToModuleName(Assert::string($fileRealPath));
         $moduleClassFile = 'phar://' . $fileRealPath . '/' . $pharBaseName . '/Module.php';
         $moduleFile = new SplFileInfo($moduleClassFile);
         if ($moduleFile->isReadable() && $moduleFile->isFile()) {
@@ -388,14 +368,11 @@ class ModuleAutoloader implements SplAutoloader
             );
         }
 
-        /** @var mixed $module
-         * @var mixed $path
-         */
         foreach ($paths as $module => $path) {
             if (is_string($module)) {
-                $this->registerPath(Value::string($path), $module);
+                $this->registerPath(Assert::string($path), $module);
             } else {
-                $this->registerPath(Value::string($path));
+                $this->registerPath(Assert::string($path));
             }
         }
 
@@ -420,9 +397,8 @@ class ModuleAutoloader implements SplAutoloader
             ));
         }
         if ($moduleName) {
-            if (in_array(substr(Value::string($moduleName), -2), ['\\*', '\\%'], strict: true)) {
-                $this->namespacedPaths[substr(Value::string($moduleName), 0, -2)] =
-                    static::normalizePath($path);
+            if (in_array(substr(Assert::string($moduleName), -2), ['\\*', '\\%'], strict: true)) {
+                $this->namespacedPaths[substr(Assert::string($moduleName), 0, -2)] = static::normalizePath($path);
             } else {
                 $this->explicitPaths[$moduleName] = static::normalizePath($path);
             }
@@ -468,7 +444,7 @@ class ModuleAutoloader implements SplAutoloader
      */
     public static function normalizePath($path, $trailingSlash = true)
     {
-        $path = rtrim(Value::string($path), '/');
+        $path = rtrim($path, '/');
         $path = rtrim($path, '\\');
         if ($trailingSlash) {
             $path .= DIRECTORY_SEPARATOR;

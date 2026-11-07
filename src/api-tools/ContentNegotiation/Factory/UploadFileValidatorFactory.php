@@ -18,11 +18,7 @@ class UploadFileValidatorFactory implements FactoryInterface
     {
         $validator = new UploadFile(options: $options);
         if ($container->has('Request')) {
-            $validator->setRequest(request: Service::get(
-                $container,
-                RequestInterface::class,
-                'Request',
-            ));
+            $validator->setRequest(request: Service::get($container, RequestInterface::class, 'Request'));
         }
 
         return $validator;

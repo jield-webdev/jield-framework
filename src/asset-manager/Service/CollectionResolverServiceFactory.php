@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Jield\AssetManager\Service;
 
 use Jield\AssetManager\Resolver\CollectionResolver;
-use Jield\Stdlib\Value;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Override;
 use Psr\Container\ContainerInterface;
@@ -25,6 +24,6 @@ class CollectionResolverServiceFactory implements FactoryInterface
             $collections = $config['asset_manager']['resolver_configs']['collections'];
         }
 
-        return new CollectionResolver(collections: Value::iterable($collections));
+        return new CollectionResolver(collections: $collections);
     }
 }

@@ -14,6 +14,7 @@ use Laminas\EventManager\EventInterface;
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\Http\Response;
 use Override;
+use Webmozart\Assert\Assert;
 
 class Module implements ConfigProviderInterface, BootstrapListenerInterface
 {
@@ -42,7 +43,7 @@ class Module implements ConfigProviderInterface, BootstrapListenerInterface
         }
 
         $request = $event->getRequest();
-        $serviceManager = Value::present($event->getApplication())->getServiceManager();
+        $serviceManager = Assert::notNull($event->getApplication())->getServiceManager();
 
         $assetManager = Service::get($serviceManager, AssetManager::class);
 
@@ -65,10 +66,7 @@ class Module implements ConfigProviderInterface, BootstrapListenerInterface
         /* @var $eventManager EventManagerInterface
          * @var mixed $eventManager
          */
-        $eventManager = Value::call(
-            Value::present(Value::object($e->getTarget())),
-            'getEventManager',
-        );
+        $eventManager = Value::call(Assert::object($e->getTarget()), 'getEventManager');
         $callback = $this->onDispatch(...);
         $priority = -9_999_999;
         Value::call($eventManager, 'attach', [

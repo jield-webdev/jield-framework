@@ -8,8 +8,8 @@ use Jield\Form\ElementInterface;
 use Jield\Form\Fieldset;
 use Jield\Form\FieldsetInterface;
 use Jield\Form\Form;
+use Webmozart\Assert\Assert;
 
-use Jield\Stdlib\Value;
 use function implode;
 use function sprintf;
 
@@ -100,7 +100,7 @@ class FilterBarElement extends FormElement
                     </li>';
 
         /** @var Fieldset $facet */
-        foreach (Value::instance(
+        foreach (Assert::isInstanceOf(
             $form->get(elementOrFieldset: 'facet'),
             FieldsetInterface::class,
         )->getFieldsets() as $counter => $facet) {
@@ -201,7 +201,7 @@ class FilterBarElement extends FormElement
             case 'submit':
                 return $this->renderHelper(name: 'formsubmit', element: $element);
             default:
-                return $this->renderHelper(name: Value::string($type), element: $element);
+                return $this->renderHelper(name: Assert::string($type), element: $element);
         }
     }
 }

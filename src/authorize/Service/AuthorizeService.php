@@ -26,11 +26,11 @@ use Laminas\Permissions\Acl\Acl;
 use Laminas\Permissions\Acl\Exception\InvalidArgumentException;
 use Laminas\Permissions\Acl\Resource\GenericResource;
 use Laminas\Permissions\Acl\Resource\ResourceInterface;
-use Laminas\Permissions\Acl\Role\RoleInterface;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Container\NotFoundExceptionInterface;
 use Traversable;
+use Webmozart\Assert\Assert;
 
 use function count;
 use function is_array;
@@ -81,17 +81,13 @@ class AuthorizeService
     public function __construct(
         private readonly ContainerInterface $container,
     ) {
-        $this->authenticationIdentityProvider = Service::get(
-            $container,
-            AuthenticationIdentityProvider::class,
-        );
-        $this->config = Value::array($container->get(Config::class));
+        $this->authenticationIdentityProvider = Service::get($container, AuthenticationIdentityProvider::class);
+        $this->config = $container->get(Config::class);
         $this->loaded = $this->load(...);
 
-        /** @var mixed $cacheEnabled */
         $cacheEnabled = $this->config['cache_enabled'] ?? false;
         if ($cacheEnabled) {
-            $cache = Value::instance($container->get(Cache::class), StorageInterface::class);
+            $cache = Assert::isInstanceOf($container->get(Cache::class), StorageInterface::class);
             $this->cache = $cache;
         }
     }
@@ -170,7 +166,7 @@ class AuthorizeService
     {
         $this->loaded && Value::truthy($this->loaded->__invoke());
 
-        return Value::instance($this->acl, \Laminas\Permissions\Acl\Acl::class);
+        return Assert::isInstanceOf($this->acl, \Laminas\Permissions\Acl\Acl::class);
     }
 
     /**
@@ -183,7 +179,7 @@ class AuthorizeService
         $this->loaded && Value::truthy($this->loaded->__invoke());
 
         try {
-            return Value::present($this->acl)->isAllowed(
+            return Assert::notNull($this->acl)->isAllowed(
                 role: $this->getIdentity(),
                 resource: $resource,
                 privilege: $privilege,
@@ -201,23 +197,14 @@ class AuthorizeService
 
         $this->loaded = null;
 
-        $aclKacheKey = sprintf('%s_acl', Value::scalar($this->config['cache_key']));
-        $rulesWithAssertions = sprintf(
-            '%s_rules_with_assertion',
-            Value::scalar($this->config['cache_key']),
-        );
+        $aclKacheKey = sprintf('%s_acl', $this->config['cache_key']);
+        $rulesWithAssertions = sprintf('%s_rules_with_assertion', $this->config['cache_key']);
 
         $success = false;
-        /** @var mixed $cacheEnabled */
         $cacheEnabled = $this->config['cache_enabled'] ?? false;
         if ($cacheEnabled) {
-            $this->rulesWithAssertions = Value::array(
-                $this->cache->getItem($rulesWithAssertions, $success) ?? [],
-            );
-            $this->acl = Value::nullableInstance(
-                $this->cache->getItem($aclKacheKey, $success),
-                \Laminas\Permissions\Acl\Acl::class,
-            );
+            $this->rulesWithAssertions = $this->cache->getItem($rulesWithAssertions, $success) ?? [];
+            $this->acl = $this->cache->getItem($aclKacheKey, $success);
         }
 
         if (!$this->acl instanceof Acl || !$success) {
@@ -231,7 +218,7 @@ class AuthorizeService
         //$this->setIdentityProvider($this->authenticationIdentityProvider);
         $parentRoles = $this->authenticationIdentityProvider->getIdentityRoles();
 
-        Value::present($this->acl)->addRole($this->getIdentityAsRole(), $parentRoles);
+        Assert::notNull($this->acl)->addRole($this->getIdentityAsRole(), $parentRoles);
     }
 
     protected function addRoles($roles): void
@@ -242,15 +229,15 @@ class AuthorizeService
 
         /** @var Role $role */
         foreach ($roles as $role) {
-            if (Value::present($this->acl)->hasRole(role: $role)) {
+            if (Assert::notNull($this->acl)->hasRole(role: $role)) {
                 continue;
             }
 
             if ($role->getParent() !== null) {
                 $this->addRoles(roles: [$role->getParent()]);
-                Value::present($this->acl)->addRole(role: $role, parents: $role->getParent());
-            } elseif (!Value::present($this->acl)->hasRole(role: $role)) {
-                Value::present($this->acl)->addRole(role: $role);
+                Assert::notNull($this->acl)->addRole(role: $role, parents: $role->getParent());
+            } elseif (!Assert::notNull($this->acl)->hasRole(role: $role)) {
+                Assert::notNull($this->acl)->addRole(role: $role);
             }
         }
     }
@@ -263,44 +250,20 @@ class AuthorizeService
             );
         }
 
-        /** @var mixed $key
-         * @var mixed $value
-         */
         foreach ($resources as $key => $value) {
             if ($value instanceof ResourceInterface) {
                 $key = $value;
             } elseif (is_string(value: $key)) {
                 $key = new GenericResource(resourceId: $key);
             } elseif (is_int(value: $key)) {
-                $key = new GenericResource(resourceId: Value::string($value));
+                $key = new GenericResource(resourceId: Assert::string($value));
             }
 
             if (is_iterable(value: $value)) {
-                Value::present($this->acl)->addResource(
-                    resource: Value::instanceOrString(
-                        $key,
-                        \Laminas\Permissions\Acl\Resource\ResourceInterface::class,
-                    ),
-                    parent: Value::nullableInstanceOrString(
-                        $parent,
-                        \Laminas\Permissions\Acl\Resource\ResourceInterface::class,
-                    ),
-                );
+                Assert::notNull($this->acl)->addResource(resource: $key, parent: $parent);
                 $this->loadResource(resources: $value, parent: $key);
-            } elseif (!Value::present($this->acl)->hasResource(resource: Value::instanceOrString(
-                $key,
-                \Laminas\Permissions\Acl\Resource\ResourceInterface::class,
-            ))) {
-                Value::present($this->acl)->addResource(
-                    resource: Value::instanceOrString(
-                        $key,
-                        \Laminas\Permissions\Acl\Resource\ResourceInterface::class,
-                    ),
-                    parent: Value::nullableInstanceOrString(
-                        $parent,
-                        \Laminas\Permissions\Acl\Resource\ResourceInterface::class,
-                    ),
-                );
+            } elseif (!Assert::notNull($this->acl)->hasResource(resource: $key)) {
+                Assert::notNull($this->acl)->addResource(resource: $key, parent: $parent);
             }
         }
     }
@@ -311,23 +274,11 @@ class AuthorizeService
         $ruleSize = count(value: $rule);
 
         if (4 === $ruleSize) {
-            /** @var mixed $roles
-             * @var mixed $resources
-             * @var mixed $privileges
-             * @var mixed $assertion
-             */
             [$roles, $resources, $privileges, $assertion] = $rule;
-            $this->rulesWithAssertions[Value::key($resources)] = $assertion;
+            $this->rulesWithAssertions[$resources] = $assertion;
         } elseif (3 === $ruleSize) {
-            /** @var mixed $roles
-             * @var mixed $resources
-             * @var mixed $privileges
-             */
             [$roles, $resources, $privileges] = $rule;
         } elseif (2 === $ruleSize) {
-            /** @var mixed $roles
-             * @var mixed $resources
-             */
             [$roles, $resources] = $rule;
         } else {
             throw new \InvalidArgumentException(
@@ -336,14 +287,7 @@ class AuthorizeService
         }
 
         //We only do allow rules
-        Value::present($this->acl)->allow(
-            Value::instanceOrArrayOrString($roles, RoleInterface::class),
-            Value::instanceOrArrayOrString(
-                $resources,
-                \Laminas\Permissions\Acl\Resource\ResourceInterface::class,
-            ),
-            Value::nullableArrayOrString($privileges),
-        );
+        Assert::notNull($this->acl)->allow($roles, $resources, $privileges);
     }
 
     public function getIdentityAsRole(): UserAsRole
@@ -369,33 +313,24 @@ class AuthorizeService
         $this->acl = new Acl();
 
         //Set the role provider first
-        foreach (Value::array($this->container->get(RoleProviders::class)) as $provider) {
-            $this->addRoleProvider(provider: Value::instance(
-                $provider,
-                \Jield\Authorize\Provider\Role\ProviderInterface::class,
-            ));
+        foreach (Assert::isArray($this->container->get(RoleProviders::class)) as $provider) {
+            $this->addRoleProvider(provider: $provider);
         }
 
         foreach ($this->roleProviders as $provider) {
             $this->addRoles(roles: $provider->getRoles());
         }
 
-        foreach (Value::array($this->container->get(Guards::class)) as $guard) {
-            $this->addGuard(guard: Value::instance($guard, \Jield\Authorize\Guard\GuardInterface::class));
+        foreach (Assert::isArray($this->container->get(Guards::class)) as $guard) {
+            $this->addGuard(guard: $guard);
         }
 
-        foreach (Value::array($this->container->get(ResourceProviders::class)) as $provider) {
-            $this->addResourceProvider(provider: Value::instance(
-                $provider,
-                \Jield\Authorize\Provider\Resource\ProviderInterface::class,
-            ));
+        foreach (Assert::isArray($this->container->get(ResourceProviders::class)) as $provider) {
+            $this->addResourceProvider(provider: $provider);
         }
 
-        foreach (Value::array($this->container->get(RuleProviders::class)) as $provider) {
-            $this->addRuleProvider(provider: Value::instance(
-                $provider,
-                \Jield\Authorize\Provider\Rule\ProviderInterface::class,
-            ));
+        foreach (Assert::isArray($this->container->get(RuleProviders::class)) as $provider) {
+            $this->addRuleProvider(provider: $provider);
         }
 
         foreach ($this->resourceProviders as $provider) {
@@ -406,8 +341,8 @@ class AuthorizeService
             $rules = $provider->getRules();
 
             if (isset($rules['allow'])) {
-                foreach (Value::iterable($rules['allow']) as $rule) {
-                    $this->loadRule(rule: Value::array($rule), type: static::TYPE_ALLOW);
+                foreach (Assert::isIterable($rules['allow']) as $rule) {
+                    $this->loadRule(rule: $rule, type: static::TYPE_ALLOW);
                 }
             }
         }

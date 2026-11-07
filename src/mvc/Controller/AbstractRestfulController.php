@@ -16,6 +16,7 @@ use Laminas\Http\Header\ContentType;
 use Laminas\Http\Request as HttpRequest;
 use Laminas\Stdlib\RequestInterface as Request;
 use Laminas\Stdlib\ResponseInterface as Response;
+use Webmozart\Assert\Assert;
 
 use function array_key_exists;
 use function array_shift;
@@ -107,7 +108,7 @@ abstract class AbstractRestfulController extends AbstractController
      */
     public function create(mixed $data): mixed
     {
-        Value::instance($this->response, \Laminas\Http\Response::class)->setStatusCode(405);
+        Assert::isInstanceOf($this->response, \Laminas\Http\Response::class)->setStatusCode(405);
 
         return [
             'content' => 'Method Not Allowed',
@@ -121,7 +122,7 @@ abstract class AbstractRestfulController extends AbstractController
      */
     public function delete(mixed $id): mixed
     {
-        Value::instance($this->response, \Laminas\Http\Response::class)->setStatusCode(405);
+        Assert::isInstanceOf($this->response, \Laminas\Http\Response::class)->setStatusCode(405);
 
         return [
             'content' => 'Method Not Allowed',
@@ -139,7 +140,7 @@ abstract class AbstractRestfulController extends AbstractController
      */
     public function deleteList($data): mixed
     {
-        Value::instance($this->response, \Laminas\Http\Response::class)->setStatusCode(405);
+        Assert::isInstanceOf($this->response, \Laminas\Http\Response::class)->setStatusCode(405);
 
         return [
             'content' => 'Method Not Allowed',
@@ -153,7 +154,7 @@ abstract class AbstractRestfulController extends AbstractController
      */
     public function get(mixed $id): mixed
     {
-        Value::instance($this->response, \Laminas\Http\Response::class)->setStatusCode(405);
+        Assert::isInstanceOf($this->response, \Laminas\Http\Response::class)->setStatusCode(405);
 
         return [
             'content' => 'Method Not Allowed',
@@ -167,7 +168,7 @@ abstract class AbstractRestfulController extends AbstractController
      */
     public function getList(): mixed
     {
-        Value::instance($this->response, \Laminas\Http\Response::class)->setStatusCode(405);
+        Assert::isInstanceOf($this->response, \Laminas\Http\Response::class)->setStatusCode(405);
 
         return [
             'content' => 'Method Not Allowed',
@@ -185,7 +186,7 @@ abstract class AbstractRestfulController extends AbstractController
      */
     public function head($id = null): mixed
     {
-        Value::instance($this->response, \Laminas\Http\Response::class)->setStatusCode(405);
+        Assert::isInstanceOf($this->response, \Laminas\Http\Response::class)->setStatusCode(405);
 
         return [
             'content' => 'Method Not Allowed',
@@ -205,7 +206,7 @@ abstract class AbstractRestfulController extends AbstractController
      */
     public function options(): mixed
     {
-        Value::instance($this->response, \Laminas\Http\Response::class)->setStatusCode(405);
+        Assert::isInstanceOf($this->response, \Laminas\Http\Response::class)->setStatusCode(405);
 
         return [
             'content' => 'Method Not Allowed',
@@ -224,7 +225,7 @@ abstract class AbstractRestfulController extends AbstractController
      */
     public function patch($id, $data): mixed
     {
-        Value::instance($this->response, \Laminas\Http\Response::class)->setStatusCode(405);
+        Assert::isInstanceOf($this->response, \Laminas\Http\Response::class)->setStatusCode(405);
 
         return [
             'content' => 'Method Not Allowed',
@@ -241,7 +242,7 @@ abstract class AbstractRestfulController extends AbstractController
      */
     public function replaceList(mixed $data): mixed
     {
-        Value::instance($this->response, \Laminas\Http\Response::class)->setStatusCode(405);
+        Assert::isInstanceOf($this->response, \Laminas\Http\Response::class)->setStatusCode(405);
 
         return [
             'content' => 'Method Not Allowed',
@@ -258,7 +259,7 @@ abstract class AbstractRestfulController extends AbstractController
      */
     public function patchList(mixed $data): mixed
     {
-        Value::instance($this->response, \Laminas\Http\Response::class)->setStatusCode(405);
+        Assert::isInstanceOf($this->response, \Laminas\Http\Response::class)->setStatusCode(405);
 
         return [
             'content' => 'Method Not Allowed',
@@ -272,7 +273,7 @@ abstract class AbstractRestfulController extends AbstractController
      */
     public function update(mixed $id, mixed $data): mixed
     {
-        Value::instance($this->response, \Laminas\Http\Response::class)->setStatusCode(405);
+        Assert::isInstanceOf($this->response, \Laminas\Http\Response::class)->setStatusCode(405);
 
         return [
             'content' => 'Method Not Allowed',
@@ -286,7 +287,7 @@ abstract class AbstractRestfulController extends AbstractController
      */
     public function notFoundAction(): array
     {
-        Value::instance($this->response, \Laminas\Http\Response::class)->setStatusCode(404);
+        Assert::isInstanceOf($this->response, \Laminas\Http\Response::class)->setStatusCode(404);
 
         return [
             'content' => 'Page not found',
@@ -337,7 +338,7 @@ abstract class AbstractRestfulController extends AbstractController
         $action = $routeMatch->getParam('action', false);
         if ($action) {
             // Handle arbitrary methods, ending in Action
-            $method = static::getMethodFromAction(Value::string($action));
+            $method = static::getMethodFromAction(Assert::string($action));
             if (!method_exists($this, $method)) {
                 $method = 'notFoundAction';
             }
@@ -347,14 +348,9 @@ abstract class AbstractRestfulController extends AbstractController
         }
 
         // RESTful methods
-        $method = strtolower(
-            Value::string(
-                Value::instance($request, \Laminas\Http\Request::class)->getMethod(),
-            ),
-        );
+        $method = strtolower(Assert::isInstanceOf($request, \Laminas\Http\Request::class)->getMethod());
         if (isset($this->customHttpMethodsMap[$method])) {
-            /** @var mixed $return */
-            $return = Value::callback($this->customHttpMethodsMap[$method])($e);
+            $return = $this->customHttpMethodsMap[$method]($e);
             $routeMatch->setParam('action', $method);
             $e->setResult($return);
             return $return;
@@ -362,7 +358,6 @@ abstract class AbstractRestfulController extends AbstractController
         switch ($method) {
             // DELETE
             case 'delete':
-                /** @var mixed $id */
                 $id = $this->getIdentifier($routeMatch, $request);
 
                 if ($id !== false) {
@@ -378,7 +373,6 @@ abstract class AbstractRestfulController extends AbstractController
                 break;
                 // GET
             case 'get':
-                /** @var mixed $id */
                 $id = $this->getIdentifier($routeMatch, $request);
                 if ($id !== false) {
                     $action = 'get';
@@ -390,7 +384,6 @@ abstract class AbstractRestfulController extends AbstractController
                 break;
                 // HEAD
             case 'head':
-                /** @var mixed $id */
                 $id = $this->getIdentifier($routeMatch, $request);
                 if ($id === false) {
                     $id = null;
@@ -409,7 +402,6 @@ abstract class AbstractRestfulController extends AbstractController
                 break;
                 // PATCH
             case 'patch':
-                /** @var mixed $id */
                 $id = $this->getIdentifier($routeMatch, $request);
                 $data = $this->processBodyContent($request);
 
@@ -427,7 +419,7 @@ abstract class AbstractRestfulController extends AbstractController
                     $return = $this->patchList($data);
                 } catch (RuntimeException) {
                     $response = $e->getResponse();
-                    Value::instance($response, \Laminas\Http\Response::class)->setStatusCode(405);
+                    Assert::isInstanceOf($response, \Laminas\Http\Response::class)->setStatusCode(405);
                     return $response;
                 }
                 break;
@@ -438,7 +430,6 @@ abstract class AbstractRestfulController extends AbstractController
                 break;
                 // PUT
             case 'put':
-                /** @var mixed $id */
                 $id = $this->getIdentifier($routeMatch, $request);
                 $data = $this->processBodyContent($request);
 
@@ -454,7 +445,7 @@ abstract class AbstractRestfulController extends AbstractController
                 // All others...
             default:
                 $response = $e->getResponse();
-                Value::instance($response, \Laminas\Http\Response::class)->setStatusCode(405);
+                Assert::isInstanceOf($response, \Laminas\Http\Response::class)->setStatusCode(405);
                 return $response;
         }
 
@@ -472,11 +463,11 @@ abstract class AbstractRestfulController extends AbstractController
     public function processPostData(Request $request): mixed
     {
         if ($this->requestHasContentType($request, self::CONTENT_TYPE_JSON)) {
-            return $this->create($this->jsonDecode(Value::string($request->getContent())));
+            return $this->create($this->jsonDecode(Assert::string($request->getContent())));
         }
 
         return $this->create(Value::call(
-            Value::instance($request, \Laminas\Http\Request::class)->getPost(),
+            Assert::isInstanceOf($request, \Laminas\Http\Request::class)->getPost(),
             'toArray',
         ));
     }
@@ -489,10 +480,7 @@ abstract class AbstractRestfulController extends AbstractController
      */
     public function requestHasContentType(Request $request, $contentType = ''): bool
     {
-        $headerContentType = Value::instance(
-            $request,
-            AbstractMessage::class,
-        )->getHeaders()->get('content-type');
+        $headerContentType = Assert::isInstanceOf($request, AbstractMessage::class)->getHeaders()->get('content-type');
         if (!$headerContentType instanceof ContentType) {
             return false;
         }
@@ -504,8 +492,8 @@ abstract class AbstractRestfulController extends AbstractController
         }
         $requestedContentType = trim($requestedContentType);
         if ($contentType !== null && array_key_exists($contentType, $this->contentTypes)) {
-            foreach (Value::iterable($this->contentTypes[$contentType]) as $contentTypeValue) {
-                if (stripos(Value::string($contentTypeValue), $requestedContentType) === 0) {
+            foreach (Assert::isIterable($this->contentTypes[$contentType]) as $contentTypeValue) {
+                if (stripos($contentTypeValue, $requestedContentType) === 0) {
                     return true;
                 }
             }
@@ -571,7 +559,7 @@ abstract class AbstractRestfulController extends AbstractController
         }
 
         $id = Value::call(
-            Value::instance($request, \Laminas\Http\Request::class)->getQuery(),
+            Assert::isInstanceOf($request, \Laminas\Http\Request::class)->getQuery(),
             'get',
             [$identifier, false],
         );
@@ -596,13 +584,10 @@ abstract class AbstractRestfulController extends AbstractController
      */
     protected function processBodyContent(mixed $request): mixed
     {
-        $content = Value::string(Value::call($request, 'getContent'));
+        $content = Assert::string(Value::call($request, 'getContent'));
 
         // JSON content? decode and return it.
-        if ($this->requestHasContentType(
-            Value::instance($request, \Laminas\Stdlib\RequestInterface::class),
-            self::CONTENT_TYPE_JSON,
-        )) {
+        if ($this->requestHasContentType($request, self::CONTENT_TYPE_JSON)) {
             return $this->jsonDecode($content);
         }
 

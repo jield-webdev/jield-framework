@@ -6,7 +6,6 @@ namespace Jield\AssetManager\Service;
 
 use Jield\AssetManager\Resolver\AggregateResolver;
 use Jield\Stdlib\Service;
-use Jield\Stdlib\Value;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Override;
 use Psr\Container\ContainerInterface;
@@ -34,18 +33,12 @@ class AssetManagerServiceFactory implements FactoryInterface
 
         $assetManager = new AssetManager(
             resolver: Service::get($container, AggregateResolver::class),
-            config: Value::array($assetManagerConfig),
+            config: $assetManagerConfig,
         );
 
-        $assetManager->setAssetFilterManager(filterManager: Service::get(
-            $container,
-            AssetFilterManager::class,
-        ));
+        $assetManager->setAssetFilterManager(filterManager: Service::get($container, AssetFilterManager::class));
 
-        $assetManager->setAssetCacheManager(cacheManager: Service::get(
-            $container,
-            AssetCacheManager::class,
-        ));
+        $assetManager->setAssetCacheManager(cacheManager: Service::get($container, AssetCacheManager::class));
 
         return $assetManager;
     }

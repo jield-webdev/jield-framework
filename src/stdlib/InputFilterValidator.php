@@ -8,7 +8,6 @@ use Laminas\InputFilter\CollectionInputFilter;
 use Laminas\InputFilter\Exception\InvalidArgumentException;
 use Laminas\InputFilter\InputFilterInterface;
 use Laminas\InputFilter\InputFilterValidationResult;
-use Laminas\InputFilter\InputInterface;
 use Laminas\InputFilter\OptionalInputFilter;
 
 /** Preserve form and PATCH validation groups with the stateless validation API. */
@@ -45,7 +44,7 @@ final class InputFilterValidator
         $context = $context === [] ? $data : $context;
         $results = [];
         foreach ($group as $key => $selection) {
-            $name = is_array($selection) ? $key : Value::key($selection);
+            $name = is_array($selection) ? $key : $selection;
             if (!$filter->has($name)) {
                 throw new InvalidArgumentException(sprintf(
                     'Validation group expects a list of valid input names; "%s" was not found',
@@ -53,12 +52,11 @@ final class InputFilterValidator
                 ));
             }
             $input = $filter->get($name);
-            /** @var mixed $value */
             $value = $data[$name] ?? null;
             if ($input instanceof InputFilterInterface) {
                 $results[$name] = self::validate(
                     $input,
-                    is_iterable($value) ? Value::array(is_array($value) ? $value : iterator_to_array($value)) : [],
+                    is_iterable($value) ? (is_array($value) ? $value : iterator_to_array($value)) : [],
                     is_array($selection) ? $selection : null,
                     $context,
                 );
@@ -126,7 +124,7 @@ final class InputFilterValidator
         }
         $groups = [];
         foreach ($data as $item) {
-            $groups[] = array_keys(Value::array($item));
+            $groups[] = array_keys($item);
         }
         return $groups;
     }

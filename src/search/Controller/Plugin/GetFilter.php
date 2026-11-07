@@ -12,8 +12,8 @@ use Jield\Search\ValueObject\DateInterval;
 use Jield\Search\ValueObject\SearchFormResult;
 use Jield\Stdlib\Value;
 use Laminas\Http\Request;
-use Laminas\Stdlib\RequestInterface;
 use Psr\Container\ContainerInterface;
+use Webmozart\Assert\Assert;
 
 use function http_build_query;
 use function urldecode;
@@ -25,7 +25,7 @@ class GetFilter extends AbstractPlugin
 
     protected ?string $encodedFilter = null;
 
-    private readonly Request|RequestInterface $request;
+    private readonly Request $request;
 
     public function __construct(
         private readonly ContainerInterface $container,
@@ -37,8 +37,9 @@ class GetFilter extends AbstractPlugin
             string: (string) $application->getMvcEvent()->getRouteMatch()?->getParam(name: 'encodedFilter'),
         );
 
-        /** @var Request $request */
-        $this->request = $application->getMvcEvent()->getRequest();
+        $request = $application->getMvcEvent()->getRequest();
+        Assert::isInstanceOf($request, Request::class);
+        $this->request = $request;
     }
 
     public function __invoke(): GetFilter
@@ -49,14 +50,8 @@ class GetFilter extends AbstractPlugin
 
         //Initiate the filter
         $this->filter = new SearchFormResult(
-            order: Value::string(Value::instance(
-                $request,
-                \Laminas\Http\Request::class,
-            )->getQuery(name: 'order', default: 'default')),
-            direction: Value::string(Value::instance(
-                $request,
-                \Laminas\Http\Request::class,
-            )->getQuery(name: 'direction', default: Order::Ascending->value)),
+            order: $request->getQuery(name: 'order', default: 'default'),
+            direction: $request->getQuery(name: 'direction', default: Order::Ascending->value),
         );
 
         if (!empty($encodedFilter)) {
@@ -64,95 +59,44 @@ class GetFilter extends AbstractPlugin
         }
 
         // If the form is submitted, refresh the URL
-        if (Value::instance($request, \Laminas\Http\Request::class)->getQuery(name: 'query') !== null) {
-            $this->filter->setQuery(query: Value::nullableString(Value::instance(
-                $request,
-                \Laminas\Http\Request::class,
-            )->getQuery(name: 'query')));
-            $this->filter->setFilter(filter: Value::toArray(Value::instance(
-                $request,
-                \Laminas\Http\Request::class,
-            )->getQuery(name: 'filter', default: [])));
+        if ($request->getQuery(name: 'query') !== null) {
+            $this->filter->setQuery(query: $request->getQuery(name: 'query'));
+            $this->filter->setFilter(filter: Value::toArray($request->getQuery(name: 'filter', default: [])));
         }
 
-        if (null !== Value::instance($request, \Laminas\Http\Request::class)->getQuery(name: 'facet')) {
-            $this->filter->setFacet(facet: Value::array(Value::instance(
-                $request,
-                \Laminas\Http\Request::class,
-            )->getQuery(name: 'facet')));
+        if (null !== $request->getQuery(name: 'facet')) {
+            $this->filter->setFacet(facet: $request->getQuery(name: 'facet'));
         }
 
-        if (
-            !empty(Value::instance($request, \Laminas\Http\Request::class)->getQuery(
-                name: 'dateInterval',
-            ))
-        ) {
-            $dateInterval = DateInterval::fromValue(value: Value::string(Value::instance(
-                $request,
-                \Laminas\Http\Request::class,
-            )->getQuery(name: 'dateInterval')));
+        if (!empty($request->getQuery(name: 'dateInterval'))) {
+            $dateInterval = DateInterval::fromValue(value: $request->getQuery(name: 'dateInterval'));
             $this->filter->setDateInterval(dateInterval: $dateInterval);
         }
 
-        if (null !== Value::instance($request, \Laminas\Http\Request::class)->getQuery(name: 'order')) {
-            $this->filter->setOrder(order: Value::string(Value::instance(
-                $request,
-                \Laminas\Http\Request::class,
-            )->getQuery(name: 'order')));
+        if (null !== $request->getQuery(name: 'order')) {
+            $this->filter->setOrder(order: $request->getQuery(name: 'order'));
         }
 
-        if (
-            null !== Value::instance($request, \Laminas\Http\Request::class)->getQuery(name: 'direction')
-        ) {
-            $this->filter->setDirection(direction: Value::string(Value::instance(
-                $request,
-                \Laminas\Http\Request::class,
-            )->getQuery(name: 'direction')));
+        if (null !== $request->getQuery(name: 'direction')) {
+            $this->filter->setDirection(direction: $request->getQuery(name: 'direction'));
         }
 
         // If the form is submitted, refresh the URL
-        if (Value::instance($request, \Laminas\Http\Request::class)->getQuery(name: 'reset') !== null) {
+        if ($request->getQuery(name: 'reset') !== null) {
             $this->filter = new SearchFormResult(
-                order: Value::string(Value::instance(
-                    $request,
-                    \Laminas\Http\Request::class,
-                )->getQuery(name: 'order', default: 'default')),
-                direction: Value::string(Value::instance(
-                    $request,
-                    \Laminas\Http\Request::class,
-                )->getQuery(name: 'direction', default: Order::Ascending->value)),
+                order: $request->getQuery(name: 'order', default: 'default'),
+                direction: $request->getQuery(name: 'direction', default: Order::Ascending->value),
             );
         }
 
-        if (Value::instance($this->request, \Laminas\Http\Request::class)->isPost()) {
+        if ($this->request->isPost()) {
             $this->filter = new SearchFormResult(
-                order: Value::string(Value::instance(
-                    $this->request,
-                    \Laminas\Http\Request::class,
-                )->getQuery(name: 'order', default: 'default')),
-                direction: Value::string(Value::instance(
-                    $this->request,
-                    \Laminas\Http\Request::class,
-                )->getQuery(name: 'direction', default: Order::Ascending->value)),
-                query: Value::nullableString(Value::instance(
-                    $this->request,
-                    \Laminas\Http\Request::class,
-                )->getPost(name: 'query')),
-                filter: Value::array(Value::instance(
-                    $this->request,
-                    \Laminas\Http\Request::class,
-                )->getPost(name: 'filter', default: [])),
-                facet: Value::array(Value::instance(
-                    $this->request,
-                    \Laminas\Http\Request::class,
-                )->getPost(name: 'facet', default: [])),
-                dateInterval: Value::instance(
-                    Value::instance($this->request, \Laminas\Http\Request::class)->getPost(
-                        name: 'dateInterval',
-                        default: new DateInterval(),
-                    ),
-                    \Jield\Search\ValueObject\DateInterval::class,
-                ),
+                order: $this->request->getQuery(name: 'order', default: 'default'),
+                direction: $this->request->getQuery(name: 'direction', default: Order::Ascending->value),
+                query: $this->request->getPost(name: 'query'),
+                filter: $this->request->getPost(name: 'filter', default: []),
+                facet: $this->request->getPost(name: 'facet', default: []),
+                dateInterval: $this->request->getPost(name: 'dateInterval', default: new DateInterval()),
             );
         }
 
@@ -200,20 +144,14 @@ class GetFilter extends AbstractPlugin
 
     public function setFacetByKey(string $facetKey, array|string $value): void
     {
-        if (
-            Value::instance($this->request, \Laminas\Http\Request::class)->getQuery(name: 'query')
-            === null
-        ) {
+        if ($this->request->getQuery(name: 'query') === null) {
             $this->filter->setFacetByKey(key: $facetKey, value: $value);
         }
     }
 
     public function setFilterByKey(string $filterKey, array|string|int $value): void
     {
-        if (
-            Value::instance($this->request, \Laminas\Http\Request::class)->getQuery(name: 'query')
-            === null
-        ) {
+        if ($this->request->getQuery(name: 'query') === null) {
             $this->filter->setFilterByKey(key: $filterKey, value: $value);
         }
     }

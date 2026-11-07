@@ -5,15 +5,13 @@ declare(strict_types=1);
 namespace Jield\Mvc\Factory;
 
 use Jield\Stdlib\Service;
-use Jield\Stdlib\Value;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Laminas\View\Helper\ViewModel as ViewModelHelper;
 use Laminas\View\HelperPluginManager;
 use Laminas\View\Resolver as ViewResolver;
 use Laminas\View\Resolver\PrefixPathStackResolver;
-use Laminas\View\Resolver\TemplateMapResolver;
-use Laminas\View\Resolver\TemplatePathStack;
 use Psr\Container\ContainerInterface;
+use Webmozart\Assert\Assert;
 
 class ViewResolverFactory implements FactoryInterface
 {
@@ -56,19 +54,19 @@ class ViewResolverFactory implements FactoryInterface
             ->attach($pathResolver)
             ->attach($prefixPathStackResolver)
             ->attach(
-                new ViewResolver\RelativeFallbackResolver($mapResolver, Value::instance(
+                new ViewResolver\RelativeFallbackResolver($mapResolver, Assert::isInstanceOf(
                     $viewModelHelper,
                     \Laminas\View\Helper\ViewModel::class,
                 )),
             )
             ->attach(
-                new ViewResolver\RelativeFallbackResolver($pathResolver, Value::instance(
+                new ViewResolver\RelativeFallbackResolver($pathResolver, Assert::isInstanceOf(
                     $viewModelHelper,
                     \Laminas\View\Helper\ViewModel::class,
                 )),
             )
             ->attach(
-                new ViewResolver\RelativeFallbackResolver($prefixPathStackResolver, Value::instance(
+                new ViewResolver\RelativeFallbackResolver($prefixPathStackResolver, Assert::isInstanceOf(
                     $viewModelHelper,
                     \Laminas\View\Helper\ViewModel::class,
                 )),

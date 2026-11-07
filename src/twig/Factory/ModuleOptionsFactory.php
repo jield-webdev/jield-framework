@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Jield\Twig\Factory;
 
-use Jield\Stdlib\Value;
 use Jield\Twig\ModuleOptions;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Psr\Container\ContainerInterface;
@@ -18,6 +17,6 @@ class ModuleOptionsFactory implements FactoryInterface
     ): ModuleOptions {
         $config = $container->get('config');
 
-        return new ModuleOptions(Value::stringKeyedArray($config['jield_twig'] ?? []));
+        return new ModuleOptions($config['jield_twig'] ?? []);
     }
 }

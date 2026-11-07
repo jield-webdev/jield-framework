@@ -17,6 +17,7 @@ use Laminas\Stdlib\Guard\ArrayOrTraversableGuardTrait;
 use ReflectionMethod;
 use RuntimeException;
 use Traversable;
+use Webmozart\Assert\Assert;
 
 use function array_change_key_case;
 use function array_key_exists;
@@ -83,55 +84,50 @@ class Proxy implements ObjectManagerAwareInterface
         }
 
         if (isset($options['object_manager'])) {
-            $this->setObjectManager(objectManager: Value::instance(
-                $options['object_manager'],
-                \Doctrine\Persistence\ObjectManager::class,
-            ));
+            $this->setObjectManager(objectManager: $options['object_manager']);
         }
 
         if (isset($options['target_class'])) {
-            $this->setTargetClass(targetClass: Value::string($options['target_class']));
+            $this->setTargetClass(targetClass: $options['target_class']);
         }
 
         if (isset($options['property'])) {
-            $this->setProperty(property: Value::string($options['property']));
+            $this->setProperty(property: $options['property']);
         }
 
         if (isset($options['label_generator'])) {
-            $this->setLabelGenerator(callable: Value::callback($options['label_generator']));
+            $this->setLabelGenerator(callable: $options['label_generator']);
         }
 
         if (isset($options['find_method'])) {
-            $this->setFindMethod(findMethod: Value::array($options['find_method']));
+            $this->setFindMethod(findMethod: $options['find_method']);
         }
 
         if (isset($options['is_method'])) {
-            $this->setIsMethod(method: Value::bool($options['is_method']));
+            $this->setIsMethod(method: $options['is_method']);
         }
 
         if (isset($options['display_empty_item'])) {
-            $this->setDisplayEmptyItem(displayEmptyItem: Value::bool($options['display_empty_item']));
+            $this->setDisplayEmptyItem(displayEmptyItem: $options['display_empty_item']);
         }
 
         if (isset($options['empty_item_label'])) {
-            $this->setEmptyItemLabel(emptyItemLabel: Value::string($options['empty_item_label']));
+            $this->setEmptyItemLabel(emptyItemLabel: $options['empty_item_label']);
         }
 
         if (isset($options['option_attributes'])) {
-            $this->setOptionAttributes(optionAttributes: Value::array($options['option_attributes']));
+            $this->setOptionAttributes(optionAttributes: $options['option_attributes']);
         }
 
         if (isset($options['optgroup_identifier'])) {
-            $this->setOptgroupIdentifier(optgroupIdentifier: Value::string(
-                $options['optgroup_identifier'],
-            ));
+            $this->setOptgroupIdentifier(optgroupIdentifier: $options['optgroup_identifier']);
         }
 
         if (!isset($options['optgroup_default'])) {
             return;
         }
 
-        $this->setOptgroupDefault(optgroupDefault: Value::string($options['optgroup_default']));
+        $this->setOptgroupDefault(optgroupDefault: $options['optgroup_default']);
     }
 
     public function getValueOptions(): mixed
@@ -233,7 +229,7 @@ class Proxy implements ObjectManagerAwareInterface
             throw new RuntimeException(message: 'No target class was set');
         }
 
-        return Value::classString($this->targetClass);
+        return $this->targetClass;
     }
 
     /**
@@ -328,10 +324,7 @@ class Proxy implements ObjectManagerAwareInterface
             return null;
         }
 
-        return Value::nullableString(call_user_func(
-            Value::callback($this->getLabelGenerator()),
-            $targetEntity,
-        ));
+        return call_user_func($this->getLabelGenerator(), $targetEntity);
     }
 
     /** @throws \RuntimeException */
@@ -343,9 +336,8 @@ class Proxy implements ObjectManagerAwareInterface
             if ($value instanceof Collection) {
                 $data = [];
 
-                /** @var mixed $object */
                 foreach ($value as $object) {
-                    $values = $metadata->getIdentifierValues(Value::object($object));
+                    $values = $metadata->getIdentifierValues($object);
                     $data[] = array_shift(array: $values);
                 }
 
@@ -362,7 +354,6 @@ class Proxy implements ObjectManagerAwareInterface
                     ));
                 }
 
-                /** @var mixed $value */
                 $value = current(array: $metadata->getIdentifierValues($value));
             }
         }
@@ -386,9 +377,7 @@ class Proxy implements ObjectManagerAwareInterface
 
         if ($findMethod === []) {
             $findMethodName = 'findAll';
-            $repository = Value::present($this->objectManager)->getRepository(
-                className: $this->getTargetClass(),
-            );
+            $repository = Assert::notNull($this->objectManager)->getRepository(className: $this->getTargetClass());
             $objects = $repository->findAll();
         } else {
             if (!isset($findMethod['name'])) {
@@ -396,23 +385,18 @@ class Proxy implements ObjectManagerAwareInterface
             }
 
             $findMethodName = $findMethod['name'];
-            $findMethodParams = isset($findMethod['params']) ? array_change_key_case(array: Value::stringKeyedArray($findMethod['params'])) : [];
-            $repository = Value::present($this->objectManager)->getRepository(
-                className: $this->getTargetClass(),
-            );
+            $findMethodParams = isset($findMethod['params']) ? array_change_key_case(array: $findMethod['params']) : [];
+            $repository = Assert::notNull($this->objectManager)->getRepository(className: $this->getTargetClass());
 
-            if (!method_exists(object_or_class: $repository, method: Value::string($findMethodName))) {
+            if (!method_exists(object_or_class: $repository, method: $findMethodName)) {
                 throw new RuntimeException(message: sprintf(
                     'Method "%s" could not be found in repository "%s"',
-                    Value::scalar($findMethodName),
+                    $findMethodName,
                     $repository::class,
                 ));
             }
 
-            $r = new ReflectionMethod(
-                objectOrMethod: $repository,
-                method: Value::nullableString($findMethodName),
-            );
+            $r = new ReflectionMethod(objectOrMethod: $repository, method: $findMethodName);
             $args = [];
 
             foreach ($r->getParameters() as $param) {
@@ -425,7 +409,7 @@ class Proxy implements ObjectManagerAwareInterface
                         'Required parameter "%s" with no default value for method "%s" in repository "%s"'
                         . ' was not provided',
                         $param->getName(),
-                        Value::scalar($findMethodName),
+                        $findMethodName,
                         $repository::class,
                     ));
                 }
@@ -436,15 +420,11 @@ class Proxy implements ObjectManagerAwareInterface
 
         $this->guardForArrayOrTraversable(
             data: $objects,
-            dataName: sprintf(
-                '%s::%s() return value',
-                $repository::class,
-                Value::scalar($findMethodName),
-            ),
+            dataName: sprintf('%s::%s() return value', $repository::class, $findMethodName),
             exceptionClass: InvalidRepositoryResultException::class,
         );
 
-        $this->objects = array_map(Value::object(...), is_array($objects) ? $objects : iterator_to_array(Value::iterable($objects)));
+        $this->objects = array_map(Assert::object(...), is_array($objects) ? $objects : iterator_to_array($objects));
     }
 
     /**
@@ -464,28 +444,24 @@ class Proxy implements ObjectManagerAwareInterface
             $options[''] = $this->getEmptyItemLabel();
         }
 
-        /** @var mixed $key
-         * @var mixed $object
-         */
-        foreach (Value::iterable($objects) as $key => $object) {
+        foreach (Assert::isIterable($objects) as $key => $object) {
             $generatedLabel = $this->generateLabel(targetEntity: $object);
             if ($generatedLabel !== null) {
                 $label = $generatedLabel;
             } elseif ($this->property !== null) {
-                /** @var mixed $property */
                 $property = $this->property;
                 if (
                     ($this->getIsMethod() === false || $this->getIsMethod() === null)
-                    && !$metadata->hasField(fieldName: Value::string($property))
+                    && !$metadata->hasField(fieldName: $property)
                 ) {
                     throw new RuntimeException(message: sprintf(
                         'Property "%s" could not be found in object "%s"',
-                        Value::scalar($property),
+                        $property,
                         $this->getTargetClass(),
                     ));
                 }
 
-                $getter = 'get' . $this->inflector->classify(word: Value::string($property));
+                $getter = 'get' . $this->inflector->classify(word: $property);
 
                 if (!is_callable(value: [$object, $getter])) {
                     throw new RuntimeException(message: sprintf(
@@ -508,10 +484,7 @@ class Proxy implements ObjectManagerAwareInterface
                 $label = (string) $object;
             }
 
-            /** @var mixed $value */
-            $value = count(value: $identifier) > 1
-                ? $key
-                : current(array: $metadata->getIdentifierValues(Value::object($object)));
+            $value = count(value: $identifier) > 1 ? $key : current(array: $metadata->getIdentifierValues($object));
 
             foreach ($this->getOptionAttributes() as $optionKey => $optionValue) {
                 if (is_string(value: $optionValue)) {
@@ -542,8 +515,7 @@ class Proxy implements ObjectManagerAwareInterface
             }
 
             // optgroup_identifier found, handle grouping
-            $optgroupGetter =
-                'get' . $this->inflector->classify(word: Value::string($this->getOptgroupIdentifier()));
+            $optgroupGetter = 'get' . $this->inflector->classify(word: $this->getOptgroupIdentifier());
 
             if (!is_callable(value: [$object, $optgroupGetter])) {
                 throw new RuntimeException(message: sprintf(
@@ -556,7 +528,7 @@ class Proxy implements ObjectManagerAwareInterface
             $optgroup = Value::call($object, $optgroupGetter);
 
             // optgroup_identifier contains a valid group-name. Handle default grouping.
-            if ($optgroup !== null && trim(string: Value::string($optgroup)) !== '') {
+            if ($optgroup !== null && trim(string: $optgroup) !== '') {
                 $options[$optgroup]['label'] = $optgroup;
                 $options[$optgroup]['options'][] = [
                     'label' => $label,

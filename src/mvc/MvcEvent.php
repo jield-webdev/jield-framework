@@ -219,7 +219,7 @@ class MvcEvent extends Event
      */
     public function getError(): string
     {
-        return Value::string($this->getParam('error', ''));
+        return $this->getParam('error', '');
     }
 
     /**
@@ -229,7 +229,7 @@ class MvcEvent extends Event
      */
     public function getController(): ?string
     {
-        return Value::nullableString($this->getParam('controller'));
+        return $this->getParam('controller');
     }
 
     /**
@@ -251,7 +251,7 @@ class MvcEvent extends Event
      */
     public function getControllerClass(): ?string
     {
-        return Value::nullableString($this->getParam('controller-class'));
+        return $this->getParam('controller-class');
     }
 
     /**

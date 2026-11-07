@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Jield\AssetManager\Resolver;
 
 use Assetic\Contracts\Asset\AssetInterface;
-use Jield\Stdlib\Value;
 use Laminas\Stdlib\PriorityQueue;
 use Override;
 
@@ -51,10 +50,9 @@ class AggregateResolver implements ResolverInterface
     public function resolve(string $fileName): ?AssetInterface
     {
         foreach ($this->queue as $resolver) {
-            /** @var mixed $resource */
             $resource = $resolver->resolve(fileName: $fileName);
             if (null !== $resource) {
-                return Value::nullableInstance($resource, AssetInterface::class);
+                return $resource;
             }
         }
 
@@ -66,11 +64,7 @@ class AggregateResolver implements ResolverInterface
         $collection = [];
 
         foreach ($this->queue as $resolver) {
-            if (!method_exists(object_or_class: Value::objectOrString($resolver), method: 'collect')) {
-                continue;
-            }
-
-            $collection = array_merge(Value::array($resolver->collect()), $collection);
+            $collection = array_merge($resolver->collect(), $collection);
         }
 
         return array_unique(array: $collection);

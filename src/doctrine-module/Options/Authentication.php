@@ -7,10 +7,10 @@ namespace DoctrineModule\Options;
 use Doctrine\Persistence\Mapping\ClassMetadata;
 use Doctrine\Persistence\ObjectManager;
 use Doctrine\Persistence\ObjectRepository;
-use Jield\Stdlib\Value;
 use Laminas\Authentication\Adapter\Exception;
 use Laminas\Authentication\Storage\StorageInterface;
 use Laminas\Stdlib\AbstractOptions;
+use Webmozart\Assert\Assert;
 
 use function gettype;
 use function is_callable;
@@ -131,7 +131,7 @@ final class Authentication extends AbstractOptions
             return $this->objectRepository;
         }
 
-        return Value::instance(
+        return Assert::isInstanceOf(
             $this->objectManager,
             ObjectManager::class,
         )->getRepository(className: $this->identityClass);
@@ -139,7 +139,7 @@ final class Authentication extends AbstractOptions
 
     public function setIdentityClass(string $identityClass): Authentication
     {
-        $this->identityClass = Value::classString($identityClass);
+        $this->identityClass = $identityClass;
 
         return $this;
     }
@@ -215,7 +215,7 @@ final class Authentication extends AbstractOptions
             return $this->classMetadata;
         }
 
-        return Value::instance(
+        return Assert::isInstanceOf(
             $this->objectManager,
             ObjectManager::class,
         )->getClassMetadata(className: $this->identityClass);

@@ -7,7 +7,6 @@ namespace Jield\Bootstrap5\Form\View\Helper;
 use Jield\Form\ElementInterface;
 use Jield\Form\View\Helper\AbstractHelper;
 
-use Jield\Stdlib\Value;
 use function sprintf;
 
 /**
@@ -41,25 +40,20 @@ final class FormDescription extends AbstractHelper
         $inlineWrapper = $inlineWrapper ?: $this->inlineWrapper;
 
         $html = '';
-        /** @var mixed $inline */
         if ($inline = $element->getOption(option: 'help-inline')) {
             if (null !== ($translator = $this->getTranslator())) {
-                $inline = $translator->translate(
-                    Value::string($inline),
-                    $this->getTranslatorTextDomain(),
-                );
+                $inline = $translator->translate($inline, $this->getTranslatorTextDomain());
             }
 
-            $html .= sprintf($inlineWrapper, Value::scalar($inline));
+            $html .= sprintf($inlineWrapper, $inline);
         }
 
-        /** @var mixed $block */
         if ($block = $element->getOption(option: 'help-block')) {
             if (null !== ($translator = $this->getTranslator())) {
-                $block = $translator->translate(Value::string($block), $this->getTranslatorTextDomain());
+                $block = $translator->translate($block, $this->getTranslatorTextDomain());
             }
 
-            $html .= sprintf($blockWrapper, Value::scalar($block));
+            $html .= sprintf($blockWrapper, $block);
         }
 
         return $html;

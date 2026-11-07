@@ -9,6 +9,7 @@ use Jield\ApiTools\Hal\Link\Link;
 use Jield\ApiTools\Hal\Link\LinkUrlBuilder;
 use Jield\Stdlib\Value;
 use Override;
+use Webmozart\Assert\Assert;
 
 use function sprintf;
 
@@ -47,7 +48,7 @@ class LinkExtractor implements LinkExtractorInterface
         }
 
         $representation['href'] = $this->linkUrlBuilder->buildLinkUrl(
-            route: Value::string($link->getRoute()),
+            route: Assert::string($link->getRoute()),
             params: $link->getRouteParams(),
             options: $options,
             reUseMatchedParams: $reuseMatchedParams,

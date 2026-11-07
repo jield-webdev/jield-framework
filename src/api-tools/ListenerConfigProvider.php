@@ -16,6 +16,7 @@ use ReflectionNamedType;
 use ReflectionUnionType;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\Finder\SplFileInfo;
+use Webmozart\Assert\Assert;
 
 final class ListenerConfigProvider
 {
@@ -119,7 +120,7 @@ final class ListenerConfigProvider
 
     private function getReflectionClassFromClassName(string $className): ReflectionClass
     {
-        return new ReflectionClass(objectOrClass: Value::classString($className));
+        return new ReflectionClass(objectOrClass: $className);
     }
 
     public function registerListener(ListenerValueObject $listenerValueObject): void
@@ -129,7 +130,7 @@ final class ListenerConfigProvider
 
     private function getConstructorArguments(string $className): array
     {
-        $constructor = new ReflectionClass(Value::classString($className))->getConstructor();
+        $constructor = new ReflectionClass($className)->getConstructor();
         if ($constructor === null) {
             return [];
         }
@@ -159,10 +160,7 @@ final class ListenerConfigProvider
         $configuration = [];
 
         foreach ($this->listeners as $listener) {
-            $configuration = array_merge_recursive(
-                $configuration,
-                Value::array(Value::call($listener, 'toArray')),
-            );
+            $configuration = array_merge_recursive($configuration, Assert::isArray(Value::call($listener, 'toArray')));
         }
 
         return $configuration;

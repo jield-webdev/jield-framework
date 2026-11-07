@@ -9,9 +9,9 @@ use Jield\ApiTools\ApiProblem\ApiProblemResponse;
 use Jield\Mvc\Controller\Plugin\AcceptableViewModelSelector;
 use Jield\Mvc\InjectApplicationEventInterface;
 use Jield\Mvc\MvcEvent;
-use Jield\Stdlib\Value;
 use Laminas\Stdlib\DispatchableInterface;
 use Laminas\View\Model\ModelInterface as ViewModelInterface;
+use Webmozart\Assert\Assert;
 
 use function is_array;
 use function is_string;
@@ -64,12 +64,8 @@ class AcceptListener
         }
 
         $selector = $this->selector;
-        $selector->setController(controller: Value::instance(
-            $controller,
-            DispatchableInterface::class,
-        ));
+        $selector->setController(controller: Assert::isInstanceOf($controller, DispatchableInterface::class));
 
-        /** @var mixed $criteria */
         $criteria = $e->getParam(name: 'LaminasContentNegotiation');
 
         // If the criteria from the LaminasContentNegotiation parameter is a string,
@@ -80,15 +76,10 @@ class AcceptListener
 
         // If we have no criteria, derive it from configuration and/or any set fallbacks
         if (!$criteria) {
-            /** @var mixed $fallbackConfig */
             $fallbackConfig = $e->getParam(name: 'LaminasContentNegotiationFallback');
-            /** @var mixed $controllerName */
-            $controllerName = Value::present($e->getRouteMatch())->getParam(name: 'controller');
+            $controllerName = Assert::notNull($e->getRouteMatch())->getParam(name: 'controller');
 
-            $criteria = $this->getSelectorCriteria(
-                fallbackConfig: Value::nullableString($fallbackConfig),
-                controllerName: Value::nullableString($controllerName),
-            );
+            $criteria = $this->getSelectorCriteria(fallbackConfig: $fallbackConfig, controllerName: $controllerName);
         }
 
         // Retrieve a view model based on the criteria
@@ -97,7 +88,7 @@ class AcceptListener
             $useDefault = true;
         }
 
-        $viewModel = $selector(matchAgainst: Value::nullableArray($criteria), returnDefault: $useDefault);
+        $viewModel = $selector(matchAgainst: Assert::nullOrIsArray($criteria), returnDefault: $useDefault);
 
         if (!$viewModel instanceof ViewModelInterface) {
             return new ApiProblemResponse(apiProblem: new ApiProblem(
@@ -134,11 +125,7 @@ class AcceptListener
         // Retrieve the criteria; if none found, or invalid, use the fallback.
         $criteria = $controllers[$controllerName];
 
-        return (
-            $this->getCriteria(criteria: Value::nullableArrayOrString($criteria)) ?: $this->getCriteria(
-                criteria: $fallbackConfig,
-            )
-        );
+        return $this->getCriteria(criteria: $criteria) ?: $this->getCriteria(criteria: $fallbackConfig);
     }
 
     /**
@@ -158,7 +145,7 @@ class AcceptListener
             // selected by the AcceptableViewModelSelector
 
             $viewModel->setVariables(variables: $result->getVariables());
-            $viewModel->setTemplate(template: Value::nonEmptyString($result->getTemplate()));
+            $viewModel->setTemplate(template: Assert::stringNotEmpty($result->getTemplate()));
             $viewModel->setCaptureTo(capture: $result->captureTo());
             $viewModel->setTerminal($result->terminate());
             $viewModel->setAppend(append: $result->isAppend());
@@ -174,7 +161,7 @@ class AcceptListener
 
         // At this point, the result is an array; use it to populate the view
         // model variables
-        $viewModel->setVariables(variables: Value::namedValues($result));
+        $viewModel->setVariables(variables: $result);
         $e->setResult(result: $viewModel);
     }
 
@@ -200,10 +187,9 @@ class AcceptListener
 
         // if it's a string, we should try to resolve that key to a reusable selector set
         if (is_string(value: $criteria) && isset($this->selectorsConfig[$criteria])) {
-            /** @var mixed $criteria */
             $criteria = $this->selectorsConfig[$criteria];
             if (!empty($criteria)) {
-                return Value::array($criteria);
+                return Assert::isArray($criteria);
             }
         }
 

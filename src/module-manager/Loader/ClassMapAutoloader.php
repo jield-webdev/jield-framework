@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Jield\ModuleManager\Loader;
 
-use Jield\Stdlib\Value;
 use Traversable;
+use Webmozart\Assert\Assert;
+
 use function array_filter;
 use function array_values;
 use function array_walk;
@@ -72,7 +73,7 @@ class ClassMapAutoloader implements SplAutoloader
      */
     public function setOptions($options)
     {
-        $this->registerAutoloadMaps(Value::array($options));
+        $this->registerAutoloadMaps(Assert::isArray($options));
         return $this;
     }
 
@@ -94,7 +95,6 @@ class ClassMapAutoloader implements SplAutoloader
         $location = null;
         if (is_string($map)) {
             $location = $map;
-            /** @var mixed $map */
             if ($this === ($map = $this->loadMapFromFile($location))) {
                 return $this;
             }
@@ -130,9 +130,8 @@ class ClassMapAutoloader implements SplAutoloader
             require_once __DIR__ . '/Exception/InvalidArgumentException.php';
             throw new Exception\InvalidArgumentException('Map list must be an array or implement Traversable');
         }
-        /** @var mixed $location */
         foreach ($locations as $location) {
-            $this->registerAutoloadMap(Value::arrayOrString($location));
+            $this->registerAutoloadMap($location);
         }
         return $this;
     }
@@ -153,7 +152,7 @@ class ClassMapAutoloader implements SplAutoloader
     public function autoload($class)
     {
         if (isset($this->map[$class])) {
-            require_once Value::string($this->map[$class]);
+            require_once Assert::string($this->map[$class]);
 
             return $class;
         }
@@ -223,8 +222,8 @@ class ClassMapAutoloader implements SplAutoloader
         }
 
         $prefixLength = 5 + strlen($match[1]);
-        $parts        = explode('/', str_replace(['/', '\\'], '/', substr($path, $prefixLength)));
-        $parts        = array_values(array_filter($parts, static fn($p) => $p !== '' && $p !== '.'));
+        $parts = explode('/', str_replace(['/', '\\'], '/', substr($path, $prefixLength)));
+        $parts = array_values(array_filter($parts, static fn($p) => $p !== '' && $p !== '.'));
 
         array_walk($parts, static function ($value, $key) use (&$parts): void {
             if ($value === '..') {
@@ -233,9 +232,7 @@ class ClassMapAutoloader implements SplAutoloader
             }
         });
 
-        if (file_exists(
-            $realPath = str_pad('phar:', $prefixLength, '/') . implode('/', Value::scalars($parts)),
-        )) {
+        if (file_exists($realPath = str_pad('phar:', $prefixLength, '/') . implode('/', $parts))) {
             return $realPath;
         }
         return null;

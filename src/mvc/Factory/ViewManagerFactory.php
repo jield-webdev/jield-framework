@@ -6,7 +6,6 @@ namespace Jield\Mvc\Factory;
 
 // phpcs:ignore
 use Jield\Mvc\View\Http\ViewManager as HttpViewManager;
-use Jield\Stdlib\Value;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Psr\Container\ContainerInterface;
 
@@ -24,9 +23,6 @@ class ViewManagerFactory implements FactoryInterface
         string $requestedName,
         ?array $options = null,
     ): HttpViewManager {
-        return Value::instance(
-            $container->get('HttpViewManager'),
-            \Jield\Mvc\View\Http\ViewManager::class,
-        );
+        return $container->get('HttpViewManager');
     }
 }

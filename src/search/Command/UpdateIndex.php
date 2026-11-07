@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Jield\Search\Command;
 
 use Jield\Search\Service\ConsoleService;
-use Jield\Stdlib\Value;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -46,29 +45,16 @@ final class UpdateIndex extends Command
         $reset = $input->getOption(name: 'reset');
         $shallow = $input->getOption(name: 'shallow');
 
-        $startMessage = sprintf(
-            '<info>%s the index of %s</info>',
-            $reset ? 'Reset' : 'Update',
-            Value::scalar($index),
-        );
+        $startMessage = sprintf('<info>%s the index of %s</info>', $reset ? 'Reset' : 'Update', $index);
         $output->writeln(messages: $startMessage);
 
         if ($shallow) {
             $output->writeln(messages: '<info>Shallow update enabled</info>');
         }
 
-        $this->consoleService->resetIndex(
-            output: $output,
-            index: Value::string($index),
-            clearIndex: Value::bool($reset),
-            shallow: Value::bool($shallow),
-        );
+        $this->consoleService->resetIndex(output: $output, index: $index, clearIndex: $reset, shallow: $shallow);
 
-        $endMessage = sprintf(
-            '<info>%s the index of %s completed</info>',
-            $reset ? 'Reset' : 'Update',
-            Value::scalar($index),
-        );
+        $endMessage = sprintf('<info>%s the index of %s completed</info>', $reset ? 'Reset' : 'Update', $index);
         $output->writeln(messages: $endMessage);
 
         return Command::SUCCESS;

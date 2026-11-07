@@ -13,6 +13,7 @@ use Laminas\Session\Container;
 use Laminas\Session\ManagerInterface as Manager;
 use Laminas\Stdlib\SplQueue;
 use ReturnTypeWillChange;
+use Webmozart\Assert\Assert;
 
 use function assert;
 use function count;
@@ -87,7 +88,7 @@ class FlashMessenger extends AbstractPlugin implements IteratorAggregate, Counta
             $container->setExpirationHops(hops: $hops, vars: null);
         }
 
-        if (!(($container[$namespace] ?? null) instanceof SplQueue)) {
+        if (!($container[$namespace] ?? null) instanceof SplQueue) {
             $container[$namespace] = new SplQueue();
         }
 
@@ -178,11 +179,10 @@ class FlashMessenger extends AbstractPlugin implements IteratorAggregate, Counta
         $container = $this->getContainer();
 
         $namespaces = [];
-        /** @var mixed $messages */
         foreach ($container as $namespace => $messages) {
-            $messages = Value::instance($messages, SplQueue::class);
+            $messages = Assert::isInstanceOf($messages, SplQueue::class);
             foreach ($messages as $message) {
-                Value::string($message);
+                Assert::string($message);
             }
             /** @var MessageList $messages */
             $this->messages[$namespace] = $messages;
@@ -427,7 +427,7 @@ class FlashMessenger extends AbstractPlugin implements IteratorAggregate, Counta
 
         if ($this->hasCurrentMessages(namespace: $namespace)) {
             $container = $this->getContainer();
-            return Value::strings(Value::call($container[$namespace], 'toArray'));
+            return Value::call($container[$namespace], 'toArray');
         }
 
         return [];
@@ -518,7 +518,6 @@ class FlashMessenger extends AbstractPlugin implements IteratorAggregate, Counta
         $container = $this->getContainer();
 
         $namespaces = [];
-        /** @var mixed $messages */
         foreach ($container as $namespace => $messages) {
             $namespaces[] = $namespace;
         }

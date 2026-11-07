@@ -6,7 +6,6 @@ namespace Jield\Mvc\View\Http;
 
 use Jield\Mvc\MvcEvent;
 use Jield\Mvc\View\Model\ViewModel;
-use Jield\Stdlib\Value;
 use Laminas\EventManager\AbstractListenerAggregate;
 use Laminas\EventManager\EventManagerInterface as Events;
 use Laminas\Stdlib\ArrayUtils;
@@ -34,7 +33,7 @@ class CreateViewModelListener extends AbstractListenerAggregate
             return;
         }
 
-        $model = new ViewModel(Value::namedValues($result));
+        $model = new ViewModel($result);
         $e->setResult($model);
     }
 

@@ -4,14 +4,12 @@ declare(strict_types=1);
 
 namespace Jield\Mvc\Controller\Plugin;
 
-use ArrayAccess;
 use Jield\Mvc\Controller\AbstractController;
 use Jield\Mvc\Exception\RuntimeException;
 use Jield\Mvc\InjectApplicationEventInterface;
 use Jield\Mvc\MvcEvent;
-use Jield\Stdlib\Value;
-use Laminas\Http\Header\HeaderInterface;
 use Laminas\Http\Request;
+use Webmozart\Assert\Assert;
 
 class Params extends AbstractPlugin
 {
@@ -90,13 +88,13 @@ class Params extends AbstractPlugin
         }
 
         if ($param === null) {
-            return Value::present(
-                Value::instance($controller->getEvent(), MvcEvent::class)->getRouteMatch(),
+            return Assert::notNull(
+                Assert::isInstanceOf($controller->getEvent(), MvcEvent::class)->getRouteMatch(),
             )->getParams();
         }
 
-        return Value::present(
-            Value::instance($controller->getEvent(), MvcEvent::class)->getRouteMatch(),
+        return Assert::notNull(
+            Assert::isInstanceOf($controller->getEvent(), MvcEvent::class)->getRouteMatch(),
         )->getParam($param, $default);
     }
 }

@@ -7,12 +7,12 @@ namespace Jield\AssetManager\Service;
 use Jield\AssetManager\Exception\InvalidArgumentException;
 use Jield\AssetManager\View\Helper\Asset;
 use Jield\Stdlib\Service;
-use Jield\Stdlib\Value;
 use Laminas\Cache\Storage\Adapter\AbstractAdapter as AbstractCacheAdapter;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Laminas\ServiceManager\ServiceLocatorInterface;
 use Override;
 use Psr\Container\ContainerInterface;
+use Webmozart\Assert\Assert;
 
 class AssetViewHelperFactory implements FactoryInterface
 {
@@ -22,23 +22,16 @@ class AssetViewHelperFactory implements FactoryInterface
     #[Override]
     public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): Asset
     {
-        $config = Value::accessible($container->get('config'))['asset_manager'];
+        $config = $container->get('config')['asset_manager'];
 
         $assetManagerResolver = Service::get($container, AssetManager::class)->getResolver();
 
         $cache = $this->loadCache(
-            container: Value::instance(
-                $container,
-                \Laminas\ServiceManager\ServiceLocatorInterface::class,
-            ),
-            config: Value::array($config),
+            container: Assert::isInstanceOf($container, \Laminas\ServiceManager\ServiceLocatorInterface::class),
+            config: $config,
         );
 
-        return new Asset(
-            assetManagerResolver: $assetManagerResolver,
-            cache: $cache,
-            config: Value::array($config),
-        );
+        return new Asset(assetManagerResolver: $assetManagerResolver, cache: $cache, config: $config);
     }
 
     /**
@@ -57,7 +50,6 @@ class AssetViewHelperFactory implements FactoryInterface
         // get the cache, if it's a string, search it among services
         $cache = $config['view_helper']['cache'];
         if (is_string(value: $cache)) {
-            /** @var mixed $cache */
             $cache = $container->get($cache);
         }
 

@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Jield\ApiTools\OAuth2\Adapter;
 
-use Jield\Stdlib\Value;
 use OAuth2\Storage\Pdo as OAuth2Pdo;
 use Override;
-
 use RuntimeException;
 use SensitiveParameter;
+use Webmozart\Assert\Assert;
+
 use function sprintf;
 
 /**
@@ -22,9 +22,9 @@ class PdoAdapter extends OAuth2Pdo
 
     public function __construct($connection, $config = [])
     {
-        parent::__construct(connection: $connection, config: Value::array($config));
+        parent::__construct(connection: $connection, config: $config);
         if (isset($config['bcrypt_cost'])) {
-            $this->bcryptCost = Value::int($config['bcrypt_cost']);
+            $this->bcryptCost = $config['bcrypt_cost'];
         }
     }
 
@@ -33,14 +33,13 @@ class PdoAdapter extends OAuth2Pdo
     {
         $stmt = $this->db->prepare(query: sprintf(
             'SELECT * from %s where client_id = :client_id',
-            Value::scalar($this->config['client_table']),
+            $this->config['client_table'],
         ));
         if ($stmt === false) {
             throw new RuntimeException('Unable to prepare the OAuth client query.');
         }
         $stmt->execute(params: ['client_id' => $client_id]);
 
-        /** @var mixed $result */
         $result = $stmt->fetch();
 
         // Do not bother verifying if the secret is missing or empty.
@@ -63,7 +62,6 @@ class PdoAdapter extends OAuth2Pdo
         $user_id = null,
     ): bool {
         if (func_num_args() > 5) {
-            $scope = $scope;
         } else {
             $user_id = $scope;
             $scope = null;
@@ -87,7 +85,7 @@ class PdoAdapter extends OAuth2Pdo
 
     protected function checkPassword($user, #[SensitiveParameter] $password): bool
     {
-        return password_verify($password, Value::string($user['password']));
+        return password_verify($password, $user['password']);
     }
 
     public function getUser($username): array|bool
@@ -98,7 +96,7 @@ class PdoAdapter extends OAuth2Pdo
             return false;
         }
 
-        $userInfo = Value::array($userInfo);
+        $userInfo = Assert::isArray($userInfo);
 
         //Save the ID in the user_id field
         $userInfo['user_id'] = $userInfo['id'];

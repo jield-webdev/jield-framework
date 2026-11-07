@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Jield\Mvc\Navigation;
 
 use Jield\Mvc\Router\RouteMatch;
-use Jield\Stdlib\Value;
 use Laminas\Navigation\Exception;
 use Laminas\Navigation\Page\AbstractPage;
 use Laminas\Permissions\Acl\Resource\ResourceInterface;
@@ -159,7 +158,7 @@ class MvcPage extends AbstractPage
 
                 if (null !== $this->getRoute()) {
                     if (
-                        Value::present($this->routeMatch)->getMatchedRouteName() === $this->getRoute()
+                        $this->routeMatch->getMatchedRouteName() === $this->getRoute()
                         && count(array_intersect_assoc($reqParams, $pageParams)) === count($pageParams)
                     ) {
                         $this->active = true;
@@ -225,7 +224,7 @@ class MvcPage extends AbstractPage
         }
 
         if ($this->useRouteMatch() && $this->getRouteMatch()) {
-            $rmParams = Value::present($this->getRouteMatch())->getParams();
+            $rmParams = $this->getRouteMatch()->getParams();
 
             if (isset($rmParams[self::ORIGINAL_CONTROLLER])) {
                 /** @psalm-suppress MixedAssignment */
@@ -253,7 +252,7 @@ class MvcPage extends AbstractPage
         $name = match (true) {
             $this->getRoute() !== null || static::getDefaultRoute() !== null
                 => $this->getRoute() ?? static::getDefaultRoute(),
-            $this->getRouteMatch() !== null => Value::present($this->getRouteMatch())->getMatchedRouteName(),
+            $this->getRouteMatch() !== null => $this->getRouteMatch()->getMatchedRouteName(),
             default => throw new Exception\DomainException('No route name could be found'),
         };
 
@@ -269,7 +268,7 @@ class MvcPage extends AbstractPage
             $options['query'] = $query;
         }
 
-        $url = $router->assemble(Value::routeParams($params), $options)->toString();
+        $url = $router->assemble($params, $options)->toString();
 
         return $this->hrefCache = $url;
     }

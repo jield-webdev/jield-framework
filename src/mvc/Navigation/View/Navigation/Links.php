@@ -13,6 +13,7 @@ use Laminas\Stdlib\ErrorHandler;
 use Laminas\View\Exception;
 use RecursiveIteratorIterator;
 use Traversable;
+use Webmozart\Assert\Assert;
 
 use function array_diff;
 use function array_keys;
@@ -147,11 +148,7 @@ class Links extends AbstractHelper
         $result = preg_match('/find(Rel|Rev)(.+)/', $method, $match);
         ErrorHandler::stop();
         if ($result) {
-            return $this->findRelation(
-                Value::instance($arguments[0], \Laminas\Navigation\Page\AbstractPage::class),
-                strtolower($match[1]),
-                strtolower($match[2]),
-            );
+            return $this->findRelation($arguments[0], strtolower($match[1]), strtolower($match[2]));
         }
 
         return parent::__call($method, $arguments);
@@ -185,18 +182,11 @@ class Links extends AbstractHelper
         $indent = $this->getIndent();
         $this->root = $container;
 
-        $result = $this->findAllRelations(
-            Value::instance($active, \Laminas\Navigation\Page\AbstractPage::class),
-            $this->getRenderFlag(),
-        );
+        $result = $this->findAllRelations($active, $this->getRenderFlag());
         foreach ($result as $attrib => $types) {
             foreach ($types as $relation => $pages) {
                 foreach ($pages as $page) {
-                    $r = $this->renderLink(
-                        Value::instance($page, \Laminas\Navigation\Page\AbstractPage::class),
-                        $attrib,
-                        Value::string($relation),
-                    );
+                    $r = $this->renderLink($page, $attrib, Assert::string($relation));
                     if ($r) {
                         $output .= $indent . $r . PHP_EOL;
                     }
@@ -249,12 +239,7 @@ class Links extends AbstractHelper
         return (
             '<link'
             . $this->htmlAttribs($attribs)
-            . Value::stringify(Value::call(
-                $this,
-                'getClosingBracket',
-                [],
-                scope: self::class,
-            ))
+            . Value::stringify(Value::call($this, 'getClosingBracket', [], scope: self::class))
         );
     }
 
@@ -297,12 +282,8 @@ class Links extends AbstractHelper
 
         foreach (array_keys($result) as $rel) {
             $meth = 'getDefined' . ucfirst($rel);
-            $types = array_merge($native, array_diff(
-                Value::scalars(Value::array(Value::call($page, $meth))),
-                Value::scalars($native),
-            ));
+            $types = array_merge($native, array_diff(Value::call($page, $meth), $native));
 
-            /** @var mixed $type */
             foreach ($types as $type) {
                 if (!($relFlag = array_search($type, static::$RELATIONS))) {
                     $relFlag = self::RENDER_CUSTOM;
@@ -311,7 +292,7 @@ class Links extends AbstractHelper
                     continue;
                 }
 
-                $found = $this->findRelation($page, $rel, Value::string($type));
+                $found = $this->findRelation($page, $rel, $type);
                 if ($found !== null && $found !== []) {
                     if (!is_array($found)) {
                         $found = [$found];
@@ -372,12 +353,8 @@ class Links extends AbstractHelper
                     $result = [$result];
                 }
 
-                /** @var mixed $page */
                 foreach ($result as $key => $page) {
-                    if (!$this->accept(Value::instance(
-                        $page,
-                        \Laminas\Navigation\Page\AbstractPage::class,
-                    ))) {
+                    if (!$this->accept($page)) {
                         unset($result[$key]);
                     }
                 }
@@ -406,7 +383,7 @@ class Links extends AbstractHelper
             $found = Value::call($this, $method, [$page], scope: self::class);
         }
 
-        return $found instanceof AbstractPage ? $found : Value::nullableArray($found);
+        return $found instanceof AbstractPage ? $found : Assert::nullOrIsArray($found);
     }
 
     // Search methods:
@@ -735,7 +712,7 @@ class Links extends AbstractHelper
             } else {
                 // pass array to factory directly
                 try {
-                    return AbstractPage::factory(new ArrayIterator(Value::stringKeyedArray($mixed)));
+                    return AbstractPage::factory(new ArrayIterator($mixed));
                 } catch (\Exception) {
                 }
             }

@@ -11,8 +11,8 @@ use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\Tools\Pagination\OffsetPaginator;
 use Doctrine\ORM\Tools\Pagination\Window;
 use IteratorAggregate;
-use Jield\Stdlib\Value;
 use Traversable;
+use Webmozart\Assert\Assert;
 
 /** @implements IteratorAggregate<int, object> */
 abstract class AbstractDoctrinePaginator implements Countable, IteratorAggregate
@@ -76,7 +76,7 @@ abstract class AbstractDoctrinePaginator implements Countable, IteratorAggregate
     {
         return new ArrayIterator($this->pageItems(
             $this->query->getFirstResult(),
-            Value::int($this->query->getMaxResults()),
+            Assert::integer($this->query->getMaxResults()),
         ));
     }
 }

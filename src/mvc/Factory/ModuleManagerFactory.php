@@ -16,11 +16,11 @@ use Jield\ModuleManager\Listener\ServiceListener;
 use Jield\ModuleManager\ModuleEvent;
 use Jield\ModuleManager\ModuleManager;
 use Jield\Stdlib\Service;
-use Jield\Stdlib\Value;
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Laminas\ServiceManager\ServiceManager;
 use Psr\Container\ContainerInterface;
+use Webmozart\Assert\Assert;
 
 class ModuleManagerFactory implements FactoryInterface
 {
@@ -45,18 +45,12 @@ class ModuleManagerFactory implements FactoryInterface
         ?array $options = null,
     ): ModuleManager {
         $configuration = $container->get('ApplicationConfig');
-        $listenerOptions = new ListenerOptions(Value::stringKeyedArray(
-            Value::accessible($configuration)['module_listener_options'],
-        ));
+        $listenerOptions = new ListenerOptions($configuration['module_listener_options']);
         $defaultListeners = new DefaultListenerAggregate($listenerOptions);
-        $serviceListener = Service::get(
-            $container,
-            ServiceListener::class,
-            'ServiceListener',
-        );
+        $serviceListener = Service::get($container, ServiceListener::class, 'ServiceListener');
 
         $serviceListener->addServiceManager(
-            Value::instance($container, ServiceManager::class),
+            Assert::isInstanceOf($container, ServiceManager::class),
             'service_manager',
             ServiceProviderInterface::class,
             'getServiceConfig',
@@ -87,18 +81,14 @@ class ModuleManagerFactory implements FactoryInterface
             'getRouteConfig',
         );
 
-        $events = Service::get(
-            $container,
-            EventManagerInterface::class,
-            'EventManager',
-        );
+        $events = Service::get($container, EventManagerInterface::class, 'EventManager');
         $defaultListeners->attach($events);
         $serviceListener->attach($events);
 
         $moduleEvent = new ModuleEvent();
         $moduleEvent->setParam('ServiceManager', $container);
 
-        $moduleManager = new ModuleManager(Value::iterable(Value::accessible($configuration)['modules']), $events);
+        $moduleManager = new ModuleManager($configuration['modules'], $events);
         $moduleManager->setEvent($moduleEvent);
 
         return $moduleManager;

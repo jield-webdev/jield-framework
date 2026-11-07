@@ -8,12 +8,11 @@ use Exception;
 use Jield\Mvc\Application;
 use Jield\Mvc\MvcEvent;
 use Jield\Mvc\View\Model\ViewModel;
-use Jield\Stdlib\Value;
 use Laminas\EventManager\AbstractListenerAggregate;
 use Laminas\EventManager\EventManagerInterface;
-use Laminas\Http\Response as HttpResponse;
 use Laminas\Stdlib\ResponseInterface as Response;
 use Throwable;
+use Webmozart\Assert\Assert;
 
 use function is_string;
 
@@ -145,7 +144,7 @@ class RouteNotFoundStrategy extends AbstractListenerAggregate
                 $this->reason = $error;
                 $response = $e->getResponse();
 
-                Value::instance($response, \Laminas\Http\Response::class)->setStatusCode(404);
+                Assert::isInstanceOf($response, \Laminas\Http\Response::class)->setStatusCode(404);
                 break;
             default:
                 return;
@@ -166,7 +165,7 @@ class RouteNotFoundStrategy extends AbstractListenerAggregate
         }
 
         $response = $e->getResponse();
-        if (Value::instance($response, \Laminas\Http\Response::class)->getStatusCode() !== 404) {
+        if (Assert::isInstanceOf($response, \Laminas\Http\Response::class)->getStatusCode() !== 404) {
             // Only handle 404 responses
             return;
         }
@@ -185,7 +184,7 @@ class RouteNotFoundStrategy extends AbstractListenerAggregate
             }
         }
 
-        $model->setTemplate(Value::nonEmptyString($this->getNotFoundTemplate()));
+        $model->setTemplate(Assert::stringNotEmpty($this->getNotFoundTemplate()));
 
         // If displaying reasons, inject the reason
         $this->injectNotFoundReason($model);
@@ -243,7 +242,6 @@ class RouteNotFoundStrategy extends AbstractListenerAggregate
 
         $model->setVariable('display_exceptions', true);
 
-        /** @var mixed $exception */
         $exception = $e->getParam('exception', false);
 
         // @TODO clean up once PHP 7 requirement is enforced

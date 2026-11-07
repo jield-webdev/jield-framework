@@ -7,10 +7,10 @@ namespace Jield\ApiTools\MvcAuth\Factory;
 use Jield\ApiTools\MvcAuth\Authentication\DefaultAuthenticationListener;
 use Jield\ApiTools\MvcAuth\Authentication\HttpAdapter;
 use Jield\ApiTools\MvcAuth\Authentication\OAuth2Adapter;
-use Jield\Stdlib\Value;
 use Laminas\ServiceManager\Factory\DelegatorFactoryInterface;
 use Override;
 use Psr\Container\ContainerInterface;
+use Webmozart\Assert\Assert;
 
 use function is_array;
 use function is_string;
@@ -31,7 +31,6 @@ class AuthenticationAdapterDelegatorFactory implements DelegatorFactoryInterface
         callable $callback,
         ?array $options = null,
     ): DefaultAuthenticationListener {
-        /** @var mixed $listener */
         $listener = $callback();
 
         $config = $container->get('config');
@@ -39,28 +38,19 @@ class AuthenticationAdapterDelegatorFactory implements DelegatorFactoryInterface
             !isset($config['api-tools-mvc-auth']['authentication']['adapters'])
             || !is_array(value: $config['api-tools-mvc-auth']['authentication']['adapters'])
         ) {
-            return Value::instance(
-                $listener,
-                \Jield\ApiTools\MvcAuth\Authentication\DefaultAuthenticationListener::class,
-            );
+            return $listener;
         }
 
         foreach ($config['api-tools-mvc-auth']['authentication']['adapters'] as $type => $data) {
             $this->attachAdapterOfType(
-                type: Value::string($type),
-                adapterConfig: Value::array($data),
+                type: Assert::string($type),
+                adapterConfig: $data,
                 container: $container,
-                listener: Value::instance(
-                    $listener,
-                    \Jield\ApiTools\MvcAuth\Authentication\DefaultAuthenticationListener::class,
-                ),
+                listener: $listener,
             );
         }
 
-        return Value::instance(
-            $listener,
-            \Jield\ApiTools\MvcAuth\Authentication\DefaultAuthenticationListener::class,
-        );
+        return $listener;
     }
 
     /**

@@ -5,13 +5,12 @@ declare(strict_types=1);
 namespace Jield\Authorize\Service;
 
 use Jield\Stdlib\Service;
-use Jield\Stdlib\Value;
 use Laminas\Permissions\Acl\Acl;
 use Laminas\Permissions\Acl\Assertion\AssertionInterface;
-use Laminas\Permissions\Acl\Resource\ResourceInterface;
 use Laminas\ServiceManager\ServiceManager;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\NotFoundExceptionInterface;
+use Webmozart\Assert\Assert;
 
 class AssertionService
 {
@@ -36,37 +35,19 @@ class AssertionService
      */
     public function addResource($entity, string $assertion): void
     {
-        if (!$this->acl->hasResource(Value::instanceOrString(
-            $entity,
-            ResourceInterface::class,
-        ))) {
-            $this->acl->addResource(Value::instanceOrString(
-                $entity,
-                ResourceInterface::class,
-            ));
+        if (!$this->acl->hasResource($entity)) {
+            $this->acl->addResource($entity);
             $this->acl->allow(
                 [],
-                Value::instanceOrArrayOrString(
-                    $entity,
-                    ResourceInterface::class,
-                ),
+                $entity,
                 [],
-                Value::instance(
-                    $this->container->build(name: $assertion),
-                    AssertionInterface::class,
-                ),
+                Assert::isInstanceOf($this->container->build(name: $assertion), AssertionInterface::class),
             );
         }
     }
 
     public function isUserAllowed($entity, string $privilege): bool
     {
-        return $this->authorizeService->isAllowed(
-            resource: Value::instanceOrString(
-                $entity,
-                ResourceInterface::class,
-            ),
-            privilege: $privilege,
-        );
+        return $this->authorizeService->isAllowed(resource: $entity, privilege: $privilege);
     }
 }

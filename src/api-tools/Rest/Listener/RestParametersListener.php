@@ -6,12 +6,10 @@ namespace Jield\ApiTools\Rest\Listener;
 
 use Jield\ApiTools\Rest\RestController;
 use Jield\Mvc\MvcEvent;
-use Jield\Stdlib\Value;
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\EventManager\ListenerAggregateInterface;
 use Laminas\EventManager\ListenerAggregateTrait;
 use Laminas\EventManager\SharedEventManagerInterface;
-use Laminas\Stdlib\Parameters;
 use Override;
 
 use function method_exists;
@@ -47,7 +45,7 @@ class RestParametersListener implements ListenerAggregateInterface
     {
         foreach ($this->sharedListeners as $index => $listener) {
             $events->detach(
-                listener: Value::callback($listener),
+                listener: $listener,
                 identifier: RestController::class,
                 eventName: MvcEvent::EVENT_DISPATCH,
             );
@@ -70,14 +68,10 @@ class RestParametersListener implements ListenerAggregateInterface
             return;
         }
 
-        /** @var mixed $query */
         $query = $request->getQuery();
         $matches = $e->getRouteMatch();
         $resource = $controller->getResource();
-        $resource->setQueryParams(params: Value::nullableInstance(
-            $query,
-            Parameters::class,
-        ));
+        $resource->setQueryParams(params: $query);
         $resource->setRouteMatch(matches: $matches);
     }
 }

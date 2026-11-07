@@ -108,7 +108,7 @@ class ObjectExists extends AbstractValidator
             }
         }
 
-        return Value::stringList($fields);
+        return array_values($fields);
     }
 
     /**
@@ -131,11 +131,11 @@ class ObjectExists extends AbstractValidator
                     throw new Exception\RuntimeException(message: sprintf(
                         'Field "%s" was not provided, but was expected since the configured field lists needs'
                         . ' it for validation',
-                        Value::scalar($field),
+                        $field,
                     ));
                 }
 
-                $matchedFieldsValues[Value::key($field)] = $value[$field];
+                $matchedFieldsValues[$field] = $value[$field];
             }
         } else {
             $matchedFieldsValues = count($this->fields) === count($value)
@@ -160,7 +160,7 @@ class ObjectExists extends AbstractValidator
     public function isValid($value): bool
     {
         $cleanedValue = $this->cleanSearchValue(value: $value);
-        $match = $this->objectRepository->findOneBy(criteria: Value::stringKeyedArray($cleanedValue));
+        $match = $this->objectRepository->findOneBy(criteria: $cleanedValue);
 
         if (is_object(value: $match)) {
             return true;

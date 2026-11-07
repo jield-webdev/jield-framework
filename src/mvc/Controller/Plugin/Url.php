@@ -13,6 +13,7 @@ use Jield\Mvc\MvcEvent;
 use Jield\Stdlib\Value;
 use Laminas\Router\RouteStackInterface;
 use Traversable;
+use Webmozart\Assert\Assert;
 
 use function array_merge;
 use function func_num_args;
@@ -58,9 +59,7 @@ class Url extends AbstractPlugin
             $router = $event->getRouter();
             $matches = $event->getRouteMatch();
         } else {
-            /** @var mixed $router */
             $router = $event->getParam('router', false);
-            /** @var mixed $matches */
             $matches = $event->getParam('route-match', false);
         }
         if (!$router instanceof RouteStackInterface) {
@@ -96,13 +95,11 @@ class Url extends AbstractPlugin
                 unset($routeMatchParams[ModuleRouteListener::MODULE_NAMESPACE]);
             }
 
-            $params = array_merge(Value::array($routeMatchParams), $params);
+            $params = array_merge($routeMatchParams, $params);
         }
 
-        $options = Value::array($options);
+        $options = Assert::isArray($options);
         $options['name'] = $route;
-        return $router
-            ->assemble(Value::routeParams($params), Value::array($options))
-            ->toString();
+        return $router->assemble($params, $options)->toString();
     }
 }

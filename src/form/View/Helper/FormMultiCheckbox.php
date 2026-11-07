@@ -7,8 +7,9 @@ namespace Jield\Form\View\Helper;
 use Jield\Form\Element\MultiCheckbox as MultiCheckboxElement;
 use Jield\Form\ElementInterface;
 use Jield\Form\Exception;
-
 use Jield\Stdlib\Value;
+use Webmozart\Assert\Assert;
+
 use function array_key_exists;
 use function array_merge;
 use function implode;
@@ -171,8 +172,7 @@ class FormMultiCheckbox extends FormInput
                 isset($inputAttributes['selected'])
                 && $inputAttributes['type'] !== 'radio'
                 && Value::truthy($inputAttributes['selected']);
-            $disabled =
-                isset($inputAttributes['disabled']) && Value::truthy($inputAttributes['disabled']);
+            $disabled = isset($inputAttributes['disabled']) && Value::truthy($inputAttributes['disabled']);
 
             if (is_scalar(value: $optionSpec)) {
                 $optionSpec = [
@@ -194,13 +194,12 @@ class FormMultiCheckbox extends FormInput
                 $disabled = $optionSpec['disabled'];
             }
             if (isset($optionSpec['label_attributes'])) {
-                /** @var mixed $labelAttributes */
                 $labelAttributes = isset($labelAttributes)
-                    ? array_merge($labelAttributes, Value::array($optionSpec['label_attributes']))
+                    ? array_merge($labelAttributes, Assert::isArray($optionSpec['label_attributes']))
                     : $optionSpec['label_attributes'];
             }
             if (isset($optionSpec['attributes'])) {
-                $inputAttributes = array_merge($inputAttributes, Value::array($optionSpec['attributes']));
+                $inputAttributes = array_merge($inputAttributes, Assert::isArray($optionSpec['attributes']));
             }
 
             if (in_array(needle: $value, haystack: $selectedOptions, strict: true)) {
@@ -217,10 +216,10 @@ class FormMultiCheckbox extends FormInput
                 $closingBracket,
             );
 
-            $label = $this->translateLabel(label: Value::string($label));
+            $label = $this->translateLabel(label: Assert::string($label));
             $label = $this->escapeLabel(element: $element, label: $label);
 
-            $labelOpen = $labelHelper->openTag(attributesOrElement: Value::array($labelAttributes));
+            $labelOpen = $labelHelper->openTag(attributesOrElement: Assert::isArray($labelAttributes));
             $template = $labelOpen . '%s%s' . $labelClose;
             $markup = match ($labelPosition) {
                 self::LABEL_PREPEND => sprintf($template, $label, $input),
@@ -417,7 +416,7 @@ class FormMultiCheckbox extends FormInput
             return $this->labelHelper;
         }
 
-        if (method_exists(object_or_class: Value::objectOrString($this->view), method: 'plugin')) {
+        if (method_exists(object_or_class: $this->view, method: 'plugin')) {
             $this->labelHelper = $this->getView()->plugin('form_label', \Jield\Form\View\Helper\FormLabel::class);
         }
 

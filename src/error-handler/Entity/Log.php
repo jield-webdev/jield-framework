@@ -9,6 +9,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Jield\Stdlib\Value;
 use Psr\Log\LogLevel;
 use Stringable;
+use Webmozart\Assert\Assert;
 
 #[ORM\Table]
 #[ORM\Entity]
@@ -71,7 +72,7 @@ class Log implements LogEntityInterface, Stringable
     {
         //The error message is of format: {class} was handled successfully (acknowledging to transport).
         //We need to extract the wildcards wrapped between {} with the data from the request data array
-        return Value::string(preg_replace_callback(
+        return Assert::string(preg_replace_callback(
             pattern: '/\{([^}]+)}/',
             callback: fn(array $matches): string => Value::stringify($this->requestData[$matches[1]] ?? ''),
             subject: $this->errorMessage,

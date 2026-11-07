@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Jield\ApiTools\Hal\Factory;
 
 use Jield\ApiTools\Hal\Metadata;
-use Jield\Stdlib\Value;
 use Laminas\Hydrator\HydratorPluginManager;
 use Laminas\Hydrator\HydratorPluginManagerInterface;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Container\NotFoundExceptionInterface;
+use Webmozart\Assert\Assert;
 
 use function is_array;
 
@@ -24,7 +24,6 @@ class MetadataMapFactory
     {
         $config = $container->get('Jield\ApiTools\Hal\HalConfig');
 
-        /** @var mixed $hydrators */
         $hydrators = $container->has('HydratorManager')
             ? $container->get('HydratorManager')
             : new HydratorPluginManager(creationContext: $container);
@@ -33,6 +32,9 @@ class MetadataMapFactory
             ? $config['metadata_map']
             : [];
 
-        return new Metadata\MetadataMap(map: $map, hydrators: Value::instance($hydrators, HydratorPluginManagerInterface::class));
+        return new Metadata\MetadataMap(map: $map, hydrators: Assert::isInstanceOf(
+            $hydrators,
+            HydratorPluginManagerInterface::class,
+        ));
     }
 }

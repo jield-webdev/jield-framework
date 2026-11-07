@@ -33,6 +33,7 @@ use PHPUnit\Framework\Assert;
 use PHPUnit\Framework\ExpectationFailedException;
 use PHPUnit\Framework\TestCase;
 use Throwable;
+use Webmozart\Assert\Assert as WebmozartAssert;
 
 use function array_diff;
 use function array_intersect;
@@ -167,7 +168,7 @@ abstract class AbstractControllerTestCase extends TestCase
             return $this->application;
         }
         $appConfig = $this->applicationConfig;
-        $this->application = Application::init(Value::array($appConfig));
+        $this->application = Application::init(WebmozartAssert::isArray($appConfig));
 
         $events = $this->application->getEventManager();
         Service::get(
@@ -186,7 +187,7 @@ abstract class AbstractControllerTestCase extends TestCase
      */
     public function getApplicationServiceLocator()
     {
-        return Value::instance($this->getApplication()->getServiceManager(), ServiceManager::class);
+        return WebmozartAssert::isInstanceOf($this->getApplication()->getServiceManager(), ServiceManager::class);
     }
 
     /**
@@ -225,11 +226,11 @@ abstract class AbstractControllerTestCase extends TestCase
     {
         $request = $this->getRequest();
         $query = Value::call(
-            Value::instance($request, \Laminas\Http\Request::class)->getQuery(),
+            WebmozartAssert::isInstanceOf($request, \Laminas\Http\Request::class)->getQuery(),
             'toArray',
         );
         $post = Value::call(
-            Value::instance($request, \Laminas\Http\Request::class)->getPost(),
+            WebmozartAssert::isInstanceOf($request, \Laminas\Http\Request::class)->getPost(),
             'toArray',
         );
         $uri = new HttpUri($url);
@@ -246,7 +247,7 @@ abstract class AbstractControllerTestCase extends TestCase
                     break;
                 case HttpRequest::METHOD_GET:
                 case HttpRequest::METHOD_DELETE:
-                    $query = array_merge(Value::array($query), $params);
+                    $query = array_merge($query, $params);
                     break;
                 case HttpRequest::METHOD_PUT:
                 case HttpRequest::METHOD_PATCH:
@@ -261,14 +262,14 @@ abstract class AbstractControllerTestCase extends TestCase
             }
         }
 
-        Value::instance($request, \Laminas\Http\Request::class)->setMethod(Value::string(
+        WebmozartAssert::isInstanceOf($request, \Laminas\Http\Request::class)->setMethod(WebmozartAssert::string(
             $method,
         ));
-        Value::instance($request, \Laminas\Http\Request::class)->setQuery(new Parameters(Value::nullableArray($query)));
-        Value::instance($request, \Laminas\Http\Request::class)->setPost(new Parameters(Value::nullableArray($post)));
-        Value::instance($request, \Laminas\Http\Request::class)->setUri($uri);
-        Value::instance($request, Request::class)->setRequestUri(
-            Value::string($uri->getPath()),
+        WebmozartAssert::isInstanceOf($request, \Laminas\Http\Request::class)->setQuery(new Parameters($query));
+        WebmozartAssert::isInstanceOf($request, \Laminas\Http\Request::class)->setPost(new Parameters($post));
+        WebmozartAssert::isInstanceOf($request, \Laminas\Http\Request::class)->setUri($uri);
+        WebmozartAssert::isInstanceOf($request, Request::class)->setRequestUri(
+            WebmozartAssert::string($uri->getPath()),
         );
 
         return $this;
@@ -290,21 +291,17 @@ abstract class AbstractControllerTestCase extends TestCase
     public function dispatch($url, $method = null, $params = [], $isXmlHttpRequest = false)
     {
         if (null === $method && $this->getRequest() instanceof HttpRequest) {
-            $method = Value::instance($this->getRequest(), \Laminas\Http\Request::class)->getMethod();
+            $method = $this->getRequest()->getMethod();
         } elseif (null === $method) {
             $method = HttpRequest::METHOD_GET;
         }
 
         if ($isXmlHttpRequest) {
-            /** @var mixed $headers */
-            $headers = Value::instance(
-                $this->getRequest(),
-                AbstractMessage::class,
-            )->getHeaders();
+            $headers = WebmozartAssert::isInstanceOf($this->getRequest(), AbstractMessage::class)->getHeaders();
             Value::call($headers, 'addHeaderLine', ['X_REQUESTED_WITH', 'XMLHttpRequest']);
         }
 
-        $this->url($url, Value::nullableString($method), $params);
+        $this->url($url, $method, $params);
         $this->getApplication()->run();
     }
 
@@ -374,11 +371,10 @@ abstract class AbstractControllerTestCase extends TestCase
      */
     public function assertModulesLoaded(array $modules)
     {
-        /** @var mixed $moduleManager */
         $moduleManager = $this->getApplicationServiceLocator()->get('ModuleManager');
         assert($moduleManager instanceof ModuleManager);
         $modulesLoaded = array_keys($moduleManager->getLoadedModules());
-        $list = array_diff(Value::keys($modules), $modulesLoaded);
+        $list = array_diff($modules, $modulesLoaded);
         if ($list) {
             throw new ExpectationFailedException(FailureMessage::format($this, sprintf('Several modules are not loaded "%s"', implode(
                 ', ',
@@ -395,14 +391,13 @@ abstract class AbstractControllerTestCase extends TestCase
      */
     public function assertNotModulesLoaded(array $modules)
     {
-        /** @var mixed $moduleManager */
         $moduleManager = $this->getApplicationServiceLocator()->get('ModuleManager');
         $modulesLoaded = Value::call($moduleManager, 'getModules');
-        $list = array_intersect($modules, Value::array($modulesLoaded));
+        $list = array_intersect($modules, $modulesLoaded);
         if ($list) {
             throw new ExpectationFailedException(FailureMessage::format($this, sprintf('Several modules WAS not loaded "%s"', implode(
                 ', ',
-                Value::scalars($list),
+                $list,
             ))));
         }
         $this->assertEquals(count($list), 0);
@@ -464,7 +459,6 @@ abstract class AbstractControllerTestCase extends TestCase
      */
     public function assertApplicationException($type, $message = null)
     {
-        /** @var mixed $exception */
         $exception = $this->getApplication()->getMvcEvent()->getParam('exception');
         if (!$exception) {
             throw new ExpectationFailedException(FailureMessage::format(
@@ -477,12 +471,13 @@ abstract class AbstractControllerTestCase extends TestCase
             $this->getApplication()->getMvcEvent()->setParam('exception', null);
         }
 
-        $this->expectException(Value::subclass($type, \Throwable::class));
+        WebmozartAssert::isAOf($type, \Throwable::class);
+        $this->expectException($type);
         if (null !== $message) {
             $this->expectExceptionMessageIsOrContains($message);
         }
 
-        throw Value::instance($exception, \Throwable::class);
+        throw WebmozartAssert::isInstanceOf($exception, \Throwable::class);
     }
 
     /**
@@ -510,13 +505,11 @@ abstract class AbstractControllerTestCase extends TestCase
         $controllerIdentifier = $routeMatch->getParam('controller');
         Assert::assertIsString($controllerIdentifier, 'No string controller identifier discovered in route match');
 
-        /** @var mixed $controllerManager */
         $controllerManager = $this->getApplicationServiceLocator()->get('ControllerManager');
         if (!$controllerManager instanceof ControllerManager) {
             Assert::fail('Invalid ControllerManager instance in ServiceManager');
         }
 
-        /** @var mixed $controller */
         $controller = $controllerManager->get($controllerIdentifier);
         Assert::assertIsObject($controller, sprintf(
             'Did not receive an object back for the controller %s',
@@ -604,7 +597,7 @@ abstract class AbstractControllerTestCase extends TestCase
             throw new ExpectationFailedException(FailureMessage::format($this, 'No route matched'));
         }
         $match = $routeMatch->getParam('controller');
-        $match = strtolower(Value::string($match));
+        $match = strtolower($match);
         $controller = strtolower($controller);
         if ($controller !== $match) {
             throw new ExpectationFailedException(FailureMessage::format($this, sprintf(
@@ -629,7 +622,7 @@ abstract class AbstractControllerTestCase extends TestCase
             throw new ExpectationFailedException(FailureMessage::format($this, 'No route matched'));
         }
         $match = $routeMatch->getParam('controller');
-        $match = strtolower(Value::string($match));
+        $match = strtolower($match);
         $controller = strtolower($controller);
         if ($controller === $match) {
             throw new ExpectationFailedException(FailureMessage::format($this, sprintf(
@@ -653,7 +646,7 @@ abstract class AbstractControllerTestCase extends TestCase
             throw new ExpectationFailedException(FailureMessage::format($this, 'No route matched'));
         }
         $match = $routeMatch->getParam('action');
-        $match = strtolower(Value::string($match));
+        $match = strtolower($match);
         $action = strtolower($action);
         if ($action !== $match) {
             throw new ExpectationFailedException(FailureMessage::format($this, sprintf(
@@ -678,7 +671,7 @@ abstract class AbstractControllerTestCase extends TestCase
             throw new ExpectationFailedException(FailureMessage::format($this, 'No route matched'));
         }
         $match = $routeMatch->getParam('action');
-        $match = strtolower(Value::string($match));
+        $match = strtolower($match);
         $action = strtolower($action);
         if ($action === $match) {
             throw new ExpectationFailedException(FailureMessage::format($this, sprintf(

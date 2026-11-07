@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Jield\ApiTools\MvcAuth\Factory;
 
-use Jield\Stdlib\Value;
 use Laminas\Authentication\Adapter\Http\FileResolver;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Override;
 use Psr\Container\ContainerInterface;
+use Webmozart\Assert\Assert;
 
 class FileResolverFactory implements FactoryInterface
 {
@@ -32,6 +32,6 @@ class FileResolverFactory implements FactoryInterface
 
         $htdigest = $config['api-tools-mvc-auth']['authentication']['http']['htdigest'];
 
-        return new FileResolver(path: Value::string($htdigest));
+        return new FileResolver(path: Assert::string($htdigest));
     }
 }

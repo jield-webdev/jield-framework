@@ -15,11 +15,7 @@ class HalJsonRendererFactory
 {
     public function __invoke(ContainerInterface $container): HalJsonRenderer
     {
-        $helpers = Service::get(
-            $container,
-            \Laminas\View\HelperPluginManager::class,
-            'ViewHelperManager',
-        );
+        $helpers = Service::get($container, \Laminas\View\HelperPluginManager::class, 'ViewHelperManager');
         $apiProblemRenderer = Service::get($container, ApiProblemRenderer::class);
 
         $renderer = new HalJsonRenderer(apiProblemRenderer: $apiProblemRenderer);

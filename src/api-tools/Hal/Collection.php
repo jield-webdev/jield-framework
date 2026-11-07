@@ -6,7 +6,6 @@ namespace Jield\ApiTools\Hal;
 
 use Exception;
 use Jield\ApiTools\Hal\Exception\InvalidArgumentException;
-use Jield\Stdlib\Value;
 use Laminas\Paginator\Paginator;
 use Laminas\Stdlib\ArrayUtils;
 use Traversable;
@@ -142,7 +141,7 @@ class Collection implements Link\LinkCollectionAwareInterface
     {
         $options = ArrayUtils::iteratorToArray(iterator: $options);
 
-        $this->collectionRouteOptions = Value::array($options);
+        $this->collectionRouteOptions = $options;
         return $this;
     }
 
@@ -223,7 +222,7 @@ class Collection implements Link\LinkCollectionAwareInterface
     {
         $options = ArrayUtils::iteratorToArray(iterator: $options);
 
-        $this->entityRouteOptions = Value::array($options);
+        $this->entityRouteOptions = $options;
         return $this;
     }
 
@@ -231,7 +230,7 @@ class Collection implements Link\LinkCollectionAwareInterface
     {
         $params = ArrayUtils::iteratorToArray(iterator: $params);
 
-        $this->entityRouteParams = Value::array($params);
+        $this->entityRouteParams = $params;
         return $this;
     }
 

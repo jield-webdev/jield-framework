@@ -13,6 +13,7 @@ use Laminas\Http\Header\ContentType;
 use Laminas\Http\Headers;
 use Laminas\Http\Request;
 use Laminas\Http\Response;
+use Webmozart\Assert\Assert;
 
 final class TokenExchangeController extends AbstractActionController
 {
@@ -34,16 +35,14 @@ final class TokenExchangeController extends AbstractActionController
         }
 
         try {
-            if (strlen(Value::string($request->getContent())) > 65_536) {
+            if (strlen($request->getContent()) > 65_536) {
                 throw new EntraException(error: 'invalid_request', description: 'Request is too large');
             }
-            $type = Value::instance($request->getHeaders(), Headers::class)->get(
-                'Content-Type',
-            );
+            $type = Assert::isInstanceOf($request->getHeaders(), Headers::class)->get('Content-Type');
 
             if ($type instanceof ContentType && $type->match('application/json')) {
                 $data = json_decode(
-                    json: Value::string($request->getContent()),
+                    json: $request->getContent(),
                     associative: true,
                     depth: 16,
                     flags: JSON_THROW_ON_ERROR,
@@ -61,7 +60,7 @@ final class TokenExchangeController extends AbstractActionController
                 );
             }
 
-            return $this->json(status: 200, data: $this->exchange->exchange(Value::array($data)));
+            return $this->json(status: 200, data: $this->exchange->exchange($data));
         } catch (JsonException) {
             return $this->json(status: 400, data: [
                 'error' => 'invalid_request',
@@ -85,7 +84,7 @@ final class TokenExchangeController extends AbstractActionController
         $response->getHeaders()->addHeaderLine(headerFieldNameOrLine: 'Cache-Control', fieldValue: 'no-store');
         $response->getHeaders()->addHeaderLine(headerFieldNameOrLine: 'Pragma', fieldValue: 'no-cache');
 
-        return Value::instance(
+        return Assert::isInstanceOf(
             $response->setContent(json_encode(value: $data, flags: JSON_THROW_ON_ERROR)),
             \Laminas\Http\Response::class,
         );

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Jield\Form;
 
-use Jield\Stdlib\Value;
 use function array_key_exists;
 
 trait LabelAwareTrait
@@ -52,11 +51,8 @@ trait LabelAwareTrait
      */
     public function setLabelOptions(iterable $arrayOrTraversable): static
     {
-        /** @var mixed $key
-         * @var mixed $value
-         */
         foreach ($arrayOrTraversable as $key => $value) {
-            $this->setLabelOption(key: Value::string($key), value: $value);
+            $this->setLabelOption(key: $key, value: $value);
         }
         return $this;
     }

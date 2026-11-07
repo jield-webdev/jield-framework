@@ -9,8 +9,8 @@ use IntlDateFormatter;
 use Jield\Form\Element\DateSelect as DateSelectElement;
 use Jield\Form\ElementInterface;
 use Jield\Form\Exception;
-
 use Jield\Stdlib\Value;
+
 use function is_numeric;
 use function sprintf;
 
@@ -71,8 +71,8 @@ class FormDateSelect extends AbstractFormDateSelect
         $selectHelper = $this->getSelectElementHelper();
         $pattern = $this->parsePattern(renderDelimiters: $element->shouldRenderDelimiters());
 
-        $daysOptions = $this->getDaysOptions(pattern: Value::string($pattern['day']));
-        $monthsOptions = $this->getMonthsOptions(pattern: Value::string($pattern['month']));
+        $daysOptions = $this->getDaysOptions(pattern: $pattern['day']);
+        $monthsOptions = $this->getMonthsOptions(pattern: $pattern['month']);
         $yearOptions = $this->getYearsOptions(minYear: $element->getMinYear(), maxYear: $element->getMaxYear());
 
         $dayElement = $element->getDayElement()->setValueOptions(options: $daysOptions);
@@ -88,7 +88,7 @@ class FormDateSelect extends AbstractFormDateSelect
         $data = [];
         $data[$pattern['day']] = $selectHelper->render(element: $dayElement);
         $data[$pattern['month']] = $selectHelper->render(element: $monthElement);
-        $data[Value::key($pattern['year'])] = $selectHelper->render(element: $yearElement);
+        $data[$pattern['year']] = $selectHelper->render(element: $yearElement);
 
         $markup = '';
         foreach ($pattern as $key => $value) {

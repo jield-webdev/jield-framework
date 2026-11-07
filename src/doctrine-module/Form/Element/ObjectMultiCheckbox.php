@@ -9,6 +9,7 @@ use Jield\Stdlib\Value;
 use Laminas\Stdlib\ArrayUtils;
 use Override;
 use Traversable;
+use Webmozart\Assert\Assert;
 
 use function array_map;
 use function is_array;
@@ -26,7 +27,7 @@ class ObjectMultiCheckbox extends MultiCheckbox
     #[Override]
     public function setOptions(iterable $options): static
     {
-        $this->getProxy()->setOptions(options: Value::array($options));
+        $this->getProxy()->setOptions(options: Assert::isArray($options));
 
         return parent::setOptions(options: $options);
     }
@@ -55,10 +56,7 @@ class ObjectMultiCheckbox extends MultiCheckbox
             $value = Value::toArray($value);
         }
 
-        return parent::setValue(value: array_map(
-            callback: [$this->getProxy(), 'getValue'],
-            array: Value::array($value),
-        ));
+        return parent::setValue(value: array_map(callback: [$this->getProxy(), 'getValue'], array: $value));
     }
 
     /**

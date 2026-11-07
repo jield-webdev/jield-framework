@@ -16,10 +16,7 @@ class RuleWithAssertionFactory implements FactoryInterface
     public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): RulesWithAssertion
     {
         return new RulesWithAssertion(
-            rules: Value::array(Value::path(
-                $container->get(Config::class),
-                ['guards', Route::class],
-            )),
+            rules: Value::path($container->get(Config::class), ['guards', Route::class]),
             container: $container,
         );
     }

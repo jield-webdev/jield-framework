@@ -13,6 +13,7 @@ use Laminas\Stdlib\SplStack;
 use Override;
 use RuntimeException;
 use SplFileInfo;
+use Webmozart\Assert\Assert;
 
 /**
  * This resolver allows you to resolve from a stack of aliases to a path.
@@ -44,7 +45,7 @@ class AliasPathStackResolver implements ResolverInterface, MimeResolverAwareInte
     public function __construct(array $aliases)
     {
         foreach ($aliases as $alias => $path) {
-            $this->addAlias(alias: Value::string($alias), path: Value::string($path));
+            $this->addAlias(alias: Assert::string($alias), path: $path);
         }
     }
 
@@ -123,7 +124,7 @@ class AliasPathStackResolver implements ResolverInterface, MimeResolverAwareInte
         }
 
         foreach ($this->aliases as $alias => $path) {
-            if (!str_contains(haystack: $fileName, needle: Value::string($alias))) {
+            if (!str_contains(haystack: $fileName, needle: Assert::string($alias))) {
                 continue;
             }
 
@@ -131,15 +132,15 @@ class AliasPathStackResolver implements ResolverInterface, MimeResolverAwareInte
                 string: $fileName,
                 replace: '',
                 offset: 0,
-                length: strlen(string: Value::string($alias)),
+                length: strlen(string: Assert::string($alias)),
             );
 
             $file = new SplFileInfo(filename: Value::stringify($path) . $correctedFilename);
 
             if ($file->isReadable() && !$file->isDir()) {
                 $filePath = $file->getRealPath();
-                $mimeType = $this->getMimeResolver()->getMimeType(filename: Value::string($filePath));
-                $asset = new FileAsset(source: Value::string($filePath));
+                $mimeType = $this->getMimeResolver()->getMimeType(filename: Assert::string($filePath));
+                $asset = new FileAsset(source: Assert::string($filePath));
 
                 $asset->setMimetype(mimetype: $mimeType);
 
@@ -156,9 +157,9 @@ class AliasPathStackResolver implements ResolverInterface, MimeResolverAwareInte
 
         foreach ($this->aliases as $alias => $path) {
             $locations = new SplStack();
-            $pathInfo = new SplFileInfo(filename: Value::string($path));
+            $pathInfo = new SplFileInfo(filename: $path);
             $locations->push(value: $pathInfo);
-            $basePath = $this->normalizePath(path: Value::string($pathInfo->getRealPath()));
+            $basePath = $this->normalizePath(path: Assert::string($pathInfo->getRealPath()));
 
             while (!$locations->isEmpty()) {
                 /** @var SplFileInfo $pathInfo */
@@ -168,19 +169,13 @@ class AliasPathStackResolver implements ResolverInterface, MimeResolverAwareInte
                 }
 
                 if ($pathInfo->isDir()) {
-                    /** @var mixed $resource */
-                    foreach (new DirectoryResource(
-                        path: Value::string($pathInfo->getRealPath()),
-                    ) as $resource) {
-                        $locations->push(value: new SplFileInfo(filename: Value::string($resource)));
+                    foreach (new DirectoryResource(path: Assert::string($pathInfo->getRealPath())) as $resource) {
+                        $locations->push(value: new SplFileInfo(filename: $resource));
                     }
                 } else {
                     $collection[] =
                         $alias
-                        . substr(
-                            string: Value::string($pathInfo->getRealPath()),
-                            offset: strlen(string: $basePath),
-                        );
+                        . substr(string: Assert::string($pathInfo->getRealPath()), offset: strlen(string: $basePath));
                 }
             }
         }

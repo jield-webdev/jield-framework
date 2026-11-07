@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Jield\Mvc\Navigation\View\Navigation;
 
-use Jield\Stdlib\Value;
 use Laminas\ServiceManager\AbstractPluginManager;
 use Laminas\ServiceManager\Exception\InvalidServiceException;
 use Laminas\ServiceManager\Factory\InvokableFactory;
 use Laminas\ServiceManager\ServiceManager;
 use Laminas\View\Renderer\RendererInterface;
 use Psr\Container\ContainerInterface;
+use Webmozart\Assert\Assert;
 
 use function get_debug_type;
 use function sprintf;
@@ -68,7 +68,7 @@ final class PluginManager extends AbstractPluginManager
         // Inject the application container into every navigation helper. Under
         // Service Manager 4 the initializer's container argument *is* the
         // creation context passed to the parent constructor below.
-        $initializers = Value::array($config['initializers'] ?? []);
+        $initializers = Assert::isArray($config['initializers'] ?? []);
         $initializers[] = function (ContainerInterface $container, mixed $instance): void {
             if ($instance instanceof AbstractHelper) {
                 $instance->setServiceLocator($container);

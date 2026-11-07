@@ -22,11 +22,11 @@ use Jield\Stdlib\Value;
 use Laminas\Http\Header\Allow;
 use Laminas\Http\Request;
 use Laminas\Http\Response;
-use Laminas\InputFilter\InputFilterInterface;
 use Laminas\Stdlib\RequestInterface;
 use Override;
 use Throwable;
 use Traversable;
+use Webmozart\Assert\Assert;
 
 use function array_keys;
 use function is_array;
@@ -250,7 +250,7 @@ final class RestController extends AbstractRestfulController
         $this->injectEventIdentityIntoResource();
         $this->injectEventInputFilterIntoResource();
         $this->injectRequestIntoResourceEventParams();
-        return Value::instance($this->resource, \Jield\ApiTools\Rest\ResourceInterface::class);
+        return Assert::isInstanceOf($this->resource, \Jield\ApiTools\Rest\ResourceInterface::class);
     }
 
     /**
@@ -299,7 +299,6 @@ final class RestController extends AbstractRestfulController
         }
 
         // Check for an API-Problem in the event
-        /** @var mixed $return */
         $return = $e->getParam(name: 'api-problem', default: false);
 
         // If no return value dispatch the parent event
@@ -335,7 +334,7 @@ final class RestController extends AbstractRestfulController
         $events->trigger(eventName: 'create.pre', target: $this, argv: ['data' => $data]);
 
         try {
-            $value = $this->getResource()->create(data: Value::arrayOrObject($data));
+            $value = $this->getResource()->create(data: $data);
         } catch (Throwable $throwable) {
             return $this->createApiProblemFromException(e: $throwable);
         }
@@ -363,18 +362,18 @@ final class RestController extends AbstractRestfulController
             $plugin = $this->plugin(name: 'Hal');
             $link = $halEntity->getLinks()->get(relation: 'self');
             $self = Value::call($plugin, 'fromLink', [$link]);
-            $url = Value::accessible($self)['href'];
+            $url = $self['href'];
 
             /** @var Response $response */
             $response = $this->getResponse();
             $response->setStatusCode(code: 201);
             $response->getHeaders()->addHeaderLine(
                 headerFieldNameOrLine: 'Location',
-                fieldValue: Value::nullableString($url),
+                fieldValue: Assert::nullOrString($url),
             );
             $response->getHeaders()->addHeaderLine(
                 headerFieldNameOrLine: 'Content-Location',
-                fieldValue: Value::nullableString($url),
+                fieldValue: Assert::nullOrString($url),
             );
         }
 
@@ -397,12 +396,11 @@ final class RestController extends AbstractRestfulController
         $events->trigger(eventName: 'delete.pre', target: $this, argv: ['id' => $id]);
 
         try {
-            $result = $this->getResource()->delete(id: Value::key($id));
+            $result = $this->getResource()->delete(id: $id);
         } catch (Throwable $throwable) {
             return $this->createApiProblemFromException(e: $throwable);
         }
 
-        /** @var mixed $result */
         $result = $result ?: new ApiProblem(status: 422, detail: 'Unable to delete entity.');
 
         if ($this->isPreparedResponse(object: $result)) {
@@ -431,12 +429,11 @@ final class RestController extends AbstractRestfulController
         $events->trigger(eventName: 'deleteList.pre', target: $this, argv: []);
 
         try {
-            $result = $this->getResource()->deleteList(data: Value::array($data));
+            $result = $this->getResource()->deleteList(data: $data);
         } catch (Throwable $throwable) {
             return $this->createApiProblemFromException(e: $throwable);
         }
 
-        /** @var mixed $result */
         $result = $result ?: new ApiProblem(status: 422, detail: 'Unable to delete collection.');
 
         if ($this->isPreparedResponse(object: $result)) {
@@ -465,12 +462,11 @@ final class RestController extends AbstractRestfulController
         $events->trigger(eventName: 'get.pre', target: $this, argv: ['id' => $id]);
 
         try {
-            $entity = $this->getResource()->fetch(id: Value::key($id));
+            $entity = $this->getResource()->fetch(id: $id);
         } catch (Throwable $throwable) {
             return $this->createApiProblemFromException(e: $throwable);
         }
 
-        /** @var mixed $entity */
         $entity = $entity ?: new ApiProblem(status: 404, detail: 'Entity not found.');
 
         if ($this->isPreparedResponse(object: $entity)) {
@@ -522,19 +518,18 @@ final class RestController extends AbstractRestfulController
         /** @var Request $request */
         $request = $this->getRequest();
 
-        /** @var mixed $pageSize */
         $pageSize = $this->pageSizeParam
             ? $request->getQuery(name: $this->pageSizeParam, default: $this->pageSize)
             : $this->pageSize;
 
-        if (Value::numeric($pageSize) < $this->minPageSize) {
+        if (Assert::numeric($pageSize) < $this->minPageSize) {
             return new ApiProblem(status: 416, detail: sprintf(
                 'Page size is out of range, minimum page size is %s',
                 $this->minPageSize,
             ));
         }
 
-        if (Value::numeric($pageSize) > $this->maxPageSize) {
+        if (Assert::numeric($pageSize) > $this->maxPageSize) {
             return new ApiProblem(status: 416, detail: sprintf(
                 'Page size is out of range, maximum page size is %s',
                 $this->maxPageSize,
@@ -566,7 +561,7 @@ final class RestController extends AbstractRestfulController
     public function head($id = null): HalEntity|Response|ApiProblem|HalCollection|ApiProblemResponse
     {
         if ($id) {
-            return $this->get(Value::key($id));
+            return $this->get($id);
         }
 
         return $this->getList();
@@ -584,7 +579,7 @@ final class RestController extends AbstractRestfulController
     {
         $e = $this->getEvent();
         $id = $this->getIdentifier(
-            routeMatch: Value::instance($e->getRouteMatch(), \Jield\Mvc\Router\RouteMatch::class),
+            routeMatch: Assert::isInstanceOf($e->getRouteMatch(), \Jield\Mvc\Router\RouteMatch::class),
             request: $e->getRequest(),
         );
 
@@ -615,10 +610,7 @@ final class RestController extends AbstractRestfulController
         $events->trigger(eventName: 'patch.pre', target: $this, argv: ['id' => $id, 'data' => $data]);
 
         try {
-            $entity = $this->getResource()->patch(
-                id: (int) $id,
-                data: Value::arrayOrObject(empty($data) ? [] : $data),
-            );
+            $entity = $this->getResource()->patch(id: (int) $id, data: empty($data) ? [] : $data);
         } catch (Throwable $throwable) {
             return $this->createApiProblemFromException(e: $throwable);
         }
@@ -653,10 +645,7 @@ final class RestController extends AbstractRestfulController
         $events->trigger(eventName: 'update.pre', target: $this, argv: ['id' => $id, 'data' => $data]);
 
         try {
-            $entity = $this->getResource()->update(
-                id: Value::key($id),
-                data: Value::arrayOrObject($data),
-            );
+            $entity = $this->getResource()->update(id: $id, data: $data);
         } catch (Throwable $throwable) {
             return $this->createApiProblemFromException(e: $throwable);
         }
@@ -687,7 +676,7 @@ final class RestController extends AbstractRestfulController
         $events->trigger(eventName: 'patchList.pre', target: $this, argv: ['data' => $data]);
 
         try {
-            $collection = $this->getResource()->patchList(data: Value::array($data));
+            $collection = $this->getResource()->patchList(data: $data);
         } catch (Throwable $throwable) {
             return $this->createApiProblemFromException(e: $throwable);
         }
@@ -719,7 +708,7 @@ final class RestController extends AbstractRestfulController
         $events->trigger(eventName: 'replaceList.pre', target: $this, argv: ['data' => $data]);
 
         try {
-            $collection = $this->getResource()->replaceList(data: Value::array($data));
+            $collection = $this->getResource()->replaceList(data: $data);
         } catch (InvalidArgumentException $e) {
             return new ApiProblem(status: 400, detail: $e->getMessage());
         } catch (Throwable $e) {
@@ -810,19 +799,21 @@ final class RestController extends AbstractRestfulController
      */
     protected function injectEventIdentityIntoResource(): void
     {
-        if (Value::present($this->resource)->getIdentity()) {
+        if (Assert::notNull($this->resource)->getIdentity()) {
             return;
         }
 
         $event = $this->getEvent();
 
-        /** @var mixed $identity */
         $identity = $event->getParam(name: AuthenticatedIdentity::class);
         if (!$identity) {
             return;
         }
 
-        Value::present($this->resource)->setIdentity(identity: Value::instance($identity, IdentityInterface::class));
+        Assert::notNull($this->resource)->setIdentity(identity: Assert::isInstanceOf(
+            $identity,
+            IdentityInterface::class,
+        ));
     }
 
     /**
@@ -830,32 +821,28 @@ final class RestController extends AbstractRestfulController
      */
     protected function injectEventInputFilterIntoResource(): void
     {
-        if (Value::present($this->resource)->getInputFilter()) {
+        if (Assert::notNull($this->resource)->getInputFilter()) {
             return;
         }
 
         $event = $this->getEvent();
 
-        /** @var mixed $inputFilter */
         $inputFilter = $event->getParam(name: 'Jield\ApiTools\ContentValidation\InputFilter');
         if (!$inputFilter) {
             return;
         }
 
-        Value::present($this->resource)->setInputFilter(inputFilter: Value::nullableInstance(
-            $inputFilter,
-            InputFilterInterface::class,
-        ));
+        Assert::notNull($this->resource)->setInputFilter(inputFilter: $inputFilter);
     }
 
     protected function injectRequestIntoResourceEventParams(): void
     {
         $request = $this->getRequest();
 
-        $params = Value::present($this->resource)->getEventParams();
+        $params = Assert::notNull($this->resource)->getEventParams();
 
         $params['request'] = $request;
-        Value::present($this->resource)->setEventParams(params: $params);
+        Assert::notNull($this->resource)->setEventParams(params: $params);
     }
 
     /** @psalm-assert-if-true ApiProblem|Response $object */
@@ -868,14 +855,10 @@ final class RestController extends AbstractRestfulController
     {
         if (!$collection instanceof HalCollection) {
             $halPlugin = $this->plugin(name: 'Hal');
-            /** @var mixed $collection */
             $collection = Value::call($halPlugin, 'createCollection', [$collection, $this->route]);
         }
 
-        return $this->prepareHalCollection(collection: Value::instance(
-            $collection,
-            \Jield\ApiTools\Hal\Collection::class,
-        ));
+        return $this->prepareHalCollection(collection: $collection);
     }
 
     /**
@@ -888,9 +871,9 @@ final class RestController extends AbstractRestfulController
             Value::call($plugin, 'injectSelfLink', [$collection, $this->route]);
         }
 
-        $collection->setCollectionRoute(route: Value::string($this->route));
+        $collection->setCollectionRoute(route: Assert::string($this->route));
         $collection->setRouteIdentifierName(identifier: $this->getRouteIdentifierName());
-        $collection->setEntityRoute(route: Value::string($this->route));
+        $collection->setEntityRoute(route: Assert::string($this->route));
         $collection->setCollectionName(name: $this->collectionName);
 
         try {
@@ -918,10 +901,10 @@ final class RestController extends AbstractRestfulController
 
         $plugin = $this->plugin(name: 'Hal');
 
-        return Value::instance(Value::call($plugin, 'createEntity', [
+        return Value::call($plugin, 'createEntity', [
             $entity,
             $this->route,
             $this->getRouteIdentifierName(),
-        ]), \Jield\ApiTools\Hal\Entity::class);
+        ]);
     }
 }

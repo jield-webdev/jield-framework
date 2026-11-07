@@ -6,7 +6,6 @@ namespace Jield\AssetManager\View\Helper;
 
 use Jield\AssetManager\Resolver\ResolverInterface;
 use Jield\Mvc\View\Helper\AbstractHelper;
-use Jield\Stdlib\Value;
 use Laminas\Cache\Storage\Adapter\AbstractAdapter as AbstractCacheAdapter;
 
 class Asset extends AbstractHelper
@@ -79,15 +78,12 @@ class Asset extends AbstractHelper
         // cache key based on the filename
         $cacheKey = md5(string: $filename);
         $itemIsFoundInCache = false;
-        $filePath = $this->cache->getItem(Value::nonEmptyString($cacheKey), $itemIsFoundInCache);
+        $filePath = $this->cache->getItem($cacheKey, $itemIsFoundInCache);
 
         // if there is no element in the cache, elaborate and cache it
         if ($itemIsFoundInCache === false || $filePath === null) {
             $filePath = $this->elaborateFilePath(filename: $filename, queryString: $queryString);
-            Value::present($this->cache)->setItem(
-                Value::nonEmptyString($cacheKey),
-                $filePath,
-            );
+            $this->cache->setItem($cacheKey, $filePath);
         }
 
         return $filePath;
@@ -114,24 +110,20 @@ class Asset extends AbstractHelper
         }
 
         // query string params
-        /** @var mixed $queryString */
         $queryString = $this->config['view_helper']['query_string'] ?? '_';
 
         // no cache dir is defined
         if (!isset($cacheConfig['options']['dir'])) {
             // append current timestamp to the filepath and use a custom query string
-            return $this->appendTimestamp(filename: $filename, queryString: Value::string($queryString));
+            return $this->appendTimestamp(filename: $filename, queryString: $queryString);
         }
 
         // get the filePath from the cache (if available)
-        $filePath = $this->getFilePathFromCache(
-            filename: $filename,
-            queryString: Value::string($queryString),
-        );
+        $filePath = $this->getFilePathFromCache(filename: $filename, queryString: $queryString);
         if ($filePath !== null) {
-            return Value::string($filePath);
+            return $filePath;
         }
 
-        return $this->elaborateFilePath(filename: $filename, queryString: Value::string($queryString));
+        return $this->elaborateFilePath(filename: $filename, queryString: $queryString);
     }
 }

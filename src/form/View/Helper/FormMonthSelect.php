@@ -8,8 +8,8 @@ use IntlDateFormatter;
 use Jield\Form\Element\MonthSelect as MonthSelectElement;
 use Jield\Form\ElementInterface;
 use Jield\Form\Exception;
-
 use Jield\Stdlib\Value;
+
 use function is_numeric;
 use function sprintf;
 
@@ -74,7 +74,7 @@ class FormMonthSelect extends AbstractFormDateSelect
         unset($pattern['day']);
         unset($pattern[0]);
 
-        $monthsOptions = $this->getMonthsOptions(pattern: Value::string($pattern['month']));
+        $monthsOptions = $this->getMonthsOptions(pattern: $pattern['month']);
         $yearOptions = $this->getYearsOptions(minYear: $element->getMinYear(), maxYear: $element->getMaxYear());
 
         $monthElement = $element->getMonthElement()->setValueOptions(options: $monthsOptions);
@@ -87,7 +87,7 @@ class FormMonthSelect extends AbstractFormDateSelect
 
         $data = [];
         $data[$pattern['month']] = $selectHelper->render(element: $monthElement);
-        $data[Value::key($pattern['year'])] = $selectHelper->render(element: $yearElement);
+        $data[$pattern['year']] = $selectHelper->render(element: $yearElement);
 
         $markup = '';
         foreach ($pattern as $key => $value) {

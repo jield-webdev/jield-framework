@@ -52,28 +52,23 @@ abstract class AbstractValidatorFactory implements FactoryInterface
         $objectManager = $this->getObjectManager(container: $container, options: $options);
         $targetClassName = $options['target_class'];
 
-        if (!class_exists(class: Value::string($targetClassName))) {
-            throw new BadMethodCallException(message: sprintf(
-                'Class %s could not be found.',
-                Value::scalar($targetClassName),
-            ));
+        if (!class_exists(class: $targetClassName)) {
+            throw new BadMethodCallException(message: sprintf('Class %s could not be found.', $targetClassName));
         }
 
-        return $objectManager->getRepository(className: Value::classString($targetClassName));
+        return $objectManager->getRepository(className: $targetClassName);
     }
 
     /** @param array $options */
     protected function getObjectManager(ContainerInterface $container, ?array $options = null): ObjectManager
     {
-        /** @var mixed $objectManager */
         $objectManager = $options['object_manager'] ?? self::DEFAULT_OBJECTMANAGER_KEY;
 
         if (is_string(value: $objectManager)) {
-            /** @var mixed $objectManager */
             $objectManager = $container->get($objectManager);
         }
 
-        return Value::instance($objectManager, \Doctrine\Persistence\ObjectManager::class);
+        return $objectManager;
     }
 
     /**

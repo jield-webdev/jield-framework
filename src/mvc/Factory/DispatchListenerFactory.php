@@ -25,10 +25,6 @@ class DispatchListenerFactory implements FactoryInterface
         string $requestedName,
         ?array $options = null,
     ): DispatchListener {
-        return new DispatchListener(Service::get(
-            $container,
-            ControllerManager::class,
-            'ControllerManager',
-        ));
+        return new DispatchListener(Service::get($container, ControllerManager::class, 'ControllerManager'));
     }
 }

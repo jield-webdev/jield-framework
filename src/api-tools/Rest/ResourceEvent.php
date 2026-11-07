@@ -7,12 +7,12 @@ namespace Jield\ApiTools\Rest;
 use ArrayAccess;
 use Jield\ApiTools\MvcAuth\Identity\IdentityInterface;
 use Jield\Mvc\Router\RouteMatch;
-use Jield\Stdlib\Value;
 use Laminas\EventManager\Event;
 use Laminas\InputFilter\InputFilterInterface;
 use Laminas\Stdlib\Parameters;
 use Laminas\Stdlib\RequestInterface;
 use Override;
+use Webmozart\Assert\Assert;
 
 use function is_array;
 
@@ -40,7 +40,7 @@ class ResourceEvent extends Event
         parent::setParams(params: $params);
         $params = parent::getParams();
         if ((is_array(value: $params) || $params instanceof ArrayAccess) && isset($params['request'])) {
-            $this->setRequest(request: Value::instance($params['request'], RequestInterface::class));
+            $this->setRequest(request: Assert::isInstanceOf($params['request'], RequestInterface::class));
             unset($params['request']);
         }
 

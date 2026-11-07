@@ -5,10 +5,9 @@ declare(strict_types=1);
 namespace Jield\ApiTools\MvcAuth\Authorization;
 
 use Jield\ApiTools\MvcAuth\Identity\IdentityInterface;
-use Jield\Stdlib\Value;
 use Laminas\Permissions\Acl\Acl;
-use Laminas\Permissions\Acl\Resource\ResourceInterface;
 use Override;
+use Webmozart\Assert\Assert;
 
 /**
  * Authorization implementation that uses the ACL component
@@ -26,30 +25,14 @@ class AclAuthorization extends Acl implements AuthorizationInterface
     #[Override]
     public function isAuthorized(IdentityInterface $identity, mixed $resource, mixed $privilege): bool
     {
-        if (
-            null !== $resource
-            && !$this->hasResource(Value::instanceOrString(
-                $resource,
-                ResourceInterface::class,
-            ))
-        ) {
-            $this->addResource(Value::instanceOrString(
-                $resource,
-                ResourceInterface::class,
-            ));
+        if (null !== $resource && !$this->hasResource($resource)) {
+            $this->addResource($resource);
         }
 
         if (!$this->hasRole($identity)) {
             $this->addRole($identity);
         }
 
-        return $this->isAllowed(
-            $identity,
-            Value::nullableInstanceOrString(
-                $resource,
-                ResourceInterface::class,
-            ),
-            Value::nullableString($privilege),
-        );
+        return $this->isAllowed($identity, $resource, Assert::nullOrString($privilege));
     }
 }

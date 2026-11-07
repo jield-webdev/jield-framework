@@ -7,12 +7,11 @@ namespace DoctrineORMModule\Service;
 use Doctrine\DBAL\Configuration;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
-use Doctrine\DBAL\Types\Type;
 use DoctrineModule\Service\AbstractFactory;
 use DoctrineORMModule\Options\DBALConnection;
-use Jield\Stdlib\Value;
 use PDO;
 use Psr\Container\ContainerInterface;
+use Webmozart\Assert\Assert;
 
 use function array_key_exists;
 use function array_merge;
@@ -39,7 +38,6 @@ final class DBALConnectionFactory extends AbstractFactory
         $pdo = $options->getPdo();
 
         if (is_string(value: $pdo)) {
-            /** @var mixed $pdo */
             $pdo = $container->get($pdo);
             assert(assertion: $pdo instanceof PDO);
         }
@@ -62,14 +60,14 @@ final class DBALConnectionFactory extends AbstractFactory
         $configuration = $container->get($options->getConfiguration());
         /** @var Params $managerConfiguration */
         $managerConfiguration = $params;
-        $connection = DriverManager::getConnection($managerConfiguration, Value::instance(
+        $connection = DriverManager::getConnection($managerConfiguration, Assert::isInstanceOf(
             $configuration,
             Configuration::class,
         ));
         foreach ($options->getDoctrineTypeMappings() as $dbType => $doctrineType) {
             $connection->getDatabasePlatform()->registerDoctrineTypeMapping(
-                dbType: Value::string($dbType),
-                doctrineType: Value::string($doctrineType),
+                dbType: Assert::string($dbType),
+                doctrineType: $doctrineType,
             );
         }
 

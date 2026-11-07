@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Jield\Form\Element;
 
 use Jield\Form\Element;
-use Jield\Stdlib\Value;
 use Laminas\InputFilter\InputProviderInterface;
 use Laminas\Validator\InArray as InArrayValidator;
 use Laminas\Validator\ValidatorInterface;
@@ -42,19 +41,15 @@ class Checkbox extends Element implements InputProviderInterface
         parent::setOptions(options: $options);
 
         if (isset($this->options['use_hidden_element'])) {
-            $this->setUseHiddenElement(useHiddenElement: Value::bool(
-                $this->options['use_hidden_element'],
-            ));
+            $this->setUseHiddenElement(useHiddenElement: $this->options['use_hidden_element']);
         }
 
         if (isset($this->options['unchecked_value'])) {
-            $this->setUncheckedValue(uncheckedValue: Value::nullableString(
-                $this->options['unchecked_value'],
-            ));
+            $this->setUncheckedValue(uncheckedValue: $this->options['unchecked_value']);
         }
 
         if (isset($this->options['checked_value'])) {
-            $this->setCheckedValue(checkedValue: Value::string($this->options['checked_value']));
+            $this->setCheckedValue(checkedValue: $this->options['checked_value']);
         }
 
         return $this;

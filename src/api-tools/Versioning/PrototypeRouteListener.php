@@ -74,7 +74,6 @@ class PrototypeRouteListener implements ListenerAggregateInterface
             return;
         }
 
-        /** @var mixed $config */
         $config = $configListener->getMergedConfig(returnConfigAsObject: false);
 
         // Check for config keys
@@ -85,7 +84,7 @@ class PrototypeRouteListener implements ListenerAggregateInterface
         // Do we need to inject a prototype?
         if (
             !isset($config['api-tools-versioning']['uri'])
-            || !is_array(value: Value::accessible($config['api-tools-versioning'])['uri'])
+            || !is_array(value: $config['api-tools-versioning']['uri'])
             || empty($config['api-tools-versioning']['uri'])
         ) {
             return;
@@ -107,7 +106,7 @@ class PrototypeRouteListener implements ListenerAggregateInterface
         // specifying nested routes)
         $routes = $config['api-tools-versioning']['uri'];
         $filtered = [];
-        foreach (Value::iterable($routes) as $route) {
+        foreach ($routes as $route) {
             if (strstr(haystack: (string) $route, needle: '/')) {
                 $temp = explode(separator: '/', string: (string) $route, limit: 2);
                 $route = array_shift(array: $temp);
@@ -132,7 +131,7 @@ class PrototypeRouteListener implements ListenerAggregateInterface
                 haystack: (string) Value::path($config, [
                     'router',
                     'routes',
-                    Value::key($routeName),
+                    $routeName,
                     'options',
                     'route',
                 ]),
@@ -140,12 +139,12 @@ class PrototypeRouteListener implements ListenerAggregateInterface
             )) {
                 Value::setPath(
                     $config,
-                    ['router', 'routes', Value::key($routeName), 'options', 'route'],
+                    ['router', 'routes', $routeName, 'options', 'route'],
                     $this->versionRoutePrefix
                         . Value::stringify(Value::path($config, [
                             'router',
                             'routes',
-                            Value::key($routeName),
+                            $routeName,
                             'options',
                             'route',
                         ])),
@@ -163,15 +162,13 @@ class PrototypeRouteListener implements ListenerAggregateInterface
 
             Value::setPath(
                 $config,
-                ['router', 'routes', Value::key($routeName), 'options'],
+                ['router', 'routes', $routeName, 'options'],
                 ArrayUtils::merge(
-                    a: Value::array(
-                        Value::accessible(Value::path($config, [
-                            'router',
-                            'routes',
-                            Value::key($routeName),
-                        ]))['options'],
-                    ),
+                    a: Value::path($config, [
+                        'router',
+                        'routes',
+                        $routeName,
+                    ])['options'],
                     b: $routeVersion,
                 ),
             );

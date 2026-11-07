@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Jield\ApiTools\ContentNegotiation;
 
-use Jield\Stdlib\Value;
 use Laminas\Stdlib\AbstractOptions;
 use Laminas\Stdlib\Exception\BadMethodCallException;
 use Override;
+use Webmozart\Assert\Assert;
 
 use function array_merge_recursive;
 use function str_replace;
@@ -53,9 +53,7 @@ class ContentNegotiationOptions extends AbstractOptions
     #[Override]
     public function setFromArray($options): AbstractOptions|ContentNegotiationOptions
     {
-        return parent::setFromArray(options: Value::stringKeyedArray($this->normalizeOptions(config: Value::array(
-            $options,
-        ))));
+        return parent::setFromArray(options: $this->normalizeOptions(config: Assert::isArray($options)));
     }
 
     /**
@@ -71,28 +69,26 @@ class ContentNegotiationOptions extends AbstractOptions
     {
         $mergedConfig = $config;
 
-        /** @var mixed $key */
         foreach ($this->keysToNormalize as $key) {
-            /** @var mixed $normalizedKey */
-            $normalizedKey = str_replace('-', '_', Value::string($key));
+            $normalizedKey = str_replace('-', '_', Assert::string($key));
 
             if (isset($config[$key], $config[$normalizedKey])) {
-                $mergedConfig[Value::key($normalizedKey)] = array_merge_recursive(
-                    Value::array($config[$key]),
-                    Value::array($config[$normalizedKey]),
+                $mergedConfig[$normalizedKey] = array_merge_recursive(
+                    $config[$key],
+                    Assert::isArray($config[$normalizedKey]),
                 );
                 unset($mergedConfig[$key]);
                 continue;
             }
 
             if (isset($config[$key])) {
-                $mergedConfig[Value::key($normalizedKey)] = $config[$key];
+                $mergedConfig[$normalizedKey] = $config[$key];
                 unset($mergedConfig[$key]);
                 continue;
             }
 
             if (isset($config[$normalizedKey])) {
-                $mergedConfig[Value::key($normalizedKey)] = $config[$normalizedKey];
+                $mergedConfig[$normalizedKey] = $config[$normalizedKey];
                 continue;
             }
         }

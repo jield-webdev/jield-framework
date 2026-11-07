@@ -57,6 +57,6 @@ abstract class AbstractAnnotationsListener extends AbstractListenerAggregate
             return $reflection->getShortName();
         }
 
-        return Value::string(Value::call($reflection, 'getName'));
+        return Value::call($reflection, 'getName');
     }
 }

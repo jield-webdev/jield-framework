@@ -8,11 +8,11 @@ use Jield\Stdlib\Value;
 use Laminas\Navigation;
 use Laminas\Navigation\AbstractContainer;
 use Laminas\Navigation\Page\AbstractPage;
-use Laminas\View;
 use Laminas\View\Exception;
-
 use Laminas\View\Helper\EscapeHtml;
 use Laminas\View\Helper\Partial;
+use Webmozart\Assert\Assert;
+
 use function array_merge;
 use function array_reverse;
 use function count;
@@ -81,12 +81,12 @@ class Breadcrumbs extends AbstractHelper
         $partial = $this->getPartial();
         if ($partial) {
             return $this->renderPartial(
-                Value::nullableInstance($container, \Laminas\Navigation\AbstractContainer::class),
+                Assert::nullOrIsInstanceOf($container, \Laminas\Navigation\AbstractContainer::class),
                 $partial,
             );
         }
 
-        return $this->renderStraight(Value::nullableInstance(
+        return $this->renderStraight(Assert::nullOrIsInstanceOf(
             $container,
             \Laminas\Navigation\AbstractContainer::class,
         ));
@@ -115,17 +115,10 @@ class Breadcrumbs extends AbstractHelper
 
         // put the deepest active page last in breadcrumbs
         if ($this->getLinkLast()) {
-            $html = $this->htmlify(Value::instance(
-                $active,
-                \Laminas\Navigation\Page\AbstractPage::class,
-            ));
+            $html = $this->htmlify($active);
         } else {
             $escaper = $this->getView()->plugin('escapeHtml', EscapeHtml::class);
-            /** @var mixed $label */
-            $label = $escaper($this->translate(
-                Value::nullableString(Value::present($active)->getLabel()),
-                Value::nullableString(Value::present($active)->getTextDomain()),
-            ));
+            $label = $escaper($this->translate($active->getLabel(), $active->getTextDomain()));
             $attribs = [
                 'aria-current' => 'page',
             ];
@@ -133,12 +126,7 @@ class Breadcrumbs extends AbstractHelper
         }
 
         // walk back to root
-        while (
-            $parent = Value::call(
-                Value::present(Value::object($active)),
-                'getParent',
-            )
-        ) {
+        while ($parent = Value::call(Assert::object($active), 'getParent')) {
             if ($parent instanceof AbstractPage) {
                 // prepend crumb to html
                 $html = $this->htmlify($parent) . $this->getSeparator() . $html;
@@ -292,7 +280,7 @@ class Breadcrumbs extends AbstractHelper
         if (isset($active['page'], $active['depth'])) {
             $active = $active['page'];
             $model['pages'][] = $active;
-            while ($parent = Value::present($active)->getParent()) {
+            while ($parent = $active->getParent()) {
                 if (!$parent instanceof AbstractPage) {
                     break;
                 }
@@ -314,12 +302,9 @@ class Breadcrumbs extends AbstractHelper
                 . 'an array must contain one value: the partial view script');
             }
 
-            return $partialHelper(
-                Value::nonEmptyString($partial[0]),
-                Value::namedValues($model),
-            );
+            return $partialHelper(Assert::stringNotEmpty($partial[0]), $model);
         }
 
-        return $partialHelper(Value::nonEmptyString($partial), Value::namedValues($model));
+        return $partialHelper($partial, $model);
     }
 }

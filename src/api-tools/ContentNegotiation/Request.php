@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Jield\ApiTools\ContentNegotiation;
 
-use Jield\Stdlib\Value;
 use Laminas\Http\PhpEnvironment\Request as BaseRequest;
-
 use RuntimeException;
+use Webmozart\Assert\Assert;
+
 use function fopen;
 use function fwrite;
 use function is_resource;
@@ -46,7 +46,7 @@ class Request extends BaseRequest
         }
 
         if (empty($this->content)) {
-            $stream = fopen(filename: Value::string($this->contentStream), mode: 'r');
+            $stream = fopen(filename: Assert::string($this->contentStream), mode: 'r');
             if ($stream === false) {
                 throw new RuntimeException('Unable to open the request content stream.');
             }

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Jield\AssetManager\Service;
 
 use Jield\Stdlib\Service;
-use Jield\Stdlib\Value;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Override;
 use Psr\Container\ContainerInterface;
@@ -25,7 +24,7 @@ class AssetFilterManagerServiceFactory implements FactoryInterface
             $filters = $config['asset_manager']['filters'];
         }
 
-        $assetFilterManager = new AssetFilterManager(config: Value::array($filters));
+        $assetFilterManager = new AssetFilterManager(config: $filters);
 
         $assetFilterManager->setContainer(container: $container);
         $assetFilterManager->setMimeResolver(mimeResolver: Service::get($container, MimeResolver::class));

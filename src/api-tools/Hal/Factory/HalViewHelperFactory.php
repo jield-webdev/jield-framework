@@ -11,9 +11,6 @@ use Jield\ApiTools\Hal\Metadata\MetadataMap;
 use Jield\ApiTools\Hal\Plugin;
 use Jield\ApiTools\Hal\RendererOptions;
 use Jield\Stdlib\Service;
-use Jield\Stdlib\Value;
-use Laminas\EventManager\EventManagerInterface;
-use Laminas\Hydrator\ExtractionInterface;
 use Laminas\Hydrator\HydratorInterface;
 use Laminas\Hydrator\HydratorPluginManager;
 use Psr\Container\ContainerInterface;
@@ -58,7 +55,6 @@ class HalViewHelperFactory
                 ));
             }
 
-            /** @var mixed $hydrator */
             $hydrator = $hydrators->get($defaultHydrator);
             Assert::isInstanceOf(value: $hydrator, class: HydratorInterface::class);
             $helper->setDefaultHydrator(hydrator: $hydrator);
@@ -69,13 +65,7 @@ class HalViewHelperFactory
 
         $hydratorMap = $rendererOptions->getHydrators();
         foreach ($hydratorMap as $class => $hydratorServiceName) {
-            $helper->addHydrator(
-                class: Value::string($class),
-                hydrator: Value::instance(
-                    $hydratorServiceName,
-                    ExtractionInterface::class,
-                ),
-            );
+            $helper->addHydrator(class: Assert::string($class), hydrator: $hydratorServiceName);
         }
 
         return $helper;

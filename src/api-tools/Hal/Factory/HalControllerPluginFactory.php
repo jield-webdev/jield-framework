@@ -19,11 +19,7 @@ class HalControllerPluginFactory implements FactoryInterface
     #[Override]
     public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): Hal
     {
-        $helpers = Service::get(
-            $container,
-            HelperPluginManager::class,
-            'ViewHelperManager',
-        );
+        $helpers = Service::get($container, HelperPluginManager::class, 'ViewHelperManager');
         /** @psalm-var Hal */
         return $helpers->get('Hal');
     }

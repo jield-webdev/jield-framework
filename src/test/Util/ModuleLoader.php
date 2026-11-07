@@ -7,7 +7,6 @@ namespace Jield\Test\Util;
 use Jield\ModuleManager\ModuleManager;
 use Jield\Mvc\Application;
 use Jield\Mvc\Service;
-use Jield\Stdlib\Value;
 use Laminas\ServiceManager\ServiceManager;
 
 use function is_numeric;
@@ -43,12 +42,9 @@ class ModuleLoader
             }
         }
 
-        /** @var mixed $smConfig */
         $smConfig = $configuration['service_manager'] ?? [];
         $this->serviceManager = new ServiceManager();
-        new Service\ServiceManagerConfig(Value::array(
-            $smConfig,
-        ))->configureServiceManager($this->serviceManager);
+        new Service\ServiceManagerConfig($smConfig)->configureServiceManager($this->serviceManager);
         $this->serviceManager->setService('ApplicationConfig', $configuration);
         \Jield\Stdlib\Service::get(
             $this->serviceManager,
@@ -64,11 +60,7 @@ class ModuleLoader
      */
     public function getApplication()
     {
-        return \Jield\Stdlib\Service::get(
-            $this->getServiceManager(),
-            \Jield\Mvc\Application::class,
-            'Application',
-        );
+        return \Jield\Stdlib\Service::get($this->getServiceManager(), \Jield\Mvc\Application::class, 'Application');
     }
 
     /**

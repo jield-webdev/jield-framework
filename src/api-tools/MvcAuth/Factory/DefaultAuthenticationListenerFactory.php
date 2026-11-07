@@ -9,7 +9,6 @@ use Jield\ApiTools\MvcAuth\Authentication\HttpAdapter;
 use Jield\ApiTools\MvcAuth\Authentication\OAuth2Adapter;
 use Jield\ApiTools\OAuth2\Factory\OAuth2ServerFactory as LaminasOAuth2ServerFactory;
 use Jield\Stdlib\Service;
-use Jield\Stdlib\Value;
 use Laminas\Authentication\Adapter\Http;
 use Laminas\Authentication\AuthenticationServiceInterface;
 use Laminas\ServiceManager\Factory\FactoryInterface;
@@ -17,6 +16,7 @@ use OAuth2\Server;
 use Override;
 use Psr\Container\ContainerInterface;
 use RuntimeException;
+use Webmozart\Assert\Assert;
 
 use function is_array;
 use function is_string;
@@ -74,23 +74,16 @@ class DefaultAuthenticationListenerFactory implements FactoryInterface
             return false;
         }
 
-        $httpAdapter = Value::instance($httpAdapter, Http::class);
+        $httpAdapter = Assert::isInstanceOf($httpAdapter, Http::class);
 
         // We must abort if no resolver was provided
         if (!$httpAdapter->getBasicResolver() && !$httpAdapter->getDigestResolver()) {
             return false;
         }
 
-        $authService = Service::get(
-            $container,
-            AuthenticationServiceInterface::class,
-            'authentication',
-        );
+        $authService = Service::get($container, AuthenticationServiceInterface::class, 'authentication');
 
-        return new HttpAdapter(
-            httpAuth: Value::instance($httpAdapter, \Laminas\Authentication\Adapter\Http::class),
-            authenticationService: $authService,
-        );
+        return new HttpAdapter(httpAuth: $httpAdapter, authenticationService: $authService);
     }
 
     /**
@@ -119,13 +112,10 @@ class DefaultAuthenticationListenerFactory implements FactoryInterface
 
             $types = array_values(array_unique(array_merge(
                 ['oauth2'],
-                Value::strings($config['api-tools-mvc-auth']['authentication']['map'] ?? []),
+                $config['api-tools-mvc-auth']['authentication']['map'] ?? [],
             )));
 
-            return new OAuth2Adapter(
-                oauth2Server: Value::instance(Value::callback($factory)(), Server::class),
-                types: $types,
-            );
+            return new OAuth2Adapter(oauth2Server: $factory(), types: $types);
         }
 
         $factory = new LaminasOAuth2ServerFactory();
@@ -143,7 +133,7 @@ class DefaultAuthenticationListenerFactory implements FactoryInterface
             };
         }
 
-        return new OAuth2Adapter(oauth2Server: Value::instance($serverFactory(), Server::class));
+        return new OAuth2Adapter(oauth2Server: Assert::isInstanceOf($serverFactory(), Server::class));
     }
 
     /**

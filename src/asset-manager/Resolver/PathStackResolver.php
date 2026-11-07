@@ -13,6 +13,7 @@ use Jield\Stdlib\Value;
 use Laminas\Stdlib\SplStack;
 use Override;
 use SplFileInfo;
+use Webmozart\Assert\Assert;
 
 /**
  * This resolver allows you to resolve from a stack of paths.
@@ -76,7 +77,7 @@ class PathStackResolver implements ResolverInterface, MimeResolverAwareInterface
     public function addPaths(iterable $paths): void
     {
         foreach ($paths as $path) {
-            $this->addPath(path: Value::string($path));
+            $this->addPath(path: $path);
         }
     }
 
@@ -175,8 +176,8 @@ class PathStackResolver implements ResolverInterface, MimeResolverAwareInterface
 
             if ($file->isReadable() && !$file->isDir()) {
                 $filePath = $file->getRealPath();
-                $mimeType = $this->getMimeResolver()->getMimeType(filename: Value::string($filePath));
-                $asset = new FileAsset(source: Value::string($filePath));
+                $mimeType = $this->getMimeResolver()->getMimeType(filename: Assert::string($filePath));
+                $asset = new FileAsset(source: Assert::string($filePath));
 
                 $asset->mimetype = $mimeType;
 
@@ -192,9 +193,9 @@ class PathStackResolver implements ResolverInterface, MimeResolverAwareInterface
         $collection = [];
         foreach ($this->getPaths() as $path) {
             $locations = new SplStack();
-            $pathInfo = new SplFileInfo(filename: Value::string($path));
+            $pathInfo = new SplFileInfo(filename: $path);
             $locations->push(value: $pathInfo);
-            $basePath = $this->normalizePath(path: Value::string($pathInfo->getRealPath()));
+            $basePath = $this->normalizePath(path: Assert::string($pathInfo->getRealPath()));
 
             while (!$locations->isEmpty()) {
                 /** @var SplFileInfo $pathInfo */
@@ -204,14 +205,13 @@ class PathStackResolver implements ResolverInterface, MimeResolverAwareInterface
                 }
 
                 if ($pathInfo->isDir()) {
-                    $dir = new DirectoryResource(path: Value::string($pathInfo->getRealPath()));
-                    /** @var mixed $resource */
+                    $dir = new DirectoryResource(path: Assert::string($pathInfo->getRealPath()));
                     foreach ($dir as $resource) {
-                        $locations->push(value: new SplFileInfo(filename: Value::string($resource)));
+                        $locations->push(value: new SplFileInfo(filename: $resource));
                     }
                 } else {
                     $relativePath = substr(
-                        string: Value::string($pathInfo->getRealPath()),
+                        string: Assert::string($pathInfo->getRealPath()),
                         offset: strlen(string: $basePath),
                     );
                     if (!in_array($relativePath, $collection, true)) {

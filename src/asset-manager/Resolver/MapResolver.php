@@ -9,10 +9,10 @@ use Jield\AssetManager\Asset\FileAsset;
 use Jield\AssetManager\Asset\HttpAsset;
 use Jield\AssetManager\Exception;
 use Jield\AssetManager\Service\MimeResolver;
-use Jield\Stdlib\Value;
 use Laminas\Stdlib\ArrayUtils;
 use Override;
 use Traversable;
+use Webmozart\Assert\Assert;
 
 /**
  * This resolver allows you to resolve using a 1 on 1 mapping to a file.
@@ -65,7 +65,7 @@ class MapResolver implements ResolverInterface, MimeResolverAwareInterface
             $map = ArrayUtils::iteratorToArray(iterator: $map);
         }
 
-        $this->map = Value::array($map);
+        $this->map = $map;
     }
 
     /**
@@ -79,12 +79,12 @@ class MapResolver implements ResolverInterface, MimeResolverAwareInterface
         }
 
         $file = $this->map[$fileName];
-        $mimeType = $this->getMimeResolver()->getMimeType(filename: Value::string($file));
+        $mimeType = $this->getMimeResolver()->getMimeType(filename: $file);
 
         if (false === filter_var(value: $file, filter: FILTER_VALIDATE_URL)) {
-            $asset = new FileAsset(source: Value::string($file));
+            $asset = new FileAsset(source: Assert::string($file));
         } else {
-            $asset = new HttpAsset(sourceUrl: Value::string($file));
+            $asset = new HttpAsset(sourceUrl: Assert::string($file));
         }
 
         $asset->setMimetype(mimetype: $mimeType);

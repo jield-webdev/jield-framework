@@ -6,7 +6,6 @@ namespace Jield\ApiTools\Paginator;
 
 use Doctrine\ORM\QueryBuilder;
 use Jield\ApiTools\Provider\ProviderInterface;
-use Jield\Stdlib\Value;
 use Laminas\Cache\Storage\Adapter\AbstractAdapter;
 use Laminas\Paginator\Adapter\AdapterInterface;
 use Override;
@@ -40,7 +39,6 @@ class DoctrineCachedORMAdapter extends AbstractDoctrinePaginator implements Adap
             $this->getQuery()->setMaxResults($itemCountPerPage);
 
             $results = [];
-            /** @var mixed $result */
             foreach ($this->pageItems($offset, $itemCountPerPage) as $result) {
                 $results[] = $this->provider->generateArray($result);
             }
@@ -48,6 +46,6 @@ class DoctrineCachedORMAdapter extends AbstractDoctrinePaginator implements Adap
             $this->cache->setItem($cacheKey, $results);
         }
 
-        return Value::array($this->cache->getItem($cacheKey));
+        return $this->cache->getItem($cacheKey);
     }
 }

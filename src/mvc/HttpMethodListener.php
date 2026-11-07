@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Jield\Mvc;
 
-use Jield\Stdlib\Value;
 use Laminas\EventManager\AbstractListenerAggregate;
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\Http\Request as HttpRequest;
@@ -91,7 +90,7 @@ class HttpMethodListener extends AbstractListenerAggregate
     public function setAllowedMethods(array $allowedMethods): void
     {
         foreach ($allowedMethods as &$value) {
-            $value = strtoupper(Value::string($value));
+            $value = strtoupper($value);
         }
         $this->allowedMethods = $allowedMethods;
     }

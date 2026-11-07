@@ -75,19 +75,16 @@ final class IsRedirectedRouteNameConstraint extends Constraint
             );
         }
 
-        /** @var mixed $controllerIdentifier */
         $controllerIdentifier = $routeMatch->getParam('controller');
         if (!is_string($controllerIdentifier)) {
             throw new RuntimeException('Invalid controller identifier found in route match params');
         }
 
-        /** @var mixed $controllerManager */
         $controllerManager = $this->activeTestCase->getApplicationServiceLocator()->get('ControllerManager');
         if (!$controllerManager instanceof ControllerManager) {
             throw new RuntimeException('Invalid ControllerManager found in ServiceManager');
         }
 
-        /** @var mixed $controller */
         $controller = $controllerManager->get($controllerIdentifier);
         if (!$controller instanceof AbstractController) {
             throw new RuntimeException(sprintf(

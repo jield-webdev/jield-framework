@@ -6,9 +6,9 @@ namespace Jield\ApiTools\MvcAuth\Authorization;
 
 use Jield\ApiTools\MvcAuth\MvcAuthEvent;
 use Jield\Mvc\Router\RouteMatch;
-use Jield\Stdlib\Value;
 use Laminas\Http\Request;
 use Laminas\Stdlib\RequestInterface;
+use Webmozart\Assert\Assert;
 
 use function array_key_exists;
 use function sprintf;
@@ -40,7 +40,7 @@ class DefaultResourceResolverListener
         $routeMatch = $mvcEvent->getRouteMatch();
 
         $resource = $this->buildResourceString(
-            routeMatch: Value::instance($routeMatch, \Jield\Mvc\Router\RouteMatch::class),
+            routeMatch: Assert::isInstanceOf($routeMatch, \Jield\Mvc\Router\RouteMatch::class),
             request: $request,
         );
         if (!$resource) {
@@ -79,25 +79,21 @@ class DefaultResourceResolverListener
 
         // - Is this an RPC or a REST call?
         //   - Basically, if it's not in the api-tools-rest configuration, we assume RPC
-        if (!array_key_exists(key: Value::key($controller), array: $this->restControllers)) {
+        if (!array_key_exists(key: $controller, array: $this->restControllers)) {
             $action = $routeMatch->getParam(name: 'action', default: 'index');
-            return sprintf('%s::%s', Value::scalar($controller), Value::scalar($action));
+            return sprintf('%s::%s', $controller, $action);
         }
 
         //   - If it is a REST controller, we need to know if we have a
         //     resource or a controller. The way to determine that is if we have
         //     an identifier. We find that info from the route parameters.
         $identifierName = $this->restControllers[$controller];
-        $id = $this->getIdentifier(
-            identifierName: Value::string($identifierName),
-            routeMatch: $routeMatch,
-            request: $request,
-        );
+        $id = $this->getIdentifier(identifierName: $identifierName, routeMatch: $routeMatch, request: $request);
         if ($id !== false) {
-            return sprintf('%s::entity', Value::scalar($controller));
+            return sprintf('%s::entity', $controller);
         }
 
-        return sprintf('%s::collection', Value::scalar($controller));
+        return sprintf('%s::collection', $controller);
     }
 
     /**

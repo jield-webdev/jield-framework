@@ -9,7 +9,6 @@ use Jield\AssetManager\Asset\AssetInterface;
 use Jield\AssetManager\Exception;
 use Jield\AssetManager\Service\AssetFilterManager;
 use Jield\AssetManager\Service\AssetFilterManagerAwareInterface;
-use Jield\Stdlib\Value;
 use Laminas\Stdlib\ArrayUtils;
 use Override;
 use Traversable;
@@ -63,7 +62,7 @@ class CollectionResolver implements ResolverInterface, AggregateResolverAwareInt
             $collections = ArrayUtils::iteratorToArray(iterator: $collections);
         }
 
-        $this->collections = Value::array($collections);
+        $this->collections = $collections;
     }
 
     /**

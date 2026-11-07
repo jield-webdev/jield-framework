@@ -22,6 +22,7 @@ use Laminas\View\Exception;
 use Laminas\View\Helper\EscapeHtml;
 use Psr\Container\ContainerInterface;
 use RecursiveIteratorIterator;
+use Webmozart\Assert\Assert;
 
 use function assert;
 use function call_user_func_array;
@@ -138,7 +139,7 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
      */
     public function __call(string $method, array $arguments = [])
     {
-        return call_user_func_array(Value::callback([$this->getContainer(), $method]), $arguments);
+        return call_user_func_array(Assert::isCallable([$this->getContainer(), $method]), $arguments);
     }
 
     /**
@@ -195,7 +196,7 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
 
         $found = null;
         $foundDepth = -1;
-        $iterator = new RecursiveIteratorIterator(Value::present($container), RecursiveIteratorIterator::CHILD_FIRST);
+        $iterator = new RecursiveIteratorIterator(Assert::notNull($container), RecursiveIteratorIterator::CHILD_FIRST);
 
         foreach ($iterator as $page) {
             $currDepth = $iterator->getDepth();
@@ -218,7 +219,7 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
                     break;
                 }
 
-                $found = Value::present($found)->getParent();
+                $found = Assert::notNull($found)->getParent();
                 if (!$found instanceof AbstractPage) {
                     $found = null;
                     break;
@@ -266,7 +267,6 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
 
                 // Uses old service name
                 if ($services->has('navigation')) {
-                    /** @var mixed $container */
                     $container = Service::get($services, AbstractContainer::class, 'navigation');
                     return;
                 }
@@ -339,7 +339,7 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
     {
         $events = $this->getEventManager();
         $results = $events->trigger(__FUNCTION__, $this, $params);
-        return Value::bool($results->last());
+        return $results->last();
     }
 
     // Util methods:
@@ -353,7 +353,7 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
     protected function getWhitespace(int|string $indent): string
     {
         if (is_int($indent)) {
-            $indent = str_repeat(' ', Value::nonNegativeInt($indent));
+            $indent = str_repeat(' ', Assert::notNegativeInteger($indent));
         }
 
         return $indent;
@@ -377,9 +377,8 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
             }
         }
 
-        /** @var mixed $attributes */
         $attributes = $this->getView()->plugin('htmlAttributes');
-        $rendered = (string) Value::callback($attributes)($attribs);
+        $rendered = (string) $attributes($attribs);
         return $rendered === '' ? '' : ' ' . ltrim($rendered);
     }
 
@@ -408,7 +407,6 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
         }
 
         $escaper = $this->getView()->plugin('escapeHtml', EscapeHtml::class);
-        /** @var mixed $label */
         $label = $escaper($label);
 
         return '<a' . $this->htmlAttribs($attribs) . '>' . Value::stringify($label) . '</a>';
@@ -449,7 +447,7 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
     protected function normalizeId(string $value): string
     {
         $prefix = static::class;
-        $prefix = strtolower(trim(substr($prefix, Value::int(strrpos($prefix, '\\'))), '\\'));
+        $prefix = strtolower(trim(substr($prefix, Assert::integer(strrpos($prefix, '\\'))), '\\'));
 
         return $prefix . '-' . $value;
     }
@@ -845,11 +843,7 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
             return;
         }
 
-        Value::present($events->getSharedManager())->attach(
-            self::class,
-            'isAllowed',
-            AclListener::accept(...),
-        );
+        $events->getSharedManager()->attach(self::class, 'isAllowed', AclListener::accept(...));
     }
 
     /**

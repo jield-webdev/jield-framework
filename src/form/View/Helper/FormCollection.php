@@ -10,6 +10,7 @@ use Jield\Form\FieldsetInterface;
 use Jield\Stdlib\Value;
 use Laminas\View\Helper\HelperInterface;
 use RuntimeException;
+use Webmozart\Assert\Assert;
 
 use function assert;
 use function is_callable;
@@ -123,7 +124,7 @@ class FormCollection extends AbstractHelper
             $templateMarkup = $this->renderTemplate(collection: $element);
         }
 
-        $element = Value::instance($element, FieldsetInterface::class);
+        $element = Assert::isInstanceOf($element, FieldsetInterface::class);
         foreach ($element->getIterator() as $elementOrFieldset) {
             if ($elementOrFieldset instanceof FieldsetInterface) {
                 $markup .= Value::stringify($fieldsetHelper($elementOrFieldset, $this->shouldWrap()));
@@ -177,10 +178,7 @@ class FormCollection extends AbstractHelper
             $templateMarkup .= Value::stringify($elementHelper($elementOrFieldset));
         }
 
-        return sprintf(
-            $this->getTemplateWrapper(),
-            Value::scalar($escapeHtmlAttribHelper(value: $templateMarkup)),
-        );
+        return sprintf($this->getTemplateWrapper(), $escapeHtmlAttribHelper(value: $templateMarkup));
     }
 
     /**
@@ -246,10 +244,7 @@ class FormCollection extends AbstractHelper
         }
 
         if ($this->view !== null && method_exists(object_or_class: $this->view, method: 'plugin')) {
-            $this->elementHelper = Value::nullableInstance(
-                $this->getView()->plugin($this->getDefaultElementHelper()),
-                \Laminas\View\Helper\HelperInterface::class,
-            );
+            $this->elementHelper = $this->getView()->plugin($this->getDefaultElementHelper());
         }
 
         if (!$this->elementHelper instanceof HelperInterface) {

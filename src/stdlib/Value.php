@@ -482,8 +482,10 @@ final class Value
         if ($scope !== null && method_exists($object, $method)) {
             $reflection = new ReflectionMethod($object, $method);
             $declaringClass = $reflection->getDeclaringClass()->getName();
-            $inScope = $scope === $declaringClass
-                || !$reflection->isPrivate() && (
+            $inScope =
+                $scope === $declaringClass
+                || !$reflection->isPrivate()
+                && (
                     new ReflectionClass($scope)->isSubclassOf($declaringClass)
                     || $reflection->getDeclaringClass()->isSubclassOf($scope)
                 );

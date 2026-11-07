@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace DoctrineModule\Authentication\Storage;
 
 use DoctrineModule\Options\Authentication as AuthenticationOptions;
-use Jield\Stdlib\Value;
 use Laminas\Authentication\Storage\StorageInterface;
+use Webmozart\Assert\Assert;
 
 /**
  * This class implements StorageInterface and allow to save the result of an authentication against an object repository
@@ -19,7 +19,7 @@ class ObjectRepository implements StorageInterface
     public function setOptions(array|AuthenticationOptions $options): ObjectRepository
     {
         if (!$options instanceof AuthenticationOptions) {
-            $options = new AuthenticationOptions(options: Value::stringKeyedArray($options));
+            $options = new AuthenticationOptions(options: $options);
         }
 
         $this->options = $options;
@@ -39,7 +39,7 @@ class ObjectRepository implements StorageInterface
 
     public function isEmpty(): bool
     {
-        return Value::instance($this->options->getStorage(), StorageInterface::class)->isEmpty();
+        return Assert::isInstanceOf($this->options->getStorage(), StorageInterface::class)->isEmpty();
     }
 
     /**
@@ -48,8 +48,7 @@ class ObjectRepository implements StorageInterface
      */
     public function read(): ?object
     {
-        /** @var mixed $identity */
-        $identity = Value::instance($this->options->getStorage(), StorageInterface::class)->read();
+        $identity = Assert::isInstanceOf($this->options->getStorage(), StorageInterface::class)->read();
         if ($identity) {
             return $this->options->getObjectRepository()->find(id: $identity);
         }
@@ -63,22 +62,19 @@ class ObjectRepository implements StorageInterface
      */
     public function readKeyOnly(): mixed
     {
-        /** @var mixed $identity */
-        return $identity = Value::instance($this->options->getStorage(), StorageInterface::class)->read();
+        return $identity = Assert::isInstanceOf($this->options->getStorage(), StorageInterface::class)->read();
     }
 
     public function write(mixed $contents): void
     {
         $metadataInfo = $this->options->getClassMetadata();
-        $identifierValues = $metadataInfo->getIdentifierValues(Value::object($contents));
+        $identifierValues = $metadataInfo->getIdentifierValues($contents);
 
-        Value::instance($this->options->getStorage(), StorageInterface::class)->write(
-            contents: $identifierValues,
-        );
+        Assert::isInstanceOf($this->options->getStorage(), StorageInterface::class)->write(contents: $identifierValues);
     }
 
     public function clear(): void
     {
-        Value::instance($this->options->getStorage(), StorageInterface::class)->clear();
+        Assert::isInstanceOf($this->options->getStorage(), StorageInterface::class)->clear();
     }
 }

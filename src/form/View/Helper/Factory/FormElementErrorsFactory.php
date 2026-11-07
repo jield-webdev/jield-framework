@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Jield\Form\View\Helper\Factory;
 
 use Jield\Form\View\Helper\FormElementErrors;
-use Jield\Stdlib\Value;
 use Psr\Container\ContainerInterface;
 
 use function array_key_exists;
@@ -31,29 +30,23 @@ final class FormElementErrorsFactory
             }
 
             // Message close string
-            if (array_key_exists(key: 'message_close_string', array: Value::array($configHelper))) {
-                $helper->setMessageCloseString(messageCloseString: Value::string(
-                    $configHelper['message_close_string'],
-                ));
+            if (array_key_exists(key: 'message_close_string', array: $configHelper)) {
+                $helper->setMessageCloseString(messageCloseString: $configHelper['message_close_string']);
             }
 
             // Message open format
-            if (array_key_exists(key: 'message_open_format', array: Value::array($configHelper))) {
-                $helper->setMessageOpenFormat(messageOpenFormat: Value::string(
-                    $configHelper['message_open_format'],
-                ));
+            if (array_key_exists(key: 'message_open_format', array: $configHelper)) {
+                $helper->setMessageOpenFormat(messageOpenFormat: $configHelper['message_open_format']);
             }
 
             // Message separator string
-            if (array_key_exists(key: 'message_separator_string', array: Value::array($configHelper))) {
-                $helper->setMessageSeparatorString(messageSeparatorString: Value::string(
-                    $configHelper['message_separator_string'],
-                ));
+            if (array_key_exists(key: 'message_separator_string', array: $configHelper)) {
+                $helper->setMessageSeparatorString(messageSeparatorString: $configHelper['message_separator_string']);
             }
 
             // Translate error messages
-            if (array_key_exists(key: 'translate_messages', array: Value::array($configHelper))) {
-                $helper->setTranslateMessages(flag: Value::bool($configHelper['translate_messages']));
+            if (array_key_exists(key: 'translate_messages', array: $configHelper)) {
+                $helper->setTranslateMessages(flag: $configHelper['translate_messages']);
             }
         }
 

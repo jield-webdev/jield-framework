@@ -6,7 +6,6 @@ namespace Jield\Form\Element;
 
 use Jield\Form\Element;
 use Jield\Form\Exception\InvalidArgumentException;
-use Jield\Stdlib\Value;
 use Jield\Validator\Each;
 use Laminas\InputFilter\InputProviderInterface;
 use Laminas\Validator\InArray as InArrayValidator;
@@ -135,19 +134,15 @@ class Select extends Element implements InputProviderInterface
         }
 
         if (isset($this->options['disable_inarray_validator'])) {
-            $this->setDisableInArrayValidator(disableOption: Value::bool(
-                $this->options['disable_inarray_validator'],
-            ));
+            $this->setDisableInArrayValidator(disableOption: $this->options['disable_inarray_validator']);
         }
 
         if (isset($this->options['use_hidden_element'])) {
-            $this->setUseHiddenElement(useHiddenElement: Value::bool(
-                $this->options['use_hidden_element'],
-            ));
+            $this->setUseHiddenElement(useHiddenElement: $this->options['use_hidden_element']);
         }
 
         if (isset($this->options['unselected_value'])) {
-            $this->setUnselectedValue(unselectedValue: Value::string($this->options['unselected_value']));
+            $this->setUnselectedValue(unselectedValue: $this->options['unselected_value']);
         }
 
         return $this;
@@ -167,7 +162,7 @@ class Select extends Element implements InputProviderInterface
             $this->setValueOptions(options: $value);
             return $this;
         }
-        return parent::setAttribute(key: $key, value: Value::plainScalar($value));
+        return parent::setAttribute(key: $key, value: $value);
     }
 
     /**

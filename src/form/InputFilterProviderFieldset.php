@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Jield\Form;
 
-use Jield\Stdlib\Value;
 use Laminas\InputFilter\InputFilterInterface;
 use Laminas\InputFilter\InputFilterProviderInterface;
 use Laminas\Stdlib\ArrayUtils;
@@ -49,9 +48,7 @@ final class InputFilterProviderFieldset extends Fieldset implements InputFilterP
         parent::setOptions(options: $options);
 
         if (isset($this->options['input_filter_spec'])) {
-            $this->setInputFilterSpecification(filterSpec: Value::iterable(
-                $this->options['input_filter_spec'],
-            ));
+            $this->setInputFilterSpecification(filterSpec: $this->options['input_filter_spec']);
         }
 
         return $this;

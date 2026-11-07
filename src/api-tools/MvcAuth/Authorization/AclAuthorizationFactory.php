@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Jield\ApiTools\MvcAuth\Authorization;
 
 use Jield\Stdlib\Value;
-use Laminas\Permissions\Acl\Resource\ResourceInterface;
+
 use function array_key_exists;
 use function is_array;
 
@@ -72,13 +72,9 @@ abstract class AclAuthorizationFactory
     {
         // Add new resource to ACL
         $resource = $ruleSet['resource'];
-        $acl->addResource(Value::instanceOrString(
-            $ruleSet['resource'],
-            ResourceInterface::class,
-        ));
+        $acl->addResource($ruleSet['resource']);
 
         // Deny guest specified privileges to resource
-        /** @var mixed $privileges */
         $privileges = $ruleSet['privileges'] ?? null;
 
         // null privileges means no permissions were setup; nothing to do

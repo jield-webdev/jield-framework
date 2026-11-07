@@ -7,8 +7,9 @@ namespace Jield\ModuleManager\Listener;
 use Jield\ModuleManager\Exception;
 use Jield\ModuleManager\Feature\DependencyIndicatorInterface;
 use Jield\ModuleManager\ModuleEvent;
-
 use Jield\Stdlib\Value;
+use Webmozart\Assert\Assert;
+
 use function method_exists;
 use function sprintf;
 
@@ -24,19 +25,16 @@ class ModuleDependencyCheckerListener
 
         if (
             $module instanceof DependencyIndicatorInterface
-            || method_exists(
-                object_or_class: Value::objectOrString($module),
-                method: 'getModuleDependencies',
-            )
+            || method_exists(object_or_class: $module, method: 'getModuleDependencies')
         ) {
-            $dependencies = Value::call(Value::present($module), 'getModuleDependencies');
+            $dependencies = Value::call($module, 'getModuleDependencies');
 
-            foreach (Value::iterable($dependencies) as $dependencyModule) {
+            foreach (Assert::isIterable($dependencies) as $dependencyModule) {
                 if (!isset($this->loaded[$dependencyModule])) {
                     throw new Exception\MissingDependencyModuleException(message: sprintf(
                         'Module "%s" depends on module "%s", which was not initialized before it',
                         $e->getModuleName(),
-                        Value::scalar($dependencyModule),
+                        $dependencyModule,
                     ));
                 }
             }

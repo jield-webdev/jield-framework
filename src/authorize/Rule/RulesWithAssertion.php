@@ -11,10 +11,9 @@ use Jield\Authorize\Service\AuthorizeService;
 use Jield\Mvc\MvcEvent;
 use Jield\Mvc\Router\RouteMatch;
 use Jield\Stdlib\Service;
-use Jield\Stdlib\Value;
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\Permissions\Acl\Assertion\AssertionInterface;
-use Laminas\Permissions\Acl\Resource\ResourceInterface;
+use Webmozart\Assert\Assert;
 
 class RulesWithAssertion extends Route
 {
@@ -31,7 +30,7 @@ class RulesWithAssertion extends Route
     {
         //Grab the ACL from the authorize service
         $acl = Service::get(
-            Value::present($event->getApplication())->getServiceManager(),
+            Assert::notNull($event->getApplication())->getServiceManager(),
             AuthorizeService::class,
         )->getAcl();
 
@@ -41,11 +40,11 @@ class RulesWithAssertion extends Route
             }
 
             $assertionClass = $rule['assertion'];
-            if ($this->container->has(Value::string($assertionClass))) {
-                $assert = $this->container->get(Value::string($assertionClass));
+            if ($this->container->has($assertionClass)) {
+                $assert = $this->container->get($assertionClass);
 
                 if ($assert instanceof AbstractAssertion) {
-                    $assert->setRouteMatch(routeMatch: Value::instance(
+                    $assert->setRouteMatch(routeMatch: Assert::isInstanceOf(
                         $event->getRouteMatch(),
                         RouteMatch::class,
                     ));
@@ -55,19 +54,13 @@ class RulesWithAssertion extends Route
                 //Do not specify any roles, we do that in the assertion, giving a role would lead to ignorance of the assertion
                 $acl->allow(
                     roles: null,
-                    resources: Value::instanceOrArrayOrString(
-                        $resource,
-                        ResourceInterface::class,
-                    ),
-                    assert: Value::instance(
-                        $assert,
-                        AssertionInterface::class,
-                    ),
+                    resources: $resource,
+                    assert: Assert::isInstanceOf($assert, AssertionInterface::class),
                 );
             } else {
                 throw new InvalidArgumentException(message: sprintf(
                     'Assertion class %s cannot be found',
-                    Value::scalar($assertionClass),
+                    $assertionClass,
                 ));
             }
         }

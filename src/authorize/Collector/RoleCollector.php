@@ -6,7 +6,6 @@ namespace Jield\Authorize\Collector;
 
 use Jield\Authorize\Provider\Identity\ProviderInterface;
 use Jield\Mvc\MvcEvent;
-use Jield\Stdlib\Value;
 use Laminas\Permissions\Acl\Role\RoleInterface;
 use Serializable;
 
@@ -86,7 +85,7 @@ class RoleCollector implements Serializable
      */
     public function unserialize($data): void
     {
-        $this->collectedRoles = Value::array(unserialize(data: $data));
+        $this->collectedRoles = unserialize(data: $data);
     }
 
     /**
@@ -104,6 +103,6 @@ class RoleCollector implements Serializable
      */
     public function __unserialize(array $serialized)
     {
-        $this->collectedRoles = Value::array($serialized['collectedRoles']);
+        $this->collectedRoles = $serialized['collectedRoles'];
     }
 }

@@ -45,7 +45,6 @@ final class EventManagerFactory extends AbstractFactory
 
             if (is_string(value: $subscriber)) {
                 if ($container->has($subscriber)) {
-                    /** @var mixed $subscriber */
                     $subscriber = $container->get($subscriber);
                 } elseif (class_exists(class: $subscriber)) {
                     $subscriber = Value::instantiate($subscriber);
@@ -57,7 +56,6 @@ final class EventManagerFactory extends AbstractFactory
                 continue;
             }
 
-            /** @var mixed $subscriberType */
             $subscriberType = is_object(value: $subscriberName) ? $subscriberName::class : $subscriberName;
 
             throw new InvalidArgumentException(message: sprintf(

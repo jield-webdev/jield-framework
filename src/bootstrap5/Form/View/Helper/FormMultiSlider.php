@@ -7,8 +7,9 @@ namespace Jield\Bootstrap5\Form\View\Helper;
 use Jield\Form\Element\MultiCheckbox;
 use Jield\Form\ElementInterface;
 use Jield\Form\View\Helper;
-
 use Jield\Stdlib\Value;
+use Webmozart\Assert\Assert;
+
 use function count;
 use function sort;
 
@@ -16,7 +17,7 @@ final class FormMultiSlider extends Helper\FormText
 {
     public function render(ElementInterface $element): string
     {
-        $id = md5(string: Value::string($element->getName()));
+        $id = md5(string: Assert::string($element->getName()));
 
         if (count(value: $element->getMessages()) > 0) {
             $element->setAttribute(key: 'class', value: (string) $element->getAttribute(key: 'class') . ' is-invalid');
@@ -30,11 +31,7 @@ final class FormMultiSlider extends Helper\FormText
         $element->setAttribute(key: 'id', value: $id);
 
         // Grab the raw values (keys).
-        $rawValueOptions = array_keys(
-            array: Value::array(
-                Value::instance($element, MultiCheckbox::class)->getValueOptions(),
-            ),
-        );
+        $rawValueOptions = array_keys(array: Assert::isInstanceOf($element, MultiCheckbox::class)->getValueOptions());
 
         // Sort values from low to high.
         sort($rawValueOptions);

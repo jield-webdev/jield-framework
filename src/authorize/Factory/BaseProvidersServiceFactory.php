@@ -8,6 +8,7 @@ use Jield\Authorize\Config;
 use Jield\Stdlib\Value;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Psr\Container\ContainerInterface;
+use Webmozart\Assert\Assert;
 
 /**
  * Base factory responsible of instantiating providers
@@ -24,15 +25,12 @@ abstract class BaseProvidersServiceFactory implements FactoryInterface
      */
     public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): object|array
     {
-        $config = Value::array($container->get(Config::class));
+        $config = Assert::isArray($container->get(Config::class));
         $providers = [];
 
-        /** @var mixed $providerName
-         * @var mixed $providerConfig
-         */
-        foreach (Value::iterable($config[static::PROVIDER_SETTING]) as $providerName => $providerConfig) {
-            if ($container->has(Value::string($providerName))) {
-                $providers[] = $container->get(Value::string($providerName));
+        foreach (Assert::isIterable($config[static::PROVIDER_SETTING]) as $providerName => $providerConfig) {
+            if ($container->has($providerName)) {
+                $providers[] = $container->get($providerName);
             } else {
                 $providers[] = Value::instantiate($providerName, [$providerConfig, $container]);
             }

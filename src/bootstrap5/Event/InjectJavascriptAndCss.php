@@ -27,11 +27,8 @@ class InjectJavascriptAndCss extends AbstractListenerAggregate
 
     public function setHeadScript(): void
     {
-        /** @var mixed $injectJquery */
         $injectJquery = $this->config['jield-bootstrap5']['inject_jquery'] ?? true;
-        /** @var mixed $injectJqueryUI */
         $injectJqueryUI = $this->config['jield-bootstrap5']['inject_jquery_ui'] ?? true;
-        /** @var mixed $injectBootstrapJS */
         $injectBootstrapJS = $this->config['jield-bootstrap5']['inject_bootstrap_js'] ?? true;
 
         if ($injectJquery) {

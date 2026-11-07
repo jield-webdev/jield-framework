@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Jield\ModuleManager;
 
-use Jield\Stdlib\Value;
 use Laminas\EventManager\EventManager;
 use Laminas\EventManager\EventManagerInterface;
 use Override;
@@ -55,7 +54,7 @@ class ModuleManager implements ModuleManagerInterface
         }
 
         foreach ($this->getModules() as $moduleName) {
-            $this->loadModule(moduleName: Value::string($moduleName));
+            $this->loadModule(moduleName: $moduleName);
         }
 
         $this->modulesAreLoaded = true;
@@ -129,7 +128,7 @@ class ModuleManager implements ModuleManagerInterface
         $this->loadFinished++;
 
         $module = $this->loadModuleByName(event: $event);
-        $event->setModule(module: Value::object($module));
+        $event->setModule(module: $module);
         $event->setName(name: ModuleEvent::EVENT_LOAD_MODULE);
 
         $this->loadedModules[$moduleName] = $module;

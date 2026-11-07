@@ -28,6 +28,7 @@ use Laminas\ServiceManager\ServiceLocatorInterface;
 use Laminas\Stdlib\ArrayUtils;
 use Laminas\Stdlib\ParametersInterface;
 use Override;
+use Webmozart\Assert\Assert;
 
 use function array_filter;
 use function array_key_exists;
@@ -79,7 +80,7 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
             isset($this->config['methods_without_bodies']) && is_array(value: $this->config['methods_without_bodies'])
         ) {
             foreach ($this->config['methods_without_bodies'] as $method) {
-                $this->addMethodWithoutBody(method: Value::string($method));
+                $this->addMethodWithoutBody(method: $method);
             }
         }
     }
@@ -169,7 +170,6 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
         }
 
         $method = $request->getMethod();
-        /** @var mixed $dataContainer */
         $dataContainer = $e->getParam(name: 'LaminasContentNegotiationParameterData', default: false);
         if (!$dataContainer instanceof ParameterDataContainer) {
             return new ApiProblemResponse(apiProblem: new ApiProblem(
@@ -186,14 +186,14 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
             : $dataContainer->getBodyParams();
 
         $isCollection = $this->isCollection(
-            serviceName: Value::string($controllerService),
+            serviceName: $controllerService,
             data: $data,
             matches: $routeMatches,
             request: $request,
         );
 
         $inputFilterService = $this->getInputFilterService(
-            controllerService: Value::string($controllerService),
+            controllerService: $controllerService,
             method: $method,
             isCollection: $isCollection,
         );
@@ -209,23 +209,11 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
             )));
         }
 
-        /** @var mixed $files */
         $files = $request->getFiles();
-        if (
-            !$isCollection
-            && 0 < count(
-                value: Value::countable(
-                    Value::instance($files, ParametersInterface::class)->toArray(),
-                ),
-            )
-        ) {
+        if (!$isCollection && 0 < count(value: Assert::isInstanceOf($files, ParametersInterface::class)->toArray())) {
             // File uploads are not validated for collections; impossible to
             // match file fields to discrete sets
-            $data = ArrayUtils::merge(
-                a: $data,
-                b: Value::array($files->toArray()),
-                preserveNumericKeys: true,
-            );
+            $data = ArrayUtils::merge(a: $data, b: $files->toArray(), preserveNumericKeys: true);
         }
 
         $inputFilter = $this->getInputFilter(inputFilterService: $inputFilterService);
@@ -251,7 +239,7 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
             callback: static fn($result) => $result instanceof ApiProblem || $result instanceof ApiProblemResponse,
             event: $e,
         );
-        $e->setName(name: Value::string($currentEventName));
+        $e->setName(name: Assert::string($currentEventName));
 
         $last = $results->last();
 
@@ -265,7 +253,7 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
 
         $data = ArrayUtils::merge(
             a: $data,
-            b: Value::array($e->getParam(name: 'Jield\ApiTools\ContentValidation\ParameterData')),
+            b: $e->getParam(name: 'Jield\ApiTools\ContentValidation\ParameterData'),
             preserveNumericKeys: true,
         );
 
@@ -303,9 +291,8 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
         //   that was the default experience starting in 1.0.
         // - If the flag is present AND is boolean true, that is also
         //   an indicator that the raw data should be present.
-        $useRawData = $this->useRawData(controllerService: Value::string($controllerService));
+        $useRawData = $this->useRawData(controllerService: $controllerService);
         if (!$useRawData) {
-            /** @var mixed $data */
             $data = $validationResult->value();
         }
 
@@ -314,33 +301,27 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
         // - If `remove_empty_data` flag is present AND is boolean true, then remove
         //   empty data from current data array
         // - Does not remove empty data if keys matched received data
-        $removeEmptyData = $this->shouldRemoveEmptyData(controllerService: Value::string(
-            $controllerService,
-        ));
+        $removeEmptyData = $this->shouldRemoveEmptyData(controllerService: $controllerService);
         if ($removeEmptyData) {
-            $data = $this->removeEmptyData(data: Value::array($data), compareTo: $receivedData);
+            $data = $this->removeEmptyData(data: $data, compareTo: $receivedData);
         }
 
         // If we don't have an instance of UnknownInputsCapableInterface, or no
         // unknown data is in the input filter, at this point we can just
         // set the current data into the data container.
         if (!$inputFilter instanceof UnknownInputsCapableInterface || !$inputFilter->hasUnknown()) {
-            $dataContainer->setBodyParams(bodyParams: Value::array($data));
+            $dataContainer->setBodyParams(bodyParams: $data);
             return null;
         }
 
         $unknown = $inputFilter->getUnknown();
 
-        if ($this->allowsOnlyFieldsInFilter(controllerService: Value::string($controllerService))) {
+        if ($this->allowsOnlyFieldsInFilter(controllerService: $controllerService)) {
             if ($inputFilter instanceof CollectionInputFilter) {
                 $unknownFields = [];
                 foreach ($unknown as $key => $fields) {
                     $unknownFields[] =
-                        '['
-                        . $key
-                        . ': '
-                        . implode(separator: ', ', array: array_keys(array: Value::array($fields)))
-                        . ']';
+                        '[' . $key . ': ' . implode(separator: ', ', array: array_keys(array: $fields)) . ']';
                 }
 
                 $fields = implode(separator: ', ', array: $unknownFields);
@@ -357,13 +338,13 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
         // The raw data already contains unknown inputs, so no need to merge
         // them with the data.
         if ($useRawData) {
-            $dataContainer->setBodyParams(bodyParams: Value::array($data));
+            $dataContainer->setBodyParams(bodyParams: $data);
             return null;
         }
 
         // When not using raw data, we merge the unknown data with the
         // validated data to get the full set of input.
-        $dataContainer->setBodyParams(bodyParams: array_merge(Value::array($data), $unknown));
+        $dataContainer->setBodyParams(bodyParams: array_merge($data, $unknown));
         return null;
     }
 
@@ -505,21 +486,18 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
         bool $isCollection,
     ): false|string {
         if ($isCollection && isset($this->config[$controllerService][$method . '_COLLECTION'])) {
-            return Value::string(Value::path(
-                $this->config,
-                [$controllerService, $method . '_COLLECTION'],
-            ));
+            return Assert::string(Value::path($this->config, [$controllerService, $method . '_COLLECTION']));
         }
 
         if (isset($this->config[$controllerService][$method])) {
-            return Value::string($this->config[$controllerService][$method]);
+            return Assert::string($this->config[$controllerService][$method]);
         }
 
         if ($method === 'DELETE' || in_array(needle: $method, haystack: $this->methodsWithoutBodies, strict: true)) {
             return false;
         }
 
-        return Value::stringOrFalse($this->config[$controllerService]['input_filter'] ?? false);
+        return $this->config[$controllerService]['input_filter'] ?? false;
     }
 
     /**
@@ -538,7 +516,6 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
             return false;
         }
 
-        /** @var mixed $inputFilter */
         $inputFilter = $this->inputFilterManager->get($inputFilterService);
         if (!$inputFilter instanceof InputFilterInterface) {
             return false;
@@ -556,10 +533,7 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
      */
     protected function getInputFilter(string $inputFilterService): InputFilterInterface
     {
-        return Value::instance(
-            $this->inputFilters[$inputFilterService],
-            \Laminas\InputFilter\InputFilterInterface::class,
-        );
+        return $this->inputFilters[$inputFilterService];
     }
 
     /**
@@ -580,11 +554,11 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
         }
 
         $identifierName = $this->restControllers[$serviceName];
-        if ($matches->getParam(name: Value::string($identifierName)) !== null) {
+        if ($matches->getParam(name: Assert::string($identifierName)) !== null) {
             return false;
         }
 
-        return null === $request->getQuery(name: Value::nullableString($identifierName), default: null);
+        return null === $request->getQuery(name: Assert::nullOrString($identifierName), default: null);
     }
 
     /**
@@ -602,18 +576,14 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
         if ($isCollection) {
             $validationGroup = $data;
             foreach ($validationGroup as &$subData) {
-                $subData = array_keys(array: Value::array($subData));
+                $subData = array_keys(array: $subData);
             }
         } else {
-            $validationGroup = array_keys(array: Value::array($data));
+            $validationGroup = array_keys(array: $data);
         }
 
         try {
-            $this->validationResult = InputFilterValidator::validate(
-                $inputFilter,
-                Value::array($data),
-                $validationGroup,
-            );
+            $this->validationResult = InputFilterValidator::validate($inputFilter, $data, $validationGroup);
             return $this->validationResult->valid();
         } catch (InputFilterInvalidArgumentException $inputFilterInvalidArgumentException) {
             $matches = [];

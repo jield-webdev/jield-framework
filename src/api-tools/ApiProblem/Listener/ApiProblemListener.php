@@ -20,6 +20,7 @@ use Laminas\Stdlib\DispatchableInterface;
 use Laminas\View\Model\ModelInterface;
 use Override;
 use Throwable;
+use Webmozart\Assert\Assert;
 
 use function in_array;
 use function is_array;
@@ -74,7 +75,7 @@ class ApiProblemListener extends AbstractListenerAggregate
         );
 
         $sharedEvents = $events->getSharedManager();
-        Value::present($sharedEvents)->attach(
+        Assert::notNull($sharedEvents)->attach(
             DispatchableInterface::class,
             MvcEvent::EVENT_DISPATCH,
             listener: $this->onDispatch(...),
@@ -102,13 +103,15 @@ class ApiProblemListener extends AbstractListenerAggregate
         // Marshal the information we need for the API-Problem response
         $response = $e->getResponse();
         $status = $response instanceof HttpResponse ? $response->getStatusCode() : 500;
-        /** @var mixed $exception */
         $exception = $model->getVariable(name: 'exception');
 
         if ($exception instanceof Throwable) {
             $apiProblem = new ApiProblem(status: $status, detail: $exception);
         } else {
-            $apiProblem = new ApiProblem(status: $status, detail: Value::stringify($model->getVariable(name: 'message')));
+            $apiProblem = new ApiProblem(
+                status: $status,
+                detail: Value::stringify($model->getVariable(name: 'message')),
+            );
         }
 
         // Create a new model with the API-Problem payload, and reset
@@ -127,24 +130,22 @@ class ApiProblemListener extends AbstractListenerAggregate
     public function onDispatch(MvcEvent $e): void
     {
         $app = $e->getApplication();
-        $services = Value::present($app)->getServiceManager();
-        /** @var mixed $config */
+        $services = Assert::notNull($app)->getServiceManager();
         $config = $services->get('config');
 
         if (!isset($config['api-tools-api-problem']['render_error_controllers'])) {
             return;
         }
 
-        /** @var mixed $controller */
-        $controller = Value::present($e->getRouteMatch())->getParam(name: 'controller');
+        $controller = Assert::notNull($e->getRouteMatch())->getParam(name: 'controller');
         $controllers = $config['api-tools-api-problem']['render_error_controllers'];
-        if (!in_array(needle: $controller, haystack: Value::array($controllers), strict: true)) {
+        if (!in_array(needle: $controller, haystack: $controllers, strict: true)) {
             // The current controller is not in our list of controllers to handle
             return;
         }
 
         // Attach the ApiProblem render.error listener
-        $events = Value::present($app)->getEventManager();
+        $events = Assert::notNull($app)->getEventManager();
         Value::call($services->get('Jield\ApiTools\ApiProblem\RenderErrorListener'), 'attach', [$events]);
     }
 
@@ -162,7 +163,6 @@ class ApiProblemListener extends AbstractListenerAggregate
         }
 
         // Marshall an ApiProblem and view model based on the exception
-        /** @var mixed $exception */
         $exception = $e->getParam(name: 'exception');
         if (!$exception instanceof Throwable) {
             // If it's not an exception, do not know what to do.
@@ -197,16 +197,13 @@ class ApiProblemListener extends AbstractListenerAggregate
         }
 
         $headers = $request->getHeaders();
-        if (!Value::instance($headers, Headers::class)->has('Accept')) {
+        if (!Assert::isInstanceOf($headers, Headers::class)->has('Accept')) {
             return false;
         }
 
         // ... that matches certain criteria
-        $accept = Value::instance($headers, Headers::class)->get('Accept');
-        return $this->matchAcceptCriteria(accept: Value::instance(
-            $accept,
-            \Laminas\Http\Header\Accept::class,
-        ));
+        $accept = Assert::isInstanceOf($headers, Headers::class)->get('Accept');
+        return $this->matchAcceptCriteria(accept: Assert::isInstanceOf($accept, \Laminas\Http\Header\Accept::class));
     }
 
     /**
@@ -219,9 +216,8 @@ class ApiProblemListener extends AbstractListenerAggregate
      */
     protected function matchAcceptCriteria(AcceptHeader $accept): bool
     {
-        /** @var mixed $type */
         foreach ($this->acceptFilters as $type) {
-            $match = $accept->match(matchAgainst: Value::arrayOrString($type));
+            $match = $accept->match(matchAgainst: $type);
             if ($match instanceof AcceptFieldValuePart && $match->getTypeString() !== '*/*') {
                 return true;
             }

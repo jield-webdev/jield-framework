@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Jield\Authorize\Provider\Role;
 
 use Jield\Authorize\Role\Role;
-use Jield\Stdlib\Value;
 use Laminas\Permissions\Acl\Role\RoleInterface;
+use Webmozart\Assert\Assert;
 
 use function array_merge;
 use function is_numeric;
@@ -28,9 +28,9 @@ class Config implements ProviderInterface
 
         foreach ($config as $key => $value) {
             if (is_numeric(value: $key)) {
-                $roles = array_merge($roles, $this->loadRole(name: Value::string($value)));
+                $roles = array_merge($roles, $this->loadRole(name: $value));
             } else {
-                $roles = array_merge($roles, $this->loadRole(name: $key, options: Value::array($value)));
+                $roles = array_merge($roles, $this->loadRole(name: $key, options: $value));
             }
         }
 
@@ -40,7 +40,7 @@ class Config implements ProviderInterface
     /** @return list<RoleInterface> */
     protected function loadRole(string $name, array $options = [], string|RoleInterface|null $parent = null): array
     {
-        $children = Value::array($options['children'] ?? []);
+        $children = Assert::isArray($options['children'] ?? []);
 
         $roles = [];
         $role = new Role(roleId: $name, parent: $parent);
@@ -48,17 +48,9 @@ class Config implements ProviderInterface
 
         foreach ($children as $key => $value) {
             if (is_numeric(value: $key)) {
-                $roles = array_merge($roles, $this->loadRole(
-                    name: Value::string($value),
-                    options: [],
-                    parent: $role,
-                ));
+                $roles = array_merge($roles, $this->loadRole(name: $value, options: [], parent: $role));
             } else {
-                $roles = array_merge($roles, $this->loadRole(
-                    name: Value::string($key),
-                    options: Value::array($value),
-                    parent: $role,
-                ));
+                $roles = array_merge($roles, $this->loadRole(name: $key, options: $value, parent: $role));
             }
         }
 

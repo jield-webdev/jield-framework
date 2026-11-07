@@ -31,11 +31,7 @@ class ForwardFactory implements FactoryInterface
                 'ControllerManager',
             ));
         }
-        $controllers = Service::get(
-            $container,
-            ControllerManager::class,
-            'ControllerManager',
-        );
+        $controllers = Service::get($container, ControllerManager::class, 'ControllerManager');
 
         return new Forward($controllers);
     }

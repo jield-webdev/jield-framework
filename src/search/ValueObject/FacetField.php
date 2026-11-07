@@ -6,7 +6,6 @@ namespace Jield\Search\ValueObject;
 
 use JetBrains\PhpStorm\Pure;
 use Jield\Search\Enum\FacetFieldVisibilityEnum;
-use Jield\Stdlib\Value;
 
 final class FacetField
 {
@@ -32,20 +31,17 @@ final class FacetField
     public static function fromArray(array $params): FacetField
     {
         return new self(
-            field: Value::string($params['field'] ?? ''),
-            name: Value::string($params['name'] ?? ''),
-            type: Value::int($params['name'] ?? self::TYPE_CHECKBOX),
-            minCount: Value::int($params['minCount'] ?? 0),
-            sort: Value::string($params['sort'] ?? 'index'),
-            reverse: Value::bool($params['reverse'] ?? false),
-            hasYesNo: Value::bool($params['hasYesNo'] ?? false),
-            hasAndOr: Value::bool($params['hasAndOr'] ?? false),
-            defaultValue: Value::nullableString($params['defaultValue'] ?? false),
-            limit: Value::int($params['limit'] ?? 100),
-            visibility: Value::instance(
-                $params['visibility'] ?? FacetFieldVisibilityEnum::FILTER_COLUMN,
-                \Jield\Search\Enum\FacetFieldVisibilityEnum::class,
-            ),
+            field: $params['field'] ?? '',
+            name: $params['name'] ?? '',
+            type: $params['name'] ?? self::TYPE_CHECKBOX,
+            minCount: $params['minCount'] ?? 0,
+            sort: $params['sort'] ?? 'index',
+            reverse: $params['reverse'] ?? false,
+            hasYesNo: $params['hasYesNo'] ?? false,
+            hasAndOr: $params['hasAndOr'] ?? false,
+            defaultValue: $params['defaultValue'] ?? false,
+            limit: $params['limit'] ?? 100,
+            visibility: $params['visibility'] ?? FacetFieldVisibilityEnum::FILTER_COLUMN,
         );
     }
 

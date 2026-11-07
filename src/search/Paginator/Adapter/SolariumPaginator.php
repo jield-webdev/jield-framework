@@ -4,11 +4,9 @@ declare(strict_types=1);
 
 namespace Jield\Search\Paginator\Adapter;
 
-use Jield\Stdlib\Value;
 use Laminas\Paginator\Adapter\AdapterInterface;
 use Solarium\Client;
 use Solarium\QueryType\Select\Query\Query;
-use Solarium\QueryType\Select\Result\Result;
 
 /**
  * Solarium result paginator.
@@ -31,9 +29,7 @@ class SolariumPaginator implements AdapterInterface
             $query = clone $this->query;
             $query->setStart(0)->setRows(0);
             $result = $this->client->select($query);
-            $this->count =
-                Value::instance($result, Result::class)->getNumFound()
-                ?? 0;
+            $this->count = $result->getNumFound() ?? 0;
         }
 
         return $this->count;
@@ -44,8 +40,7 @@ class SolariumPaginator implements AdapterInterface
         $this->query->setStart(start: $offset);
         $this->query->setRows(rows: $itemCountPerPage);
         $result = $this->client->select($this->query);
-        $this->count =
-            Value::instance($result, Result::class)->getNumFound() ?? 0;
+        $this->count = $result->getNumFound() ?? 0;
 
         return $result->getIterator();
     }

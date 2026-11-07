@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Jield\AssetManager\Service;
 
 use Jield\AssetManager\Resolver\ConcatResolver;
-use Jield\Stdlib\Value;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Override;
 use Psr\Container\ContainerInterface;
@@ -25,6 +24,6 @@ class ConcatResolverServiceFactory implements FactoryInterface
             $files = $config['asset_manager']['resolver_configs']['concat'];
         }
 
-        return new ConcatResolver(concats: Value::iterable($files));
+        return new ConcatResolver(concats: $files);
     }
 }

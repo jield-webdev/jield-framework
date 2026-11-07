@@ -9,7 +9,6 @@ use DateTime as PhpDateTime;
 use DateTimeInterface;
 use Jield\Form\Element;
 use Jield\Form\Exception\InvalidArgumentException;
-use Jield\Stdlib\Value;
 use Laminas\Filter\StringTrim;
 use Laminas\InputFilter\InputProviderInterface;
 use Laminas\Validator\Date as DateValidator;
@@ -43,7 +42,7 @@ abstract class AbstractDateTime extends Element implements InputProviderInterfac
         parent::setOptions(options: $options);
 
         if (isset($this->options['format'])) {
-            $this->setFormat(format: Value::string($this->options['format']));
+            $this->setFormat(format: $this->options['format']);
         }
 
         return $this;

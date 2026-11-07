@@ -19,7 +19,6 @@ class InputFilterPlugin extends AbstractPlugin
         }
 
         $event = $controller->getEvent();
-        /** @var mixed $inputFilter */
         $inputFilter = $event->getParam(name: __NAMESPACE__);
 
         if (!$inputFilter instanceof InputFilterInterface) {

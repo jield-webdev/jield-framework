@@ -7,7 +7,6 @@ namespace Jield\ApiTools\OAuth2;
 use Firebase\JWT\JWK;
 use Firebase\JWT\Key;
 use GuzzleHttp\ClientInterface;
-use Jield\Stdlib\Value;
 use Psr\Cache\CacheItemPoolInterface;
 use RuntimeException;
 use Throwable;
@@ -23,12 +22,9 @@ readonly class EntraJwksProvider
     {
         // The URL is derived exclusively from a validated database tenant ID, never from JWT headers.
         $item = $this->cache->getItem('entra_jwks_' . $tenantId);
-        /** @var mixed $data */
         $data = $item->isHit() ? $item->get() : null;
 
-        $key = is_array($data)
-            ? $this->findKey(keys: Value::array($data['keys'] ?? []), tenantId: $tenantId, kid: $kid)
-            : null;
+        $key = is_array($data) ? $this->findKey(keys: $data['keys'] ?? [], tenantId: $tenantId, kid: $kid) : null;
         if ($key instanceof Key) {
             return $key;
         }
@@ -85,7 +81,6 @@ readonly class EntraJwksProvider
             if (!is_array($key) || ($key['kid'] ?? null) !== $kid) {
                 continue;
             }
-            /** @var mixed $keyIssuer */
             $keyIssuer = $key['issuer'] ?? '';
             if (
                 !is_string($keyIssuer)

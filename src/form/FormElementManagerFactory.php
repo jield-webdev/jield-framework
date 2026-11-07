@@ -27,10 +27,7 @@ final class FormElementManagerFactory implements FactoryInterface
     ): AbstractPluginManager {
         $configuration = $options ?? [];
         /** @var ServiceManagerConfiguration $configuration */
-        $pluginManager = new FormElementManager(
-            creationContext: $container,
-            config: $configuration,
-        );
+        $pluginManager = new FormElementManager(creationContext: $container, config: $configuration);
 
         // If this is in a jield-mvc application, the ServiceListener will inject
         // merged configuration during bootstrap.

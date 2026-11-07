@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Jield\AssetManager\Service;
 
-use Jield\Stdlib\Value;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Laminas\ServiceManager\ServiceLocatorInterface;
 use Override;
 use Psr\Container\ContainerInterface;
+use Webmozart\Assert\Assert;
 
 /**
  * Factory for the Asset Cache Manager Service
@@ -32,11 +32,8 @@ class AssetCacheManagerServiceFactory implements FactoryInterface
         }
 
         return new AssetCacheManager(
-            container: Value::instance(
-                $container,
-                ServiceLocatorInterface::class,
-            ),
-            config: Value::array($config),
+            container: Assert::isInstanceOf($container, ServiceLocatorInterface::class),
+            config: $config,
         );
     }
 }

@@ -10,7 +10,7 @@ use Jield\Mvc\Controller\Plugin\AbstractPlugin;
 use Jield\Mvc\Exception\RuntimeException;
 use Jield\Mvc\InjectApplicationEventInterface;
 use Jield\Mvc\MvcEvent;
-use Jield\Stdlib\Value;
+use Webmozart\Assert\Assert;
 
 class RouteParam extends AbstractPlugin
 {
@@ -25,10 +25,9 @@ class RouteParam extends AbstractPlugin
         }
 
         if ($controller instanceof AbstractController) {
-            /** @var mixed $parameterData */
             $parameterData = $controller->getEvent()->getParam(name: 'LaminasContentNegotiationParameterData');
             if ($parameterData instanceof ParameterDataContainer) {
-                return $parameterData->getRouteParam(name: Value::string($param), default: $default);
+                return $parameterData->getRouteParam(name: Assert::string($param), default: $default);
             }
         }
 
@@ -37,9 +36,6 @@ class RouteParam extends AbstractPlugin
             return $default;
         }
 
-        return Value::present($event->getRouteMatch())->getParam(
-            name: Value::string($param),
-            default: $default,
-        );
+        return $event->getRouteMatch()->getParam(name: Assert::string($param), default: $default);
     }
 }

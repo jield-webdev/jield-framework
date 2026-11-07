@@ -6,7 +6,6 @@ namespace Jield\ModuleManager\Listener;
 
 use Jield\ModuleManager\Loader\ModuleAutoloader;
 use Jield\ModuleManager\ModuleEvent;
-use Jield\Stdlib\Value;
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\EventManager\ListenerAggregateInterface;
 use Override;
@@ -61,7 +60,7 @@ class ModuleLoaderListener extends AbstractListener implements ListenerAggregate
     public function detach(EventManagerInterface $events): void
     {
         foreach ($this->callbacks as $index => $callback) {
-            $events->detach(listener: Value::callback($callback));
+            $events->detach(listener: $callback);
 
             unset($this->callbacks[$index]);
         }
@@ -78,7 +77,7 @@ class ModuleLoaderListener extends AbstractListener implements ListenerAggregate
     /** @return array */
     protected function getCachedConfig(): array
     {
-        return Value::array(include $this->options->getModuleMapCacheFile());
+        return include $this->options->getModuleMapCacheFile();
     }
 
     /**

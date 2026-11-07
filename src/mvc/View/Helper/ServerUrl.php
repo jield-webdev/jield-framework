@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Jield\Mvc\View\Helper;
 
-use Jield\Stdlib\Value;
+use Webmozart\Assert\Assert;
+
 use function array_pop;
 use function explode;
 use function in_array;
@@ -135,7 +136,9 @@ class ServerUrl extends AbstractHelper
                 $this->setPort(443);
                 return;
             }
-            $this->setPort(Value::numericPort($_SERVER['SERVER_PORT']));
+            $port = $_SERVER['SERVER_PORT'];
+            Assert::true(is_int($port) || is_string($port) && is_numeric($port));
+            $this->setPort($port);
         }
     }
 
@@ -181,14 +184,14 @@ class ServerUrl extends AbstractHelper
         }
 
         $host = $_SERVER['HTTP_X_FORWARDED_HOST'];
-        if (str_contains(Value::string($host), ',')) {
-            $hosts = explode(',', Value::string($host));
+        if (str_contains($host, ',')) {
+            $hosts = explode(',', $host);
             $host = trim(array_pop($hosts));
         }
         if (empty($host)) {
             return false;
         }
-        $this->setHost(Value::string($host));
+        $this->setHost(Assert::string($host));
 
         return true;
     }
@@ -209,7 +212,8 @@ class ServerUrl extends AbstractHelper
         }
 
         $port = $_SERVER['HTTP_X_FORWARDED_PORT'];
-        $this->setPort(Value::numericPort($port));
+        Assert::true(is_int($port) || is_string($port) && is_numeric($port));
+        $this->setPort($port);
 
         return true;
     }

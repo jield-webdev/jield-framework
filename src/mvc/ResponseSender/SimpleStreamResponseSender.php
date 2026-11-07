@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Jield\Mvc\ResponseSender;
 
-use Jield\Stdlib\Value;
 use Laminas\Http\Response\Stream;
+use Webmozart\Assert\Assert;
 
 use function fpassthru;
 
@@ -21,7 +21,7 @@ class SimpleStreamResponseSender extends AbstractResponseSender
         if ($event->contentSent()) {
             return $this;
         }
-        $response = Value::instance($event->getResponse(), Stream::class);
+        $response = Assert::isInstanceOf($event->getResponse(), Stream::class);
         $stream = $response->getStream();
         fpassthru($stream);
         $event->setContentSent();

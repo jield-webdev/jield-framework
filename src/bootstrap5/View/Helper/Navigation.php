@@ -12,6 +12,7 @@ use Laminas\Navigation\AbstractContainer;
 use Laminas\Navigation\Navigation as NavigationContainer;
 use Laminas\View\HelperPluginManager;
 use Psr\Container\ContainerInterface;
+use Webmozart\Assert\Assert;
 
 use function is_string;
 
@@ -54,12 +55,8 @@ final class Navigation
      */
     public function __call(string $name, array $arguments): mixed
     {
-        $proxy = Service::get(
-            $this->services,
-            HelperPluginManager::class,
-            'ViewHelperManager',
-        )->get('navigation');
-        $proxy = Value::instance($proxy, \Jield\Mvc\Navigation\View\Navigation::class);
+        $proxy = Service::get($this->services, HelperPluginManager::class, 'ViewHelperManager')->get('navigation');
+        $proxy = Assert::isInstanceOf($proxy, \Jield\Mvc\Navigation\View\Navigation::class);
         $proxy($this->resolveContainer($this->container));
 
         return Value::call($proxy, $name === 'lbs5menu' ? 'menu' : $name, $arguments);
@@ -73,18 +70,12 @@ final class Navigation
 
         if (is_string($container)) {
             /** @var AbstractContainer $resolved */
-            return Value::nullableInstance(
-                $this->services->get($container),
-                \Laminas\Navigation\AbstractContainer::class,
-            );
+            return $this->services->get($container);
         }
 
         if ($this->services->has('navigation')) {
             /** @var AbstractContainer $resolved */
-            return Value::nullableInstance(
-                $this->services->get('navigation'),
-                \Laminas\Navigation\AbstractContainer::class,
-            );
+            return $this->services->get('navigation');
         }
 
         if ($this->services->has(NavigationContainer::class)) {
@@ -94,10 +85,7 @@ final class Navigation
 
         if ($this->services->has('Navigation')) {
             /** @var AbstractContainer $resolved */
-            return Value::nullableInstance(
-                $this->services->get('Navigation'),
-                \Laminas\Navigation\AbstractContainer::class,
-            );
+            return $this->services->get('Navigation');
         }
 
         return null;

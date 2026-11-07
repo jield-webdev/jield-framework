@@ -89,7 +89,7 @@ class ServiceManagerConfig
             ): SharedEventManager => new SharedEventManager(),
         );
 
-        $this->config['initializers'] = ArrayUtils::merge(Value::array($this->config['initializers']), [
+        $this->config['initializers'] = ArrayUtils::merge($this->config['initializers'], [
             'EventManagerAwareInitializer' => static function (ContainerInterface $container, mixed $instance): void {
                 if (!$instance instanceof EventManagerAwareInterface) {
                     return;

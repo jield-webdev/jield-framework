@@ -4,13 +4,12 @@ declare(strict_types=1);
 
 namespace Jield\ApiTools\MvcAuth\Factory;
 
-use Jield\Stdlib\Value;
 use Laminas\Authentication\Adapter\Http as HttpAuth;
 use Laminas\Authentication\Adapter\Http\ApacheResolver;
 use Laminas\Authentication\Adapter\Http\FileResolver;
-use Laminas\Authentication\Adapter\Http\ResolverInterface;
 use Laminas\ServiceManager\Exception\ServiceNotCreatedException;
 use Psr\Container\ContainerInterface;
+use Webmozart\Assert\Assert;
 
 use function array_merge;
 use function implode;
@@ -56,7 +55,7 @@ final class HttpAdapterFactory
         }
 
         $httpAdapter = new HttpAuth(config: array_merge($config, [
-            'accept_schemes' => implode(separator: ' ', array: Value::scalars($config['accept_schemes'])),
+            'accept_schemes' => implode(separator: ' ', array: $config['accept_schemes']),
         ]));
 
         if (in_array(needle: 'basic', haystack: $config['accept_schemes'], strict: true)) {
@@ -64,16 +63,11 @@ final class HttpAdapterFactory
                 isset($config['basic_resolver_factory'])
                 && self::containerHasKey(container: $container, key: $config['basic_resolver_factory'])
             ) {
-                $httpAdapter->setBasicResolver(resolver: Value::instance(
-                    Value::present($container)->get(Value::string(
-                        $config['basic_resolver_factory'],
-                    )),
-                    ResolverInterface::class,
+                $httpAdapter->setBasicResolver(resolver: Assert::notNull($container)->get(
+                    $config['basic_resolver_factory'],
                 ));
             } elseif (isset($config['htpasswd'])) {
-                $httpAdapter->setBasicResolver(
-                    resolver: new ApacheResolver(path: Value::string($config['htpasswd'])),
-                );
+                $httpAdapter->setBasicResolver(resolver: new ApacheResolver(path: Assert::string($config['htpasswd'])));
             }
         }
 
@@ -82,16 +76,11 @@ final class HttpAdapterFactory
                 isset($config['digest_resolver_factory'])
                 && self::containerHasKey(container: $container, key: $config['digest_resolver_factory'])
             ) {
-                $httpAdapter->setDigestResolver(resolver: Value::instance(
-                    Value::present($container)->get(Value::string(
-                        $config['digest_resolver_factory'],
-                    )),
-                    ResolverInterface::class,
+                $httpAdapter->setDigestResolver(resolver: Assert::notNull($container)->get(
+                    $config['digest_resolver_factory'],
                 ));
             } elseif (isset($config['htdigest'])) {
-                $httpAdapter->setDigestResolver(
-                    resolver: new FileResolver(path: Value::string($config['htdigest'])),
-                );
+                $httpAdapter->setDigestResolver(resolver: new FileResolver(path: Assert::string($config['htdigest'])));
             }
         }
 

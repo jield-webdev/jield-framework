@@ -6,11 +6,11 @@ namespace DoctrineModule\Service\Authentication;
 
 use BadMethodCallException;
 use DoctrineModule\Service\AbstractFactory;
-use Jield\Stdlib\Value;
 use Laminas\Authentication\Adapter\AdapterInterface;
 use Laminas\Authentication\AuthenticationService;
 use Laminas\Authentication\Storage\StorageInterface;
 use Psr\Container\ContainerInterface;
+use Webmozart\Assert\Assert;
 
 /**
  * Factory to create authentication service object.
@@ -26,8 +26,14 @@ final class AuthenticationServiceFactory extends AbstractFactory
         ?array $options = null,
     ): AuthenticationService {
         return new AuthenticationService(
-            storage: Value::instance($container->get('doctrine.authenticationstorage.' . $this->getName()), StorageInterface::class),
-            adapter: Value::instance($container->get('doctrine.authenticationadapter.' . $this->getName()), AdapterInterface::class),
+            storage: Assert::isInstanceOf(
+                $container->get('doctrine.authenticationstorage.' . $this->getName()),
+                StorageInterface::class,
+            ),
+            adapter: Assert::isInstanceOf(
+                $container->get('doctrine.authenticationadapter.' . $this->getName()),
+                AdapterInterface::class,
+            ),
         );
     }
 

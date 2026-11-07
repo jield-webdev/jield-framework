@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Jield\ApiTools\OAuth2\Factory;
 
 use Jield\ApiTools\OAuth2\Controller\Exception;
-use Jield\Stdlib\Value;
 use OAuth2\GrantType\AuthorizationCode;
 use OAuth2\GrantType\ClientCredentials;
 use OAuth2\GrantType\JwtBearer;
@@ -18,6 +17,7 @@ use OAuth2\Storage\JwtBearerInterface;
 use OAuth2\Storage\RefreshTokenInterface;
 use OAuth2\Storage\UserCredentialsInterface;
 use Psr\Container\ContainerInterface;
+use Webmozart\Assert\Assert;
 
 use function array_merge;
 use function is_array;
@@ -57,26 +57,20 @@ class OAuth2ServerInstanceFactory
 
         $storage = [];
 
-        /** @var mixed $storagesService */
         foreach ($storagesServices as $storageKey => $storagesService) {
-            $storage[$storageKey] = $this->services->get(Value::string($storagesService));
+            $storage[$storageKey] = $this->services->get($storagesService);
         }
 
-        /** @var mixed $enforceState */
         $enforceState = $config['enforce_state'] ?? true;
-        /** @var mixed $allowImplicit */
         $allowImplicit = $config['allow_implicit'] ?? false;
-        /** @var mixed $accessLifetime */
         $accessLifetime = $config['access_lifetime'] ?? 3600;
-        /** @var mixed $audience */
         $audience = $config['audience'] ?? '';
-        /** @var mixed $options */
         $options = $config['options'] ?? [];
         $options = array_merge([
             'enforce_state' => $enforceState,
             'allow_implicit' => $allowImplicit,
             'access_lifetime' => $accessLifetime,
-        ], Value::array($options));
+        ], Assert::isArray($options));
 
         // Pass a storage object or array of storage objects to the OAuth2 server class
         $server = new OAuth2Server(storage: $storage, config: $options);
@@ -90,7 +84,7 @@ class OAuth2ServerInstanceFactory
 
             // Add the "Client Credentials" grant type (it is the simplest of the grant types)
             $server->addGrantType(grantType: new ClientCredentials(
-                storage: Value::instance(
+                storage: Assert::isInstanceOf(
                     $server->getStorage(name: 'client_credentials'),
                     ClientCredentialsInterface::class,
                 ),
@@ -101,7 +95,7 @@ class OAuth2ServerInstanceFactory
         if (isset($availableGrantTypes['authorization_code']) && $availableGrantTypes['authorization_code'] === true) {
             // Add the "Authorization Code" grant type (this is where the oauth magic happens)
             $server->addGrantType(
-                grantType: new AuthorizationCode(storage: Value::instance(
+                grantType: new AuthorizationCode(storage: Assert::isInstanceOf(
                     $server->getStorage(name: 'authorization_code'),
                     AuthorizationCodeInterface::class,
                 )),
@@ -111,7 +105,7 @@ class OAuth2ServerInstanceFactory
         if (isset($availableGrantTypes['password']) && $availableGrantTypes['password'] === true) {
             // Add the "User Credentials" grant type
             $server->addGrantType(
-                grantType: new UserCredentials(storage: Value::instance(
+                grantType: new UserCredentials(storage: Assert::isInstanceOf(
                     $server->getStorage(name: 'user_credentials'),
                     UserCredentialsInterface::class,
                 )),
@@ -121,11 +115,8 @@ class OAuth2ServerInstanceFactory
         if (isset($availableGrantTypes['jwt']) && $availableGrantTypes['jwt'] === true) {
             // Add the "JWT Bearer" grant type
             $server->addGrantType(grantType: new JwtBearer(
-                storage: Value::instance(
-                    $server->getStorage(name: 'jwt_bearer'),
-                    JwtBearerInterface::class,
-                ),
-                audience: Value::string($audience),
+                storage: Assert::isInstanceOf($server->getStorage(name: 'jwt_bearer'), JwtBearerInterface::class),
+                audience: Assert::string($audience),
             ));
         }
 
@@ -141,10 +132,7 @@ class OAuth2ServerInstanceFactory
 
             // Add the "Refresh Token" grant type
             $server->addGrantType(grantType: new RefreshToken(
-                storage: Value::instance(
-                    $server->getStorage(name: 'refresh_token'),
-                    RefreshTokenInterface::class,
-                ),
+                storage: Assert::isInstanceOf($server->getStorage(name: 'refresh_token'), RefreshTokenInterface::class),
                 config: $refreshOptions,
             ));
         }

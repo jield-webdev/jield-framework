@@ -15,6 +15,7 @@ use Laminas\InputFilter\InputFilterPluginManager;
 use Laminas\ServiceManager\Exception\ServiceNotCreatedException;
 use Laminas\ServiceManager\Factory\AbstractFactoryInterface;
 use Psr\Container\ContainerInterface;
+use Webmozart\Assert\Assert;
 
 use function is_array;
 use function is_subclass_of;
@@ -42,33 +43,19 @@ final class BuilderAbstractFactory implements AbstractFactoryInterface
 
         // setup a form factory which can use custom form elements
         $annotationBuilder = Value::instantiate($requestedName);
-        $eventManager = Service::get(
-            $container,
-            \Laminas\EventManager\EventManagerInterface::class,
-            'EventManager',
-        );
+        $eventManager = Service::get($container, \Laminas\EventManager\EventManagerInterface::class, 'EventManager');
         Value::call($annotationBuilder, 'setEventManager', [$eventManager]);
 
-        $this->injectFactory(
-            Value::instance(
-                Value::call($annotationBuilder, 'getFormFactory'),
-                \Jield\Form\Factory::class,
-            ),
-            $container,
-        );
+        $this->injectFactory(Value::call($annotationBuilder, 'getFormFactory'), $container);
 
         $config = $this->marshalConfig($container);
         if (isset($config['preserve_defined_order'])) {
-            Value::call(
-                $annotationBuilder,
-                'setPreserveDefinedOrder',
-                [$config['preserve_defined_order']],
-            );
+            Value::call($annotationBuilder, 'setPreserveDefinedOrder', [$config['preserve_defined_order']]);
         }
 
         $this->injectListeners($config, $eventManager, $container);
 
-        return Value::instance($annotationBuilder, \Jield\Form\Annotation\AbstractBuilder::class);
+        return Assert::isInstanceOf($annotationBuilder, \Jield\Form\Annotation\AbstractBuilder::class);
     }
 
     /**
@@ -97,7 +84,6 @@ final class BuilderAbstractFactory implements AbstractFactoryInterface
         }
 
         $config = $container->get('config');
-        /** @var mixed $config */
         $config = $config['form_annotation_builder'] ?? [];
 
         return is_array($config) ? $config : [];
@@ -120,14 +106,11 @@ final class BuilderAbstractFactory implements AbstractFactoryInterface
             return;
         }
 
-        foreach (Value::iterable($config['listeners']) as $listenerName) {
-            $listener = $container->get(Value::string($listenerName));
+        foreach (Assert::isIterable($config['listeners']) as $listenerName) {
+            $listener = $container->get($listenerName);
 
             if (!$listener instanceof ListenerAggregateInterface) {
-                throw new ServiceNotCreatedException(sprintf(
-                    'Invalid event listener (%s) provided',
-                    Value::scalar($listenerName),
-                ));
+                throw new ServiceNotCreatedException(sprintf('Invalid event listener (%s) provided', $listenerName));
             }
 
             $listener->attach($events);

@@ -14,9 +14,7 @@ class AuthenticatedIdentity extends Role implements IdentityInterface
         protected mixed $identity,
     ) {
         parent::__construct(
-            is_array($identity) && isset($identity['id'])
-                ? Value::stringify($identity['id'])
-                : 'authenticated',
+            is_array($identity) && isset($identity['id']) ? Value::stringify($identity['id']) : 'authenticated',
         );
     }
 

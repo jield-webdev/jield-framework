@@ -7,13 +7,13 @@ namespace Jield\ApiTools\ContentNegotiation;
 use Jield\ApiTools\ApiProblem\ApiProblem;
 use Jield\ApiTools\ApiProblem\ApiProblemResponse;
 use Jield\Mvc\MvcEvent;
-use Jield\Stdlib\Value;
 use Laminas\EventManager\AbstractListenerAggregate;
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\Http\Header\HeaderInterface;
 use Laminas\Http\Headers;
 use Laminas\Http\Request as HttpRequest;
 use Override;
+use Webmozart\Assert\Assert;
 
 use function array_key_exists;
 use function in_array;
@@ -56,9 +56,7 @@ class HttpMethodOverrideListener extends AbstractListenerAggregate
             return null;
         }
 
-        if (!Value::instance($request->getHeaders(), Headers::class)->has(
-            'X-HTTP-Method-Override',
-        )) {
+        if (!Assert::isInstanceOf($request->getHeaders(), Headers::class)->has('X-HTTP-Method-Override')) {
             return null;
         }
 
@@ -72,13 +70,10 @@ class HttpMethodOverrideListener extends AbstractListenerAggregate
         }
 
         $header = $request->getHeader(name: 'X-HTTP-Method-Override');
-        $overrideMethod = Value::instance(
-            $header,
-            HeaderInterface::class,
-        )->getFieldValue();
+        $overrideMethod = Assert::isInstanceOf($header, HeaderInterface::class)->getFieldValue();
         $allowedMethods = $this->httpMethodOverride[$method];
 
-        if (!in_array(needle: $overrideMethod, haystack: Value::array($allowedMethods), strict: true)) {
+        if (!in_array(needle: $overrideMethod, haystack: $allowedMethods, strict: true)) {
             return new ApiProblemResponse(apiProblem: new ApiProblem(status: 400, detail: sprintf(
                 'Illegal override method %s in X-HTTP-Method-Override header',
                 $overrideMethod,

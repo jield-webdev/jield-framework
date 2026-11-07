@@ -6,7 +6,6 @@ namespace Jield\ErrorHandler;
 
 use ArrayLookup\AtLeast;
 use ErrorException;
-use Jield\ErrorHandler\Listener\Mvc;
 use Jield\Mvc\MvcEvent;
 use Jield\Stdlib\Value;
 use Webmozart\Assert\Assert;
@@ -46,11 +45,7 @@ trait HeroTrait
             $this->mvcEvent = $args[0];
         }
 
-        if (
-            !Value::accessible(
-                $this->getErrorHandlerConfiguration()['display-settings'],
-            )['display_errors']
-        ) {
+        if (!$this->getErrorHandlerConfiguration()['display-settings']['display_errors']) {
             error_reporting(error_level: E_ALL);
             ini_set(option: 'display_errors', value: '0');
         }
@@ -120,10 +115,10 @@ trait HeroTrait
         );
 
         if (AtLeast::once(
-            data: Value::array(Value::path($this->getErrorHandlerConfiguration(), [
+            data: Value::path($this->getErrorHandlerConfiguration(), [
                 'display-settings',
                 'exclude-php-errors',
-            ])),
+            ]),
             filter: $filter,
         )) {
             return;

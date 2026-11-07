@@ -22,11 +22,7 @@ class RenameUploadFilterFactory implements FactoryInterface
         $filter = new RenameUpload(targetOrOptions: $options);
 
         if ($container->has('Request')) {
-            $filter->setRequest(request: Service::get(
-                $container,
-                RequestInterface::class,
-                'Request',
-            ));
+            $filter->setRequest(request: Service::get($container, RequestInterface::class, 'Request'));
         }
 
         return $filter;

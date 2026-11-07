@@ -23,25 +23,16 @@ class ConsoleService
         $services = Value::path($container->get('config'), ['search', 'cores']);
 
         //Do an init check
-        /** @var mixed $key
-         * @var mixed $service
-         */
-        foreach (Value::iterable($services ?? []) as $key => $service) {
-            if (!$this->container->has(Value::string(
-                Value::accessible($service)['service'],
-            ))) {
-                throw new InvalidArgumentException(message: sprintf(
-                    'Service %s not found',
-                    Value::scalar(Value::path($service, ['service'])),
-                ));
+        foreach (Assert::isIterable($services ?? []) as $key => $service) {
+            if (!$this->container->has($service['service'])) {
+                throw new InvalidArgumentException(message: sprintf('Service %s not found', Value::path($service, [
+                    'service',
+                ])));
             }
 
-            Assert::isInstanceOf(
-                value: Value::instantiate(Value::accessible($service)['entity']),
-                class: HasSearchInterface::class,
-            );
+            Assert::isInstanceOf(value: Value::instantiate($service['entity']), class: HasSearchInterface::class);
 
-            $this->services[Value::key($key)] = $service;
+            $this->services[$key] = $service;
         }
     }
 
@@ -54,15 +45,11 @@ class ConsoleService
         if ($index === 'all') {
             foreach ($this->services as $service) {
                 /** @var AbstractSearchService $serviceInstance */
-                $serviceInstance = $this->container->get(Value::string(
-                    Value::accessible($service)['service'],
-                ));
+                $serviceInstance = $this->container->get($service['service']);
                 /** @var HasSearchInterface $entity */
-                $entity = Value::instantiate(Value::accessible($service)['entity']);
+                $entity = Value::instantiate($service['entity']);
 
-                /** @var mixed $limit */
                 $limit = $service['limit'] ?? 50;
-                /** @var mixed $criteria */
                 $criteria = $service['criteria'] ?? [];
 
                 $serviceInstance->updateCollection(
@@ -70,8 +57,8 @@ class ConsoleService
                     entity: $entity,
                     clearIndex: $clearIndex,
                     shallow: $shallow,
-                    limit: Value::int($limit),
-                    criteria: Value::array($criteria),
+                    limit: $limit,
+                    criteria: $criteria,
                 );
             }
             return;
@@ -87,15 +74,11 @@ class ConsoleService
 
         //We have the service, so get it
         /** @var AbstractSearchService $serviceInstance */
-        $serviceInstance = $this->container->get(Value::string(
-            Value::accessible($this->services[$index])['service'],
-        ));
+        $serviceInstance = $this->container->get($this->services[$index]['service']);
         /** @var HasSearchInterface $entity */
-        $entity = Value::instantiate(Value::accessible($this->services[$index])['entity']);
+        $entity = Value::instantiate($this->services[$index]['entity']);
 
-        /** @var mixed $limit */
         $limit = $this->services[$index]['limit'] ?? 50;
-        /** @var mixed $criteria */
         $criteria = $this->services[$index]['criteria'] ?? [];
 
         $serviceInstance->updateCollection(
@@ -103,8 +86,8 @@ class ConsoleService
             entity: $entity,
             clearIndex: $clearIndex,
             shallow: $shallow,
-            limit: Value::int($limit),
-            criteria: Value::array($criteria),
+            limit: $limit,
+            criteria: $criteria,
         );
     }
 
@@ -113,27 +96,17 @@ class ConsoleService
         foreach ($this->services as $service) {
             if ($service['skip_sync'] ?? false) {
                 $output->writeln(messages: '');
-                $output->writeln(messages: sprintf(
-                    '<comment>Skipping sync for %s</comment>',
-                    Value::scalar(Value::accessible($service)['service']),
-                ));
+                $output->writeln(messages: sprintf('<comment>Skipping sync for %s</comment>', $service['service']));
                 continue;
             }
 
             /** @var AbstractSearchService $serviceInstance */
-            $serviceInstance = $this->container->get(Value::string(
-                Value::accessible($service)['service'],
-            ));
+            $serviceInstance = $this->container->get($service['service']);
             /** @var HasSearchInterface $entity */
-            $entity = Value::instantiate(Value::accessible($service)['entity']);
-            /** @var mixed $criteria */
+            $entity = Value::instantiate($service['entity']);
             $criteria = $service['criteria'] ?? [];
 
-            $serviceInstance->syncIndex(
-                output: $output,
-                entity: $entity,
-                criteria: Value::array($criteria),
-            );
+            $serviceInstance->syncIndex(output: $output, entity: $entity, criteria: $criteria);
         }
     }
 
@@ -141,11 +114,9 @@ class ConsoleService
     {
         foreach ($this->services as $service) {
             /** @var AbstractSearchService $serviceInstance */
-            $serviceInstance = $this->container->get(Value::string(
-                Value::accessible($service)['service'],
-            ));
+            $serviceInstance = $this->container->get($service['service']);
             /** @var HasSearchInterface $entity */
-            $entity = Value::instantiate(Value::accessible($service)['entity']);
+            $entity = Value::instantiate($service['entity']);
 
             $serviceInstance->testIndex(output: $output, entity: $entity, clearIndex: $clearIndex);
         }

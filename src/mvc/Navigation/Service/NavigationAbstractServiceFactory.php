@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Jield\Mvc\Navigation\Service;
 
 use ArrayAccess;
-use Jield\Stdlib\Value;
 use Laminas\Navigation\Navigation;
 use Laminas\ServiceManager\Factory\AbstractFactoryInterface;
 use Psr\Container\ContainerInterface;
@@ -93,7 +92,7 @@ final class NavigationAbstractServiceFactory implements AbstractFactoryInterface
         }
 
         $config = $config[self::CONFIG_KEY];
-        $this->config = Value::stringKeyedArray($config);
+        $this->config = $config;
 
         return $this->config;
     }
@@ -140,11 +139,11 @@ final class NavigationAbstractServiceFactory implements AbstractFactoryInterface
         $withoutPrefix = $this->getConfigName($name);
 
         if (isset($config[$withoutPrefix])) {
-            return Value::maps($config[$withoutPrefix]);
+            return $config[$withoutPrefix];
         }
 
         if (isset($config[strtolower($withoutPrefix)])) {
-            return Value::maps($config[strtolower($withoutPrefix)]);
+            return $config[strtolower($withoutPrefix)];
         }
 
         return [];

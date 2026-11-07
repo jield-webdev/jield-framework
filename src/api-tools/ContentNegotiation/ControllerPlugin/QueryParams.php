@@ -15,25 +15,21 @@ class QueryParams extends AbstractPlugin
     {
         $controller = $this->getController();
         if ($controller instanceof AbstractController) {
-            /** @var mixed $parameterData */
             $parameterData = $controller->getEvent()->getParam(name: 'LaminasContentNegotiationParameterData');
             if ($parameterData instanceof ParameterDataContainer) {
                 return $parameterData->getQueryParams();
             }
         }
 
-        if (!method_exists(object_or_class: Value::objectOrString($controller), method: 'getRequest')) {
+        if (!method_exists(object_or_class: $controller, method: 'getRequest')) {
             return [];
         }
 
         $request = Value::call($controller, 'getRequest');
-        if (!method_exists(object_or_class: Value::objectOrString($request), method: 'getQuery')) {
+        if (!method_exists(object_or_class: $request, method: 'getQuery')) {
             return [];
         }
 
-        return Value::array(Value::call(
-            Value::call($request, 'getQuery'),
-            'toArray',
-        ));
+        return Value::call(Value::call($request, 'getQuery'), 'toArray');
     }
 }

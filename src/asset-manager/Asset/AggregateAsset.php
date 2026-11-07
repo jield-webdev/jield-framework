@@ -7,8 +7,8 @@ namespace Jield\AssetManager\Asset;
 use Assetic\Asset\BaseAsset;
 use Assetic\Contracts\Filter\FilterInterface;
 use Jield\AssetManager\Exception;
-use Jield\Stdlib\Value;
 use Override;
+use Webmozart\Assert\Assert;
 
 /**
  * Represents a concatented string asset.
@@ -62,7 +62,7 @@ class AggregateAsset extends BaseAsset implements AssetInterface
                 ));
             }
 
-            $this->setLastModified(lastModified: Value::int(max(
+            $this->setLastModified(lastModified: Assert::integer(max(
                 $asset->getLastModified(),
                 $this->getLastModified(),
             )));

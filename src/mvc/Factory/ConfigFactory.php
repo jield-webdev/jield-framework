@@ -22,17 +22,9 @@ class ConfigFactory implements FactoryInterface
      */
     public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): array
     {
-        $moduleManager = Service::get(
-            $container,
-            ModuleManager::class,
-            'ModuleManager',
-        );
+        $moduleManager = Service::get($container, ModuleManager::class, 'ModuleManager');
         $moduleManager->loadModules();
         $moduleParams = $moduleManager->getEvent()->getParams();
-        return Value::array(Value::call(
-            $moduleParams['configListener'],
-            'getMergedConfig',
-            [false],
-        ));
+        return Value::call($moduleParams['configListener'], 'getMergedConfig', [false]);
     }
 }

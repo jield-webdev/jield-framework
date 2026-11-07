@@ -8,8 +8,9 @@ use Jield\Form\Element\MultiCheckbox;
 use Jield\Form\ElementInterface;
 use Jield\Form\LabelAwareInterface;
 use Jield\Form\View\Helper;
-
 use Jield\Stdlib\Value;
+use Webmozart\Assert\Assert;
+
 use function array_key_exists;
 use function array_merge;
 use function count;
@@ -31,7 +32,7 @@ class FormMultiCheckbox extends Helper\FormMultiCheckbox
     {
         $name = static::getName(element: $element);
 
-        $options = Value::instance($element, \Jield\Form\Element\MultiCheckbox::class)->getValueOptions();
+        $options = Assert::isInstanceOf($element, \Jield\Form\Element\MultiCheckbox::class)->getValueOptions();
 
         $attributes = $element->getAttributes();
         $attributes['name'] = $name;
@@ -53,7 +54,7 @@ class FormMultiCheckbox extends Helper\FormMultiCheckbox
 
         if ($useHiddenElement) {
             $rendered =
-                $this->renderHiddenElement(element: Value::instance(
+                $this->renderHiddenElement(element: Assert::isInstanceOf(
                     $element,
                     \Jield\Form\Element\MultiCheckbox::class,
                 )) . $rendered;
@@ -100,8 +101,7 @@ class FormMultiCheckbox extends Helper\FormMultiCheckbox
                 isset($inputAttributes['selected'])
                 && $inputAttributes['type'] !== 'radio'
                 && Value::truthy($inputAttributes['selected']);
-            $disabled =
-                isset($inputAttributes['disabled']) && Value::truthy($inputAttributes['disabled']);
+            $disabled = isset($inputAttributes['disabled']) && Value::truthy($inputAttributes['disabled']);
 
             if (is_scalar(value: $optionSpec)) {
                 $optionSpec = [
@@ -124,12 +124,12 @@ class FormMultiCheckbox extends Helper\FormMultiCheckbox
             }
             if (isset($optionSpec['label_attributes'])) {
                 $labelAttributes = array_merge(
-                    Value::array($labelAttributes),
-                    Value::array($optionSpec['label_attributes']),
+                    Assert::isArray($labelAttributes),
+                    Assert::isArray($optionSpec['label_attributes']),
                 );
             }
             if (isset($optionSpec['attributes'])) {
-                $inputAttributes = array_merge($inputAttributes, Value::array($optionSpec['attributes']));
+                $inputAttributes = array_merge($inputAttributes, Assert::isArray($optionSpec['attributes']));
             }
 
             if (in_array(needle: $value, haystack: $selectedOptions, strict: true)) {
@@ -137,8 +137,7 @@ class FormMultiCheckbox extends Helper\FormMultiCheckbox
             }
 
             $elementId = md5(
-                string: (string) $element->getName() . Value::stringify($label)
-                    . Value::stringify($value),
+                string: (string) $element->getName() . Value::stringify($label) . Value::stringify($value),
             );
             $inputAttributes['class'] = 'form-check-input';
 
@@ -159,11 +158,10 @@ class FormMultiCheckbox extends Helper\FormMultiCheckbox
             );
 
             if (null !== ($translator = $this->getTranslator())) {
-                $label = $translator->translate(Value::string($label), $this->getTranslatorTextDomain());
+                $label = $translator->translate($label, $this->getTranslatorTextDomain());
             }
 
             if (!$element instanceof LabelAwareInterface || !$element->getLabelOption(key: 'disable_html_escape')) {
-                /** @var mixed $label */
                 $label = $escapeHtmlHelper(value: $label);
             }
 
@@ -175,22 +173,8 @@ class FormMultiCheckbox extends Helper\FormMultiCheckbox
             $inlineClass = '';
 
             $markup = match ($labelPosition) {
-                self::LABEL_PREPEND => sprintf(
-                    $this->template,
-                    $inlineClass,
-                    Value::scalar($label),
-                    $labelOpen,
-                    $input,
-                    $labelClose,
-                ),
-                default => sprintf(
-                    $this->template,
-                    $inlineClass,
-                    $input,
-                    $labelOpen,
-                    Value::scalar($label),
-                    $labelClose,
-                ),
+                self::LABEL_PREPEND => sprintf($this->template, $inlineClass, $label, $labelOpen, $input, $labelClose),
+                default => sprintf($this->template, $inlineClass, $input, $labelOpen, $label, $labelClose),
             };
 
             $combinedMarkup[] = $markup;

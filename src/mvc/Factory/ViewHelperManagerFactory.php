@@ -23,6 +23,7 @@ use Laminas\View\Helper\BasePath;
 use Laminas\View\Helper\Doctype;
 use Laminas\View\HelperPluginManager;
 use Psr\Container\ContainerInterface;
+use Webmozart\Assert\Assert;
 
 use function is_callable;
 
@@ -59,24 +60,18 @@ class ViewHelperManagerFactory extends AbstractPluginManagerFactory
             ContainerInterface $pluginContainer,
             mixed $helper,
         ) use ($container): void {
-            if (method_exists(Value::objectOrString($helper), 'setView')) {
-                Value::call($helper, 'setView', [Service::get(
-                    $container,
-                    PhpRenderer::class,
-                )]);
+            if (method_exists($helper, 'setView')) {
+                Value::call($helper, 'setView', [Service::get($container, PhpRenderer::class)]);
             }
-            if (method_exists(Value::objectOrString($helper), 'setTranslator')) {
-                Value::call($helper, 'setTranslator', [Service::get(
-                    $container,
-                    TranslatorInterface::class,
-                )]);
+            if (method_exists($helper, 'setTranslator')) {
+                Value::call($helper, 'setTranslator', [Service::get($container, TranslatorInterface::class)]);
             }
         });
         $plugins = parent::__invoke($container, $requestedName, $options);
 
         // Override plugin factories
         return $this->injectOverrideFactories(
-            Value::instance($plugins, \Laminas\View\HelperPluginManager::class),
+            Assert::isInstanceOf($plugins, \Laminas\View\HelperPluginManager::class),
             $container,
         );
     }
@@ -97,11 +92,7 @@ class ViewHelperManagerFactory extends AbstractPluginManagerFactory
             ServerUrl::class => static fn() => new ServerUrl(),
         ]]);
         $plugins->configure(['factories' => [
-            Identity::class =>
-                static fn() => new Identity(Service::get(
-                    $services,
-                    AuthenticationService::class,
-                )),
+            Identity::class => static fn() => new Identity(Service::get($services, AuthenticationService::class)),
         ]]);
         $plugins->configure(['factories' => [
             Translate::class => static fn() => new Translate(),
@@ -165,19 +156,17 @@ class ViewHelperManagerFactory extends AbstractPluginManagerFactory
     {
         return static function () use ($services): BasePath {
             $config = Configuration::get($services);
-            /** @var mixed $basePath */
             $basePath = $config['view_manager']['base_path'] ?? null;
-            /** @var mixed $basePath */
             $basePath = $config['view_helper_config']['base_path'] ?? $basePath;
 
-            $helper = new ViewHelper\BasePath(Value::nullableString($basePath));
+            $helper = new ViewHelper\BasePath($basePath);
             if ($basePath !== null) {
                 return $helper;
             }
 
             $request = Service::get($services, RequestInterface::class, 'Request');
             if (is_callable([$request, 'getBasePath'])) {
-                $helper->setBasePath(Value::string(Value::call($request, 'getBasePath')));
+                $helper->setBasePath(Value::call($request, 'getBasePath'));
             }
             return $helper;
         };
@@ -195,12 +184,10 @@ class ViewHelperManagerFactory extends AbstractPluginManagerFactory
     {
         return static function () use ($services): Doctype {
             $config = Configuration::get($services);
-            /** @var mixed $doctype */
             $doctype = $config['view_manager']['doctype'] ?? Doctype::DEFAULT_DOCTYPE;
-            /** @var mixed $doctype */
             $doctype = $config['view_helper_config']['doctype'] ?? $doctype;
 
-            return new ViewHelper\Doctype(Value::key($doctype));
+            return new ViewHelper\Doctype($doctype);
         };
     }
 }

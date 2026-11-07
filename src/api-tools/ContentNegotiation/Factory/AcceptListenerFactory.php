@@ -31,11 +31,7 @@ class AcceptListenerFactory
             return new AcceptableViewModelSelector();
         }
 
-        $plugins = Service::get(
-            $container,
-            PluginManager::class,
-            'ControllerPluginManager',
-        );
+        $plugins = Service::get($container, PluginManager::class, 'ControllerPluginManager');
         if (!$plugins->has('AcceptableViewModelSelector')) {
             return new AcceptableViewModelSelector();
         }

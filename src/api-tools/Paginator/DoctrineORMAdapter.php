@@ -34,11 +34,8 @@ class DoctrineORMAdapter extends AbstractDoctrinePaginator implements AdapterInt
     #[Override]
     public function getItems($offset, $itemCountPerPage): array
     {
-        if (
-            array_key_exists($offset, $this->cache)
-            && array_key_exists($itemCountPerPage, Value::array($this->cache[$offset]))
-        ) {
-            return Value::array($this->cache[$offset][$itemCountPerPage]);
+        if (array_key_exists($offset, $this->cache) && array_key_exists($itemCountPerPage, $this->cache[$offset])) {
+            return $this->cache[$offset][$itemCountPerPage];
         }
 
         $this->getQuery()->setFirstResult($offset);
@@ -49,13 +46,12 @@ class DoctrineORMAdapter extends AbstractDoctrinePaginator implements AdapterInt
         }
 
         $results = [];
-        /** @var mixed $result */
         foreach ($this->pageItems($offset, $itemCountPerPage) as $result) {
             $results[] = $this->provider->generateArray($result);
         }
 
         Value::setPath($this->cache, [$offset, $itemCountPerPage], $results);
 
-        return Value::array(Value::accessible($this->cache[$offset])[$itemCountPerPage]);
+        return $this->cache[$offset][$itemCountPerPage];
     }
 }

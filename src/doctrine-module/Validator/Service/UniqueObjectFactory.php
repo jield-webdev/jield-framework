@@ -7,6 +7,7 @@ namespace DoctrineModule\Validator\Service;
 use DoctrineModule\Validator\UniqueObject;
 use Jield\Stdlib\Value;
 use Psr\Container\ContainerInterface;
+use Webmozart\Assert\Assert;
 
 final class UniqueObjectFactory extends AbstractValidatorFactory
 {
@@ -19,14 +20,11 @@ final class UniqueObjectFactory extends AbstractValidatorFactory
     {
         $useContext = isset($options['use_context']) ? Value::truthy($options['use_context']) : false;
 
-        return new UniqueObject(options: $this->merge(
-            previousOptions: Value::array($options),
-            newOptions: [
-                'object_manager' => $this->getObjectManager(container: $container, options: $options),
-                'use_context' => $useContext,
-                'object_repository' => $this->getRepository(container: $container, options: $options),
-                'fields' => $this->getFields(options: Value::array($options)),
-            ],
-        ));
+        return new UniqueObject(options: $this->merge(previousOptions: Assert::isArray($options), newOptions: [
+            'object_manager' => $this->getObjectManager(container: $container, options: $options),
+            'use_context' => $useContext,
+            'object_repository' => $this->getRepository(container: $container, options: $options),
+            'fields' => $this->getFields(options: Assert::isArray($options)),
+        ]));
     }
 }

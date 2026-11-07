@@ -8,9 +8,8 @@ use Jield\Mvc\Router\RouteMatch;
 use Jield\Stdlib\Value;
 use Laminas\EventManager\AbstractListenerAggregate;
 use Laminas\EventManager\EventManagerInterface;
-use Laminas\Http\AbstractMessage;
-use Laminas\Http\Request;
 use Nyholm\Psr7\ServerRequest;
+use Webmozart\Assert\Assert;
 
 class RouteListener extends AbstractListenerAggregate
 {
@@ -37,26 +36,20 @@ class RouteListener extends AbstractListenerAggregate
      */
     public function onRoute(MvcEvent $event): mixed
     {
-        $request = Value::instance($event->getRequest(), \Laminas\Http\PhpEnvironment\Request::class);
+        $request = Assert::isInstanceOf($event->getRequest(), \Laminas\Http\PhpEnvironment\Request::class);
         $router = $event->getRouter();
         $routingRequest = new ServerRequest(
-            Value::string(
-                Value::instance($request, Request::class)->getMethod(),
-            ),
-            Value::instance($request, Request::class)->getUriString(),
-            Value::array(
-                Value::instance($request, AbstractMessage::class)
-                    ->getHeaders()
-                    ->toArray(),
-            ),
+            $request->getMethod(),
+            $request->getUriString(),
+            $request->getHeaders()->toArray(),
             $request->getContent(),
-            Value::string($request->getVersion()),
-            Value::array(Value::call($request->getServer(), 'toArray')),
+            $request->getVersion(),
+            Value::call($request->getServer(), 'toArray'),
         );
         $matched = $router->match($routingRequest);
         $routeMatch = $matched === null ? null : new RouteMatch($matched->getParams());
         if ($routeMatch !== null) {
-            $routeMatch->setMatchedRouteName(Value::present($matched)->getMatchedRouteName());
+            $routeMatch->setMatchedRouteName($matched->getMatchedRouteName());
         }
 
         if ($routeMatch instanceof RouteMatch) {
@@ -68,14 +61,7 @@ class RouteListener extends AbstractListenerAggregate
         $event->setError(Application::ERROR_ROUTER_NO_MATCH);
 
         $target = $event->getTarget();
-        $results = Value::call(
-            Value::call(
-                Value::present(Value::object($target)),
-                'getEventManager',
-            ),
-            'triggerEvent',
-            [$event],
-        );
+        $results = Value::call(Value::call(Assert::object($target), 'getEventManager'), 'triggerEvent', [$event]);
         if (!empty($results)) {
             return Value::call($results, 'last');
         }

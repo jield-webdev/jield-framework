@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace Jield\ApiTools\OAuth2\Factory;
 
 use Jield\ApiTools\OAuth2\Controller\AuthController;
-use Jield\ApiTools\OAuth2\Provider\UserId\UserIdProviderInterface;
-use Jield\Stdlib\Value;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use OAuth2\Server as OAuth2Server;
 use Override;
@@ -22,10 +20,7 @@ class AuthControllerFactory implements FactoryInterface
     {
         $authController = new AuthController(
             serverFactory: $this->getOAuth2ServerFactory(container: $container),
-            userIdProvider: Value::instance(
-                $container->get('Jield\ApiTools\OAuth2\Provider\UserId'),
-                UserIdProviderInterface::class,
-            ),
+            userIdProvider: $container->get('Jield\ApiTools\OAuth2\Provider\UserId'),
         );
 
         $authController->setApiProblemErrorResponse(apiProblemErrorResponse: $this->marshalApiProblemErrorResponse(
@@ -45,7 +40,7 @@ class AuthControllerFactory implements FactoryInterface
     {
         $oauth2ServerFactory = $container->get('Jield\ApiTools\OAuth2\Service\OAuth2Server');
         if (!$oauth2ServerFactory instanceof OAuth2Server) {
-            return Value::callback($oauth2ServerFactory);
+            return $oauth2ServerFactory;
         }
 
         return static fn() => $oauth2ServerFactory;

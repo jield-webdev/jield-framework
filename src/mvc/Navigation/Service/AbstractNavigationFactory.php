@@ -9,7 +9,6 @@ use Jield\Mvc\ApplicationInterface;
 use Jield\Mvc\Navigation\MvcPage;
 use Jield\Mvc\Router\RouteMatch;
 use Jield\Stdlib\Service;
-use Jield\Stdlib\Value;
 use Laminas\Http\Request;
 use Laminas\Navigation\Exception;
 use Laminas\Navigation\Exception\InvalidArgumentException;
@@ -71,9 +70,8 @@ abstract class AbstractNavigationFactory implements FactoryInterface
                 ));
             }
 
-            /** @var mixed $configuration */
             $configuration = $configuration['navigation'];
-            $navigation = Value::accessible($configuration)[$this->getName()];
+            $navigation = $configuration[$this->getName()];
             $pages = $this->getPagesFromConfig($navigation);
             $this->pages = $this->preparePages($container, $pages);
         }
@@ -116,7 +114,7 @@ abstract class AbstractNavigationFactory implements FactoryInterface
             throw new Exception\InvalidArgumentException('Invalid input, expected array or Traversable object');
         }
 
-        return Value::maps($config);
+        return $config;
     }
 
     /**
@@ -149,12 +147,7 @@ abstract class AbstractNavigationFactory implements FactoryInterface
             }
 
             if (isset($page['pages'])) {
-                $page['pages'] = $this->injectComponents(
-                    Value::maps($page['pages']),
-                    $routeMatch,
-                    $router,
-                    $request,
-                );
+                $page['pages'] = $this->injectComponents($page['pages'], $routeMatch, $router, $request);
             }
         }
 

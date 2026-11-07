@@ -15,23 +15,27 @@ final class DoctrineDbalHandler extends AbstractProcessingHandler
 {
     public function __construct(
         private readonly Connection $connection,
-        private readonly string     $table = 'application_log',
-        int|string|Level            $level = Level::Error,
-        bool                        $bubble = true,
+        private readonly string $table = 'application_log',
+        int|string|Level $level = Level::Error,
+        bool $bubble = true,
     ) {
-        $level = $level instanceof Level ? $level : (is_int($level)
-            ? Level::from($level)
-            : match (strtolower($level)) {
-                'debug' => Level::Debug,
-                'info' => Level::Info,
-                'notice' => Level::Notice,
-                'warning' => Level::Warning,
-                'error' => Level::Error,
-                'critical' => Level::Critical,
-                'alert' => Level::Alert,
-                'emergency' => Level::Emergency,
-                default => throw new UnhandledMatchError(sprintf('Unknown log level: %s', $level)),
-            });
+        $level = $level instanceof Level
+            ? $level
+            : (
+                is_int($level)
+                    ? Level::from($level)
+                    : match (strtolower($level)) {
+                        'debug' => Level::Debug,
+                        'info' => Level::Info,
+                        'notice' => Level::Notice,
+                        'warning' => Level::Warning,
+                        'error' => Level::Error,
+                        'critical' => Level::Critical,
+                        'alert' => Level::Alert,
+                        'emergency' => Level::Emergency,
+                        default => throw new UnhandledMatchError(sprintf('Unknown log level: %s', $level)),
+                    }
+            );
         parent::__construct($level, $bubble);
     }
 

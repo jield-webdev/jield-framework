@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Jield\Form;
 
 use Jield\Form\Element\CollectionInterface;
-use Jield\Stdlib\Value;
 use Laminas\Hydrator;
 use Laminas\Hydrator\HydratorAwareInterface;
 use Laminas\Hydrator\HydratorInterface;
@@ -13,6 +12,7 @@ use Laminas\Stdlib\ArrayUtils;
 use Laminas\Stdlib\PriorityList;
 use ReflectionClass;
 use Traversable;
+use Webmozart\Assert\Assert;
 
 use function array_key_exists;
 use function assert;
@@ -96,14 +96,12 @@ class Fieldset extends Element implements FieldsetInterface
         parent::setOptions(options: $options);
 
         if (isset($this->options['use_as_base_fieldset'])) {
-            $this->setUseAsBaseFieldset(useAsBaseFieldset: Value::bool(
-                $this->options['use_as_base_fieldset'],
-            ));
+            $this->setUseAsBaseFieldset(useAsBaseFieldset: $this->options['use_as_base_fieldset']);
         }
 
         if (isset($this->options['allowed_object_binding_class'])) {
             $this->setAllowedObjectBindingClass(
-                allowObjectBindingClass: Value::classString($this->options['allowed_object_binding_class']),
+                allowObjectBindingClass: $this->options['allowed_object_binding_class'],
             );
         }
 
@@ -236,17 +234,14 @@ class Fieldset extends Element implements FieldsetInterface
     /** @inheritDoc */
     public function setMessages(iterable $messages): static
     {
-        /** @var mixed $key
-         * @var mixed $messageSet
-         */
         foreach ($messages as $key => $messageSet) {
             if (!$this->has(elementOrFieldset: (string) $key)) {
-                $this->messages[Value::key($key)] = $messageSet;
+                $this->messages[$key] = $messageSet;
                 continue;
             }
 
             $element = $this->get(elementOrFieldset: (string) $key);
-            $element->setMessages(messages: Value::iterable($messageSet));
+            $element->setMessages(messages: $messageSet);
         }
 
         return $this;
@@ -320,7 +315,7 @@ class Fieldset extends Element implements FieldsetInterface
 
         foreach ($this->iterator as $name => $elementOrFieldset) {
             assert(assertion: $elementOrFieldset instanceof ElementInterface);
-            $valueExists = array_key_exists(key: $name, array: Value::array($data));
+            $valueExists = array_key_exists(key: $name, array: $data);
 
             if ($elementOrFieldset instanceof FieldsetInterface) {
                 if ($valueExists && is_iterable(value: $data[$name])) {
@@ -330,7 +325,7 @@ class Fieldset extends Element implements FieldsetInterface
 
                 if ($elementOrFieldset instanceof Element\CollectionInterface) {
                     if ($valueExists && null !== $data[$name]) {
-                        $elementOrFieldset->populateValues(data: Value::iterable($data[$name]));
+                        $elementOrFieldset->populateValues(data: $data[$name]);
                         continue;
                     }
 
@@ -455,10 +450,12 @@ class Fieldset extends Element implements FieldsetInterface
      */
     public function setHydratorByName(string $hydratorName): void
     {
-        $this->setHydrator(hydrator: Value::instance(
-            $this->getFormFactory()->getFormElementManager()->getHydratorFromName(hydratorName: $hydratorName),
-            \Laminas\Hydrator\HydratorInterface::class,
-        ));
+        $this->setHydrator(
+            hydrator: $this
+                ->getFormFactory()
+                ->getFormElementManager()
+                ->getHydratorFromName(hydratorName: $hydratorName),
+        );
     }
 
     /**
@@ -480,7 +477,7 @@ class Fieldset extends Element implements FieldsetInterface
                 $this->setHydrator(hydrator: new Hydrator\ArraySerializableHydrator());
             }
         }
-        return Value::instance($this->hydrator, \Laminas\Hydrator\HydratorInterface::class);
+        return Assert::isInstanceOf($this->hydrator, \Laminas\Hydrator\HydratorInterface::class);
     }
 
     /**
@@ -522,15 +519,10 @@ class Fieldset extends Element implements FieldsetInterface
                 $values[$name] = [];
             }
 
-            /** @var mixed $value */
             $value = $values[$name];
 
             if ($element instanceof FieldsetInterface && $element->allowValueBinding()) {
-                /** @var mixed $value */
-                $value = $element->bindValues(
-                    Value::array($value),
-                    Value::nullableArray(empty($validationGroup[$name]) ? null : $validationGroup[$name]),
-                );
+                $value = $element->bindValues($value, empty($validationGroup[$name]) ? null : $validationGroup[$name]);
             }
 
             // skip post values for disabled elements, get old value from object
@@ -576,7 +568,7 @@ class Fieldset extends Element implements FieldsetInterface
             return [];
         }
 
-        $values = $this->getHydrator()->extract(object: Value::object($this->object));
+        $values = $this->getHydrator()->extract(object: $this->object);
 
         // Recursively extract and populate values for nested fieldsets
         foreach ($this->fieldsets as $fieldset) {
@@ -585,10 +577,7 @@ class Fieldset extends Element implements FieldsetInterface
             if (isset($values[$name])) {
                 $object = $values[$name];
 
-                if (
-                    $fieldset instanceof Fieldset
-                    && $fieldset->allowObjectBinding(object: Value::arrayOrObject($object))
-                ) {
+                if ($fieldset instanceof Fieldset && $fieldset->allowObjectBinding(object: $object)) {
                     $fieldset->setObject(object: $object);
                     $values[$name] = $fieldset->extract();
                 }
@@ -612,19 +601,10 @@ class Fieldset extends Element implements FieldsetInterface
         $this->iterator = new PriorityList();
         $this->iterator->isLIFO(flag: false);
 
-        /** @var mixed $item */
         foreach ($items as $name => $item) {
-            /** @var mixed $elementOrFieldset */
-            $elementOrFieldset = clone Value::instance(
-                Value::accessible($item)['data'],
-                ElementInterface::class,
-            );
+            $elementOrFieldset = clone Assert::isInstanceOf($item['data'], ElementInterface::class);
 
-            $this->iterator->insert(
-                name: (string) $name,
-                value: $elementOrFieldset,
-                priority: Value::int(Value::accessible($item)['priority']),
-            );
+            $this->iterator->insert(name: (string) $name, value: $elementOrFieldset, priority: $item['priority']);
 
             if ($elementOrFieldset instanceof FieldsetInterface) {
                 $this->fieldsets[$name] = $elementOrFieldset;

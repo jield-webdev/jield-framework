@@ -10,6 +10,7 @@ use Jield\Mvc\MvcEvent;
 use Jield\Stdlib\Value;
 use Laminas\Http\Header\ContentType;
 use Laminas\Http\PhpEnvironment\Request;
+use Webmozart\Assert\Assert;
 
 use function array_key_exists;
 use function basename;
@@ -76,14 +77,11 @@ class ContentTypeListener
         $parameterData = new ParameterDataContainer();
 
         // route parameters:
-        $routeParams = Value::present($routeMatch)->getParams();
+        $routeParams = Assert::notNull($routeMatch)->getParams();
         $parameterData->setRouteParams(routeParams: $routeParams);
 
         // query parameters:
-        $parameterData->setQueryParams(queryParams: Value::array(Value::call(
-            $request->getQuery(),
-            'toArray',
-        )));
+        $parameterData->setQueryParams(queryParams: Value::call($request->getQuery(), 'toArray'));
 
         // body parameters:
         $bodyParams = [];
@@ -92,7 +90,6 @@ class ContentTypeListener
         switch ($request->getMethod()) {
             case $request::METHOD_POST:
                 if ($contentType && $contentType->match(matchAgainst: 'application/json')) {
-                    /** @var mixed $bodyParams */
                     $bodyParams = $this->decodeJson(json: $request->getContent());
                     break;
                 }
@@ -124,14 +121,12 @@ class ContentTypeListener
                 }
 
                 if ($contentType && $contentType->match(matchAgainst: 'application/json')) {
-                    /** @var mixed $bodyParams */
                     $bodyParams = $this->decodeJson(json: $content);
                     break;
                 }
 
                 // Try to assume JSON if content starts like JSON and no explicit Content-Type was provided
                 if (strlen(string: $content) > 0 && in_array(needle: $content[0], haystack: ['{', '['], strict: true)) {
-                    /** @var mixed $bodyParams */
                     $bodyParams = $this->decodeJson(json: $content);
                 }
 
@@ -148,7 +143,7 @@ class ContentTypeListener
             return $bodyParams;
         }
 
-        $parameterData->setBodyParams(bodyParams: Value::array($bodyParams));
+        $parameterData->setBodyParams(bodyParams: $bodyParams);
         $e->setParam(name: 'LaminasContentNegotiationParameterData', value: $parameterData);
         return null;
     }
@@ -165,28 +160,21 @@ class ContentTypeListener
         }
 
         foreach ($request->getFiles() as $fileInfo) {
-            if (
-                dirname(path: (string) Value::accessible($fileInfo)['tmp_name']) !== $this->uploadTmpDir
-            ) {
+            if (dirname(path: (string) $fileInfo['tmp_name']) !== $this->uploadTmpDir) {
                 // File was moved
                 continue;
             }
 
-            if (!preg_match(
-                pattern: '/^laminasc/',
-                subject: basename(path: (string) Value::accessible($fileInfo)['tmp_name']),
-            )) {
+            if (!preg_match(pattern: '/^laminasc/', subject: basename(path: (string) $fileInfo['tmp_name']))) {
                 // File was moved
                 continue;
             }
 
-            if (!file_exists(filename: Value::string(
-                Value::accessible($fileInfo)['tmp_name'],
-            ))) {
+            if (!file_exists(filename: $fileInfo['tmp_name'])) {
                 continue;
             }
 
-            unlink(filename: Value::string(Value::accessible($fileInfo)['tmp_name']));
+            unlink(filename: $fileInfo['tmp_name']);
         }
     }
 
@@ -214,11 +202,8 @@ class ContentTypeListener
 
         // Decode 'application/hal+json' to 'application/json' by merging _embedded into the array
         if ($isArray && isset($data['_embedded'])) {
-            /** @var mixed $key
-             * @var mixed $value
-             */
-            foreach (Value::iterable($data['_embedded']) as $key => $value) {
-                $data[Value::key($key)] = $value;
+            foreach (Assert::isIterable($data['_embedded']) as $key => $value) {
+                $data[$key] = $value;
             }
 
             unset($data['_embedded']);
@@ -233,14 +218,13 @@ class ContentTypeListener
             return $data;
         }
 
-        /** @var mixed $message */
         $message = array_key_exists(key: $error, array: $this->jsonErrors)
             ? $this->jsonErrors[$error]
             : 'Unknown error';
 
         return new ApiProblemResponse(apiProblem: new ApiProblem(status: 400, detail: sprintf(
             'JSON decoding error: %s',
-            Value::scalar($message),
+            $message,
         )));
     }
 
@@ -261,7 +245,6 @@ class ContentTypeListener
         }
 
         $this->uploadTmpDir = $uploadTmpDir;
-        /** @var mixed $events */
         $events = $target->getEventManager();
         Value::call($events, 'attach', ['finish', $this->onFinish(...), 1000]);
     }

@@ -11,7 +11,6 @@ use Jield\ModuleManager\Feature\DependencyIndicatorInterface;
 use Jield\Stdlib\Service;
 use Jield\Stdlib\Value;
 use Laminas\EventManager\EventInterface;
-use Laminas\EventManager\EventManagerInterface;
 use Laminas\ServiceManager\ServiceManager;
 
 final class Module implements ConfigProviderInterface, BootstrapListenerInterface, DependencyIndicatorInterface
@@ -28,10 +27,7 @@ final class Module implements ConfigProviderInterface, BootstrapListenerInterfac
         $sm = Value::call($app, 'getServiceManager');
 
         $setTitle = Service::get($sm, InjectJavascriptAndCss::class);
-        $setTitle->attach(events: Value::instance(
-            Value::call($app, 'getEventManager'),
-            EventManagerInterface::class,
-        ));
+        $setTitle->attach(events: Value::call($app, 'getEventManager'));
     }
 
     public function getModuleDependencies(): array

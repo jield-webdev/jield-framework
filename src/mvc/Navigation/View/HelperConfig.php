@@ -12,6 +12,7 @@ use Laminas\Stdlib\ArrayUtils;
 use Laminas\View\HelperPluginManager;
 use Psr\Container\ContainerInterface;
 use Traversable;
+use Webmozart\Assert\Assert;
 
 use function in_array;
 use function is_array;
@@ -75,7 +76,7 @@ class HelperConfig
     {
         if ($appContainer->has('config')) {
             $config = $appContainer->get('config');
-            $this->mergeHelpersFromConfiguration($config instanceof Traversable ? $config : Value::stringKeyedArray($config));
+            $this->mergeHelpersFromConfiguration($config instanceof Traversable ? $config : $config);
         }
 
         $this->injectNavigationDelegatorFactory();
@@ -95,7 +96,7 @@ class HelperConfig
     private function mergeConfig(array $config): void
     {
         if (isset($config['invokables'])) {
-            $config = $this->processInvokables(Value::stringMap($config['invokables']), $config);
+            $config = $this->processInvokables($config['invokables'], $config);
         }
 
         foreach ($config as $type => $services) {
@@ -132,7 +133,7 @@ class HelperConfig
             $navigationHelpers = iterator_to_array($navigationHelpers);
         }
 
-        $this->mergeConfig(Value::stringKeyedArray($navigationHelpers));
+        $this->mergeConfig($navigationHelpers);
     }
 
     /**
@@ -157,7 +158,7 @@ class HelperConfig
 
         unset($config['invokables']);
 
-        return Value::stringKeyedArray($config);
+        return $config;
     }
 
     /**
@@ -169,17 +170,13 @@ class HelperConfig
 
         if (
             isset($this->config['delegators'][NavigationHelper::class])
-            && in_array(
-                $factory,
-                Value::array($this->config['delegators'][NavigationHelper::class]),
-                true,
-            )
+            && in_array($factory, $this->config['delegators'][NavigationHelper::class], true)
         ) {
             // Already present.
             return;
         }
 
-        $delegators = Value::array($this->config['delegators'] ?? []);
+        $delegators = Assert::isArray($this->config['delegators'] ?? []);
         Value::setPath($delegators, [NavigationHelper::class, null], $factory);
         Value::setPath($delegators, ['laminasviewhelpernavigation', null], $factory);
         $this->config['delegators'] = $delegators;
@@ -205,14 +202,13 @@ class HelperConfig
             callable $callback,
             ?array $options = null,
         ) use ($config): object {
-            /** @var mixed $helper */
             $helper = $callback();
 
             // Seed the proxy helper's sub-helper plugin manager with the same
             // configuration, so custom navigation helpers propagate to it.
             Value::call(Value::call($helper, 'getPluginManager'), 'configure', [$config]);
 
-            return Value::object($helper);
+            return Assert::object($helper);
         };
 
         return $this->navigationDelegatorFactory;

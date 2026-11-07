@@ -15,6 +15,7 @@ use Jield\Stdlib\Value;
 use Laminas\EventManager\SharedEventManagerInterface as SharedEvents;
 use Laminas\Stdlib\DispatchableInterface;
 use Traversable;
+use Webmozart\Assert\Assert;
 
 use function array_shift;
 use function get_debug_type;
@@ -88,7 +89,7 @@ class Forward extends AbstractPlugin
      */
     public function setListenersToDetach($listeners): static
     {
-        $this->listenersToDetach = Value::maps($listeners);
+        $this->listenersToDetach = $listeners;
 
         return $this;
     }
@@ -106,7 +107,6 @@ class Forward extends AbstractPlugin
     {
         $event = clone $this->getEvent();
 
-        /** @var mixed $controller */
         $controller = $this->controllers->get($name);
         if ($controller instanceof InjectApplicationEventInterface) {
             $controller->setEvent($event);
@@ -115,9 +115,7 @@ class Forward extends AbstractPlugin
         // Allow passing parameters to seed the RouteMatch with & copy matched route name
         if ($params !== null) {
             $routeMatch = new RouteMatch($params);
-            $routeMatch->setMatchedRouteName(
-                Value::present($event->getRouteMatch())->getMatchedRouteName(),
-            );
+            $routeMatch->setMatchedRouteName(Assert::notNull($event->getRouteMatch())->getMatchedRouteName());
             $event->setRouteMatch($routeMatch);
         }
 
@@ -129,8 +127,8 @@ class Forward extends AbstractPlugin
         $this->numNestedForwards++;
 
         // Detach listeners that may cause problems during dispatch:
-        $sharedEvents = Value::present($event->getApplication())->getEventManager()->getSharedManager();
-        $listeners = $this->detachProblemListeners(Value::instance(
+        $sharedEvents = Assert::notNull($event->getApplication())->getEventManager()->getSharedManager();
+        $listeners = $this->detachProblemListeners(Assert::isInstanceOf(
             $sharedEvents,
             \Laminas\EventManager\SharedEventManagerInterface::class,
         ));
@@ -139,7 +137,7 @@ class Forward extends AbstractPlugin
 
         // If we detached any listeners, reattach them now:
         $this->reattachProblemListeners(
-            Value::instance($sharedEvents, \Laminas\EventManager\SharedEventManagerInterface::class),
+            Assert::isInstanceOf($sharedEvents, \Laminas\EventManager\SharedEventManagerInterface::class),
             $listeners,
         );
 
@@ -160,23 +158,13 @@ class Forward extends AbstractPlugin
         // Convert the problem list from two-dimensional array to more convenient id => event => class format:
         $formattedProblems = [];
         foreach ($this->getListenersToDetach() ?? [] as $current) {
-            if (!isset($formattedProblems[Value::accessible($current)['id']])) {
-                $formattedProblems[Value::key($current['id'])] = [];
+            if (!isset($formattedProblems[$current['id']])) {
+                $formattedProblems[$current['id']] = [];
             }
-            if (
-                !isset(
-                    $formattedProblems[Value::accessible($current)['id']][Value::accessible(
-                        $current,
-                    )['event']],
-                )
-            ) {
-                $formattedProblems[Value::key($current['id'])][Value::key(
-                    $current['event'],
-                )] = [];
+            if (!isset($formattedProblems[$current['id']][$current['event']])) {
+                $formattedProblems[$current['id']][$current['event']] = [];
             }
-            $formattedProblems[Value::key($current['id'])][Value::key(
-                $current['event'],
-            )][] = Value::accessible($current)['class'];
+            $formattedProblems[$current['id']][$current['event']][] = $current['class'];
         }
 
         // Loop through the class blacklist, detaching problem events and remembering their CallbackHandlers
@@ -184,20 +172,15 @@ class Forward extends AbstractPlugin
         $results = [];
         foreach ($formattedProblems as $id => $eventArray) {
             $results[$id] = [];
-            /** @var mixed $eventName */
             foreach ($eventArray as $eventName => $classArray) {
-                $results[$id][Value::key($eventName)] = [];
-                $events                               = $this->getSharedListenersById($id, Value::string($eventName), $sharedEvents);
-                /** @var mixed $priority
-                 * @var mixed $currentPriorityEvents
-                 */
+                $results[$id][$eventName] = [];
+                $events = $this->getSharedListenersById($id, Assert::string($eventName), $sharedEvents);
                 foreach ($events as $priority => $currentPriorityEvents) {
-                    foreach (Value::iterable($currentPriorityEvents) as $currentEvent) {
+                    foreach (Assert::isIterable($currentPriorityEvents) as $currentEvent) {
                         $currentCallback = $currentEvent;
 
                         // If we have an array, grab the object
                         if (is_array($currentCallback)) {
-                            /** @var mixed $currentCallback */
                             $currentCallback = array_shift($currentCallback);
                         }
 
@@ -211,12 +194,8 @@ class Forward extends AbstractPlugin
                                 continue;
                             }
 
-                            $this->detachSharedListener(
-                                $id,
-                                Value::callback($currentEvent),
-                                $sharedEvents,
-                            );
-                            $results[$id][$eventName][Value::key($priority)] = $currentEvent;
+                            $this->detachSharedListener($id, Assert::isCallable($currentEvent), $sharedEvents);
+                            $results[$id][$eventName][$priority] = $currentEvent;
                         }
                     }
                 }
@@ -236,21 +215,15 @@ class Forward extends AbstractPlugin
     protected function reattachProblemListeners(SharedEvents $sharedEvents, array $listeners): void
     {
         foreach ($listeners as $id => $eventArray) {
-            /** @var mixed $eventName
-             * @var mixed $callbacks
-             */
-            foreach (Value::iterable($eventArray) as $eventName => $callbacks) {
-                /** @var mixed $priority
-                 * @var mixed $current
-                 */
-                foreach (Value::iterable($callbacks) as $priority => $current) {
+            foreach (Assert::isIterable($eventArray) as $eventName => $callbacks) {
+                foreach (Assert::isIterable($callbacks) as $priority => $current) {
                     $callback = $current;
 
                     $sharedEvents->attach(
-                        Value::string($id),
-                        Value::string($eventName),
-                        Value::callback($callback),
-                        Value::int($priority),
+                        Assert::string($id),
+                        Assert::string($eventName),
+                        $callback,
+                        Assert::integer($priority),
                     );
                 }
             }
@@ -314,6 +287,6 @@ class Forward extends AbstractPlugin
      */
     private function detachSharedListener($id, $listener, SharedEvents $sharedEvents): void
     {
-        $sharedEvents->detach(Value::callback($listener), Value::nullableString($id));
+        $sharedEvents->detach($listener, Assert::nullOrString($id));
     }
 }

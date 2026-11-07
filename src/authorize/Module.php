@@ -12,9 +12,9 @@ use Jield\ModuleManager\Feature\ConfigProviderInterface;
 use Jield\ModuleManager\Feature\DependencyIndicatorInterface;
 use Jield\Mvc\ApplicationInterface;
 use Jield\Stdlib\Service;
-use Jield\Stdlib\Value;
 use Laminas\EventManager\EventInterface;
 use Laminas\ServiceManager\ServiceManager;
+use Webmozart\Assert\Assert;
 
 /**
  * BjyAuthorize Module
@@ -27,11 +27,11 @@ class Module implements BootstrapListenerInterface, ConfigProviderInterface, Dep
         $app = $e->getTarget();
         /** @var ServiceManager $serviceManager */
         $serviceManager = $app->getServiceManager();
-        $config = Value::array($serviceManager->get(Config::class));
+        $config = Assert::isArray($serviceManager->get(Config::class));
         /** @var UnauthorizedStrategy $strategy */
-        $strategy = $serviceManager->get(Value::string($config['unauthorized_strategy']));
+        $strategy = $serviceManager->get($config['unauthorized_strategy']);
         /** @var AbstractGuard[] $guards */
-        $guards = Value::array($serviceManager->get(Guards::class));
+        $guards = Assert::isArray($serviceManager->get(Guards::class));
 
         foreach ($guards as $guard) {
             $guard->attach(events: $app->getEventManager());

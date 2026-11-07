@@ -15,6 +15,7 @@ use Laminas\Http\Header\Accept\FieldValuePart\AbstractFieldValuePart;
 use Laminas\Http\Headers;
 use Laminas\Http\Request;
 use Laminas\View\Model\ModelInterface;
+use Webmozart\Assert\Assert;
 
 use function class_exists;
 use function str_replace;
@@ -80,7 +81,7 @@ class AcceptableViewModelSelector extends AbstractPlugin
             throw new InvalidArgumentException('The supplied View Model could not be found');
         }
 
-        return Value::instance(Value::instantiate($name), ModelInterface::class);
+        return Assert::isInstanceOf(Value::instantiate($name), ModelInterface::class);
     }
 
     /**
@@ -122,7 +123,7 @@ class AcceptableViewModelSelector extends AbstractPlugin
 
         if (
             !$matchAgainst && !$this->defaultMatchAgainst
-            || !Value::instance($headers, Headers::class)->has('accept')
+            || !Assert::isInstanceOf($headers, Headers::class)->has('accept')
         ) {
             return null;
         }
@@ -135,14 +136,14 @@ class AcceptableViewModelSelector extends AbstractPlugin
         foreach ($matchAgainst as $modelName => $modelStrings) {
             foreach (Value::toArray($modelStrings) as $modelString) {
                 $matchAgainstString .= $this->injectViewModelName(
-                    Value::string($modelString),
-                    Value::string($modelName),
+                    Assert::string($modelString),
+                    Assert::string($modelName),
                 );
             }
         }
 
         /** @var Accept $accept */
-        $accept = Value::instance($headers, Headers::class)->get('Accept');
+        $accept = Assert::isInstanceOf($headers, Headers::class)->get('Accept');
         $res = $accept->match($matchAgainstString);
         if (!$res instanceof AbstractFieldValuePart) {
             return null;
@@ -206,7 +207,7 @@ class AcceptableViewModelSelector extends AbstractPlugin
     {
         $modelName = str_replace('\\', '|', $modelName);
 
-        $modelAcceptString = is_array($modelAcceptString) ? implode(', ', Value::strings($modelAcceptString)) : $modelAcceptString;
+        $modelAcceptString = is_array($modelAcceptString) ? implode(', ', $modelAcceptString) : $modelAcceptString;
 
         return $modelAcceptString . '; ' . self::INJECT_VIEWMODEL_NAME . '="' . $modelName . '", ';
     }
@@ -218,8 +219,8 @@ class AcceptableViewModelSelector extends AbstractPlugin
      */
     protected function extractViewModelName(AbstractFieldValuePart $res): string
     {
-        $params = get_object_vars(Value::present($res->getMatchedAgainst())->getParams());
-        $modelName = Value::string($params[self::INJECT_VIEWMODEL_NAME]);
+        $params = get_object_vars(Assert::notNull($res->getMatchedAgainst())->getParams());
+        $modelName = Assert::string($params[self::INJECT_VIEWMODEL_NAME]);
         return str_replace('|', '\\', $modelName);
     }
 

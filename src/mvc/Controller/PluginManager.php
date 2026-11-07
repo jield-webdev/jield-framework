@@ -13,12 +13,12 @@ use Jield\Mvc\Controller\Plugin\PluginInterface;
 use Jield\Mvc\Controller\Plugin\Redirect;
 use Jield\Mvc\Controller\Plugin\Service\ForwardFactory;
 use Jield\Mvc\Controller\Plugin\Url;
-use Jield\Stdlib\Value;
 use Laminas\ServiceManager\AbstractPluginManager;
 use Laminas\ServiceManager\Exception\InvalidServiceException;
 use Laminas\ServiceManager\Factory\InvokableFactory;
 use Laminas\ServiceManager\ServiceManager;
 use Laminas\Stdlib\DispatchableInterface;
+use Webmozart\Assert\Assert;
 
 use function get_debug_type;
 use function method_exists;
@@ -90,11 +90,10 @@ class PluginManager extends AbstractPluginManager
      */
     public function get($id, ?array $options = null): mixed
     {
-        /** @var mixed $plugin */
         $plugin = $options === null ? parent::get($id) : parent::build($id, $options);
-        $this->injectController(plugin: Value::object($plugin));
+        $this->injectController(plugin: $plugin);
 
-        return Value::instance($plugin, PluginInterface::class);
+        return Assert::isInstanceOf($plugin, PluginInterface::class);
     }
 
     /**

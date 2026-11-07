@@ -8,8 +8,9 @@ use Jield\Mvc\Exception;
 use Jield\Mvc\Exception\DomainException;
 use Jield\Mvc\MvcEvent;
 use Jield\Mvc\View\Model\ViewModel;
-
 use Jield\Stdlib\Value;
+use Webmozart\Assert\Assert;
+
 use function method_exists;
 
 /**
@@ -43,10 +44,10 @@ abstract class AbstractActionController extends AbstractController
     {
         $event = $this->getEvent();
         $routeMatch = $event->getRouteMatch();
-        Value::present($routeMatch)->setParam('action', 'not-found');
+        Assert::notNull($routeMatch)->setParam('action', 'not-found');
 
         $helper = $this->plugin('createHttpNotFoundModel');
-        return Value::instance(Value::callback($helper)($event->getResponse()), \Jield\Mvc\View\Model\ViewModel::class);
+        return $helper($event->getResponse());
     }
 
     /**
@@ -67,7 +68,7 @@ abstract class AbstractActionController extends AbstractController
         }
 
         $action = $routeMatch->getParam('action', 'not-found');
-        $method = static::getMethodFromAction(Value::string($action));
+        $method = static::getMethodFromAction(Assert::string($action));
 
         if (!method_exists($this, $method)) {
             $method = 'notFoundAction';

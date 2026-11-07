@@ -14,6 +14,7 @@ use Laminas\Escaper\Exception\RuntimeException as EscaperException;
 use Laminas\View\Helper\Doctype;
 use Laminas\View\Helper\EscapeHtml;
 use Laminas\View\Helper\EscapeHtmlAttr;
+use Webmozart\Assert\Assert;
 
 use function implode;
 use function in_array;
@@ -234,7 +235,7 @@ abstract class AbstractHelper extends BaseAbstractHelper
      */
     public function setEncoding(string $encoding): static
     {
-        $escaper = new Escaper(Value::nullableNonEmptyString($encoding));
+        $escaper = new Escaper(Assert::nullOrStringNotEmpty($encoding));
         $this->escapeHtmlHelper = new EscapeHtml($escaper);
         $this->escapeHtmlAttrHelper = new EscapeHtmlAttr($escaper);
         $this->encoding = $encoding;
@@ -268,7 +269,7 @@ abstract class AbstractHelper extends BaseAbstractHelper
             if (isset($this->booleanAttributes[$key])) {
                 if (!$value) {
                     // Skip boolean attributes that expect empty string as false value
-                    if ('' === Value::accessible($this->booleanAttributes[$key])['off']) {
+                    if ('' === $this->booleanAttributes[$key]['off']) {
                         continue;
                     }
                 } elseif ($doctypeHelper->isHtml5() && !$doctypeHelper->isXhtml()) {
@@ -278,24 +279,19 @@ abstract class AbstractHelper extends BaseAbstractHelper
             }
 
             //check if attribute is translatable and translate it
-            $value = $this->translateHtmlAttributeValue(key: $key, value: Value::nullableString($value));
+            $value = $this->translateHtmlAttributeValue(key: $key, value: $value);
 
             // @todo Escape event attributes like AbstractHtmlElement view helper does in htmlAttribs ??
             try {
-                /** @var mixed $escapedAttribute */
                 $escapedAttribute = $escapeAttr(value: $value);
-                $strings[] = sprintf(
-                    '%s="%s"',
-                    Value::scalar($escape(value: $key)),
-                    Value::scalar($escapedAttribute),
-                );
+                $strings[] = sprintf('%s="%s"', $escape(value: $key), $escapedAttribute);
             } catch (EscaperException) {
                 // If an escaper exception happens, escape only the key, and use a blank value.
-                $strings[] = sprintf('%s=""', Value::scalar($escape(value: $key)));
+                $strings[] = sprintf('%s=""', $escape(value: $key));
             }
         }
 
-        return implode(separator: ' ', array: Value::scalars($strings));
+        return implode(separator: ' ', array: $strings);
     }
 
     /**
@@ -362,8 +358,7 @@ abstract class AbstractHelper extends BaseAbstractHelper
         }
 
         if (!$this->escapeHtmlHelper instanceof EscapeHtml) {
-            $this->escapeHtmlHelper =
-                new EscapeHtml(new Escaper(Value::nullableNonEmptyString($this->encoding)));
+            $this->escapeHtmlHelper = new EscapeHtml(new Escaper(Assert::nullOrStringNotEmpty($this->encoding)));
         }
 
         return $this->escapeHtmlHelper;
@@ -387,7 +382,7 @@ abstract class AbstractHelper extends BaseAbstractHelper
 
         if (!$this->escapeHtmlAttrHelper instanceof EscapeHtmlAttr) {
             $this->escapeHtmlAttrHelper =
-                new EscapeHtmlAttr(new Escaper(Value::nullableNonEmptyString($this->encoding)));
+                new EscapeHtmlAttr(new Escaper(Assert::nullOrStringNotEmpty($this->encoding)));
         }
 
         return $this->escapeHtmlAttrHelper;
@@ -441,21 +436,13 @@ abstract class AbstractHelper extends BaseAbstractHelper
     {
         if (
             !is_bool(value: $value)
-            && in_array(
-                needle: $value,
-                haystack: Value::array($this->booleanAttributes[$attribute]),
-                strict: true,
-            )
+            && in_array(needle: $value, haystack: $this->booleanAttributes[$attribute], strict: true)
         ) {
-            return Value::string($value);
+            return $value;
         }
 
         $value = Value::truthy($value);
-        return Value::string(
-            $value
-                ? Value::accessible($this->booleanAttributes[$attribute])['on']
-                : Value::accessible($this->booleanAttributes[$attribute])['off'],
-        );
+        return $value ? $this->booleanAttributes[$attribute]['on'] : $this->booleanAttributes[$attribute]['off'];
     }
 
     /**
@@ -468,27 +455,18 @@ abstract class AbstractHelper extends BaseAbstractHelper
         }
 
         if (isset($this->translatableAttributes[$key]) || isset(self::$defaultTranslatableHtmlAttributes[$key])) {
-            return Value::present($this->getTranslator())->translate(
-                $value,
-                $this->getTranslatorTextDomain(),
-            );
+            return $this->getTranslator()->translate($value, $this->getTranslatorTextDomain());
         } else {
             foreach ($this->translatableAttributePrefixes as $prefix) {
                 if (0 === mb_strpos($key, (string) $prefix)) {
                     // prefix matches => return translated $value
-                    return Value::present($this->getTranslator())->translate(
-                        $value,
-                        $this->getTranslatorTextDomain(),
-                    );
+                    return $this->getTranslator()->translate($value, $this->getTranslatorTextDomain());
                 }
             }
             foreach (self::$defaultTranslatableHtmlAttributePrefixes as $prefix) {
                 if (0 === mb_strpos($key, (string) $prefix)) {
                     // default prefix matches => return translated $value
-                    return Value::present($this->getTranslator())->translate(
-                        $value,
-                        $this->getTranslatorTextDomain(),
-                    );
+                    return $this->getTranslator()->translate($value, $this->getTranslatorTextDomain());
                 }
             }
         }
@@ -620,6 +598,6 @@ abstract class AbstractHelper extends BaseAbstractHelper
         }
 
         $escapeHtmlHelper = $this->getEscapeHtmlHelper();
-        return Value::string($escapeHtmlHelper(value: $label));
+        return $escapeHtmlHelper(value: $label);
     }
 }

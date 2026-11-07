@@ -15,6 +15,7 @@ use Laminas\InputFilter\InputFilterInterface;
 use Laminas\Paginator\Paginator;
 use Laminas\Stdlib\Parameters;
 use Override;
+use Webmozart\Assert\Assert;
 
 use function sprintf;
 
@@ -142,42 +143,32 @@ abstract class AbstractResourceListener implements ListenerAggregateInterface
         $this->event = $event;
         switch ($event->getName()) {
             case 'create':
-                /** @var mixed $data */
                 $data = $event->getParam(name: 'data', default: []);
                 return $this->create(data: new Parameters(Value::toArray($data)));
             case 'delete':
                 $id = (int) $event->getParam(name: 'id');
                 return $this->delete(id: $id);
             case 'deleteList':
-                /** @var mixed $data */
                 $data = $event->getParam(name: 'data', default: []);
                 return $this->deleteList(data: new Parameters(Value::toArray($data)));
             case 'fetch':
-                /** @var mixed $id */
                 $id = $event->getParam(name: 'id');
-                return $this->fetch(id: Value::string($id));
+                return $this->fetch(id: $id);
             case 'fetchAll':
                 $queryParams = $event->getQueryParams() ?: [];
-                return $this->fetchAll(params: Value::instance(
-                    $queryParams,
-                    \Laminas\Stdlib\Parameters::class,
-                ));
+                return $this->fetchAll(params: Assert::isInstanceOf($queryParams, \Laminas\Stdlib\Parameters::class));
             case 'patch':
                 $id = (int) $event->getParam(name: 'id');
-                /** @var mixed $data */
                 $data = $event->getParam(name: 'data', default: []);
                 return $this->patch(id: $id, data: new Parameters(Value::toArray($data)));
             case 'patchList':
-                /** @var mixed $data */
                 $data = $event->getParam(name: 'data', default: []);
                 return $this->patchList(data: new Parameters(Value::toArray($data)));
             case 'replaceList':
-                /** @var mixed $data */
                 $data = $event->getParam(name: 'data', default: []);
                 return $this->replaceList(data: new Parameters(Value::toArray($data)));
             case 'update':
                 $id = (int) $event->getParam(name: 'id');
-                /** @var mixed $data */
                 $data = $event->getParam(name: 'data', default: []);
                 return $this->update(id: $id, data: new Parameters(Value::toArray($data)));
             default:

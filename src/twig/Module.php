@@ -11,10 +11,9 @@ use Jield\Mvc\MvcEvent;
 use Jield\Stdlib\Service;
 use Jield\Stdlib\Value;
 use Laminas\EventManager\EventInterface;
-use Psr\Container\ContainerInterface;
 use Twig\Environment;
+use Webmozart\Assert\Assert;
 
-use Twig\Extension\ExtensionInterface;
 use function is_object;
 use function is_string;
 
@@ -25,20 +24,11 @@ class Module implements BootstrapListenerInterface, ConfigProviderInterface
      */
     public function onBootstrap(EventInterface $e): void
     {
-        $application = Value::present(
-            Value::instance($e, MvcEvent::class)->getApplication(),
-        );
-        /** @var mixed $serviceManager */
+        $application = Assert::notNull(Assert::isInstanceOf($e, MvcEvent::class)->getApplication());
         $serviceManager = $application->getServiceManager();
-        $environment = Service::get(
-            Value::instance($serviceManager, ContainerInterface::class),
-            Environment::class,
-        );
+        $environment = Service::get($serviceManager, Environment::class);
 
-        $options = Service::get(
-            Value::instance($serviceManager, ContainerInterface::class),
-            ModuleOptions::class,
-        );
+        $options = Service::get($serviceManager, ModuleOptions::class);
 
         // Setup extensions
         foreach ($options->getExtensions() as $extension) {
@@ -49,7 +39,6 @@ class Module implements BootstrapListenerInterface, ConfigProviderInterface
 
             if (is_string($extension)) {
                 if ($serviceManager->has($extension)) {
-                    /** @var mixed $extension */
                     $extension = $serviceManager->get($extension);
                 } else {
                     $extension = Value::instantiate($extension);
@@ -58,10 +47,7 @@ class Module implements BootstrapListenerInterface, ConfigProviderInterface
                 throw new InvalidArgumentException('Extensions should be a string or object.');
             }
 
-            $environment->addExtension(Value::instance(
-                $extension,
-                ExtensionInterface::class,
-            ));
+            $environment->addExtension($extension);
         }
     }
 

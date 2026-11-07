@@ -11,6 +11,7 @@ use Jield\Stdlib\Value;
 use Laminas\Authentication\Adapter\AbstractAdapter;
 use Laminas\Authentication\Adapter\Exception;
 use Laminas\Authentication\Result as AuthenticationResult;
+use Webmozart\Assert\Assert;
 
 use function call_user_func;
 use function method_exists;
@@ -48,7 +49,7 @@ class ObjectRepository extends AbstractAdapter
     public function setOptions(array|AuthenticationOptions $options): self
     {
         if (!$options instanceof AuthenticationOptions) {
-            $options = new AuthenticationOptions(options: Value::stringKeyedArray($options));
+            $options = new AuthenticationOptions(options: $options);
         }
 
         $this->options = $options;
@@ -112,17 +113,12 @@ class ObjectRepository extends AbstractAdapter
         $callable = $this->options->getCredentialCallable();
 
         if ($callable) {
-            /** @var mixed $credentialValue */
-            $credentialValue = call_user_func(Value::callback($callable), $identity, $credentialValue);
+            $credentialValue = call_user_func($callable, $identity, $credentialValue);
         }
 
         if ($credentialValue !== true && $credentialValue !== $documentCredential) {
             $this->authenticationResultInfo['code'] = AuthenticationResult::FAILURE_CREDENTIAL_INVALID;
-            Value::setPath(
-                $this->authenticationResultInfo,
-                ['messages', null],
-                'Supplied credential is invalid.',
-            );
+            Value::setPath($this->authenticationResultInfo, ['messages', null], 'Supplied credential is invalid.');
 
             return $this->createAuthenticationResult();
         }
@@ -166,11 +162,11 @@ class ObjectRepository extends AbstractAdapter
      */
     protected function createAuthenticationResult(): AuthenticationResult
     {
-        $info = Value::array($this->authenticationResultInfo);
+        $info = Assert::isArray($this->authenticationResultInfo);
         return new AuthenticationResult(
-            code: Value::int($info['code']),
+            code: Assert::integer($info['code']),
             identity: $info['identity'],
-            messages: Value::array($info['messages']),
+            messages: $info['messages'],
         );
     }
 }

@@ -71,17 +71,9 @@ class Form extends AbstractHelper
         assert(assertion: $renderer instanceof PhpRenderer);
         foreach ($form as $element) {
             if ($element instanceof FieldsetInterface) {
-                $formContent .= Value::stringify(Value::call(
-                    $renderer,
-                    'formCollection',
-                    [$element],
-                ));
+                $formContent .= Value::stringify(Value::call($renderer, 'formCollection', [$element]));
             } else {
-                $formContent .= Value::stringify(Value::call(
-                    $renderer,
-                    'formRow',
-                    [$element],
-                ));
+                $formContent .= Value::stringify(Value::call($renderer, 'formRow', [$element]));
             }
         }
 

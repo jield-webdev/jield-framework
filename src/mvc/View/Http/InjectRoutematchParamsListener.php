@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Jield\Mvc\View\Http;
 
 use Jield\Mvc\MvcEvent;
-use Jield\Stdlib\Value;
 use Laminas\EventManager\AbstractListenerAggregate;
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\Http\Request as HttpRequest;
 use Laminas\Stdlib\ParametersInterface;
+use Webmozart\Assert\Assert;
 
 class InjectRoutematchParamsListener extends AbstractListenerAggregate
 {
@@ -35,7 +35,7 @@ class InjectRoutematchParamsListener extends AbstractListenerAggregate
      */
     public function injectParams(MvcEvent $e): void
     {
-        $routeMatchParams = Value::present($e->getRouteMatch())->getParams();
+        $routeMatchParams = Assert::notNull($e->getRouteMatch())->getParams();
         $request = $e->getRequest();
 
         if (!$request instanceof HttpRequest) {
@@ -43,7 +43,7 @@ class InjectRoutematchParamsListener extends AbstractListenerAggregate
             return;
         }
 
-        $params = Value::instance($request->getQuery(), ParametersInterface::class);
+        $params = Assert::isInstanceOf($request->getQuery(), ParametersInterface::class);
 
         if ($this->overwrite) {
             // Overwrite existing parameters, or create new ones if not present.
@@ -55,7 +55,7 @@ class InjectRoutematchParamsListener extends AbstractListenerAggregate
 
         // Only create new parameters.
         foreach ($routeMatchParams as $key => $val) {
-            if (array_key_exists($key, Value::array($params->toArray()))) {
+            if (array_key_exists($key, $params->toArray())) {
                 continue;
             }
 

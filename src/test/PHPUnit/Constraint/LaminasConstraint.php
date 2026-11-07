@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Jield\Test\PHPUnit\Constraint;
 
-use Exception;
 use Jield\Stdlib\Value;
 use Jield\Test\PHPUnit\Controller\AbstractControllerTestCase;
 use Jield\Test\PHPUnit\FailureMessage;
@@ -12,10 +11,7 @@ use Override;
 use PHPUnit\Framework\Constraint\Constraint;
 use PHPUnit\Framework\ExpectationFailedException;
 use SebastianBergmann\Comparator\ComparisonFailure;
-use Throwable;
-
-use function implode;
-use function sprintf;
+use Webmozart\Assert\Assert;
 
 // @codingStandardsIgnoreLine
 abstract class LaminasConstraint extends Constraint
@@ -52,15 +48,11 @@ abstract class LaminasConstraint extends Constraint
     final public function getControllerFullClassName(): string
     {
         $routeMatch = $this->activeTestCase->getApplication()->getMvcEvent()->getRouteMatch();
-        /** @var mixed $controllerIdentifier */
-        $controllerIdentifier = Value::present($routeMatch)->getParam('controller');
+        $controllerIdentifier = Assert::notNull($routeMatch)->getParam('controller');
 
-        /** @var mixed $controllerManager */
         $controllerManager = $this->activeTestCase->getApplicationServiceLocator()->get('ControllerManager');
 
-        return Value::string(
-            Value::call($controllerManager, 'get', [$controllerIdentifier])::class,
-        );
+        return Value::call($controllerManager, 'get', [$controllerIdentifier])::class;
     }
 
     /**

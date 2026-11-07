@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace Jield\Search\ValueObject;
 
 use Doctrine\Common\Collections\Order;
-
 use Exception;
 use Jield\Stdlib\Value;
+use Webmozart\Assert\Assert;
+
 use function array_key_exists;
 use function base64_decode;
 use function base64_encode;
@@ -27,17 +28,15 @@ final class SearchFormResult
 
     public static function fromArray(array $params): SearchFormResult
     {
-        $query = null === ($params['query'] ?? null)
-            ? null
-            : trim(string: Value::string($params['query']));
+        $query = null === ($params['query'] ?? null) ? null : trim(string: $params['query']);
 
         return new self(
-            order: Value::string($params['order'] ?? 'default'),
-            direction: Value::string($params['direction'] ?? Order::Ascending->value),
+            order: $params['order'] ?? 'default',
+            direction: $params['direction'] ?? Order::Ascending->value,
             query: $query,
-            filter: Value::array($params['filter'] ?? []),
-            facet: Value::array($params['facet'] ?? []),
-            dateInterval: DateInterval::fromValue(value: Value::string($params['dateInterval'] ?? '')),
+            filter: $params['filter'] ?? [],
+            facet: $params['facet'] ?? [],
+            dateInterval: DateInterval::fromValue(value: $params['dateInterval'] ?? ''),
         );
     }
 
@@ -45,7 +44,7 @@ final class SearchFormResult
     {
         try {
             $filter = Value::toArray(json_decode(
-                json: Value::string(base64_decode(string: $encodedFilter, strict: true)),
+                json: Assert::string(base64_decode(string: $encodedFilter, strict: true)),
                 associative: true,
             ));
         } catch (Exception) {
@@ -54,10 +53,8 @@ final class SearchFormResult
 
         $this->filter = Value::toArray($filter['filter'] ?? []);
         $this->facet = Value::toArray($filter['facet'] ?? []);
-        $this->dateInterval = DateInterval::fromValue(value: Value::string(
-            $filter['dateInterval'] ?? '',
-        ));
-        $this->query = Value::nullableString($filter['query'] ?? null);
+        $this->dateInterval = DateInterval::fromValue(value: $filter['dateInterval'] ?? '');
+        $this->query = $filter['query'] ?? null;
 
         return $this;
     }
@@ -76,7 +73,7 @@ final class SearchFormResult
 
     public function getHash(): string
     {
-        return base64_encode(string: Value::string(json_encode(value: $this->toArray())));
+        return base64_encode(string: Assert::string(json_encode(value: $this->toArray())));
     }
 
     public function toArray(): array
@@ -187,7 +184,7 @@ final class SearchFormResult
     public function addFilters(array $filters): SearchFormResult
     {
         foreach ($filters as $key => $value) {
-            $this->addFilter(key: Value::string($key), value: $value);
+            $this->addFilter(key: Assert::string($key), value: $value);
         }
 
         return $this;
@@ -199,7 +196,7 @@ final class SearchFormResult
             $existing = $this->filter[$key];
             $this->filter[$key] = is_array($existing) && is_array($value)
                 ? $existing + $value
-                : Value::numeric($existing) + Value::numeric($value);
+                : Assert::numeric($existing) + Assert::numeric($value);
         } else {
             $this->filter[$key] = $value;
         }

@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Jield\ApiTools\ContentValidation;
 
-use Jield\Stdlib\Value;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Laminas\ServiceManager\ServiceLocatorInterface;
 use Override;
 use Psr\Container\ContainerInterface;
+use Webmozart\Assert\Assert;
 
 class ContentValidationListenerFactory implements FactoryInterface
 {
@@ -23,15 +23,16 @@ class ContentValidationListenerFactory implements FactoryInterface
         $requestedName,
         ?array $options = null,
     ): ContentValidationListener {
-        /** @var mixed $config */
         $config = $container->has('config') ? $container->get('config') : [];
-        /** @var mixed $contentValidationConfig */
         $contentValidationConfig = $config['api-tools-content-validation'] ?? [];
-        $restServices = $this->getRestServicesFromConfig(config: Value::array($config));
+        $restServices = $this->getRestServicesFromConfig(config: $config);
 
         return new ContentValidationListener(
-            config: Value::array($contentValidationConfig),
-            inputFilterManager: Value::instance($container->get('InputFilterManager'), ServiceLocatorInterface::class),
+            config: $contentValidationConfig,
+            inputFilterManager: Assert::isInstanceOf(
+                $container->get('InputFilterManager'),
+                ServiceLocatorInterface::class,
+            ),
             restControllers: $restServices,
         );
     }
@@ -52,15 +53,12 @@ class ContentValidationListenerFactory implements FactoryInterface
             return $restServices;
         }
 
-        /** @var mixed $controllerService
-         * @var mixed $restConfig
-         */
-        foreach (Value::iterable($config['api-tools-rest']) as $controllerService => $restConfig) {
+        foreach (Assert::isIterable($config['api-tools-rest']) as $controllerService => $restConfig) {
             if (!isset($restConfig['route_identifier_name'])) {
                 continue;
             }
 
-            $restServices[Value::key($controllerService)] = $restConfig['route_identifier_name'];
+            $restServices[$controllerService] = $restConfig['route_identifier_name'];
         }
 
         return $restServices;

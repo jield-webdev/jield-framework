@@ -11,6 +11,7 @@ use Jield\AssetManager\Resolver\MimeResolverAwareInterface;
 use Jield\Stdlib\Value;
 use Override;
 use Psr\Container\ContainerInterface;
+use Webmozart\Assert\Assert;
 
 class AssetFilterManager implements MimeResolverAwareInterface
 {
@@ -56,9 +57,7 @@ class AssetFilterManager implements MimeResolverAwareInterface
         } elseif (!empty($config[$mimeType])) {
             $filters = $config[$mimeType];
         } else {
-            $extension = $this->getMimeResolver()->getExtension(
-                mimetype: $mimeType,
-            );
+            $extension = $this->getMimeResolver()->getExtension(mimetype: $mimeType);
             if (!empty($config[$extension])) {
                 $filters = $config[$extension];
             } else {
@@ -66,21 +65,15 @@ class AssetFilterManager implements MimeResolverAwareInterface
             }
         }
 
-        foreach (Value::iterable($filters) as $filter) {
+        foreach (Assert::isIterable($filters) as $filter) {
             if (is_null(value: $filter)) {
                 continue;
             }
 
             if (!empty($filter['filter'])) {
-                $this->ensureByFilter(asset: $asset, filter: Value::instanceOrString(
-                    $filter['filter'],
-                    \Assetic\Contracts\Filter\FilterInterface::class,
-                ));
+                $this->ensureByFilter(asset: $asset, filter: $filter['filter']);
             } elseif (!empty($filter['service'])) {
-                $this->ensureByService(
-                    asset: $asset,
-                    service: Value::string(Value::accessible($filter)['service']),
-                );
+                $this->ensureByService(asset: $asset, service: $filter['service']);
             } else {
                 throw new Exception\RuntimeException(message: 'Invalid filter supplied. Expected Filter or Service.');
             }
@@ -96,10 +89,7 @@ class AssetFilterManager implements MimeResolverAwareInterface
      */
     protected function ensureByService(AssetInterface $asset, string $service): void
     {
-        $this->ensureByFilter(asset: $asset, filter: Value::instanceOrString(
-            $this->container->get($service),
-            \Assetic\Contracts\Filter\FilterInterface::class,
-        ));
+        $this->ensureByFilter(asset: $asset, filter: $this->container->get($service));
     }
 
     /**
@@ -129,17 +119,14 @@ class AssetFilterManager implements MimeResolverAwareInterface
             throw new Exception\RuntimeException(message: 'No filter found for ' . $filter);
         }
 
-        $this->filterInstances[$filterClass] ??= Value::instance(
+        $this->filterInstances[$filterClass] ??= Assert::isInstanceOf(
             Value::instantiate($filterClass),
             FilterInterface::class,
         );
 
         $filterInstance = $this->filterInstances[$filterClass];
 
-        $asset->ensureFilter(filter: Value::instance(
-            $filterInstance,
-            \Assetic\Contracts\Filter\FilterInterface::class,
-        ));
+        $asset->ensureFilter(filter: $filterInstance);
     }
 
     public function getContainer(): ContainerInterface

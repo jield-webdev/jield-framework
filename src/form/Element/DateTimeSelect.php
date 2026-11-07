@@ -9,7 +9,6 @@ use DateTimeInterface;
 use Exception;
 use Jield\Form\Exception\InvalidArgumentException;
 use Jield\Form\FormInterface;
-use Jield\Stdlib\Value;
 use Laminas\Validator\Date as DateValidator;
 use Laminas\Validator\ValidatorInterface;
 
@@ -81,25 +80,19 @@ class DateTimeSelect extends DateSelect
         parent::setOptions(options: $options);
 
         if (isset($this->options['hour_attributes'])) {
-            $this->setHourAttributes(hourAttributes: Value::scalarMap($this->options['hour_attributes']));
+            $this->setHourAttributes(hourAttributes: $this->options['hour_attributes']);
         }
 
         if (isset($this->options['minute_attributes'])) {
-            $this->setMinuteAttributes(minuteAttributes: Value::scalarMap(
-                $this->options['minute_attributes'],
-            ));
+            $this->setMinuteAttributes(minuteAttributes: $this->options['minute_attributes']);
         }
 
         if (isset($this->options['second_attributes'])) {
-            $this->setSecondAttributes(secondAttributes: Value::scalarMap(
-                $this->options['second_attributes'],
-            ));
+            $this->setSecondAttributes(secondAttributes: $this->options['second_attributes']);
         }
 
         if (isset($this->options['should_show_seconds'])) {
-            $this->setShouldShowSeconds(shouldShowSeconds: Value::bool(
-                $this->options['should_show_seconds'],
-            ));
+            $this->setShouldShowSeconds(shouldShowSeconds: $this->options['should_show_seconds']);
         }
 
         return $this;
@@ -306,15 +299,7 @@ class DateTimeSelect extends DateSelect
             $second = '00';
         }
 
-        return sprintf(
-            '%04d-%02d-%02d %02d:%02d:%02d',
-            Value::scalar($year),
-            Value::scalar($month),
-            Value::scalar($day),
-            Value::scalar($hour),
-            Value::scalar($minute),
-            Value::scalar($second),
-        );
+        return sprintf('%04d-%02d-%02d %02d:%02d:%02d', $year, $month, $day, $hour, $minute, $second);
     }
 
     /**

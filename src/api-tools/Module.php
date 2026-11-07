@@ -43,13 +43,12 @@ use Laminas\Authentication\AuthenticationServiceInterface;
 use Laminas\ConfigAggregator\ConfigAggregator;
 use Laminas\EventManager\EventInterface;
 use Laminas\EventManager\EventManager;
-use Laminas\EventManager\EventManagerInterface;
 use Laminas\EventManager\SharedEventManagerInterface;
 use Laminas\Http\Request as HttpRequest;
 use Laminas\ServiceManager\ServiceManager;
 use Laminas\Stdlib\DispatchableInterface;
-use Laminas\View\View;
 use Override;
+use Webmozart\Assert\Assert;
 
 final class Module implements ConfigProviderInterface, BootstrapListenerInterface
 {
@@ -66,16 +65,12 @@ final class Module implements ConfigProviderInterface, BootstrapListenerInterfac
 
     public function init($moduleManager): void
     {
-        $this->getPrototypeRouteListener()->attach(events: Value::instance(
-            Value::call($moduleManager, 'getEventManager'),
-            EventManagerInterface::class,
-        ));
+        $this->getPrototypeRouteListener()->attach(events: Value::call($moduleManager, 'getEventManager'));
     }
 
     #[Override]
     public function onBootstrap(EventInterface|MvcEvent $e): void
     {
-        /** @var mixed $app */
         $app = $e->getParam(name: 'application');
 
         /** @var ServiceManager $serviceManager */
@@ -83,12 +78,8 @@ final class Module implements ConfigProviderInterface, BootstrapListenerInterfac
         /** @var EventManager $eventManager */
         $eventManager = Value::call($app, 'getEventManager');
 
-        Service::get($serviceManager, \Jield\ApiTools\Versioning\AcceptListener::class)->attach(
-            $eventManager,
-        );
-        Service::get($serviceManager, \Jield\ApiTools\Versioning\ContentTypeListener::class)->attach(
-            $eventManager,
-        );
+        Service::get($serviceManager, \Jield\ApiTools\Versioning\AcceptListener::class)->attach($eventManager);
+        Service::get($serviceManager, \Jield\ApiTools\Versioning\ContentTypeListener::class)->attach($eventManager);
         Service::get($serviceManager, VersionListener::class)->attach($eventManager);
 
         //ApiProblem
@@ -96,11 +87,7 @@ final class Module implements ConfigProviderInterface, BootstrapListenerInterfac
         Service::get($serviceManager, ApiProblemStrategy::class)->attach($eventManager, 400);
         Service::get($serviceManager, HalJsonStrategy::class)->attach($eventManager, 300);
 
-        $sendResponseListener = Service::get(
-            $serviceManager,
-            SendResponseListener::class,
-            'SendResponseListener',
-        );
+        $sendResponseListener = Service::get($serviceManager, SendResponseListener::class, 'SendResponseListener');
         $sendResponseListener->getEventManager()->attach(
             SendResponseEvent::EVENT_SEND_RESPONSE,
             Service::get($serviceManager, SendApiProblemResponseListener::class),
@@ -122,7 +109,7 @@ final class Module implements ConfigProviderInterface, BootstrapListenerInterfac
         }
 
         $sharedEventManager = $eventManager->getSharedManager();
-        Value::present($sharedEventManager)->attach(
+        Assert::notNull($sharedEventManager)->attach(
             DispatchableInterface::class,
             MvcEvent::EVENT_DISPATCH,
             listener: Service::get($serviceManager, AcceptListener::class),
@@ -144,11 +131,7 @@ final class Module implements ConfigProviderInterface, BootstrapListenerInterfac
         Service::get($serviceManager, ContentValidationListener::class)->attach($eventManager);
 
         if ($e instanceof MvcEvent && $e->getRequest() instanceof HttpRequest) {
-            $authentication = Service::get(
-                $serviceManager,
-                AuthenticationServiceInterface::class,
-                'authentication',
-            );
+            $authentication = Service::get($serviceManager, AuthenticationServiceInterface::class, 'authentication');
             $mvcAuthEvent = new MvcAuthEvent(
                 mvcEvent: $e,
                 authentication: $authentication,
@@ -158,10 +141,7 @@ final class Module implements ConfigProviderInterface, BootstrapListenerInterfac
             new MvcRouteListener(
                 mvcAuthEvent: $mvcAuthEvent,
                 events: $eventManager,
-                authentication: Value::instance(
-                    $authentication,
-                    AuthenticationService::class,
-                ),
+                authentication: Assert::isInstanceOf($authentication, AuthenticationService::class),
             );
 
             $eventManager->attach(eventName: MvcAuthEvent::EVENT_AUTHENTICATION, listener: Service::get(
@@ -187,30 +167,18 @@ final class Module implements ConfigProviderInterface, BootstrapListenerInterfac
             ));
         }
 
-        Service::get($serviceManager, \Jield\ApiTools\Rest\Listener\OptionsListener::class)->attach(
-            $eventManager,
-        );
-        Service::get(
-            $serviceManager,
-            RestParametersListener::class,
-        )->attachShared(Value::instance(
+        Service::get($serviceManager, \Jield\ApiTools\Rest\Listener\OptionsListener::class)->attach($eventManager);
+        Service::get($serviceManager, RestParametersListener::class)->attachShared(Assert::isInstanceOf(
             $sharedEventManager,
             SharedEventManagerInterface::class,
         ));
 
         // Attach OptionsListener
         $optionsListener = Service::get($serviceManager, OptionsListener::class);
-        $optionsListener->attach(Value::instance(
-            Value::call($app, 'getEventManager'),
-            EventManagerInterface::class,
-        ));
+        $optionsListener->attach(Value::call($app, 'getEventManager'));
 
         // Setup json strategy
-        $strategy = Service::get(
-            $serviceManager,
-            JsonStrategy::class,
-            'ViewJsonStrategy',
-        );
+        $strategy = Service::get($serviceManager, JsonStrategy::class, 'ViewJsonStrategy');
         $strategy->attach($eventManager, 100);
     }
 
@@ -222,19 +190,19 @@ final class Module implements ConfigProviderInterface, BootstrapListenerInterfac
         }
 
         $app = $e->getApplication();
-        $services = Value::present($app)->getServiceManager();
-        $events = Value::present($app)->getEventManager();
+        $services = Assert::notNull($app)->getServiceManager();
+        $events = Assert::notNull($app)->getEventManager();
         Service::get($services, RenderErrorListener::class)->attach($events);
     }
 
     public function onRenderApiProblem(MvcEvent $e): void
     {
         $app = $e->getApplication();
-        $services = Value::present($app)->getServiceManager();
+        $services = Assert::notNull($app)->getServiceManager();
 
         if ($services->has('View')) {
             $view = Service::get($services, \Laminas\View\View::class, 'View');
-            $events = Value::present($app)->getEventManager();
+            $events = Assert::notNull($app)->getEventManager();
 
             // register at high priority, to "beat" normal json strategy registered
             // via view manager, as well as HAL strategy.

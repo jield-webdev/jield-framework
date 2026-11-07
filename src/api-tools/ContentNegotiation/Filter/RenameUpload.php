@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Jield\ApiTools\ContentNegotiation\Filter;
 
-use Jield\Stdlib\Value;
 use Laminas\Filter\Exception\RuntimeException;
 use Laminas\Filter\File\MoveUploadedFileInterface;
 use Laminas\Filter\File\RenameUpload as BaseFilter;
 use Laminas\Filter\FilterInterface;
 use Laminas\Stdlib\RequestInterface;
+use Webmozart\Assert\Assert;
 
 /**
  * @implements \Laminas\Filter\FilterInterface<mixed>
@@ -51,11 +51,11 @@ class RenameUpload implements FilterInterface
         }
         $options = $this->targetOrOptions ?? [];
         return new BaseFilter([
-            'target' => Value::nonEmptyString($options['target'] ?? '*'),
-            'use_upload_name' => Value::bool($options['use_upload_name'] ?? false),
-            'use_upload_extension' => Value::bool($options['use_upload_extension'] ?? false),
-            'overwrite' => Value::bool($options['overwrite'] ?? false),
-            'randomize' => Value::bool($options['randomize'] ?? false),
+            'target' => Assert::stringNotEmpty($options['target'] ?? '*'),
+            'use_upload_name' => Assert::boolean($options['use_upload_name'] ?? false),
+            'use_upload_extension' => Assert::boolean($options['use_upload_extension'] ?? false),
+            'overwrite' => Assert::boolean($options['overwrite'] ?? false),
+            'randomize' => Assert::boolean($options['randomize'] ?? false),
         ], $mover)->filter($value);
     }
 }

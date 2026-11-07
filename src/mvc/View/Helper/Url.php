@@ -6,10 +6,10 @@ namespace Jield\Mvc\View\Helper;
 
 use Jield\Mvc\ModuleRouteListener;
 use Jield\Mvc\Router\RouteMatch;
-use Jield\Stdlib\Value;
 use Laminas\Router\RouteStackInterface;
 use Laminas\View\Exception;
 use Traversable;
+use Webmozart\Assert\Assert;
 
 use function array_merge;
 use function func_num_args;
@@ -108,12 +108,10 @@ class Url extends AbstractHelper
         if ($options instanceof Traversable) {
             $options = iterator_to_array($options);
         }
-        $options = Value::array($options);
+        $options = Assert::isArray($options);
         $options['name'] = $name;
 
-        return $this->router
-            ->assemble(Value::routeParams($params), Value::array($options))
-            ->toString();
+        return $this->router->assemble($params, $options)->toString();
     }
 
     /**

@@ -16,9 +16,9 @@ final class InputFilterFactory
     {
         if ($container === null) {
             $dependencies = array_replace_recursive(
-                Value::stringKeyedArray(new \Laminas\Filter\ConfigProvider()->getDependencyConfig()),
-                Value::stringKeyedArray(new \Laminas\Validator\ConfigProvider()->getDependencyConfig()),
-                Value::stringKeyedArray(new \Laminas\InputFilter\ConfigProvider()->getDependencyConfig()),
+                new \Laminas\Filter\ConfigProvider()->getDependencyConfig(),
+                new \Laminas\Validator\ConfigProvider()->getDependencyConfig(),
+                new \Laminas\InputFilter\ConfigProvider()->getDependencyConfig(),
             );
             Value::setPath(
                 $dependencies,

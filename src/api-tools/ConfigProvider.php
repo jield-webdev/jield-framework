@@ -188,14 +188,10 @@ final class ConfigProvider
                 RestParametersListener::class => RestParametersListener::class,
             ],
             'factories' => [
-                EntraJwksProvider::class =>
-                    EntraJwksProviderFactory::class,
-                EntraOnBehalfOfClient::class =>
-                    EntraOnBehalfOfClientFactory::class,
-                EntraTokenValidator::class =>
-                    EntraTokenValidatorFactory::class,
-                TokenExchange::class =>
-                    TokenExchangeFactory::class,
+                EntraJwksProvider::class => EntraJwksProviderFactory::class,
+                EntraOnBehalfOfClient::class => EntraOnBehalfOfClientFactory::class,
+                EntraTokenValidator::class => EntraTokenValidatorFactory::class,
+                TokenExchange::class => TokenExchangeFactory::class,
 
                 \Jield\ApiTools\Rest\Listener\OptionsListener::class =>
                     \Jield\ApiTools\Rest\Factory\OptionsListenerFactory::class,

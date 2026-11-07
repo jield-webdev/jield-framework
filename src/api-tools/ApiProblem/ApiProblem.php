@@ -7,7 +7,6 @@ namespace Jield\ApiTools\ApiProblem;
 use Exception;
 use Jield\ApiTools\ApiProblem\Exception\InvalidArgumentException;
 use Jield\ApiTools\ApiProblem\Exception\ProblemExceptionInterface;
-use Jield\Stdlib\Value;
 use Throwable;
 
 use function array_key_exists;
@@ -173,7 +172,6 @@ class ApiProblem
     {
         $normalized = strtolower(string: $name);
         if (isset($this->normalizedProperties[$normalized])) {
-            /** @var mixed $prop */
             $prop = $this->normalizedProperties[$normalized];
 
             return match ($prop) {
@@ -282,7 +280,7 @@ class ApiProblem
             $this->type === 'https://datatracker.ietf.org/doc/html/rfc7231#section-6'
             && array_key_exists(key: $this->getStatus(), array: $this->problemStatusTitles)
         ) {
-            return Value::nullableString($this->problemStatusTitles[$this->status]);
+            return $this->problemStatusTitles[$this->status];
         }
 
         if ($this->detail instanceof Throwable) {

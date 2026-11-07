@@ -116,10 +116,7 @@ abstract class AbstractBuilder implements EventManagerAwareInterface, FormFactor
         if (!isset($formSpec['input_filter'])) {
             $formSpec['input_filter'] = $filterSpec;
         } elseif (is_array($formSpec['input_filter'])) {
-            $formSpec['input_filter'] = ArrayUtils::merge(
-                $filterSpec->getArrayCopy(),
-                Value::array($formSpec['input_filter']),
-            );
+            $formSpec['input_filter'] = ArrayUtils::merge($filterSpec->getArrayCopy(), $formSpec['input_filter']);
         }
 
         return $formSpec;
@@ -288,7 +285,7 @@ abstract class AbstractBuilder implements EventManagerAwareInterface, FormFactor
         );
         // @codingStandardsIgnoreEnd
 
-        return Value::string($results->last());
+        return $results->last();
     }
 
     /**
@@ -307,6 +304,6 @@ abstract class AbstractBuilder implements EventManagerAwareInterface, FormFactor
         $results = $this->getEventManager()->triggerEventUntil(static fn(?bool $r): bool => true === $r, $event);
         // @codingStandardsIgnoreEnd
 
-        return Value::bool(Value::truthy($results->last()));
+        return Value::truthy($results->last());
     }
 }

@@ -7,7 +7,6 @@ namespace Jield\ErrorHandler\Handler;
 use ErrorException;
 use InvalidArgumentException;
 use Jield\ErrorHandler\HeroConstant;
-use Jield\Stdlib\Value;
 use Laminas\Http\Header\Cookie;
 use Laminas\Http\PhpEnvironment\RemoteAddress;
 use Laminas\Http\PhpEnvironment\Request as HttpRequest;
@@ -18,6 +17,7 @@ use RuntimeException;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Email;
 use Throwable;
+use Webmozart\Assert\Assert;
 
 use function basename;
 use function get_current_user;
@@ -56,14 +56,8 @@ final class Logging
         private readonly ?MailerInterface $mailer = null,
         private readonly bool $includeFilesToAttachments = true,
     ) {
-        $this->emailReceivers = Value::strings(
-            Value::accessible(
-                $errorHeroModuleLocalConfig['email-notification-settings'],
-            )['email-to-send'],
-        );
-        $this->emailSender = Value::string(
-            Value::accessible($errorHeroModuleLocalConfig['email-notification-settings'])['email-from'],
-        );
+        $this->emailReceivers = $errorHeroModuleLocalConfig['email-notification-settings']['email-to-send'];
+        $this->emailSender = $errorHeroModuleLocalConfig['email-notification-settings']['email-from'];
     }
 
     /**
@@ -193,10 +187,10 @@ final class Logging
         return [
             self::SERVER_URL => $serverUrl,
             'url' => $url,
-            'file' => Value::string($collectedExceptionData[self::ERROR_FILE]),
-            'line' => Value::int($collectedExceptionData[self::ERROR_LINE]),
-            'error_type' => Value::string($collectedExceptionData[self::ERROR_TYPE]),
-            self::TRACE => Value::string($collectedExceptionData[self::TRACE]),
+            'file' => Assert::string($collectedExceptionData[self::ERROR_FILE]),
+            'line' => Assert::integer($collectedExceptionData[self::ERROR_LINE]),
+            'error_type' => Assert::string($collectedExceptionData[self::ERROR_TYPE]),
+            self::TRACE => Assert::string($collectedExceptionData[self::TRACE]),
             'request_data' => $this->getRequestData($request),
         ];
     }

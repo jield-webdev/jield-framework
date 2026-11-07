@@ -10,6 +10,7 @@ use Jield\GoogleAnalytics\Analytics\Ecommerce\Transaction;
 use Jield\GoogleAnalytics\Analytics\Event;
 use Jield\GoogleAnalytics\Analytics\Tracker;
 use Override;
+
 use function json_encode;
 
 class Gajs implements ScriptInterface

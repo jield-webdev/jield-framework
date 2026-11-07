@@ -10,6 +10,7 @@ use Laminas\EventManager\AbstractListenerAggregate;
 use Laminas\EventManager\EventManagerInterface as Events;
 use Laminas\Stdlib\StringUtils;
 use Laminas\View\Model\ModelInterface as ViewModel;
+use Webmozart\Assert\Assert;
 
 use function array_diff;
 use function array_pop;
@@ -74,14 +75,10 @@ class InjectTemplateListener extends AbstractListenerAggregate
         }
 
         $routeMatch = $e->getRouteMatch();
-        /** @var mixed $preferRouteMatchController */
         if (
-            $preferRouteMatchController = Value::present($routeMatch)->getParam(
-                'prefer_route_match_controller',
-                false,
-            )
+            $preferRouteMatchController = Assert::notNull($routeMatch)->getParam('prefer_route_match_controller', false)
         ) {
-            $this->setPreferRouteMatchController(Value::bool($preferRouteMatchController));
+            $this->setPreferRouteMatchController(Assert::boolean($preferRouteMatchController));
         }
 
         $controller = $e->getTarget();
@@ -89,20 +86,18 @@ class InjectTemplateListener extends AbstractListenerAggregate
             $controller = $controller::class;
         }
 
-        /** @var mixed $routeMatchController */
-        $routeMatchController = Value::present($routeMatch)->getParam('controller', '');
+        $routeMatchController = Assert::notNull($routeMatch)->getParam('controller', '');
         if (!$controller || $this->preferRouteMatchController && Value::truthy($routeMatchController)) {
             $controller = $routeMatchController;
         }
 
-        $template = $this->mapController(Value::string($controller));
+        $template = $this->mapController(Assert::string($controller));
 
-        /** @var mixed $action */
-        $action = Value::present($routeMatch)->getParam('action');
+        $action = Assert::notNull($routeMatch)->getParam('action');
         if (null !== $action) {
-            $template = (string) $template . '/' . $this->inflectName(Value::string($action));
+            $template = (string) $template . '/' . $this->inflectName(Assert::string($action));
         }
-        $model->setTemplate(Value::nonEmptyString($template));
+        $model->setTemplate(Assert::stringNotEmpty($template));
     }
 
     /**
@@ -140,7 +135,7 @@ class InjectTemplateListener extends AbstractListenerAggregate
             // Map namespace to $replacement if its value is string
             if (is_string($replacement)) {
                 $mapped = rtrim($replacement, '/') . '/';
-                $controller = substr($controller, strlen(Value::string($namespace)) + 1) ?: '';
+                $controller = substr($controller, strlen(Assert::string($namespace)) + 1) ?: '';
                 break;
             }
         }
@@ -178,7 +173,7 @@ class InjectTemplateListener extends AbstractListenerAggregate
         }
 
         $name = preg_replace($pattern, $replacement, $name);
-        return strtolower(Value::string($name));
+        return strtolower(Assert::string($name));
     }
 
     /**

@@ -8,9 +8,9 @@ namespace Jield\Mvc\Factory;
 use ArrayAccess;
 use Jield\Mvc\Service\HttpViewManagerConfigTrait;
 use Jield\Mvc\View\Http\RouteNotFoundStrategy;
-use Jield\Stdlib\Value;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Psr\Container\ContainerInterface;
+use Webmozart\Assert\Assert;
 
 class HttpRouteNotFoundStrategyFactory implements FactoryInterface
 {
@@ -41,9 +41,8 @@ class HttpRouteNotFoundStrategyFactory implements FactoryInterface
      */
     private function injectDisplayExceptions(RouteNotFoundStrategy $strategy, array|ArrayAccess $config): void
     {
-        /** @var mixed $flag */
         $flag = $config['display_exceptions'] ?? false;
-        $strategy->setDisplayExceptions(Value::bool($flag));
+        $strategy->setDisplayExceptions(Assert::boolean($flag));
     }
 
     /**
@@ -51,9 +50,8 @@ class HttpRouteNotFoundStrategyFactory implements FactoryInterface
      */
     private function injectDisplayNotFoundReason(RouteNotFoundStrategy $strategy, array|ArrayAccess $config): void
     {
-        /** @var mixed $flag */
         $flag = $config['display_not_found_reason'] ?? false;
-        $strategy->setDisplayNotFoundReason(Value::bool($flag));
+        $strategy->setDisplayNotFoundReason(Assert::boolean($flag));
     }
 
     /**
@@ -61,8 +59,7 @@ class HttpRouteNotFoundStrategyFactory implements FactoryInterface
      */
     private function injectNotFoundTemplate(RouteNotFoundStrategy $strategy, array|ArrayAccess $config): void
     {
-        /** @var mixed $template */
         $template = $config['not_found_template'] ?? '404';
-        $strategy->setNotFoundTemplate(Value::string($template));
+        $strategy->setNotFoundTemplate(Assert::string($template));
     }
 }

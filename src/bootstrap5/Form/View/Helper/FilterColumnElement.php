@@ -10,8 +10,9 @@ use Jield\Form\Fieldset;
 use Jield\Form\FieldsetInterface;
 use Jield\Form\Form;
 use Jield\Search\ValueObject\FacetField;
-
 use Jield\Stdlib\Value;
+use Webmozart\Assert\Assert;
+
 use function implode;
 use function sprintf;
 
@@ -66,7 +67,7 @@ class FilterColumnElement extends FormElement
 
         $facets = [];
         /** @var Fieldset $facet */
-        foreach (Value::instance(
+        foreach (Assert::isInstanceOf(
             $form->get(elementOrFieldset: 'facet'),
             FieldsetInterface::class,
         )->getFieldsets() as $facet) {
@@ -128,28 +129,20 @@ class FilterColumnElement extends FormElement
 
                 //Reset the options so the checked one is always on top
                 $sortedValueOptions = [];
-                $currentValueOptions = Value::instance(
-                    $element,
-                    MultiCheckbox::class,
-                )->getValueOptions();
+                $currentValueOptions = Assert::isInstanceOf($element, MultiCheckbox::class)->getValueOptions();
 
                 foreach (Value::toArray($element->getValue()) as $value) {
-                    $value = Value::key($value);
                     //We can only unset the value if it is in the value options
-                    if (!array_key_exists(
-                        key: $value,
-                        array: $currentValueOptions,
-                    )) {
+                    if (!array_key_exists(key: $value, array: $currentValueOptions)) {
                         continue;
                     }
 
-                    $sortedValueOptions[Value::key($value)] = $currentValueOptions[$value];
+                    $sortedValueOptions[$value] = $currentValueOptions[$value];
                     unset($currentValueOptions[$value]);
                 }
 
-                Value::instance($element, MultiCheckbox::class)->setValueOptions(
-                    options: $sortedValueOptions + $currentValueOptions,
-                );
+                Assert::isInstanceOf($element, MultiCheckbox::class)->setValueOptions(options: $sortedValueOptions
+                + $currentValueOptions);
 
                 return $formMultiCheckbox->render(element: $element);
             case 'checkbox':
@@ -168,7 +161,7 @@ class FilterColumnElement extends FormElement
 
                 return $formMultiCheckbox->render(element: $element);
             default:
-                return $this->renderHelper(name: Value::string($type), element: $element);
+                return $this->renderHelper(name: Assert::string($type), element: $element);
         }
     }
 }

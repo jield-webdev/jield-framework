@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Jield\ApiTools\OAuth2;
 
 use Firebase\JWT\JWT;
-use Jield\Stdlib\Value;
 use SensitiveParameter;
 use Throwable;
+use Webmozart\Assert\Assert;
 
 class EntraTokenValidator
 {
@@ -103,7 +103,7 @@ class EntraTokenValidator
         }
 
         try {
-            $key = $this->keys->getKey(tenantId: Value::string($tenantId), kid: $header['kid']);
+            $key = $this->keys->getKey(tenantId: Assert::string($tenantId), kid: $header['kid']);
         } catch (EntraException $exception) {
             $this->signingKeyFailure(exception: $exception, kid: $header['kid']);
         }
@@ -209,10 +209,8 @@ class EntraTokenValidator
             if (
                 !is_array($claims['roles'] ?? null)
                 || !array_is_list($claims['roles'])
-                || array_filter(
-                    array: Value::array($claims['roles']),
-                    callback: static fn(mixed $role): bool => !is_string($role),
-                ) !== []
+                || array_filter(array: $claims['roles'], callback: static fn(mixed $role): bool => !is_string($role))
+                    !== []
             ) {
                 $this->invalid(
                     standardMessage: $applicationError,

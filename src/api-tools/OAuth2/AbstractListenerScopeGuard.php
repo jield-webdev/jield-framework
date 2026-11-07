@@ -7,9 +7,9 @@ namespace Jield\ApiTools\OAuth2;
 use Jield\ApiTools\Listener\AbstractRoutedListener;
 use Jield\ApiTools\MvcAuth\Identity\AuthenticatedIdentity;
 use Jield\Mvc\MvcEvent;
-use Jield\Stdlib\Value;
 use Laminas\Http\Request;
 use Laminas\Http\Response;
+use Webmozart\Assert\Assert;
 
 /** Attach after authentication and HTTP method overrides, before application authorization. */
 abstract class AbstractListenerScopeGuard
@@ -21,19 +21,16 @@ abstract class AbstractListenerScopeGuard
             return null;
         }
 
-        /** @var mixed $controller */
         $controller = $event->getRouteMatch()?->getParam('controller');
         $listener = is_string($controller) && is_subclass_of($controller, AbstractRoutedListener::class)
             ? $controller
             : null;
-        /** @var mixed $identity */
         $identity = $event->getParam(AuthenticatedIdentity::class);
 
         // Existing session/guest authorization remains the application's responsibility.
         if (!$identity instanceof AuthenticatedIdentity && ($listener === null || !$listener::requiresAccessToken())) {
             return null;
         }
-        /** @var mixed $rawIdentity */
         $rawIdentity = $identity instanceof AuthenticatedIdentity ? $identity->getAuthenticationIdentity() : [];
         $data = is_array($rawIdentity) ? $rawIdentity : [];
         $expires = filter_var($data['expires'] ?? 0, FILTER_VALIDATE_INT);
@@ -42,7 +39,7 @@ abstract class AbstractListenerScopeGuard
         }
 
         $required = $listener === null ? [] : $listener::getScopesForMethod($request->getMethod());
-        $scopes = Scope::split(Value::nullableString($data['scope'] ?? null));
+        $scopes = Scope::split($data['scope'] ?? null);
         if ($required === [] || array_intersect($scopes, $required) === []) {
             return $this->deny(
                 $event,
@@ -55,7 +52,7 @@ abstract class AbstractListenerScopeGuard
         if (
             $listener !== null
             && $this->isApplicationIdentity($data)
-            && array_intersect($scopes, $required, Value::array($listener::getApplicationScopes())) === []
+            && array_intersect($scopes, $required, $listener::getApplicationScopes()) === []
         ) {
             return $this->deny(
                 $event,
@@ -94,7 +91,7 @@ abstract class AbstractListenerScopeGuard
             'WWW-Authenticate',
             'Bearer error="' . $error . '"' . ($scopes === [] ? '' : ', scope="' . implode(' ', $scopes) . '"'),
         );
-        return Value::instance(
+        return Assert::isInstanceOf(
             $response->setContent(json_encode([
                 'error' => $error,
                 'error_description' => $description,

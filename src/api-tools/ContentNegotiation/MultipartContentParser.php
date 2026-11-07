@@ -5,15 +5,14 @@ declare(strict_types=1);
 namespace Jield\ApiTools\ContentNegotiation;
 
 use finfo;
-use Jield\Stdlib\Value;
 use Laminas\Http\Header\ContentType as ContentTypeHeader;
 use Laminas\Http\Request as HttpRequest;
 use Laminas\Stdlib\Parameters;
+use Webmozart\Assert\Assert;
 
 use function fclose;
 use function fgets;
 use function filesize;
-use function finfo_open;
 use function fopen;
 use function function_exists;
 use function fwrite;
@@ -145,7 +144,7 @@ class MultipartContentParser
                         // Write the last line, stripping the EOL characters
                         if (
                             false === fwrite(stream: $tmpFile, data: rtrim(
-                                string: Value::string($lastLine),
+                                string: Assert::string($lastLine),
                                 characters: "\r\n",
                             ))
                         ) {
@@ -158,22 +157,20 @@ class MultipartContentParser
 
                             if ($mimeType === 'application/octet-stream' && function_exists(function: 'finfo_open')) {
                                 $finfo = new finfo(FILEINFO_MIME_TYPE);
-                                $type = $finfo->file(
-                                    filename: Value::string($file['tmp_name']),
-                                );
+                                $type = $finfo->file(filename: Assert::string($file['tmp_name']));
                                 if (false !== $type) {
                                     $file['type'] = $type;
                                 }
                             }
 
                             // Finally, set the filesize
-                            $file['size'] = filesize(filename: Value::string($file['tmp_name']));
+                            $file['size'] = filesize(filename: Assert::string($file['tmp_name']));
                         }
                     }
 
                     if ($filename) {
                         // At this point, we can add the file entry, regardless of error condition
-                        $files->set(name: Value::string($name), value: $file);
+                        $files->set(name: Assert::string($name), value: $file);
                     }
                 }
 
@@ -269,7 +266,7 @@ class MultipartContentParser
                 }
 
                 $file['tmp_name'] = tempnam(directory: $tmpDir, prefix: 'laminasc');
-                $tmpFile = fopen(filename: Value::string($file['tmp_name']), mode: 'wb');
+                $tmpFile = fopen(filename: Assert::string($file['tmp_name']), mode: 'wb');
                 if (false === $tmpFile) {
                     // Cannot open the temporary file for writing; this is an error
                     $file['error'] = UPLOAD_ERR_CANT_WRITE;
@@ -364,6 +361,6 @@ class MultipartContentParser
             return 'application/octet-stream';
         }
 
-        return Value::string($headers['CONTENT-TYPE']);
+        return $headers['CONTENT-TYPE'];
     }
 }

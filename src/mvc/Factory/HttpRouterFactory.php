@@ -10,6 +10,7 @@ use Laminas\Router\RoutePluginManager;
 use Laminas\Router\RouteStackInterface;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Psr\Container\ContainerInterface;
+use Webmozart\Assert\Assert;
 
 final class HttpRouterFactory implements FactoryInterface
 {
@@ -18,15 +19,13 @@ final class HttpRouterFactory implements FactoryInterface
         string $requestedName,
         ?array $options = null,
     ): RouteStackInterface {
-        /** @var mixed $config */
         $config = $container->get('config')['router'] ?? [];
-        /** @var mixed $class */
         $class = $config['router_class'] ?? TreeRouteStack::class;
         Value::setPath(
             $config,
             ['route_plugins'],
-            $container->get(Value::string($config['route_plugins'] ?? RoutePluginManager::class)),
+            $container->get($config['route_plugins'] ?? RoutePluginManager::class),
         );
-        return Value::instance($class::factory($config), \Laminas\Router\RouteStackInterface::class);
+        return Assert::isInstanceOf($class::factory($config), \Laminas\Router\RouteStackInterface::class);
     }
 }

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace DoctrineModule\Validator;
 
-use Jield\Stdlib\Value;
 use Override;
+
 use function is_object;
 
 /**
@@ -28,7 +28,7 @@ class NoObjectExists extends ObjectExists
     public function isValid($value): bool
     {
         $cleanedValue = $this->cleanSearchValue(value: $value);
-        $match = $this->objectRepository->findOneBy(criteria: Value::stringKeyedArray($cleanedValue));
+        $match = $this->objectRepository->findOneBy(criteria: $cleanedValue);
 
         if (is_object(value: $match)) {
             $this->error(messageKey: self::ERROR_OBJECT_FOUND, value: $value);

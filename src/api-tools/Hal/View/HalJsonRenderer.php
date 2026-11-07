@@ -12,11 +12,11 @@ use Jield\ApiTools\Hal\Entity;
 use Jield\ApiTools\Hal\Plugin\Hal;
 use Jield\Mvc\MvcEvent as ViewEvent;
 use Jield\Mvc\View\Renderer\JsonRenderer;
-use Jield\Stdlib\Value;
 use Laminas\View\HelperPluginManager;
 use Laminas\View\Model\ModelInterface;
 use LogicException;
 use Override;
+use Webmozart\Assert\Assert;
 
 /**
  * Handles rendering of the following:
@@ -95,7 +95,7 @@ class HalJsonRenderer extends JsonRenderer
 
         if ($templateNameOrModel->isEntity()) {
             /** @psalm-var Hal $helper */
-            $helper = Value::present($this->getHelperPluginManager())->get('Hal');
+            $helper = Assert::notNull($this->getHelperPluginManager())->get('Hal');
             /** @psalm-var Entity $entity */
             $entity = $templateNameOrModel->getPayload();
             $payload = $helper->renderEntity(halEntity: $entity);
@@ -105,7 +105,7 @@ class HalJsonRenderer extends JsonRenderer
 
         if ($templateNameOrModel->isCollection()) {
             /** @var Hal $helper */
-            $helper = Value::present($this->getHelperPluginManager())->get('Hal');
+            $helper = Assert::notNull($this->getHelperPluginManager())->get('Hal');
             /** @var Collection $collection */
             $collection = $templateNameOrModel->getPayload();
             $payload = $helper->renderCollection(halCollection: $collection);

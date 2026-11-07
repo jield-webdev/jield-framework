@@ -6,7 +6,6 @@ namespace Jield\AssetManager\Cache;
 
 use Assetic\Contracts\Cache\CacheInterface;
 use Jield\AssetManager\Exception\RuntimeException;
-use Jield\Stdlib\Value;
 use Laminas\Stdlib\ErrorHandler;
 use Override;
 
@@ -83,12 +82,9 @@ class FilePathCache implements CacheInterface
 
         ErrorHandler::start();
 
-        if (!is_dir(filename: Value::string($cacheDir))) {
+        if (!is_dir(filename: $cacheDir)) {
             $umask = umask(mask: 0);
-            if (
-                !mkdir(directory: Value::string($cacheDir), permissions: 0o777, recursive: true)
-                && !is_dir(filename: Value::string($cacheDir))
-            ) {
+            if (!mkdir(directory: $cacheDir, permissions: 0o777, recursive: true) && !is_dir(filename: $cacheDir)) {
                 throw new \RuntimeException(message: sprintf('Directory "%s" was not created', $cacheDir));
             }
 
@@ -101,7 +97,7 @@ class FilePathCache implements CacheInterface
 
         ErrorHandler::stop();
 
-        if (!is_writable(filename: Value::string($cacheDir))) {
+        if (!is_writable(filename: $cacheDir)) {
             throw new RuntimeException(message: 'Unable to write file ' . $this->cachedFile());
         }
 

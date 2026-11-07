@@ -12,6 +12,7 @@ use Jield\Stdlib\Value;
 use Laminas\Translator\TranslatorInterface;
 use Laminas\View\Helper\EscapeHtml;
 use Laminas\View\HelperPluginManager;
+use Webmozart\Assert\Assert;
 
 use function sprintf;
 
@@ -69,11 +70,7 @@ class FormElement extends Helper\FormElement
         parent::__construct($viewHelperManager);
         $this->formLabel = Service::get($viewHelperManager, Helper\FormLabel::class, 'formlabel');
         $this->escapeHtml = Service::get($viewHelperManager, EscapeHtml::class, 'escapehtml');
-        $this->formDescription = Service::get(
-            $viewHelperManager,
-            FormDescription::class,
-            'lbs5formdescription',
-        );
+        $this->formDescription = Service::get($viewHelperManager, FormDescription::class, 'lbs5formdescription');
         $this->formElementErrors = Service::get(
             $viewHelperManager,
             Helper\FormElementErrors::class,
@@ -160,24 +157,9 @@ class FormElement extends Helper\FormElement
             $this->getView()->headLink()->appendStylesheet('assets/css/jield-bootstrap5/codemirror.css');
 
             $element->setAttribute(key: 'class', value: 'codemirror-element form-control');
-            $element->setAttribute(
-                key: 'data-mode',
-                value: Value::plainScalar(Value::scalar($element->getOption(
-                    option: 'mode',
-                ))),
-            );
-            $element->setAttribute(
-                key: 'data-line-numbers',
-                value: Value::plainScalar(Value::scalar($element->getOption(
-                    option: 'line-numbers',
-                ))),
-            );
-            $element->setAttribute(
-                key: 'data-height',
-                value: Value::plainScalar(Value::scalar($element->getOption(
-                    option: 'height',
-                ))),
-            );
+            $element->setAttribute(key: 'data-mode', value: $element->getOption(option: 'mode'));
+            $element->setAttribute(key: 'data-line-numbers', value: $element->getOption(option: 'line-numbers'));
+            $element->setAttribute(key: 'data-height', value: $element->getOption(option: 'height'));
         }
 
         $renderedType = $this->renderType(element: $element);
@@ -186,9 +168,7 @@ class FormElement extends Helper\FormElement
             return $renderedType;
         }
 
-        $element->setValue(value: Value::present($this->translator)->translate(
-            message: Value::string($element->getValue()),
-        ));
+        $element->setValue(value: Assert::notNull($this->translator)->translate(message: $element->getValue()));
 
         return parent::render(element: $element);
     }
@@ -218,14 +198,14 @@ class FormElement extends Helper\FormElement
             switch ($type) {
                 case 'radio':
                     return $this->getRadioElement(
-                        label: Value::string($label),
+                        label: Assert::string($label),
                         element: $renderedElement,
                         error: $error,
                         description: $description,
                     );
                 case 'multi_checkbox':
                     return $this->getMultiCheckboxElement(
-                        label: Value::string($label),
+                        label: Assert::string($label),
                         element: $renderedElement,
                         error: $error,
                         description: $description,
@@ -257,8 +237,8 @@ class FormElement extends Helper\FormElement
     {
         $label = $element->getAttribute(key: 'label') ?? $element->getLabel();
 
-        if ($label !== null && null !== ($translator = Value::present($this->formLabel)->getTranslator())) {
-            $label = $translator->translate(message: Value::string($label));
+        if ($label !== null && null !== ($translator = Assert::notNull($this->formLabel)->getTranslator())) {
+            $label = $translator->translate(message: Assert::string($label));
         }
 
         return $label === null ? null : (string) $label;
@@ -266,7 +246,7 @@ class FormElement extends Helper\FormElement
 
     protected function parseDescription(ElementInterface $element): string
     {
-        return Value::present($this->formDescription)->__invoke(element: $element);
+        return Assert::notNull($this->formDescription)->__invoke(element: $element);
     }
 
     protected function hasFormElementError(ElementInterface $element): bool
@@ -276,17 +256,13 @@ class FormElement extends Helper\FormElement
 
     protected function parseFormElementError(ElementInterface $element): string
     {
-        Value::present($this->formElementErrors)->setMessageOpenFormat(
+        Assert::notNull($this->formElementErrors)->setMessageOpenFormat(
             messageOpenFormat: '<div class="invalid-feedback"><span%s>',
         );
-        Value::present($this->formElementErrors)->setMessageSeparatorString(
-            messageSeparatorString: '<br>',
-        );
-        Value::present($this->formElementErrors)->setMessageCloseString(
-            messageCloseString: '</span></div>',
-        );
+        Assert::notNull($this->formElementErrors)->setMessageSeparatorString(messageSeparatorString: '<br>');
+        Assert::notNull($this->formElementErrors)->setMessageCloseString(messageCloseString: '</span></div>');
 
-        return Value::present($this->formElementErrors)->__invoke(element: $element);
+        return Assert::notNull($this->formElementErrors)->__invoke(element: $element);
     }
 
     private function getRadioElement(string $label, string $element, ?string $error, string $description): string
@@ -381,50 +357,34 @@ class FormElement extends Helper\FormElement
             $openTagAttributes['class'] = ($openTagAttributes['class'] ?? '') . ' required';
         }
 
-        $openTag = Value::present($this->formLabel)->openTag(attributesOrElement: $openTagAttributes);
+        $openTag = Assert::notNull($this->formLabel)->openTag(attributesOrElement: $openTagAttributes);
 
         if (!$element instanceof LabelAwareInterface || !$element->getLabelOption(key: 'disable_html_escape')) {
-            /** @var mixed $label */
-            $label = Value::present($this->escapeHtml)->__invoke(value: $label);
+            $label = Assert::notNull($this->escapeHtml)->__invoke(value: $label);
         }
 
-        return (
-            $openTag
-            . Value::stringify($label)
-            . Value::present($this->formLabel)->closeTag()
-        );
+        return $openTag . Value::stringify($label) . Assert::notNull($this->formLabel)->closeTag();
     }
 
     private function getDefaultElement($label, $element, $error, $description): string
     {
         return match ($this->type) {
-            self::TYPE_INLINE, self::TYPE_DEFAULT => sprintf(
-                '%s%s%s%s',
-                Value::scalar($label),
-                Value::scalar($element),
-                Value::scalar($error),
-                Value::scalar($description),
-            ),
-            self::TYPE_ELEMENT_ONLY => sprintf(
-                '%s%s%s',
-                Value::scalar($element),
-                Value::scalar($error),
-                Value::scalar($description),
-            ),
+            self::TYPE_INLINE, self::TYPE_DEFAULT => sprintf('%s%s%s%s', $label, $element, $error, $description),
+            self::TYPE_ELEMENT_ONLY => sprintf('%s%s%s', $element, $error, $description),
             self::TYPE_FLOATING_LABEL => sprintf(
                 '<div class="form-floating mb-3">%s%s%s%s</div>',
-                Value::scalar($element),
-                Value::scalar($label),
-                Value::scalar($error),
-                Value::scalar($description),
+                $element,
+                $label,
+                $error,
+                $description,
             ),
             default => sprintf(
                 '<div class="row mb-3">%s<div class="col-sm-%d">%s%s%s</div></div>',
-                Value::scalar($label),
+                $label,
                 $this->elementCols,
-                Value::scalar($element),
-                Value::scalar($error),
-                Value::scalar($description),
+                $element,
+                $error,
+                $description,
             ),
         };
     }

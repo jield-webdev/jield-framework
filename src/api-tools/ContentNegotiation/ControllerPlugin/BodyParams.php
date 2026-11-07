@@ -18,25 +18,21 @@ class BodyParams extends AbstractPlugin
     {
         $controller = $this->getController();
         if ($controller instanceof AbstractController) {
-            /** @var mixed $parameterData */
             $parameterData = $controller->getEvent()->getParam(name: 'LaminasContentNegotiationParameterData');
             if ($parameterData instanceof ParameterDataContainer) {
                 return $parameterData->getBodyParams();
             }
         }
 
-        if (!method_exists(object_or_class: Value::objectOrString($controller), method: 'getRequest')) {
+        if (!method_exists(object_or_class: $controller, method: 'getRequest')) {
             return [];
         }
 
         $request = Value::call($controller, 'getRequest');
-        if (!method_exists(object_or_class: Value::objectOrString($request), method: 'getPost')) {
+        if (!method_exists(object_or_class: $request, method: 'getPost')) {
             return [];
         }
 
-        return Value::array(Value::call(
-            Value::call($request, 'getPost'),
-            'toArray',
-        ));
+        return Value::call(Value::call($request, 'getPost'), 'toArray');
     }
 }

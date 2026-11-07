@@ -20,10 +20,7 @@ class IdentityFactory implements FactoryInterface
         if ($container->has(AuthenticationService::class)) {
             $plugin->setAuthenticationService(Service::get($container, AuthenticationService::class));
         } elseif ($container->has(AuthenticationServiceInterface::class)) {
-            $plugin->setAuthenticationService(Service::get(
-                $container,
-                AuthenticationServiceInterface::class,
-            ));
+            $plugin->setAuthenticationService(Service::get($container, AuthenticationServiceInterface::class));
         }
 
         return $plugin;

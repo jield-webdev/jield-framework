@@ -8,9 +8,9 @@ use Jield\Form\ElementInterface;
 use Jield\Form\View\Helper;
 use Jield\Form\View\Helper\FormLabel;
 use Jield\Stdlib\Service;
-use Jield\Stdlib\Value;
 use Laminas\Translator\TranslatorInterface;
 use Laminas\View\HelperPluginManager;
+use Webmozart\Assert\Assert;
 
 use function count;
 use function md5;
@@ -25,11 +25,7 @@ final class FormCheckbox extends Helper\FormCheckbox
 
     public function __construct(HelperPluginManager $viewHelperManager, TranslatorInterface $translator)
     {
-        $this->formLabel = Service::get(
-            $viewHelperManager,
-            FormLabel::class,
-            'formlabel',
-        );
+        $this->formLabel = Service::get($viewHelperManager, FormLabel::class, 'formlabel');
 
         $this->translator = $translator;
     }
@@ -45,7 +41,7 @@ final class FormCheckbox extends Helper\FormCheckbox
             $element->setAttribute(key: 'class', value: 'form-check-input is-invalid');
         }
 
-        $id = md5(string: Value::string($element->getName()));
+        $id = md5(string: Assert::string($element->getName()));
         $element->setAttribute(key: 'id', value: $id);
 
         $renderedElement = parent::render(element: $element);
@@ -60,7 +56,7 @@ final class FormCheckbox extends Helper\FormCheckbox
         $label = $element->getAttribute(key: 'label') ?? $element->getLabel();
 
         if (null !== ($translator = $this->formLabel->getTranslator())) {
-            $label = $translator->translate(Value::string($label));
+            $label = $translator->translate(Assert::string($label));
         }
 
         return $label === null ? null : (string) $label;

@@ -9,8 +9,7 @@ use Jield\ApiTools\Hal\Extractor\EntityExtractor;
 use Jield\ApiTools\Hal\Link\Link;
 use Jield\ApiTools\Hal\Link\LinkCollection;
 use Jield\ApiTools\Hal\Metadata\Metadata;
-use Jield\Stdlib\Value;
-use Laminas\Paginator\Paginator;
+use Webmozart\Assert\Assert;
 
 use function array_merge;
 use function get_debug_type;
@@ -34,14 +33,11 @@ class ResourceFactory
         bool $renderEmbeddedEntities = true,
     ): Entity|Collection {
         if ($metadata->isCollection()) {
-            return $this->createCollectionFromMetadata(
-                object: Value::iterable($object),
-                metadata: $metadata,
-            );
+            return $this->createCollectionFromMetadata(object: Assert::isIterable($object), metadata: $metadata);
         }
 
         /** @psalm-var array<string,mixed> $data */
-        $data = $this->entityExtractor->extract(object: Value::object($object));
+        $data = $this->entityExtractor->extract(object: Assert::object($object));
 
         $entityIdentifierName = $metadata->getEntityIdentifierName();
         if ($entityIdentifierName && !isset($data[$entityIdentifierName])) {
@@ -52,7 +48,6 @@ class ResourceFactory
             ));
         }
 
-        /** @var mixed $id */
         $id = $entityIdentifierName !== '' && $entityIdentifierName !== '0' ? $data[$entityIdentifierName] : null;
 
         if (!$renderEmbeddedEntities) {
@@ -82,8 +77,8 @@ class ResourceFactory
     {
         $halCollection = new Collection(collection: $object);
         $halCollection->setCollectionName(name: $metadata->getCollectionName());
-        $halCollection->setCollectionRoute(route: Value::string($metadata->getRoute()));
-        $halCollection->setEntityRoute(route: Value::string($metadata->getEntityRoute()));
+        $halCollection->setCollectionRoute(route: Assert::string($metadata->getRoute()));
+        $halCollection->setEntityRoute(route: Assert::string($metadata->getEntityRoute()));
         $halCollection->setRouteIdentifierName(identifier: $metadata->getRouteIdentifierName());
         $halCollection->setEntityIdentifierName(identifier: $metadata->getEntityIdentifierName());
 
@@ -92,10 +87,7 @@ class ResourceFactory
 
         $forceSelfLink = $metadata->getForceSelfLink();
         if ($forceSelfLink && !$links->has(relation: 'self') && ($metadata->hasUrl() || $metadata->hasRoute())) {
-            $link = $this->marshalLinkFromMetadata(
-                metadata: $metadata,
-                object: Value::arrayOrObject($object),
-            );
+            $link = $this->marshalLinkFromMetadata(metadata: $metadata, object: $object);
             $links->idempotentAdd(link: $link);
         }
 
@@ -114,7 +106,7 @@ class ResourceFactory
     ): Link {
         $link = new Link(relation: $relation);
         if ($metadata->hasUrl()) {
-            $link->setUrl(href: Value::string($metadata->getUrl()));
+            $link->setUrl(href: Assert::string($metadata->getUrl()));
             return $link;
         }
 
@@ -136,7 +128,6 @@ class ResourceFactory
 
             // invoke callables with the object
             if (is_callable(value: $param)) {
-                /** @var mixed $value */
                 $value = $param($object);
                 $params[$key] = $value;
             }
@@ -147,7 +138,7 @@ class ResourceFactory
         }
 
         $link->setRoute(
-            route: Value::string($metadata->getRoute()),
+            route: Assert::string($metadata->getRoute()),
             params: $params,
             options: $metadata->getRouteOptions(),
         );

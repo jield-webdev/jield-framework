@@ -6,7 +6,6 @@ namespace Jield\ApiTools\Versioning;
 
 use Jield\Mvc\MvcEvent;
 use Jield\Mvc\Router\RouteMatch;
-use Jield\Stdlib\Value;
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\EventManager\ListenerAggregateInterface;
 use Laminas\EventManager\ListenerAggregateTrait;
@@ -14,6 +13,7 @@ use Laminas\Http\Header\HeaderInterface;
 use Laminas\Http\Headers;
 use Laminas\Http\Request;
 use Override;
+use Webmozart\Assert\Assert;
 
 use function array_reverse;
 use function array_shift;
@@ -86,14 +86,14 @@ class ContentTypeListener implements ListenerAggregateInterface
         }
 
         $headers = $request->getHeaders();
-        if (!Value::instance($headers, Headers::class)->has($this->headerName)) {
+        if (!Assert::isInstanceOf($headers, Headers::class)->has($this->headerName)) {
             return;
         }
 
-        $header = Value::instance($headers, Headers::class)->get($this->headerName);
+        $header = Assert::isInstanceOf($headers, Headers::class)->get($this->headerName);
 
         $matches = $this->parseHeaderForMatches(
-            value: Value::instance($header, HeaderInterface::class)->getFieldValue(),
+            value: Assert::isInstanceOf($header, HeaderInterface::class)->getFieldValue(),
         );
         if (is_array(value: $matches)) {
             $this->injectRouteMatches(routeMatches: $routeMatches, matches: $matches);
@@ -113,9 +113,8 @@ class ContentTypeListener implements ListenerAggregateInterface
         $contentType = array_shift(array: $parts);
         $contentType = trim(string: $contentType);
 
-        /** @var mixed $regex */
         foreach (array_reverse(array: $this->regexes) as $regex) {
-            if (!preg_match(pattern: Value::string($regex), subject: $contentType, matches: $matches)) {
+            if (!preg_match(pattern: $regex, subject: $contentType, matches: $matches)) {
                 continue;
             }
 

@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace DoctrineORMModule\Paginator\Adapter;
 
 use Doctrine\ORM\Tools\Pagination\Paginator;
-use Jield\Stdlib\Value;
 use JsonSerializable;
 use Laminas\Paginator\Adapter\AdapterInterface;
 use Traversable;
+use Webmozart\Assert\Assert;
 
 /**
  * Paginator adapter for the Laminas\Paginator component
@@ -53,7 +53,7 @@ class DoctrinePaginator implements AdapterInterface, JsonSerializable
     {
         $this->paginator
             ->getQuery()
-            ->setFirstResult(firstResult: Value::int($offset))
+            ->setFirstResult(firstResult: Assert::integer($offset))
             ->setMaxResults(maxResults: $itemCountPerPage);
 
         return $this->paginator->getIterator();

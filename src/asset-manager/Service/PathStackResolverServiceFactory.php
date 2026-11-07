@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Jield\AssetManager\Service;
 
 use Jield\AssetManager\Resolver\PathStackResolver;
-use Jield\Stdlib\Value;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Override;
 use Psr\Container\ContainerInterface;
@@ -26,7 +25,7 @@ class PathStackResolverServiceFactory implements FactoryInterface
             $paths = $config['asset_manager']['resolver_configs']['paths'];
         }
 
-        $pathStackResolver->addPaths(paths: Value::iterable($paths));
+        $pathStackResolver->addPaths(paths: $paths);
 
         return $pathStackResolver;
     }

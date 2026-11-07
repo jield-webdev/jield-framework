@@ -6,6 +6,7 @@ namespace Jield\Search\Solr;
 
 use InvalidArgumentException;
 use Stringable;
+
 use function defined;
 use function gettype;
 use function ini_get;

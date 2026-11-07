@@ -19,11 +19,7 @@ final class GoogleAnalyticsFactory implements FactoryInterface
     {
         $tracker = Service::get($container, Tracker::class);
 
-        $script = Service::get(
-            $container,
-            ScriptInterface::class,
-            ScriptFactory::class,
-        );
+        $script = Service::get($container, ScriptInterface::class, ScriptFactory::class);
         return new GoogleAnalytics(script: $script, id: $tracker->getId());
     }
 }

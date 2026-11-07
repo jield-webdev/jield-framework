@@ -14,6 +14,7 @@ use Jield\Stdlib\Value;
 use Laminas\Stdlib\ArrayUtils;
 use Laminas\Stdlib\Exception\InvalidArgumentException;
 use Traversable;
+use Webmozart\Assert\Assert;
 
 use function assert;
 use function class_exists;
@@ -121,37 +122,35 @@ class Collection extends Fieldset implements CollectionInterface
 
         if (isset($this->options['target_element'])) {
             $target = $this->options['target_element'];
-            $this->setTargetElement(elementOrFieldset: is_iterable($target) ? $target : Value::instance($target, ElementInterface::class));
+            $this->setTargetElement(
+                elementOrFieldset: is_iterable($target)
+                    ? $target
+                    : Assert::isInstanceOf($target, ElementInterface::class),
+            );
         }
 
         if (isset($this->options['count'])) {
-            $this->setCount(count: Value::int($this->options['count']));
+            $this->setCount(count: $this->options['count']);
         }
 
         if (isset($this->options['allow_add'])) {
-            $this->setAllowAdd(allowAdd: Value::bool($this->options['allow_add']));
+            $this->setAllowAdd(allowAdd: $this->options['allow_add']);
         }
 
         if (isset($this->options['allow_remove'])) {
-            $this->setAllowRemove(allowRemove: Value::bool($this->options['allow_remove']));
+            $this->setAllowRemove(allowRemove: $this->options['allow_remove']);
         }
 
         if (isset($this->options['should_create_template'])) {
-            $this->setShouldCreateTemplate(shouldCreateTemplate: Value::bool(
-                $this->options['should_create_template'],
-            ));
+            $this->setShouldCreateTemplate(shouldCreateTemplate: $this->options['should_create_template']);
         }
 
         if (isset($this->options['template_placeholder'])) {
-            $this->setTemplatePlaceholder(templatePlaceholder: Value::string(
-                $this->options['template_placeholder'],
-            ));
+            $this->setTemplatePlaceholder(templatePlaceholder: $this->options['template_placeholder']);
         }
 
         if (isset($this->options['create_new_objects'])) {
-            $this->setCreateNewObjects(createNewObjects: Value::bool(
-                $this->options['create_new_objects'],
-            ));
+            $this->setCreateNewObjects(createNewObjects: $this->options['create_new_objects']);
         }
 
         return $this;
@@ -205,7 +204,7 @@ class Collection extends Fieldset implements CollectionInterface
             $data = ArrayUtils::iteratorToArray(iterator: $data);
         }
 
-        if (!$this->allowRemove && count(value: Value::countable($data)) < $this->count) {
+        if (!$this->allowRemove && count(value: $data) < $this->count) {
             throw new Exception\DomainException(message: sprintf(
                 'There are fewer elements than specified in the collection (%s). Either set the allow_remove option '
                 . 'to true, or re-submit the form.',
@@ -234,9 +233,6 @@ class Collection extends Fieldset implements CollectionInterface
             $this->remove(elementOrFieldset: (string) $name);
         }
 
-        /** @var mixed $key
-         * @var mixed $value
-         */
         foreach ($data as $key => $value) {
             $elementOrFieldset = null;
             if ($this->has(elementOrFieldset: (string) $key)) {
@@ -250,15 +246,12 @@ class Collection extends Fieldset implements CollectionInterface
             }
 
             if ($elementOrFieldset instanceof FieldsetInterface) {
-                $elementOrFieldset->populateValues(data: Value::iterable($value));
+                $elementOrFieldset->populateValues(data: $value);
                 continue;
             }
 
             if ($elementOrFieldset !== null) {
-                $elementOrFieldset->setAttribute(
-                    key: 'value',
-                    value: Value::plainScalar(Value::scalar($value)),
-                );
+                $elementOrFieldset->setAttribute(key: 'value', value: $value);
             }
         }
 
@@ -287,7 +280,7 @@ class Collection extends Fieldset implements CollectionInterface
             $element = $this->get(elementOrFieldset: (string) $name);
 
             if ($element instanceof FieldsetInterface) {
-                $collection[] = $element->bindValues(Value::array($value), $validationGroup);
+                $collection[] = $element->bindValues($value, $validationGroup);
             } else {
                 $collection[] = $value;
             }
@@ -457,7 +450,7 @@ class Collection extends Fieldset implements CollectionInterface
         // Create a template that will also be prepared
         if ($this->shouldCreateTemplate) {
             $templateElement = $this->getTemplateElement();
-            $this->add(elementOrFieldset: Value::present($templateElement));
+            $this->add(elementOrFieldset: Assert::notNull($templateElement));
         }
 
         parent::prepareElement(form: $form);
@@ -478,7 +471,7 @@ class Collection extends Fieldset implements CollectionInterface
     public function extract(): array
     {
         if ($this->object instanceof Traversable) {
-            $this->object = Value::array(ArrayUtils::iteratorToArray(iterator: $this->object, recursive: false));
+            $this->object = ArrayUtils::iteratorToArray(iterator: $this->object, recursive: false);
         } elseif (!is_array(value: $this->object)) {
             return [];
         }
@@ -488,14 +481,14 @@ class Collection extends Fieldset implements CollectionInterface
         foreach ($this->object as $key => $value) {
             // If a hydrator is provided, our work here is done
             if ($this->hydrator) {
-                $values[$key] = $this->hydrator->extract(object: Value::object($value));
+                $values[$key] = $this->hydrator->extract(object: $value);
                 continue;
             }
 
             // If the target element is a fieldset that can accept the provided value
             // we should clone it, inject the value and extract the data
             if ($this->targetElement instanceof FieldsetInterface) {
-                if (!$this->targetElement->allowObjectBinding(object: Value::object($value))) {
+                if (!$this->targetElement->allowObjectBinding(object: $value)) {
                     continue;
                 }
                 $targetElement = clone $this->targetElement;
@@ -529,7 +522,6 @@ class Collection extends Fieldset implements CollectionInterface
     protected function createNewTargetElementInstance(): ElementInterface
     {
         assert(assertion: $this->targetElement !== null);
-        /** @var mixed $type */
         if (
             $this->targetElement instanceof InputFilterProviderFieldset
             && null !== ($type = $this->targetElement->getOption(option: 'target_type'))

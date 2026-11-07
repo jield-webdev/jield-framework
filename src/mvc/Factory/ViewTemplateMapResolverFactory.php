@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Jield\Mvc\Factory;
 
-use Jield\Stdlib\Value;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Laminas\View\Resolver as ViewResolver;
 use Psr\Container\ContainerInterface;
+use Webmozart\Assert\Assert;
 
 use function is_array;
 
@@ -31,15 +31,14 @@ class ViewTemplateMapResolverFactory implements FactoryInterface
         $config = $container->get('config');
         $map = [];
         if (is_array($config) && isset($config['view_manager'])) {
-            /** @var mixed $config */
             $config = $config['view_manager'];
             if (is_array($config) && isset($config['template_map'])) {
                 $map = $config['template_map'];
             }
         }
         $templates = [];
-        foreach (Value::stringKeyedArray($map) as $name => $path) {
-            $templates[Value::nonEmptyString($name)] = Value::nonEmptyString($path);
+        foreach ($map as $name => $path) {
+            $templates[Assert::stringNotEmpty($name)] = Assert::stringNotEmpty($path);
         }
         return new ViewResolver\TemplateMapResolver($templates);
     }

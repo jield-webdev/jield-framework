@@ -10,10 +10,10 @@ use Jield\AssetManager\Resolver\AggregateResolverAwareInterface;
 use Jield\AssetManager\Resolver\MimeResolverAwareInterface;
 use Jield\AssetManager\Resolver\ResolverInterface;
 use Jield\Stdlib\Service;
-use Jield\Stdlib\Value;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Override;
 use Psr\Container\ContainerInterface;
+use Webmozart\Assert\Assert;
 
 /**
  * Factory class for AssetManagerService
@@ -30,7 +30,6 @@ class AggregateResolverServiceFactory implements FactoryInterface
     public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): AggregateResolver
     {
         $config = $container->get('config');
-        /** @var mixed $config */
         $config = $config['asset_manager'] ?? [];
 
         $resolver = new AggregateResolver();
@@ -39,12 +38,8 @@ class AggregateResolverServiceFactory implements FactoryInterface
             return $resolver;
         }
 
-        /** @var mixed $resolverService
-         * @var mixed $priority
-         */
-        foreach (Value::iterable($config['resolvers']) as $resolverService => $priority) {
-            /** @var mixed $resolverService */
-            $resolverService = $container->get(Value::string($resolverService));
+        foreach (Assert::isIterable($config['resolvers']) as $resolverService => $priority) {
+            $resolverService = $container->get($resolverService);
 
             if (!$resolverService instanceof ResolverInterface) {
                 throw new Exception\RuntimeException(
@@ -57,10 +52,7 @@ class AggregateResolverServiceFactory implements FactoryInterface
             }
 
             if ($resolverService instanceof MimeResolverAwareInterface) {
-                $resolverService->setMimeResolver(mimeResolver: Service::get(
-                    $container,
-                    MimeResolver::class,
-                ));
+                $resolverService->setMimeResolver(mimeResolver: Service::get($container, MimeResolver::class));
             }
 
             if ($resolverService instanceof AssetFilterManagerAwareInterface) {
@@ -70,7 +62,7 @@ class AggregateResolverServiceFactory implements FactoryInterface
                 ));
             }
 
-            $resolver->attach(resolver: $resolverService, priority: Value::int($priority));
+            $resolver->attach(resolver: $resolverService, priority: Assert::integer($priority));
         }
 
         return $resolver;

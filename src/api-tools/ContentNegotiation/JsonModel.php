@@ -8,12 +8,9 @@ use Jield\ApiTools\Hal\Collection as HalCollection;
 use Jield\ApiTools\Hal\Entity as HalEntity;
 use Jield\Mvc\View\Model\JsonModel as BaseJsonModel;
 use Jield\Stdlib\Json;
-use Jield\Stdlib\Value;
 use JsonSerializable;
 use Override;
-
 use Traversable;
-use function json_last_error;
 
 use const JSON_ERROR_CTRL_CHAR;
 use const JSON_ERROR_DEPTH;
@@ -36,11 +33,10 @@ class JsonModel extends BaseJsonModel
     public function setVariables($variables, $overwrite = false): static
     {
         if ($variables instanceof JsonSerializable) {
-            /** @var mixed $variables */
             $variables = $variables->jsonSerialize();
         }
 
-        return parent::setVariables(variables: Value::namedValues($variables), overwrite: $overwrite);
+        return parent::setVariables(variables: $variables, overwrite: $overwrite);
     }
 
     /**
@@ -78,7 +74,6 @@ class JsonModel extends BaseJsonModel
 
         // 'payload' == payload for HAL representations
         if (isset($variables['payload'])) {
-            /** @var mixed $variables */
             $variables = $variables['payload'];
         }
 

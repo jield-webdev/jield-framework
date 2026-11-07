@@ -5,9 +5,7 @@ declare(strict_types=1);
 namespace Jield\ErrorHandler\Listener;
 
 use Jield\ErrorHandler\Handler\Logging;
-use Jield\Mvc\View\Renderer\PhpRenderer;
 use Jield\Stdlib\Service;
-use Jield\Stdlib\Value;
 use Psr\Container\ContainerInterface;
 
 final class MvcFactory
@@ -19,14 +17,10 @@ final class MvcFactory
 
         $logging = Service::get($container, Logging::class);
 
-        $viewRenderer = Service::get(
-            $container,
-            \Jield\Mvc\View\Renderer\PhpRenderer::class,
-            'ViewRenderer',
-        );
+        $viewRenderer = Service::get($container, \Jield\Mvc\View\Renderer\PhpRenderer::class, 'ViewRenderer');
 
         return new Mvc(
-            errorHeroModuleConfig: Value::array($config['error-hero-module']),
+            errorHeroModuleConfig: $config['error-hero-module'],
             logging: $logging,
             phpRenderer: $viewRenderer,
         );

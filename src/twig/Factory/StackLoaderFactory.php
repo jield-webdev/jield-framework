@@ -5,11 +5,9 @@ declare(strict_types=1);
 namespace Jield\Twig\Factory;
 
 use Jield\Stdlib\Service;
-use Jield\Stdlib\Value;
 use Jield\Twig\ModuleOptions;
 use Jield\Twig\StackLoader;
 use Laminas\ServiceManager\Factory\FactoryInterface;
-use Laminas\View\Resolver\TemplatePathStack;
 use Psr\Container\ContainerInterface;
 
 class StackLoaderFactory implements FactoryInterface
@@ -18,7 +16,7 @@ class StackLoaderFactory implements FactoryInterface
     {
         $moduleOptions = $options === null
             ? Service::get($container, ModuleOptions::class)
-            : new ModuleOptions(Value::stringKeyedArray($options));
+            : new ModuleOptions($options);
 
         $zfTemplateStack = Service::get(
             $container,

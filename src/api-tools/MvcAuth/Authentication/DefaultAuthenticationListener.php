@@ -8,10 +8,10 @@ use Jield\ApiTools\MvcAuth\Identity;
 use Jield\ApiTools\MvcAuth\Identity\AuthenticatedIdentity;
 use Jield\ApiTools\MvcAuth\MvcAuthEvent;
 use Jield\Mvc\Router\RouteMatch;
-use Jield\Stdlib\Value;
 use Laminas\Http\Request as HttpRequest;
 use Laminas\Http\Response;
 use Laminas\Http\Response as HttpResponse;
+use Webmozart\Assert\Assert;
 
 use function array_merge;
 use function array_unique;
@@ -142,13 +142,13 @@ class DefaultAuthenticationListener
         }
 
         foreach ($this->authMap as $api => $type) {
-            $api = rtrim(string: Value::string($api), characters: '\\') . '\\';
+            $api = rtrim(string: Assert::string($api), characters: '\\') . '\\';
             if (strlen(string: $api) > strlen(string: (string) $controller)) {
                 continue;
             }
 
             if (str_starts_with(haystack: (string) $controller, needle: $api)) {
-                return Value::string($type);
+                return Assert::string($type);
             }
         }
 
@@ -164,7 +164,7 @@ class DefaultAuthenticationListener
         foreach ($this->adapters as $adapter) {
             $type = $adapter->getTypeFromRequest(request: $request);
             if (false !== $type) {
-                return Value::string($type);
+                return $type;
             }
         }
 

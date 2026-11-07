@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace DoctrineModule\Validator\Service;
 
 use DoctrineModule\Validator\NoObjectExists;
-use Jield\Stdlib\Value;
 use Psr\Container\ContainerInterface;
+use Webmozart\Assert\Assert;
 
 final class NoObjectExistsFactory extends AbstractValidatorFactory
 {
@@ -19,12 +19,9 @@ final class NoObjectExistsFactory extends AbstractValidatorFactory
     {
         $repository = $this->getRepository(container: $container, options: $options);
 
-        return new NoObjectExists(options: $this->merge(
-            previousOptions: Value::array($options),
-            newOptions: [
-                'object_repository' => $repository,
-                'fields' => $this->getFields(options: Value::array($options)),
-            ],
-        ));
+        return new NoObjectExists(options: $this->merge(previousOptions: Assert::isArray($options), newOptions: [
+            'object_repository' => $repository,
+            'fields' => $this->getFields(options: Assert::isArray($options)),
+        ]));
     }
 }

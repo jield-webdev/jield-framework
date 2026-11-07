@@ -19,6 +19,7 @@ use Laminas\Http\Request;
 use Laminas\Router\Http\TreeRouteStack;
 use Laminas\Session\Container;
 use Laminas\Stdlib\ResponseInterface as Response;
+use Webmozart\Assert\Assert;
 
 /**
  * Dispatch error handler, catches exceptions related with authorization and
@@ -112,23 +113,16 @@ class UnauthorizedStrategy implements ListenerAggregateInterface
                     /** @var TreeRouteStack $router */
                     $router = $event->getRouter();
 
-                    $redirect = $router->assemble(
-                        params: Value::routeParams($event->getRouteMatch()?->getParams()),
-                        options: [
-                            'name' => $event->getParam(name: 'route'),
-                        ],
-                    )->toString();
+                    $redirect = $router->assemble(params: $event->getRouteMatch()?->getParams(), options: [
+                        'name' => $event->getParam(name: 'route'),
+                    ])->toString();
 
                     //Store the referrer in a session
                     if ($redirect) {
                         //Grab the query and append it to the URL
-                        /** @var mixed $query */
-                        $query = Value::instance($event->getRequest(), Request::class)
-                            ->getUri()
-                            ->getQuery();
+                        $query = Assert::isInstanceOf($event->getRequest(), Request::class)->getUri()->getQuery();
                         $session = new Container('session');
-                        $session['redirect'] =
-                            $redirect . (empty($query) ? '' : '?' . Value::stringify($query));
+                        $session['redirect'] = $redirect . (empty($query) ? '' : '?' . Value::stringify($query));
                     }
 
                     $response->getHeaders()->addHeaderLine(headerFieldNameOrLine: 'Location', fieldValue: $url);
@@ -150,7 +144,7 @@ class UnauthorizedStrategy implements ListenerAggregateInterface
 
         $model = new ViewModel(variables: $viewVariables);
 
-        $model->setTemplate(template: Value::nonEmptyString($this->getTemplate()));
+        $model->setTemplate(template: Assert::stringNotEmpty($this->getTemplate()));
         $event->getViewModel()->addChild(child: $model);
         $response->setStatusCode(code: 403);
         $event->setResponse(response: $response);

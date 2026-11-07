@@ -14,6 +14,7 @@ use RuntimeException;
 use Twig\Environment;
 use Twig\Loader\LoaderInterface;
 use Twig\TwigFunction;
+use Webmozart\Assert\Assert;
 
 use function sprintf;
 
@@ -23,7 +24,7 @@ class EnvironmentFactory implements FactoryInterface
     {
         $moduleOptions = $options === null
             ? Service::get($container, ModuleOptions::class)
-            : new ModuleOptions(Value::stringKeyedArray($options));
+            : new ModuleOptions($options);
 
         $envClass = $moduleOptions->getEnvironmentClass() ?: Environment::class;
 
@@ -34,34 +35,25 @@ class EnvironmentFactory implements FactoryInterface
             ));
         }
 
-        $env = Value::instance(Value::instantiate($envClass, [
-            Value::instance(
-                $container->get($moduleOptions->getEnvironmentLoader()),
-                LoaderInterface::class,
-            ),
+        $env = Assert::isInstanceOf(Value::instantiate($envClass, [
+            Assert::isInstanceOf($container->get($moduleOptions->getEnvironmentLoader()), LoaderInterface::class),
             $moduleOptions->getEnvironmentOptions(),
         ]), Environment::class);
 
         if ($moduleOptions->enableFallbackFunctions()) {
-            $helperPluginManager = Service::get(
-                $container,
-                HelperPluginManager::class,
-                'ViewHelperManager',
-            );
+            $helperPluginManager = Service::get($container, HelperPluginManager::class, 'ViewHelperManager');
             $env->registerUndefinedFunctionCallback(static function ($name) use ($helperPluginManager) {
                 if ($helperPluginManager->has($name)) {
-                    return new TwigFunction(
-                        $name,
-                        Value::callback($helperPluginManager->get($name)),
-                        ['is_safe' => ['all']],
-                    );
+                    return new TwigFunction($name, Assert::isCallable($helperPluginManager->get($name)), ['is_safe' => [
+                        'all',
+                    ]]);
                 }
                 return false;
             });
         }
 
         foreach ($moduleOptions->getGlobals() as $name => $value) {
-            $env->addGlobal(Value::string($name), $value);
+            $env->addGlobal(Assert::string($name), $value);
         }
 
         // Extensions are loaded later to avoid circular dependencies (for example, if an extension needs Renderer).

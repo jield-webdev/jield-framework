@@ -15,6 +15,7 @@ use Twig\Error\LoaderError;
 use Twig\Error\RuntimeError;
 use Twig\Error\SyntaxError;
 use Twig\Loader;
+use Webmozart\Assert\Assert;
 
 use function call_user_func_array;
 use function is_callable;
@@ -140,9 +141,7 @@ class TwigRenderer implements RendererInterface
      */
     public function render(string|ModelInterface $templateNameOrModel, $variables = null): string
     {
-        $variables = Value::iterable($variables instanceof ModelInterface
-            ? $variables->getVariables()
-            : ($variables ?? []));
+        $variables = $variables instanceof ModelInterface ? $variables->getVariables() : $variables ?? [];
         $values = is_array($variables) ? $variables : iterator_to_array($variables);
         if ($templateNameOrModel instanceof ModelInterface) {
             $model = $templateNameOrModel;
@@ -159,10 +158,10 @@ class TwigRenderer implements RendererInterface
             }
             $templateNameOrModel = $model->getTemplate();
         }
-        $templateName = $this->resolver->resolve(Value::nonEmptyString($templateNameOrModel));
+        $templateName = $this->resolver->resolve(Assert::stringNotEmpty($templateNameOrModel));
         if ($templateName === false) {
             throw new Exception\DomainException(sprintf('Cannot resolve template "%s"', $templateNameOrModel));
         }
-        return $this->environment->render($templateName, Value::array($values));
+        return $this->environment->render($templateName, $values);
     }
 }

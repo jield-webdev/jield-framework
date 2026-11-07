@@ -8,9 +8,9 @@ namespace Jield\Mvc\Factory;
 use ArrayAccess;
 use Jield\Mvc\Service\HttpViewManagerConfigTrait;
 use Jield\Mvc\View\Http\ExceptionStrategy;
-use Jield\Stdlib\Value;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Psr\Container\ContainerInterface;
+use Webmozart\Assert\Assert;
 
 class HttpExceptionStrategyFactory implements FactoryInterface
 {
@@ -40,9 +40,8 @@ class HttpExceptionStrategyFactory implements FactoryInterface
      */
     private function injectDisplayExceptions(ExceptionStrategy $strategy, array|ArrayAccess $config): void
     {
-        /** @var mixed $flag */
         $flag = $config['display_exceptions'] ?? false;
-        $strategy->setDisplayExceptions(Value::bool($flag));
+        $strategy->setDisplayExceptions(Assert::boolean($flag));
     }
 
     /**
@@ -50,8 +49,7 @@ class HttpExceptionStrategyFactory implements FactoryInterface
      */
     private function injectExceptionTemplate(ExceptionStrategy $strategy, array|ArrayAccess $config): void
     {
-        /** @var mixed $template */
         $template = $config['exception_template'] ?? 'error';
-        $strategy->setExceptionTemplate(Value::string($template));
+        $strategy->setExceptionTemplate(Assert::string($template));
     }
 }

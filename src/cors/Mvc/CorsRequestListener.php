@@ -25,13 +25,13 @@ use Jield\Cors\Exception\DisallowedOriginException;
 use Jield\Cors\Exception\InvalidOriginException;
 use Jield\Cors\Service\CorsService;
 use Jield\Mvc\MvcEvent;
-use Jield\Stdlib\Value;
 use Laminas\EventManager\AbstractListenerAggregate;
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\Http\Header\HeaderInterface;
 use Laminas\Http\Request as HttpRequest;
 use Laminas\Http\Response as HttpResponse;
 use Psr\Http\Message\RequestInterface;
+use Webmozart\Assert\Assert;
 
 /**
  * CorsRequestListener
@@ -78,7 +78,7 @@ class CorsRequestListener extends AbstractListenerAggregate
         try {
             $isCorsRequest = $this->corsService->isCorsRequest($request);
         } catch (InvalidOriginException $exception) {
-            $response = Value::instance($event->getResponse(), HttpResponse::class);
+            $response = Assert::isInstanceOf($event->getResponse(), HttpResponse::class);
             $response->setStatusCode(400);
             $response->setReasonPhrase($exception->getMessage());
             return $response;
@@ -97,16 +97,13 @@ class CorsRequestListener extends AbstractListenerAggregate
         $requestForMatching = clone $request;
         // Use the request method for route detection, which is being used during the request.
         $requestForMatching->setMethod(
-            Value::instance(
+            Assert::isInstanceOf(
                 $request->getHeader('Access-Control-Request-Method'),
                 HeaderInterface::class,
             )->getFieldValue(),
         );
 
-        $routeMatch = $router->match(Value::instance(
-            $requestForMatching,
-            RequestInterface::class,
-        ));
+        $routeMatch = $router->match(Assert::isInstanceOf($requestForMatching, RequestInterface::class));
 
         return $this->corsService->createPreflightCorsResponseWithRouteOptions($request, $routeMatch);
     }
@@ -122,7 +119,7 @@ class CorsRequestListener extends AbstractListenerAggregate
         }
 
         $request = $event->getRequest();
-        $response = Value::instance($event->getResponse(), HttpResponse::class);
+        $response = Assert::isInstanceOf($event->getResponse(), HttpResponse::class);
 
         if (!$request instanceof HttpRequest) {
             return;

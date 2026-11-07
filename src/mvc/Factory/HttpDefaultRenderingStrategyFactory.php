@@ -9,10 +9,10 @@ use ArrayAccess;
 use Jield\Mvc\Service\HttpViewManagerConfigTrait;
 use Jield\Mvc\View\Http\DefaultRenderingStrategy;
 use Jield\Stdlib\Service;
-use Jield\Stdlib\Value;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Laminas\View\View;
 use Psr\Container\ContainerInterface;
+use Webmozart\Assert\Assert;
 
 class HttpDefaultRenderingStrategyFactory implements FactoryInterface
 {
@@ -43,8 +43,7 @@ class HttpDefaultRenderingStrategyFactory implements FactoryInterface
      */
     private function injectLayoutTemplate(DefaultRenderingStrategy $strategy, array|ArrayAccess $config): void
     {
-        /** @var mixed $layout */
         $layout = $config['layout'] ?? 'layout/layout';
-        $strategy->setLayoutTemplate(Value::string($layout));
+        $strategy->setLayoutTemplate(Assert::string($layout));
     }
 }

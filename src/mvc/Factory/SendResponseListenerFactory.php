@@ -18,11 +18,7 @@ class SendResponseListenerFactory
     public function __invoke(ContainerInterface $container): SendResponseListener
     {
         $listener = new SendResponseListener();
-        $listener->setEventManager(Service::get(
-            $container,
-            EventManagerInterface::class,
-            'EventManager',
-        ));
+        $listener->setEventManager(Service::get($container, EventManagerInterface::class, 'EventManager'));
         return $listener;
     }
 }

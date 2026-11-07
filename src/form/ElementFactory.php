@@ -36,7 +36,6 @@ final class ElementFactory implements FactoryInterface
         }
 
         if (isset($options['options'])) {
-            /** @var mixed $options */
             $options = $options['options'];
         }
 

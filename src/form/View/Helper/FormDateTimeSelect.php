@@ -9,8 +9,8 @@ use IntlDateFormatter;
 use Jield\Form\Element\DateTimeSelect as DateTimeSelectElement;
 use Jield\Form\ElementInterface;
 use Jield\Form\Exception;
-
 use Jield\Stdlib\Value;
+
 use function array_diff;
 use function array_intersect;
 use function array_key_exists;
@@ -108,11 +108,11 @@ class FormDateTimeSelect extends AbstractFormDateSelect
         $shouldRenderDelimiters = $element->shouldRenderDelimiters();
         $selectHelper = $this->getSelectElementHelper();
         $pattern = $this->parsePattern(renderDelimiters: $shouldRenderDelimiters);
-        $daysOptions = $this->getDaysOptions(pattern: Value::string($pattern['day']));
-        $monthsOptions = $this->getMonthsOptions(pattern: Value::string($pattern['month']));
+        $daysOptions = $this->getDaysOptions(pattern: $pattern['day']);
+        $monthsOptions = $this->getMonthsOptions(pattern: $pattern['month']);
         $yearOptions = $this->getYearsOptions(minYear: $element->getMinYear(), maxYear: $element->getMaxYear());
-        $hourOptions = $this->getHoursOptions(pattern: Value::string($pattern['hour']));
-        $minuteOptions = $this->getMinutesOptions(pattern: Value::string($pattern['minute']));
+        $hourOptions = $this->getHoursOptions(pattern: $pattern['hour']);
+        $minuteOptions = $this->getMinutesOptions(pattern: $pattern['minute']);
 
         $dayElement = $element->getDayElement()->setValueOptions(options: $daysOptions);
         $monthElement = $element->getMonthElement()->setValueOptions(options: $monthsOptions);
@@ -131,12 +131,12 @@ class FormDateTimeSelect extends AbstractFormDateSelect
         $data = [];
         $data[$pattern['day']] = $selectHelper->render(element: $dayElement);
         $data[$pattern['month']] = $selectHelper->render(element: $monthElement);
-        $data[Value::key($pattern['year'])] = $selectHelper->render(element: $yearElement);
+        $data[$pattern['year']] = $selectHelper->render(element: $yearElement);
         $data[$pattern['hour']] = $selectHelper->render(element: $hourElement);
         $data[$pattern['minute']] = $selectHelper->render(element: $minuteElement);
 
         if ($element->shouldShowSeconds() && array_key_exists(key: 'second', array: $pattern)) {
-            $secondOptions = $this->getSecondsOptions(pattern: Value::string($pattern['second']));
+            $secondOptions = $this->getSecondsOptions(pattern: $pattern['second']);
             $secondElement = $element->getSecondElement()->setValueOptions(options: $secondOptions);
 
             if ($element->shouldCreateEmptyOption()) {

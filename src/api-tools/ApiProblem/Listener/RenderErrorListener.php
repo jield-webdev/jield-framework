@@ -6,13 +6,13 @@ namespace Jield\ApiTools\ApiProblem\Listener;
 
 use Jield\ApiTools\ApiProblem\ApiProblem;
 use Jield\Mvc\MvcEvent;
-use Jield\Stdlib\Value;
 use Laminas\EventManager\AbstractListenerAggregate;
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\Http\Response as HttpResponse;
 use Laminas\View\Exception\ExceptionInterface as ViewExceptionInterface;
 use Override;
 use Throwable;
+use Webmozart\Assert\Assert;
 
 use function json_encode;
 
@@ -71,7 +71,6 @@ class RenderErrorListener extends AbstractListenerAggregate
         $detail = 'Your request could not be resolved to an acceptable representation.';
         $details = false;
 
-        /** @var mixed $exception */
         $exception = $e->getParam(name: 'exception');
         if ($exception instanceof Throwable && !$exception instanceof ViewExceptionInterface) {
             $code = $exception->getCode();
@@ -97,7 +96,7 @@ class RenderErrorListener extends AbstractListenerAggregate
         }
 
         $response->getHeaders()->addHeaderLine('content-type', ApiProblem::CONTENT_TYPE);
-        $response->setStatusCode(code: Value::int($status));
+        $response->setStatusCode(code: Assert::integer($status));
         $response->setContent(json_encode(value: $payload));
 
         $e->stopPropagation();

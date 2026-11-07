@@ -12,6 +12,7 @@ use Laminas\ServiceManager\Exception\ServiceNotCreatedException;
 use Laminas\ServiceManager\Factory\AbstractFactoryInterface;
 use Override;
 use Psr\Container\ContainerInterface;
+use Webmozart\Assert\Assert;
 
 use function class_exists;
 use function explode;
@@ -51,7 +52,6 @@ class RpcControllerFactory implements AbstractFactoryInterface
             return false;
         }
 
-        /** @var mixed $config */
         $config = $config['api-tools-rpc'][$requestedName];
         return isset($config['callable']);
     }
@@ -80,7 +80,7 @@ class RpcControllerFactory implements AbstractFactoryInterface
         }
 
         $controller = new RpcController();
-        $controller->setWrappedCallable(wrappedCallable: Value::callback($callable));
+        $controller->setWrappedCallable(wrappedCallable: Assert::isCallable($callable));
         return $controller;
     }
 
@@ -100,11 +100,7 @@ class RpcControllerFactory implements AbstractFactoryInterface
             $callable = $this->marshalCallableFromContainer(
                 class: $class,
                 method: $method,
-                container: Service::get(
-                    $container,
-                    ControllerManager::class,
-                    'ControllerManager',
-                ),
+                container: Service::get($container, ControllerManager::class, 'ControllerManager'),
             );
         }
 
@@ -115,18 +111,18 @@ class RpcControllerFactory implements AbstractFactoryInterface
         }
 
         if ($callable) {
-            return Value::callback($callable);
+            return Assert::isCallable($callable);
         }
 
         if (!class_exists(class: $class)) {
             throw new ServiceNotCreatedException(message: sprintf(
                 'Cannot create callback %s as class %s does not exist',
-                Value::scalar($string),
+                $string,
                 $class,
             ));
         }
 
-        return Value::callback([Value::instantiate($class), $method]);
+        return Assert::isCallable([Value::instantiate($class), $method]);
     }
 
     /**

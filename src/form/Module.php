@@ -10,7 +10,6 @@ use Jield\ModuleManager\Listener\ServiceListener;
 use Jield\ModuleManager\ModuleManagerInterface;
 use Jield\Stdlib\Service;
 use Jield\Stdlib\Value;
-use Psr\Container\ContainerInterface;
 
 final class Module implements InitProviderInterface
 {
@@ -31,12 +30,11 @@ final class Module implements InitProviderInterface
      */
     public function init(ModuleManagerInterface $manager): void
     {
-        /** @var mixed $event */
         $event = $manager->getEvent();
         $container = Value::call($event, 'getParam', ['name' => 'ServiceManager']);
 
         $serviceListener = Service::get(
-            Value::instance($container, ContainerInterface::class),
+            $container,
             \Jield\ModuleManager\Listener\ServiceListener::class,
             'ServiceListener',
         );

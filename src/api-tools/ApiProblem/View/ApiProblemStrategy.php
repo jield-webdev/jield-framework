@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Jield\ApiTools\ApiProblem\View;
 
 use Jield\Mvc\MvcEvent;
-use Jield\Stdlib\Value;
 use Laminas\EventManager\AbstractListenerAggregate;
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\Http\AbstractMessage;
 use Laminas\Http\Response;
+use Webmozart\Assert\Assert;
 
 class ApiProblemStrategy extends AbstractListenerAggregate
 {
@@ -36,11 +36,11 @@ class ApiProblemStrategy extends AbstractListenerAggregate
         $problem = $model;
         $response = $event->getResponse();
         $status = $problem->getApiProblem()->getStatus();
-        Value::instance($response, Response::class)->setStatusCode(
+        Assert::isInstanceOf($response, Response::class)->setStatusCode(
             $status >= 100 && $status <= 599 ? $status : 500,
         );
         $response->setContent($body);
-        Value::instance($response, AbstractMessage::class)
+        Assert::isInstanceOf($response, AbstractMessage::class)
             ->getHeaders()
             ->addHeaderLine('Content-Type', 'application/problem+json');
         $event->setResult($response);

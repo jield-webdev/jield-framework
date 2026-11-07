@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Jield\Mvc\View\Model;
 
 use InvalidArgumentException;
-use Jield\Stdlib\Value;
 
 class JsonModel extends ViewModel
 {
@@ -15,7 +14,7 @@ class JsonModel extends ViewModel
         iterable $variables = [],
         protected array $options = [],
     ) {
-        parent::__construct(Value::namedValues($variables));
+        parent::__construct($variables);
         parent::setTerminal(true);
     }
 

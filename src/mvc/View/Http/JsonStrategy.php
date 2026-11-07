@@ -6,10 +6,10 @@ namespace Jield\Mvc\View\Http;
 
 use Jield\Mvc\MvcEvent;
 use Jield\Mvc\View\Model\JsonModel;
-use Jield\Stdlib\Value;
 use Laminas\EventManager\AbstractListenerAggregate;
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\Http\AbstractMessage;
+use Webmozart\Assert\Assert;
 
 final class JsonStrategy extends AbstractListenerAggregate
 {
@@ -29,7 +29,7 @@ final class JsonStrategy extends AbstractListenerAggregate
         }
         $response = $event->getResponse();
         $response->setContent($model->serialize());
-        Value::instance($response, AbstractMessage::class)
+        Assert::isInstanceOf($response, AbstractMessage::class)
             ->getHeaders()
             ->addHeaderLine('Content-Type', 'application/json');
         $event->setResult($response);

@@ -11,12 +11,8 @@ use Doctrine\ORM\Configuration;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Internal\Hydration\AbstractHydrator;
 use Doctrine\ORM\Mapping\EntityListenerResolver;
-use Doctrine\ORM\Mapping\NamingStrategy;
-use Doctrine\ORM\Mapping\QuoteStrategy;
 use Doctrine\ORM\Query\AST\Functions\FunctionNode;
 use Doctrine\ORM\Query\Filter\SQLFilter;
-use Doctrine\ORM\Repository\RepositoryFactory;
-use Doctrine\Persistence\Mapping\Driver\MappingDriver;
 use DoctrineORMModule\Options\Configuration as DoctrineORMModuleConfiguration;
 use DoctrineORMModule\Service\DBALConfigurationFactory as DoctrineConfigurationFactory;
 use Jield\Stdlib\Value;
@@ -24,6 +20,7 @@ use Laminas\ServiceManager\Exception\InvalidArgumentException;
 use Laminas\ServiceManager\Exception\ServiceNotCreatedException;
 use Psr\Cache\CacheItemPoolInterface;
 use Psr\Container\ContainerInterface;
+use Webmozart\Assert\Assert;
 
 use function is_string;
 use function method_exists;
@@ -35,12 +32,13 @@ final class ConfigurationFactory extends DoctrineConfigurationFactory
     private function dqlFunctions(array $functions): array
     {
         $result = [];
-        foreach (Value::stringKeyedArray($functions) as $name => $function) {
+        foreach ($functions as $name => $function) {
             if (is_string($function) && !is_callable($function)) {
-                $result[$name] = Value::subclass($function, FunctionNode::class);
+                Assert::isAOf($function, FunctionNode::class);
+                $result[$name] = $function;
             } else {
-                $callback = Value::callback($function);
-                $result[$name] = static fn(string $name): FunctionNode => Value::instance($callback($name), FunctionNode::class);
+                $callback = Assert::isCallable($function);
+                $result[$name] = static fn(string $name): FunctionNode => $callback($name);
             }
         }
         return $result;
@@ -63,10 +61,10 @@ final class ConfigurationFactory extends DoctrineConfigurationFactory
         $config->enableNativeLazyObjects(true);
 
         $config->setAutoGenerateProxyClasses(autoGenerate: $options->getGenerateProxies());
-        $config->setProxyDir(dir: Value::string($options->getProxyDir()));
-        $config->setProxyNamespace(ns: Value::string($options->getProxyNamespace()));
+        $config->setProxyDir(dir: $options->getProxyDir());
+        $config->setProxyNamespace(ns: $options->getProxyNamespace());
 
-        $config->setEntityNamespaces(entityNamespaces: Value::stringMap($options->getEntityNamespaces()));
+        $config->setEntityNamespaces(entityNamespaces: $options->getEntityNamespaces());
 
         $config->setCustomDatetimeFunctions(functions: $this->dqlFunctions($options->getDatetimeFunctions()));
         $config->setCustomStringFunctions(functions: $this->dqlFunctions($options->getStringFunctions()));
@@ -75,9 +73,7 @@ final class ConfigurationFactory extends DoctrineConfigurationFactory
         }
 
         if ($options->getClassMetadataFactoryName() !== null) {
-            $config->setClassMetadataFactoryName(
-                Value::classString($options->getClassMetadataFactoryName()),
-            );
+            $config->setClassMetadataFactoryName($options->getClassMetadataFactoryName());
         }
 
         if ($options->getNamedQueries() !== [] || $options->getNamedNativeQueries() !== []) {
@@ -86,51 +82,24 @@ final class ConfigurationFactory extends DoctrineConfigurationFactory
             );
         }
 
-        /** @var mixed $modeName
-         * @var mixed $hydrator
-         */
         foreach ($options->getCustomHydrationModes() as $modeName => $hydrator) {
-            $config->addCustomHydrationMode(
-                modeName: Value::string($modeName),
-                hydrator: Value::subclass(
-                    $hydrator,
-                    AbstractHydrator::class,
-                ),
-            );
+            Assert::string($hydrator);
+            Assert::isAOf($hydrator, AbstractHydrator::class);
+            $config->addCustomHydrationMode(modeName: $modeName, hydrator: $hydrator);
         }
 
-        /** @var mixed $name
-         * @var mixed $class
-         */
         foreach ($options->getFilters() as $name => $class) {
-            $config->addFilter(
-                name: Value::string($name),
-                className: Value::subclass($class, SQLFilter::class),
-            );
+            Assert::string($class);
+            Assert::isAOf($class, SQLFilter::class);
+            $config->addFilter(name: $name, className: $class);
         }
 
-        $config->setMetadataCache(Value::instance(
-            $container->get(Value::string($options->getMetadataCache())),
-            CacheItemPoolInterface::class,
-        ));
-        $config->setQueryCache(Value::instance(
-            $container->get(Value::string($options->getQueryCache())),
-            CacheItemPoolInterface::class,
-        ));
-        $config->setResultCache(Value::instance(
-            $container->get(Value::string($options->getResultCache())),
-            CacheItemPoolInterface::class,
-        ));
-        $config->setHydrationCache(Value::instance(
-            $container->get(Value::string($options->getHydrationCache())),
-            CacheItemPoolInterface::class,
-        ));
-        $config->setMetadataDriverImpl(driverImpl: Value::instance(
-            $container->get(Value::string($options->getDriver())),
-            MappingDriver::class,
-        ));
+        $config->setMetadataCache($container->get($options->getMetadataCache()));
+        $config->setQueryCache($container->get($options->getQueryCache()));
+        $config->setResultCache($container->get($options->getResultCache()));
+        $config->setHydrationCache($container->get($options->getHydrationCache()));
+        $config->setMetadataDriverImpl(driverImpl: $container->get($options->getDriver()));
 
-        /** @var mixed $namingStrategy */
         $namingStrategy = $options->getNamingStrategy();
         if ($namingStrategy) {
             if (is_string(value: $namingStrategy)) {
@@ -141,19 +110,12 @@ final class ConfigurationFactory extends DoctrineConfigurationFactory
                     ));
                 }
 
-                $config->setNamingStrategy(namingStrategy: Value::instance(
-                    $container->get($namingStrategy),
-                    NamingStrategy::class,
-                ));
+                $config->setNamingStrategy(namingStrategy: $container->get($namingStrategy));
             } else {
-                $config->setNamingStrategy(namingStrategy: Value::instance(
-                    $namingStrategy,
-                    NamingStrategy::class,
-                ));
+                $config->setNamingStrategy(namingStrategy: $namingStrategy);
             }
         }
 
-        /** @var mixed $quoteStrategy */
         $quoteStrategy = $options->getQuoteStrategy();
         if ($quoteStrategy) {
             if (is_string(value: $quoteStrategy)) {
@@ -164,19 +126,12 @@ final class ConfigurationFactory extends DoctrineConfigurationFactory
                     ));
                 }
 
-                $config->setQuoteStrategy(quoteStrategy: Value::instance(
-                    $container->get($quoteStrategy),
-                    QuoteStrategy::class,
-                ));
+                $config->setQuoteStrategy(quoteStrategy: $container->get($quoteStrategy));
             } else {
-                $config->setQuoteStrategy(quoteStrategy: Value::instance(
-                    $quoteStrategy,
-                    QuoteStrategy::class,
-                ));
+                $config->setQuoteStrategy(quoteStrategy: $quoteStrategy);
             }
         }
 
-        /** @var mixed $repositoryFactory */
         $repositoryFactory = $options->getRepositoryFactory();
         if ($repositoryFactory) {
             if (is_string(value: $repositoryFactory)) {
@@ -187,80 +142,50 @@ final class ConfigurationFactory extends DoctrineConfigurationFactory
                     ));
                 }
 
-                $config->setRepositoryFactory(repositoryFactory: Value::instance(
-                    $container->get($repositoryFactory),
-                    RepositoryFactory::class,
-                ));
+                $config->setRepositoryFactory(repositoryFactory: $container->get($repositoryFactory));
             } else {
-                $config->setRepositoryFactory(repositoryFactory: Value::instance(
-                    $repositoryFactory,
-                    RepositoryFactory::class,
-                ));
+                $config->setRepositoryFactory(repositoryFactory: $repositoryFactory);
             }
         }
 
-        /** @var mixed $entityListenerResolver */
         $entityListenerResolver = $options->getEntityListenerResolver();
         if ($entityListenerResolver) {
             if ($entityListenerResolver instanceof EntityListenerResolver) {
                 $config->setEntityListenerResolver(resolver: $entityListenerResolver);
             } else {
-                $config->setEntityListenerResolver(resolver: Value::instance(
-                    $container->get(Value::string($entityListenerResolver)),
-                    \Doctrine\ORM\Mapping\EntityListenerResolver::class,
-                ));
+                $config->setEntityListenerResolver(resolver: $container->get($entityListenerResolver));
             }
         }
 
-        /** @var mixed $secondLevelCache */
         $secondLevelCache = $options->getSecondLevelCache();
 
         if (Value::call($secondLevelCache, 'isEnabled')) {
             $regionsConfig = new RegionsConfiguration(
-                defaultLifetime: Value::int(Value::call(
-                    $secondLevelCache,
-                    'getDefaultLifetime',
-                )),
-                defaultLockLifetime: Value::int(Value::call(
-                    $secondLevelCache,
-                    'getDefaultLockLifetime',
-                )),
+                defaultLifetime: Value::call($secondLevelCache, 'getDefaultLifetime'),
+                defaultLockLifetime: Value::call($secondLevelCache, 'getDefaultLockLifetime'),
             );
 
-            /** @var mixed $regionName
-             * @var mixed $regionConfig
-             */
-            foreach (Value::iterable(Value::call(
-                $secondLevelCache,
-                'getRegions',
-            )) as $regionName => $regionConfig) {
+            foreach (Assert::isIterable(Value::call($secondLevelCache, 'getRegions')) as $regionName => $regionConfig) {
                 if (isset($regionConfig['lifetime'])) {
-                    $regionsConfig->setLifetime(
-                        name: Value::string($regionName),
-                        lifetime: Value::int($regionConfig['lifetime']),
-                    );
+                    $regionsConfig->setLifetime(name: $regionName, lifetime: $regionConfig['lifetime']);
                 }
 
                 if (!isset($regionConfig['lock_lifetime'])) {
                     continue;
                 }
 
-                $regionsConfig->setLockLifetime(
-                    name: Value::string($regionName),
-                    lifetime: Value::int($regionConfig['lock_lifetime']),
-                );
+                $regionsConfig->setLockLifetime(name: $regionName, lifetime: $regionConfig['lock_lifetime']);
             }
 
             // As Second Level Cache caches queries results, we reuse the result cache impl
-            $cacheFactory =
-                new DefaultCacheFactory(regionsConfig: $regionsConfig, cacheItemPool: Value::instance(
-                    $config->getResultCache(),
-                    CacheItemPoolInterface::class,
-                ));
-            $cacheFactory->setFileLockRegionDirectory(fileLockRegionDirectory: Value::string(Value::call(
+            $cacheFactory = new DefaultCacheFactory(regionsConfig: $regionsConfig, cacheItemPool: Assert::isInstanceOf(
+                $config->getResultCache(),
+                CacheItemPoolInterface::class,
+            ));
+            $cacheFactory->setFileLockRegionDirectory(fileLockRegionDirectory: Value::call(
                 $secondLevelCache,
                 'getFileLockRegionDirectory',
-            )));
+            ));
 
             $cacheConfiguration = new CacheConfiguration();
             $cacheConfiguration->setCacheFactory(factory: $cacheFactory);
@@ -272,7 +197,6 @@ final class ConfigurationFactory extends DoctrineConfigurationFactory
 
         // only works for DBAL 2.x, not for 3.x
         if (method_exists(object_or_class: $config, method: 'setFilterSchemaAssetsExpression')) {
-            /** @var mixed $filterSchemaAssetsExpression */
             $filterSchemaAssetsExpression = $options->getFilterSchemaAssetsExpression();
             if ($filterSchemaAssetsExpression) {
                 $config->setFilterSchemaAssetsExpression($filterSchemaAssetsExpression);
@@ -281,20 +205,16 @@ final class ConfigurationFactory extends DoctrineConfigurationFactory
 
         // DBAL 2.x
         if (method_exists(object_or_class: $config, method: 'setSchemaAssetsFilter')) {
-            /** @var mixed $schemaAssetsFilter */
             $schemaAssetsFilter = $options->getSchemaAssetsFilter();
             if ($schemaAssetsFilter) {
-                $config->setSchemaAssetsFilter(schemaAssetsFilter: Value::callback($schemaAssetsFilter));
+                $config->setSchemaAssetsFilter(schemaAssetsFilter: $schemaAssetsFilter);
             }
         }
 
-        /** @var mixed $className */
         $className = $options->getDefaultRepositoryClassName();
         if ($className) {
-            $config->setDefaultRepositoryClassName(className: Value::subclass(
-                $className,
-                EntityRepository::class,
-            ));
+            Assert::isAOf($className, EntityRepository::class);
+            $config->setDefaultRepositoryClassName(className: $className);
         }
 
         $this->setupDBALConfiguration(container: $container, config: $config);

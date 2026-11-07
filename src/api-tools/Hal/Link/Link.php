@@ -6,7 +6,6 @@ namespace Jield\ApiTools\Hal\Link;
 
 use Jield\ApiTools\ApiProblem\Exception\DomainException;
 use Jield\ApiTools\Hal\Exception;
-use Jield\Stdlib\Value;
 use Laminas\Stdlib\ArrayUtils;
 use Laminas\Uri\Exception as UriException;
 use Laminas\Uri\UriFactory;
@@ -14,6 +13,7 @@ use Override;
 use Psr\Link\LinkInterface;
 use Throwable;
 use Traversable;
+use Webmozart\Assert\Assert;
 
 use function get_debug_type;
 use function is_array;
@@ -88,9 +88,8 @@ class Link implements LinkInterface
 
         // deprecated since 1.5.0; use 'href' instead
         if (isset($spec['url'])) {
-            /** @var mixed $url */
             $url = $spec['url'];
-            $link->setUrl(href: Value::string($url));
+            $link->setUrl(href: $url);
             return $link;
         }
 
@@ -123,11 +122,11 @@ class Link implements LinkInterface
                 ));
             }
 
-            $name = Value::string($routeInfo['name']);
+            $name = Assert::string($routeInfo['name']);
             $params = is_array(value: $routeInfo['params']) ? $routeInfo['params'] : [];
             $options = is_array(value: $routeInfo['options']) ? $routeInfo['options'] : [];
             /** @psalm-suppress RedundantCastGivenDocblockType */
-            $link->setRoute(route: Value::string($name), params: $params, options: $options);
+            $link->setRoute(route: $name, params: $params, options: $options);
             return $link;
         }
 
@@ -189,7 +188,7 @@ class Link implements LinkInterface
             $options = ArrayUtils::iteratorToArray(iterator: $options);
         }
 
-        $this->routeOptions = Value::array($options);
+        $this->routeOptions = $options;
         return $this;
     }
 
@@ -232,7 +231,7 @@ class Link implements LinkInterface
                 throw $exception;
             }
             throw new Exception\InvalidArgumentException(
-                message: sprintf('Received invalid URL: %s', Value::scalar($exception->getMessage())),
+                message: sprintf('Received invalid URL: %s', $exception->getMessage()),
                 code: (int) $exception->getCode(),
                 previous: $exception,
             );

@@ -14,9 +14,9 @@ use Jield\Search\ValueObject\FacetField;
 use Jield\Stdlib\Value;
 use Laminas\InputFilter\InputFilterProviderInterface;
 use RuntimeException;
-use Solarium\Component\Result\Facet\FacetResultInterface;
-
 use Solarium\Component\Result\Facet\Field;
+use Webmozart\Assert\Assert;
+
 use function array_reverse;
 use function count;
 use function http_build_query;
@@ -83,7 +83,7 @@ class SolrSearchFilter extends SearchFilter implements InputFilterProviderInterf
             }
 
             $facetElementFieldset->add(elementOrFieldset: $this->createFacetFieldFormElement(
-                field: Value::instance($field, Field::class),
+                field: $field,
                 facetField: $facetField,
             ));
 
@@ -101,7 +101,6 @@ class SolrSearchFilter extends SearchFilter implements InputFilterProviderInterf
 
     private function getFacetByFacetField(string $fieldName)
     {
-        /** @var mixed $facetSet */
         $facetSet = $this->searchService->getResultSet()->getFacetSet();
 
         if (null === $facetSet) {
@@ -124,17 +123,11 @@ class SolrSearchFilter extends SearchFilter implements InputFilterProviderInterf
         return $yesNoElement;
     }
 
-    private function createFacetFieldFormElement(
-        Field $field,
-        FacetField $facetField,
-    ): MultiCheckbox {
+    private function createFacetFieldFormElement(Field $field, FacetField $facetField): MultiCheckbox
+    {
         $multiOptions = [];
         foreach ($field as $key => $value) {
-            $multiOptions[$key] = sprintf(
-                '%s <small class="text-muted">(%s)</small>',
-                $key,
-                Value::scalar($value),
-            );
+            $multiOptions[$key] = sprintf('%s <small class="text-muted">(%s)</small>', $key, $value);
         }
 
         if ($facetField->getReverse()) {
@@ -188,7 +181,7 @@ class SolrSearchFilter extends SearchFilter implements InputFilterProviderInterf
                 'type' => 'search',
                 'query' => $submittedData['query'],
                 'facetArguments' => http_build_query(data: $data),
-                'resetEncodedFilter' => base64_encode(string: Value::string(json_encode(value: $data))),
+                'resetEncodedFilter' => base64_encode(string: Assert::string(json_encode(value: $data))),
             ];
         }
 
@@ -203,18 +196,14 @@ class SolrSearchFilter extends SearchFilter implements InputFilterProviderInterf
                 'type' => 'dateInterval',
                 'value' => $submittedData['dateInterval'],
                 'facetArguments' => http_build_query(data: $data),
-                'resetEncodedFilter' => base64_encode(string: Value::string(json_encode(value: $data))),
+                'resetEncodedFilter' => base64_encode(string: Assert::string(json_encode(value: $data))),
             ];
         }
 
         if (!empty($submittedData['filter']['general'])) {
-            /** @var mixed $selectedValues */
-            $selectedValues = Value::scalars($submittedData['filter']['general']);
-            foreach (Value::iterable($selectedValues) as $value) {
-                $remainingValues = array_diff(
-                    Value::scalars(Value::array($selectedValues)),
-                    Value::scalars([$value]),
-                );
+            $selectedValues = $submittedData['filter']['general'];
+            foreach (Assert::isIterable($selectedValues) as $value) {
+                $remainingValues = array_diff($selectedValues, [$value]);
 
                 $data = [
                     'facet' => $submittedData['facet'],
@@ -232,43 +221,32 @@ class SolrSearchFilter extends SearchFilter implements InputFilterProviderInterf
                     'type' => 'general',
                     'value' => $value,
                     'facetArguments' => http_build_query(data: $data),
-                    'resetEncodedFilter' => base64_encode(string: Value::string(json_encode(
-                        value: $data,
-                    ))),
+                    'resetEncodedFilter' => base64_encode(string: Assert::string(json_encode(value: $data))),
                 ];
             }
         }
 
-        /** @var mixed $facetName
-         * @var mixed $facetData
-         */
-        foreach (Value::iterable($submittedData['facet'] ?? []) as $facetName => $facetData) {
+        foreach (Assert::isIterable($submittedData['facet'] ?? []) as $facetName => $facetData) {
             //We need to check if the facet is actually a facet field
-            if (!$this->searchService->hasFacet(fieldName: Value::string($facetName))) {
+            if (!$this->searchService->hasFacet(fieldName: $facetName)) {
                 continue;
             }
 
-            $facetField = $this->searchService->getFacet(fieldName: Value::string($facetName));
+            $facetField = $this->searchService->getFacet(fieldName: $facetName);
 
-            /** @var mixed $values */
             $values = $facetData['values'] ?? [];
 
             if (is_string(value: $values) && $facetField->isSlider()) {
                 $values = array_map(callback: intval(...), array: explode(separator: ',', string: $values));
                 $valueText = sprintf('BETWEEN %s and %s', $values[0], $values[1] ?? '');
             } elseif ($facetField->isCheckboxMin()) {
-                $valueText = sprintf('AT LEAST %d', Value::scalar($values[0] ?? ''));
+                $valueText = sprintf('AT LEAST %d', $values[0] ?? '');
             } else {
-                $valueText = implode(
-                    separator: $facetData['andOr'] ?? false ? ' and ' : ' or ',
-                    array: Value::scalars($values),
-                );
+                $valueText = implode(separator: $facetData['andOr'] ?? false ? ' and ' : ' or ', array: $values);
             }
 
             //Remaining facets are all facets where the current facet value is filtered out
             $remainingFacets = $submittedData['facet'];
-
-            $remainingFacets = Value::accessible($remainingFacets);
 
             unset($remainingFacets[$facetName]);
 

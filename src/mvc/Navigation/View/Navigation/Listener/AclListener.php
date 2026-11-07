@@ -7,6 +7,7 @@ namespace Jield\Mvc\Navigation\View\Navigation\Listener;
 use Jield\Stdlib\Value;
 use Laminas\EventManager\Event;
 use Laminas\Navigation\Page\AbstractPage;
+use Webmozart\Assert\Assert;
 
 /**
  * Default Access Control Listener
@@ -29,7 +30,7 @@ class AclListener
     public static function accept(Event $event)
     {
         $accepted = true;
-        $params = Value::accessible($event->getParams());
+        $params = $event->getParams();
         $acl = $params['acl'];
         $page = $params['page'];
         $role = $params['role'];
@@ -38,17 +39,13 @@ class AclListener
             return $accepted;
         }
 
-        $resource = Value::instance($page, AbstractPage::class)->getResource();
-        $privilege = Value::instance($page, AbstractPage::class)->getPrivilege();
+        $resource = Assert::isInstanceOf($page, AbstractPage::class)->getResource();
+        $privilege = Assert::isInstanceOf($page, AbstractPage::class)->getPrivilege();
 
         if ($resource || $privilege) {
             $accepted =
                 Value::truthy(Value::call($acl, 'hasResource', [$resource]))
-                && Value::truthy(Value::call(
-                    $acl,
-                    'isAllowed',
-                    [$role, $resource, $privilege],
-                ));
+                && Value::truthy(Value::call($acl, 'isAllowed', [$role, $resource, $privilege]));
         }
 
         return $accepted;

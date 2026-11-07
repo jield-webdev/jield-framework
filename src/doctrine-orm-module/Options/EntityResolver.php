@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace DoctrineORMModule\Options;
 
 use InvalidArgumentException;
-use Jield\Stdlib\Value;
 use Laminas\Stdlib\AbstractOptions;
 
 use function class_exists;
@@ -49,11 +48,11 @@ final class EntityResolver extends AbstractOptions
     public function setResolvers(array $resolvers): void
     {
         foreach ($resolvers as $old => $new) {
-            if (!class_exists(class: Value::string($new))) {
+            if (!class_exists(class: $new)) {
                 throw new InvalidArgumentException(message: sprintf(
                     '%s is resolved to the entity %s, which does not exist',
                     $old,
-                    Value::scalar($new),
+                    $new,
                 ));
             }
 

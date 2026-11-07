@@ -33,12 +33,11 @@ final class CollectionValidationGroups extends BaseInputFilter
      */
     public function validate(iterable $data, array $context = []): InputFilterValidationResult
     {
-        /** @var mixed $group */
         $group = $this->groups[$this->position++] ?? null;
         return InputFilterValidator::validate(
             $this->filter,
             $data,
-            $group === null ? null : (is_array($group) ? $group : [Value::key($group)]),
+            $group === null ? null : (is_array($group) ? $group : [$group]),
             $context,
         );
     }

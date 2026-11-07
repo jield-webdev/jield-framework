@@ -6,7 +6,6 @@ namespace Jield\ErrorHandler\Command;
 
 use Jield\ErrorHandler\Handler\Logging;
 use Jield\Stdlib\Service;
-use Jield\Stdlib\Value;
 use Laminas\ServiceManager\Initializer\InitializerInterface;
 use Override;
 use Psr\Container\ContainerInterface;
@@ -25,6 +24,6 @@ final class BaseLoggingCommandInitializer implements InitializerInterface
         $errorHeroModuleConfig = $config['error-hero-module'];
 
         $logging = Service::get($container, Logging::class);
-        $instance->init(errorHeroModuleConfig: Value::array($errorHeroModuleConfig), logging: $logging);
+        $instance->init(errorHeroModuleConfig: $errorHeroModuleConfig, logging: $logging);
     }
 }

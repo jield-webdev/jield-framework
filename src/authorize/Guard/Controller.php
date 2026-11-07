@@ -12,6 +12,7 @@ use Jield\Stdlib\Service;
 use Jield\Stdlib\Value;
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\Http\Request as HttpRequest;
+use Webmozart\Assert\Assert;
 
 use function sprintf;
 use function strtolower;
@@ -30,12 +31,8 @@ final class Controller extends AbstractGuard
         $rule['action'] = isset($rule['action']) ? Value::toArray($rule['action']) : [null];
 
         foreach (Value::toArray($rule['controller']) as $controller) {
-            /** @var mixed $action */
             foreach ($rule['action'] as $action) {
-                $results[] = $this->getResourceName(
-                    controller: Value::string($controller),
-                    action: Value::nullableString($action),
-                );
+                $results[] = $this->getResourceName(controller: $controller, action: $action);
             }
         }
 
@@ -64,27 +61,17 @@ final class Controller extends AbstractGuard
     {
         $service = Service::get($this->container, AuthorizeService::class);
         $match = $event->getRouteMatch();
-        /** @var mixed $controller */
-        $controller = Value::present($match)->getParam(name: 'controller');
-        /** @var mixed $action */
-        $action = Value::present($match)->getParam(name: 'action');
+        $controller = Assert::notNull($match)->getParam(name: 'controller');
+        $action = Assert::notNull($match)->getParam(name: 'action');
         $request = $event->getRequest();
         $method = $request instanceof HttpRequest ? strtolower(string: $request->getMethod()) : null;
 
         $authorized =
             PHP_SAPI === 'cli'
-            || $service->isAllowed(resource: $this->getResourceName(controller: Value::string(
-                $controller,
-            )))
-            || $service->isAllowed(resource: $this->getResourceName(
-                controller: Value::string($controller),
-                action: Value::nullableString($action),
-            ))
+            || $service->isAllowed(resource: $this->getResourceName(controller: $controller))
+            || $service->isAllowed(resource: $this->getResourceName(controller: $controller, action: $action))
             || $method
-            && $service->isAllowed(resource: $this->getResourceName(
-                controller: Value::string($controller),
-                action: $method,
-            ));
+            && $service->isAllowed(resource: $this->getResourceName(controller: $controller, action: $method));
 
         if ($authorized) {
             return $request;
@@ -95,11 +82,7 @@ final class Controller extends AbstractGuard
         $event->setParam(name: 'controller', value: $controller);
         $event->setParam(name: 'action', value: $action);
 
-        $errorMessage = sprintf(
-            'You are not authorized to access %s:%s',
-            Value::scalar($controller),
-            Value::scalar($action),
-        );
+        $errorMessage = sprintf('You are not authorized to access %s:%s', $controller, $action);
         $event->setParam(name: 'exception', value: new UnAuthorizedException(message: $errorMessage));
 
         /** @var ApplicationInterface $app */

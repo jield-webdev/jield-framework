@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Jield\ApiTools\MvcAuth\Factory;
 
 use Jield\ApiTools\OAuth2\Adapter\PdoAdapter;
-use Jield\Stdlib\Value;
 use Laminas\ServiceManager\Exception\ServiceNotCreatedException;
 use OAuth2\GrantType\AuthorizationCode;
 use OAuth2\GrantType\ClientCredentials;
@@ -20,6 +19,7 @@ use OAuth2\Storage\JwtBearerInterface;
 use OAuth2\Storage\RefreshTokenInterface;
 use OAuth2\Storage\UserCredentialsInterface;
 use Psr\Container\ContainerInterface;
+use Webmozart\Assert\Assert;
 
 use function array_key_exists;
 use function array_merge;
@@ -41,21 +41,17 @@ final class OAuth2ServerFactory
     public static function factory(array $config, ContainerInterface $container): OAuth2Server
     {
         $allConfig = $container->get('config');
-        /** @var mixed $oauth2Config */
         $oauth2Config = $allConfig['api-tools-oauth2'] ?? [];
-        $options = self::marshalOptions(config: Value::array($oauth2Config));
+        $options = self::marshalOptions(config: $oauth2Config);
 
         $oauth2Server = new OAuth2Server(
-            storage: self::createStorage(
-                config: array_merge(Value::array($oauth2Config), $config),
-                container: $container,
-            ),
+            storage: self::createStorage(config: array_merge($oauth2Config, $config), container: $container),
             config: $options,
         );
 
         return self::injectGrantTypes(
             server: $oauth2Server,
-            availableGrantTypes: Value::array($oauth2Config['grant_types']),
+            availableGrantTypes: $oauth2Config['grant_types'],
             options: $options,
         );
     }
@@ -76,7 +72,7 @@ final class OAuth2ServerFactory
             && (is_string(value: $config['storage']) || is_array(value: $config['storage']))
         ) {
             return self::createStorageFromServices(
-                storage: is_array($config['storage']) ? Value::strings($config['storage']) : $config['storage'],
+                storage: is_array($config['storage']) ? $config['storage'] : $config['storage'],
                 container: $container,
             );
         }
@@ -148,11 +144,8 @@ final class OAuth2ServerFactory
             throw new ServiceNotCreatedException(message: 'Missing DSN for OAuth2 PDO adapter creation');
         }
 
-        /** @var mixed $username */
         $username = $config['username'] ?? null;
-        /** @var mixed $password */
         $password = $config['password'] ?? null;
-        /** @var mixed $options */
         $options = $config['options'] ?? [];
 
         return [
@@ -184,15 +177,10 @@ final class OAuth2ServerFactory
      */
     private static function marshalOptions(array $config): array
     {
-        /** @var mixed $enforceState */
         $enforceState = array_key_exists(key: 'enforce_state', array: $config) ? $config['enforce_state'] : true;
-        /** @var mixed $allowImplicit */
         $allowImplicit = $config['allow_implicit'] ?? false;
-        /** @var mixed $accessLifetime */
         $accessLifetime = $config['access_lifetime'] ?? 3600;
-        /** @var mixed $audience */
         $audience = $config['audience'] ?? '';
-        /** @var mixed $options */
         $options = $config['options'] ?? [];
 
         return array_merge([
@@ -200,7 +188,7 @@ final class OAuth2ServerFactory
             'allow_implicit' => $allowImplicit,
             'audience' => $audience,
             'enforce_state' => $enforceState,
-        ], Value::array($options));
+        ], Assert::isArray($options));
     }
 
     /**
@@ -224,7 +212,7 @@ final class OAuth2ServerFactory
 
             // Add the "Client Credentials" grant type (it is the simplest of the grant types)
             $server->addGrantType(grantType: new ClientCredentials(
-                storage: Value::instance(
+                storage: Assert::isInstanceOf(
                     $server->getStorage(name: 'client_credentials'),
                     ClientCredentialsInterface::class,
                 ),
@@ -236,7 +224,7 @@ final class OAuth2ServerFactory
             array_key_exists(key: 'authorization_code', array: $availableGrantTypes)
             && $availableGrantTypes['authorization_code'] === true
         ) {
-            $storage = Value::instance(
+            $storage = Assert::isInstanceOf(
                 $server->getStorage(name: 'authorization_code'),
                 AuthorizationCodeInterface::class,
             );
@@ -252,7 +240,7 @@ final class OAuth2ServerFactory
         ) {
             // Add the "User Credentials" grant type
             $server->addGrantType(
-                grantType: new UserCredentials(storage: Value::instance(
+                grantType: new UserCredentials(storage: Assert::isInstanceOf(
                     $server->getStorage(name: 'user_credentials'),
                     UserCredentialsInterface::class,
                 )),
@@ -262,11 +250,8 @@ final class OAuth2ServerFactory
         if (array_key_exists(key: 'jwt', array: $availableGrantTypes) && $availableGrantTypes['jwt'] === true) {
             // Add the "JWT Bearer" grant type
             $server->addGrantType(grantType: new JwtBearer(
-                storage: Value::instance(
-                    $server->getStorage(name: 'jwt_bearer'),
-                    JwtBearerInterface::class,
-                ),
-                audience: Value::string($options['audience']),
+                storage: Assert::isInstanceOf($server->getStorage(name: 'jwt_bearer'), JwtBearerInterface::class),
+                audience: Assert::string($options['audience']),
             ));
         }
 
@@ -289,10 +274,7 @@ final class OAuth2ServerFactory
 
             // Add the "Refresh Token" grant type
             $server->addGrantType(grantType: new RefreshToken(
-                storage: Value::instance(
-                    $server->getStorage(name: 'refresh_token'),
-                    RefreshTokenInterface::class,
-                ),
+                storage: Assert::isInstanceOf($server->getStorage(name: 'refresh_token'), RefreshTokenInterface::class),
                 config: $refreshOptions,
             ));
         }

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Jield\ModuleManager\Listener;
 
 use Jield\ModuleManager\ModuleEvent;
-use Jield\Stdlib\Value;
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\EventManager\ListenerAggregateInterface;
 use Override;
@@ -87,7 +86,7 @@ class DefaultListenerAggregate extends AbstractListener implements ListenerAggre
                 continue;
             }
 
-            $events->detach(listener: Value::callback($listener));
+            $events->detach(listener: $listener);
             unset($this->listeners[$key]);
         }
     }

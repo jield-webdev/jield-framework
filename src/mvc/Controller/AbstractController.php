@@ -25,6 +25,7 @@ use Laminas\Stdlib\DispatchableInterface as Dispatchable;
 use Laminas\Stdlib\RequestInterface as Request;
 use Laminas\Stdlib\ResponseInterface as Response;
 use Laminas\View\Model\ModelInterface;
+use Webmozart\Assert\Assert;
 
 use function array_merge;
 use function array_values;
@@ -188,11 +189,11 @@ abstract class AbstractController implements Dispatchable, EventManagerAwareInte
             $identifiers[] = substr($className, 0, $rightmostNsPos); // full namespace
         }
 
-        $eventManager->setIdentifiers(Value::strings(array_merge(
+        $eventManager->setIdentifiers(array_merge(
             $identifiers,
             array_values(class_implements($className) ?: []),
             Value::toArray($this->eventIdentifier),
-        )));
+        ));
 
         $this->events = $eventManager;
         $this->attachDefaultListeners();
@@ -281,7 +282,7 @@ abstract class AbstractController implements Dispatchable, EventManagerAwareInte
         }
 
         $this->plugins->setController($this);
-        return Value::instance($this->plugins, \Jield\Mvc\Controller\PluginManager::class);
+        return Assert::isInstanceOf($this->plugins, \Jield\Mvc\Controller\PluginManager::class);
     }
 
     /**

@@ -19,6 +19,7 @@ use Laminas\View\Model\ModelInterface;
 use Laminas\View\View;
 use Psr\Container\ContainerInterface;
 use Traversable;
+use Webmozart\Assert\Assert;
 
 use function is_array;
 use function is_string;
@@ -77,10 +78,9 @@ class ViewManager extends AbstractListenerAggregate
     public function onBootstrap(MvcEvent $event): void
     {
         $application = $event->getApplication();
-        $services = Value::present($application)->getServiceManager();
-        /** @var mixed $config */
+        $services = Assert::notNull($application)->getServiceManager();
         $config = $services->get('config');
-        $events = Value::present($application)->getEventManager();
+        $events = Assert::notNull($application)->getEventManager();
         $sharedEvents = $events->getSharedManager();
 
         $this->config = isset($config['view_manager'])
@@ -90,11 +90,8 @@ class ViewManager extends AbstractListenerAggregate
         $this->services = $services;
         $this->event = $event;
 
-        /** @var mixed $routeNotFoundStrategy */
         $routeNotFoundStrategy = $services->get('HttpRouteNotFoundStrategy');
-        /** @var mixed $exceptionStrategy */
         $exceptionStrategy = $services->get('HttpExceptionStrategy');
-        /** @var mixed $mvcRenderingStrategy */
         $mvcRenderingStrategy = $services->get('HttpDefaultRenderingStrategy');
 
         $this->injectViewModelIntoPlugin();
@@ -104,10 +101,7 @@ class ViewManager extends AbstractListenerAggregate
         $injectViewModelListener = new InjectViewModelListener();
 
         $this->registerMvcRenderingStrategies($events);
-        $this->registerViewStrategies(Value::instance(
-            $events,
-            \Laminas\EventManager\EventManager::class,
-        ));
+        $this->registerViewStrategies(Assert::isInstanceOf($events, \Laminas\EventManager\EventManager::class));
 
         Value::call($routeNotFoundStrategy, 'attach', [$events]);
         Value::call($exceptionStrategy, 'attach', [$events]);
@@ -123,31 +117,31 @@ class ViewManager extends AbstractListenerAggregate
         );
         Value::call($mvcRenderingStrategy, 'attach', [$events]);
 
-        Value::present($sharedEvents)->attach(
+        Assert::notNull($sharedEvents)->attach(
             DispatchableInterface::class,
             MvcEvent::EVENT_DISPATCH,
             listener: $createViewModelListener->createViewModelFromArray(...),
             priority: -80,
         );
-        Value::present($sharedEvents)->attach(
+        Assert::notNull($sharedEvents)->attach(
             DispatchableInterface::class,
             MvcEvent::EVENT_DISPATCH,
-            listener: Value::callback([$routeNotFoundStrategy, 'prepareNotFoundViewModel']),
+            listener: Assert::isCallable([$routeNotFoundStrategy, 'prepareNotFoundViewModel']),
             priority: -90,
         );
-        Value::present($sharedEvents)->attach(
+        Assert::notNull($sharedEvents)->attach(
             DispatchableInterface::class,
             MvcEvent::EVENT_DISPATCH,
             listener: $createViewModelListener->createViewModelFromNull(...),
             priority: -80,
         );
-        Value::present($sharedEvents)->attach(
+        Assert::notNull($sharedEvents)->attach(
             DispatchableInterface::class,
             MvcEvent::EVENT_DISPATCH,
             listener: $injectTemplateListener->injectTemplate(...),
             priority: -90,
         );
-        Value::present($sharedEvents)->attach(
+        Assert::notNull($sharedEvents)->attach(
             DispatchableInterface::class,
             MvcEvent::EVENT_DISPATCH,
             listener: $injectViewModelListener->injectViewModel(...),
@@ -182,11 +176,8 @@ class ViewManager extends AbstractListenerAggregate
         }
 
         $this->viewModel = $model = $this->event->getViewModel();
-        $layoutTemplate = Value::call(
-            $this->services->get('HttpDefaultRenderingStrategy'),
-            'getLayoutTemplate',
-        );
-        $model->setTemplate(Value::nonEmptyString($layoutTemplate));
+        $layoutTemplate = Value::call($this->services->get('HttpDefaultRenderingStrategy'), 'getLayoutTemplate');
+        $model->setTemplate(Assert::stringNotEmpty($layoutTemplate));
 
         return $this->viewModel;
     }
@@ -271,11 +262,7 @@ class ViewManager extends AbstractListenerAggregate
     private function injectViewModelIntoPlugin(): void
     {
         $model = $this->getViewModel();
-        $plugins = Service::get(
-            $this->services,
-            HelperPluginManager::class,
-            'ViewHelperManager',
-        );
+        $plugins = Service::get($this->services, HelperPluginManager::class, 'ViewHelperManager');
         $plugin = Service::get($plugins, ViewModel::class, 'viewmodel');
         $plugin->setRoot($model);
     }

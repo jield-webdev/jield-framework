@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Jield\ApiTools\ApiProblem\Factory;
 
 use Jield\ApiTools\ApiProblem\Listener\ApiProblemListener;
-use Jield\Stdlib\Value;
 use Psr\Container\ContainerInterface;
 
 class ApiProblemListenerFactory
@@ -23,6 +22,6 @@ class ApiProblemListenerFactory
             $filters = $config['api-tools-api-problem']['accept_filters'];
         }
 
-        return new ApiProblemListener(filters: Value::nullableArrayOrString($filters));
+        return new ApiProblemListener(filters: $filters);
     }
 }

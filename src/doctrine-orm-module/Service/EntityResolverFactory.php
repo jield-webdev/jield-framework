@@ -9,6 +9,7 @@ use DoctrineModule\Service\AbstractFactory;
 use DoctrineORMModule\Options\EntityResolver;
 use Jield\Stdlib\Value;
 use Psr\Container\ContainerInterface;
+use Webmozart\Assert\Assert;
 
 use function assert;
 
@@ -28,8 +29,8 @@ final class EntityResolverFactory extends AbstractFactory
 
         foreach ($resolvers as $oldEntity => $newEntity) {
             $targetEntityListener->addResolveTargetEntity(
-                originalEntity: Value::string($oldEntity),
-                newEntity: Value::string($newEntity),
+                originalEntity: Assert::string($oldEntity),
+                newEntity: $newEntity,
                 mapping: [],
             );
         }

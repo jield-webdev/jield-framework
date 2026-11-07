@@ -9,7 +9,6 @@ use Exception;
 use Jield\Mvc\Application;
 use Jield\Mvc\ApplicationInterface;
 use Jield\Mvc\MvcEvent;
-use Jield\Stdlib\Value;
 use Laminas\Http\PhpEnvironment\Request as PhpEnvironmentRequest;
 use Laminas\Http\PhpEnvironment\Response as PhpEnvironmentResponse;
 use Laminas\Http\Request;
@@ -20,6 +19,7 @@ use ReflectionException;
 use ReflectionFunction;
 use ReflectionNamedType;
 use ReflectionObject;
+use Webmozart\Assert\Assert;
 
 use function count;
 use function is_array;
@@ -49,7 +49,7 @@ class ParameterMatcher
         } elseif (is_array(value: $callable) && count(value: $callable) === 2) {
             $object = $callable[0];
             $method = $callable[1];
-            $reflection = new ReflectionObject(object: Value::object($object));
+            $reflection = new ReflectionObject(object: Assert::object($object));
             $reflMethodParams = $reflection->getMethod(name: $method)->getParameters();
         } else {
             throw new Exception(message: 'Unknown callable');
@@ -63,7 +63,7 @@ class ParameterMatcher
             $normalParams[str_replace(
                 search: ['-', '_'],
                 replace: '',
-                subject: strtolower(string: Value::string($pn)),
+                subject: strtolower(string: Assert::string($pn)),
             )] = $pv;
         }
 

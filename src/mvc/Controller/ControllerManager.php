@@ -6,7 +6,6 @@ namespace Jield\Mvc\Controller;
 
 // phpcs:ignore
 use Jield\Stdlib\Service;
-use Jield\Stdlib\Value;
 use Laminas\EventManager\EventManagerAwareInterface;
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\EventManager\SharedEventManagerInterface;
@@ -43,7 +42,7 @@ class ControllerManager extends AbstractPluginManager
         ];
 
         if (isset($config['initializers'])) {
-            $config['initializers'] = array_merge(Value::array($config['initializers']), $initializers);
+            $config['initializers'] = array_merge($config['initializers'], $initializers);
         } else {
             $config['initializers'] = $initializers;
         }
@@ -89,11 +88,7 @@ class ControllerManager extends AbstractPluginManager
 
         $events = $controller->getEventManager();
         if (!$events->getSharedManager() instanceof SharedEventManagerInterface) {
-            $controller->setEventManager(Service::get(
-                $container,
-                EventManagerInterface::class,
-                'EventManager',
-            ));
+            $controller->setEventManager(Service::get($container, EventManagerInterface::class, 'EventManager'));
         }
     }
 

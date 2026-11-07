@@ -7,8 +7,8 @@ namespace Jield\Form\Annotation;
 use Attribute;
 use Doctrine\Common\Annotations\Annotation;
 use Doctrine\Common\Annotations\Annotation\NamedArgumentConstructor;
+use Webmozart\Assert\Assert;
 
-use Jield\Stdlib\Value;
 use function is_array;
 use function sprintf;
 use function trigger_error;
@@ -59,9 +59,9 @@ final class Filter
                 E_USER_DEPRECATED,
             );
 
-            $this->name = Value::string($name['name'] ?? null);
-            $this->options = Value::array($name['options'] ?? $options);
-            $this->priority = Value::nullableInt($name['priority'] ?? $priority);
+            $this->name = Assert::string($name['name'] ?? null);
+            $this->options = Assert::isArray($name['options'] ?? $options);
+            $this->priority = Assert::nullOrInteger($name['priority'] ?? $priority);
         } else {
             $this->name = $name;
             $this->options = $options;

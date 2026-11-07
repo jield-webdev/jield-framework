@@ -7,12 +7,12 @@ namespace Jield\Form\Element;
 use Jield\Form\Element;
 use Jield\Form\ElementPrepareAwareInterface;
 use Jield\Form\FormInterface;
-use Jield\Stdlib\Value;
 use Jield\Validator\Options;
 use Laminas\Filter\StringTrim;
 use Laminas\InputFilter\InputProviderInterface;
 use Laminas\Session\Container;
 use Laminas\Session\Validator\Csrf as CsrfValidator;
+use Webmozart\Assert\Assert;
 
 use function array_merge;
 use function assert;
@@ -45,7 +45,7 @@ class Csrf extends Element implements InputProviderInterface, ElementPrepareAwar
         parent::setOptions(options: $options);
 
         if (isset($this->options['csrf_options'])) {
-            $this->setCsrfValidatorOptions(options: Value::array($this->options['csrf_options']));
+            $this->setCsrfValidatorOptions(options: $this->options['csrf_options']);
         }
 
         return $this;
@@ -72,18 +72,18 @@ class Csrf extends Element implements InputProviderInterface, ElementPrepareAwar
     {
         if (null === $this->csrfValidator) {
             $csrfOptions = $this->getCsrfValidatorOptions();
-            $csrfOptions = array_merge(['name' => Value::nonEmptyString($this->getName())], $csrfOptions);
+            $csrfOptions = array_merge(['name' => Assert::stringNotEmpty($this->getName())], $csrfOptions);
             $csrfOptions = Options::normalize($csrfOptions);
             foreach (['name', 'hash', 'salt'] as $key) {
                 if (isset($csrfOptions[$key])) {
-                    $csrfOptions[$key] = Value::nonEmptyString($csrfOptions[$key]);
+                    $csrfOptions[$key] = Assert::stringNotEmpty($csrfOptions[$key]);
                 }
             }
             if (isset($csrfOptions['timeout'])) {
-                $csrfOptions['timeout'] = Value::positiveInt($csrfOptions['timeout']);
+                $csrfOptions['timeout'] = Assert::positiveInteger($csrfOptions['timeout']);
             }
             if (isset($csrfOptions['session'])) {
-                $csrfOptions['session'] = Value::instance($csrfOptions['session'], Container::class);
+                $csrfOptions['session'] = Assert::isInstanceOf($csrfOptions['session'], Container::class);
             }
             /** @var OptionsArgument $csrfOptions */
             $this->setCsrfValidator(validator: new CsrfValidator($csrfOptions));

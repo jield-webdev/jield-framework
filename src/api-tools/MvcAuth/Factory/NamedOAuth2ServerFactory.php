@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Jield\ApiTools\MvcAuth\Factory;
 
 use Jield\ApiTools\OAuth2\Factory\OAuth2ServerInstanceFactory;
-use Jield\Stdlib\Value;
 use OAuth2\Server;
 use Psr\Container\ContainerInterface;
+use Webmozart\Assert\Assert;
 
 /**
  * Override factory for the Jield\ApiTools\OAuth2\Service\OAuth2Server service.
@@ -23,9 +23,7 @@ class NamedOAuth2ServerFactory
     {
         $config = $container->get('config');
 
-        /** @var mixed $oauth2Config */
         $oauth2Config = $config['api-tools-oauth2'] ?? [];
-        /** @var mixed $mvcAuthConfig */
         $mvcAuthConfig = $config['api-tools-mvc-auth']['authentication']['adapters'] ?? [];
 
         $servers = new class {
@@ -40,10 +38,7 @@ class NamedOAuth2ServerFactory
                     return $servers->application;
                 }
 
-                $factory = new OAuth2ServerInstanceFactory(
-                    config: Value::array($oauth2Config),
-                    services: $container,
-                );
+                $factory = new OAuth2ServerInstanceFactory(config: $oauth2Config, services: $container);
                 return $servers->application = $factory();
             }
 
@@ -51,7 +46,7 @@ class NamedOAuth2ServerFactory
                 return $servers->api[$type];
             }
 
-            foreach (Value::iterable($mvcAuthConfig) as $adapterConfig) {
+            foreach (Assert::isIterable($mvcAuthConfig) as $adapterConfig) {
                 if (!isset($adapterConfig['storage']['route'])) {
                     // Not a api-tools-oauth2 config
                     continue;
@@ -62,7 +57,7 @@ class NamedOAuth2ServerFactory
                 }
 
                 // Found!
-                return $servers->api[Value::key($type)] = OAuth2ServerFactory::factory(
+                return $servers->api[$type] = OAuth2ServerFactory::factory(
                     config: $adapterConfig['storage'],
                     container: $container,
                 );
@@ -75,10 +70,7 @@ class NamedOAuth2ServerFactory
                 return $servers->application;
             }
 
-            $factory = new OAuth2ServerInstanceFactory(
-                config: Value::array($oauth2Config),
-                services: $container,
-            );
+            $factory = new OAuth2ServerInstanceFactory(config: $oauth2Config, services: $container);
             return $servers->application = $factory();
         };
     }

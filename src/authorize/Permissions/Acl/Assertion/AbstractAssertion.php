@@ -10,12 +10,12 @@ use Jield\Authorize\Role\UserAsRole;
 use Jield\Authorize\Role\UserAsRoleInterface;
 use Jield\Mvc\Router\RouteMatch;
 use Jield\Stdlib\Service;
-use Jield\Stdlib\Value;
 use Laminas\Http\Request;
 use Laminas\Permissions\Acl\Assertion\AssertionInterface;
 use Laminas\Stdlib\RequestInterface;
 use Psr\Container\ContainerInterface;
 use RuntimeException;
+use Webmozart\Assert\Assert;
 
 abstract class AbstractAssertion implements AssertionInterface
 {
@@ -30,10 +30,7 @@ abstract class AbstractAssertion implements AssertionInterface
     public function __construct(
         protected ContainerInterface $container,
     ) {
-        $this->authenticationIdentityProvider = Service::get(
-            $this->container,
-            AuthenticationIdentityProvider::class,
-        );
+        $this->authenticationIdentityProvider = Service::get($this->container, AuthenticationIdentityProvider::class);
     }
 
     public function setRouteMatch(RouteMatch $routeMatch): AbstractAssertion
@@ -54,10 +51,7 @@ abstract class AbstractAssertion implements AssertionInterface
             return false;
         }
 
-        return $this->authenticationIdentityProvider->hasPermit(
-            resource: Value::object($entity),
-            privilege: $privilege,
-        );
+        return $this->authenticationIdentityProvider->hasPermit(resource: $entity, privilege: $privilege);
     }
 
     protected function isLoggedIn(): bool
@@ -80,7 +74,7 @@ abstract class AbstractAssertion implements AssertionInterface
             throw new RuntimeException(message: 'Calling getIdentity when nog logged in is not possible');
         }
 
-        return Value::instance(
+        return Assert::isInstanceOf(
             $this->authenticationIdentityProvider->getIdentity(),
             \Jield\Authorize\Role\UserAsRoleInterface::class,
         );
@@ -99,13 +93,9 @@ abstract class AbstractAssertion implements AssertionInterface
         }
 
         if (!isset($this->routeMatch)) {
-            throw new RuntimeException(
-                message: 'Calling parsePrivilege before setting the routematch is not possible',
-            );
+            throw new RuntimeException(message: 'Calling parsePrivilege before setting the routematch is not possible');
         }
 
-        return Value::string(
-            $this->routeMatch->getParam(name: 'privilege') ?? $this->routeMatch->getParam(name: 'action'),
-        );
+        return $this->routeMatch->getParam(name: 'privilege') ?? $this->routeMatch->getParam(name: 'action');
     }
 }

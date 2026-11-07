@@ -8,12 +8,12 @@ use Jield\ModuleManager\Feature\ConfigProviderInterface;
 use Jield\ModuleManager\ModuleEvent;
 use Jield\Stdlib\Value;
 use Laminas\EventManager\EventManagerInterface;
-use Laminas\EventManager\ListenerAggregateInterface;
 use Laminas\EventManager\ListenerAggregateTrait;
 use Laminas\Stdlib\ArrayUtils;
 use Laminas\Stdlib\Glob;
 use Override;
 use Traversable;
+use Webmozart\Assert\Assert;
 
 use function class_exists;
 use function file_exists;
@@ -23,7 +23,7 @@ use function is_callable;
 use function is_file;
 use function sprintf;
 
-class ConfigListener extends AbstractListener implements ConfigMergerInterface, ListenerAggregateInterface
+class ConfigListener extends AbstractListener implements ConfigMergerInterface
 {
     use ListenerAggregateTrait;
 
@@ -40,7 +40,7 @@ class ConfigListener extends AbstractListener implements ConfigMergerInterface, 
         parent::__construct(options: $options);
         if ($this->hasCachedConfig()) {
             $this->skipConfig = true;
-            $this->setMergedConfig(config: Value::array($this->getCachedConfig()));
+            $this->setMergedConfig(config: $this->getCachedConfig());
         } else {
             $this->addConfigGlobPaths(globPaths: $this->getOptions()->getConfigGlobPaths());
             $this->addConfigStaticPaths(staticPaths: $this->getOptions()->getConfigStaticPaths());
@@ -100,7 +100,7 @@ class ConfigListener extends AbstractListener implements ConfigMergerInterface, 
         $config = null;
 
         if ($module instanceof ConfigProviderInterface || is_callable(value: [$module, 'getConfig'])) {
-            $config = Value::call(Value::present($module), 'getConfig');
+            $config = Value::call($module, 'getConfig');
         } elseif (is_callable(value: $module)) {
             $config = $this->getConfigFromProvider($module);
         } else {
@@ -114,7 +114,7 @@ class ConfigListener extends AbstractListener implements ConfigMergerInterface, 
             return $this;
         }
 
-        $config = $this->normalizeServiceManagerConfig(Value::array($config));
+        $config = $this->normalizeServiceManagerConfig($config);
         $this->addConfig(key: $e->getModuleName(), config: $config);
 
         return $this;
@@ -158,17 +158,14 @@ class ConfigListener extends AbstractListener implements ConfigMergerInterface, 
     {
         // Load the config files
         foreach ($this->paths as $path) {
-            $this->addConfigByPath(
-                path: Value::string(Value::accessible($path)['path']),
-                type: Value::string(Value::accessible($path)['type']),
-            );
+            $this->addConfigByPath(path: $path['path'], type: $path['type']);
         }
 
         // Merge all of the collected configs
         $extraConfig = $this->getOptions()->getExtraConfig();
         $this->mergedConfig = is_array($extraConfig) ? $extraConfig : iterator_to_array($extraConfig);
         foreach ($this->configs as $config) {
-            $this->mergedConfig = ArrayUtils::merge(a: $this->mergedConfig, b: Value::array($config));
+            $this->mergedConfig = ArrayUtils::merge(a: $this->mergedConfig, b: $config);
         }
         $this->mergedConfig = $this->normalizeServiceManagerConfig($this->mergedConfig);
 
@@ -188,25 +185,15 @@ class ConfigListener extends AbstractListener implements ConfigMergerInterface, 
         // modified before it is cached (In particular, allows the removal of config keys)
         $originalEventName = $e->getName();
         $e->setName(name: ModuleEvent::EVENT_MERGE_CONFIG);
-        Value::call(
-            Value::call(
-                Value::present(Value::object($e->getTarget())),
-                'getEventManager',
-            ),
-            'triggerEvent',
-            [$e],
-        );
+        Value::call(Value::call(Assert::object($e->getTarget()), 'getEventManager'), 'triggerEvent', [$e]);
 
         // Reset event name
-        $e->setName(name: Value::string($originalEventName));
+        $e->setName(name: Assert::string($originalEventName));
 
         // If enabled, update the config cache
         if ($this->getOptions()->getConfigCacheEnabled() && false === $this->skipConfig) {
             $configFile = $this->getOptions()->getConfigCacheFile();
-            $this->writeArrayToFile(
-                filePath: $configFile,
-                array: Value::array($this->getMergedConfig(returnConfigAsObject: false)),
-            );
+            $this->writeArrayToFile(filePath: $configFile, array: $this->getMergedConfig(returnConfigAsObject: false));
         }
 
         return $this;
@@ -305,7 +292,7 @@ class ConfigListener extends AbstractListener implements ConfigMergerInterface, 
         }
 
         foreach ($paths as $path) {
-            $this->addConfigPath(path: Value::string($path), type: $type);
+            $this->addConfigPath(path: $path, type: $type);
         }
     }
 
@@ -367,12 +354,8 @@ class ConfigListener extends AbstractListener implements ConfigMergerInterface, 
             case self::GLOB_PATH:
                 // We want to keep track of where each value came from so we don't
                 // use ConfigFactory::fromFiles() since it does merging internally.
-                /** @var mixed $file */
                 foreach (Glob::glob(pattern: $path, flags: Glob::GLOB_BRACE, forceFallback: true) as $file) {
-                    $this->addConfig(
-                        key: Value::string($file),
-                        config: $this->loadConfigFile(Value::string($file)),
-                    );
+                    $this->addConfig(key: $file, config: $this->loadConfigFile($file));
                 }
                 break;
         }
@@ -450,8 +433,8 @@ class ConfigListener extends AbstractListener implements ConfigMergerInterface, 
         // Factory callables are atomic pairs; recursive list merging would duplicate them.
         foreach (['factories', 'aliases', 'services'] as $key) {
             $normalized[$key] = array_replace(
-                Value::array($config['dependencies'][$key] ?? []),
-                Value::array($config['service_manager'][$key] ?? []),
+                $config['dependencies'][$key] ?? [],
+                $config['service_manager'][$key] ?? [],
             );
         }
 

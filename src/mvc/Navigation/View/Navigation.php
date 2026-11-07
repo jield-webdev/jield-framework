@@ -7,11 +7,11 @@ namespace Jield\Mvc\Navigation\View;
 use Jield\Mvc\Navigation\View\Navigation\AbstractHelper as AbstractNavigationHelper;
 use Jield\Mvc\Navigation\View\Navigation\HelperInterface as NavigationHelper;
 use Jield\Mvc\View\Helper\AbstractTranslatorHelper;
-use Jield\Stdlib\Value;
 use Laminas\Navigation\AbstractContainer;
 use Laminas\Navigation\Exception\ExceptionInterface;
 use Laminas\View\Exception;
 use Laminas\View\Renderer\RendererInterface as Renderer;
+use Webmozart\Assert\Assert;
 
 use function assert;
 use function call_user_func_array;
@@ -121,7 +121,7 @@ class Navigation extends AbstractNavigationHelper
             if (method_exists($helper, 'setServiceLocator') && $this->getServiceLocator()) {
                 $helper->setServiceLocator($this->getServiceLocator());
             }
-            return call_user_func_array(Value::callback($helper), $arguments);
+            return call_user_func_array(Assert::isCallable($helper), $arguments);
         }
 
         // default behaviour: proxy call to container
@@ -164,7 +164,6 @@ class Navigation extends AbstractNavigationHelper
             return false;
         }
 
-        /** @var mixed $helper */
         $helper = $plugins->get($proxy);
         assert($helper instanceof NavigationHelper);
         $container = $this->getContainer();
@@ -205,11 +204,7 @@ class Navigation extends AbstractNavigationHelper
             }
         }
 
-        if (
-            $this->getInjectTranslator()
-            && $helper instanceof AbstractTranslatorHelper
-            && !$helper->hasTranslator()
-        ) {
+        if ($this->getInjectTranslator() && $helper instanceof AbstractTranslatorHelper && !$helper->hasTranslator()) {
             $helper->setTranslator($this->getTranslator(), $this->getTranslatorTextDomain());
         }
     }

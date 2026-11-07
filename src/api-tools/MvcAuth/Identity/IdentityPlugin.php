@@ -18,7 +18,6 @@ class IdentityPlugin extends AbstractPlugin
         }
 
         $event = $controller->getEvent();
-        /** @var mixed $identity */
         $identity = $event->getParam(name: __NAMESPACE__);
 
         if (!$identity instanceof IdentityInterface) {

@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Jield\Authorize\Factory;
 
 use Jield\Authorize\Config;
-use Jield\Stdlib\Value;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Psr\Container\ContainerInterface;
+use Webmozart\Assert\Assert;
 
 class IdentityProviderServiceFactory implements FactoryInterface
 {
@@ -18,8 +18,6 @@ class IdentityProviderServiceFactory implements FactoryInterface
      */
     public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): mixed
     {
-        return $container->get(Value::string(
-            Value::array($container->get(Config::class))['identity_provider'],
-        ));
+        return $container->get(Assert::isArray($container->get(Config::class))['identity_provider']);
     }
 }

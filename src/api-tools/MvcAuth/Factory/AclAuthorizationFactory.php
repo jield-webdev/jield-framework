@@ -11,6 +11,7 @@ use Laminas\Http\Request;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Override;
 use Psr\Container\ContainerInterface;
+use Webmozart\Assert\Assert;
 
 use function array_key_exists;
 use function array_keys;
@@ -64,8 +65,8 @@ class AclAuthorizationFactory implements FactoryInterface
 
         foreach ($config as $controllerService => $privileges) {
             $this->createAclConfigFromPrivileges(
-                controllerService: Value::string($controllerService),
-                privileges: Value::array($privileges),
+                controllerService: Assert::string($controllerService),
+                privileges: $privileges,
                 aclConfig: $aclConfig,
                 denyByDefault: $denyByDefault,
             );
@@ -96,15 +97,12 @@ class AclAuthorizationFactory implements FactoryInterface
         // the admin may write the name using dash seprators.
         $controllerService = strtr($controllerService, '-', '\\');
         if (isset($privileges['actions'])) {
-            /** @var mixed $action
-             * @var mixed $methods
-             */
-            foreach (Value::iterable($privileges['actions']) as $action => $methods) {
+            foreach (Assert::isIterable($privileges['actions']) as $action => $methods) {
                 $action = lcfirst(string: (string) $action);
                 $aclConfig[] = [
                     'resource' => sprintf('%s::%s', $controllerService, $action),
                     'privileges' => $this->createPrivilegesFromMethods(
-                        methods: Value::array($methods),
+                        methods: $methods,
                         denyByDefault: $denyByDefault,
                     ),
                 ];
@@ -115,7 +113,7 @@ class AclAuthorizationFactory implements FactoryInterface
             $aclConfig[] = [
                 'resource' => sprintf('%s::collection', $controllerService),
                 'privileges' => $this->createPrivilegesFromMethods(
-                    methods: Value::array($privileges['collection']),
+                    methods: $privileges['collection'],
                     denyByDefault: $denyByDefault,
                 ),
             ];
@@ -125,7 +123,7 @@ class AclAuthorizationFactory implements FactoryInterface
             $aclConfig[] = [
                 'resource' => sprintf('%s::entity', $controllerService),
                 'privileges' => $this->createPrivilegesFromMethods(
-                    methods: Value::array($privileges['entity']),
+                    methods: $privileges['entity'],
                     denyByDefault: $denyByDefault,
                 ),
             ];
@@ -190,6 +188,6 @@ class AclAuthorizationFactory implements FactoryInterface
             return [];
         }
 
-        return Value::array($config['api-tools-mvc-auth']['authorization']);
+        return $config['api-tools-mvc-auth']['authorization'];
     }
 }

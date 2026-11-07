@@ -10,7 +10,6 @@ use Jield\Mvc\Controller\Plugin\AbstractPlugin;
 use Jield\Mvc\Exception\RuntimeException;
 use Jield\Mvc\InjectApplicationEventInterface;
 use Jield\Mvc\MvcEvent;
-use Jield\Stdlib\Value;
 
 class RouteParams extends AbstractPlugin
 {
@@ -25,7 +24,6 @@ class RouteParams extends AbstractPlugin
         }
 
         if ($controller instanceof AbstractController) {
-            /** @var mixed $parameterData */
             $parameterData = $controller->getEvent()->getParam(name: 'LaminasContentNegotiationParameterData');
             if ($parameterData instanceof ParameterDataContainer) {
                 return $parameterData->getRouteParams();
@@ -37,6 +35,6 @@ class RouteParams extends AbstractPlugin
             return [];
         }
 
-        return Value::present($event->getRouteMatch())->getParams();
+        return $event->getRouteMatch()->getParams();
     }
 }

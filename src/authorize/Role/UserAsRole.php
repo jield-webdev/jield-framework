@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Jield\Authorize\Role;
 
-use Jield\Stdlib\Value;
 use Laminas\Permissions\Acl\Role\RoleInterface;
 use RuntimeException;
 use Stringable;
@@ -28,7 +27,7 @@ class UserAsRole implements RoleInterface, Stringable
             );
         }
 
-        return Value::instance($this->userAsRole, \Jield\Authorize\Role\UserAsRoleInterface::class);
+        return $this->userAsRole;
     }
 
     public function __toString(): string

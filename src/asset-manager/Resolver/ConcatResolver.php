@@ -13,6 +13,7 @@ use Jield\AssetManager\Service\MimeResolver;
 use Jield\Stdlib\Value;
 use Laminas\Stdlib\ArrayUtils;
 use Override;
+use Webmozart\Assert\Assert;
 
 /**
  * This resolver allows the resolving of concatenated files.
@@ -88,7 +89,7 @@ class ConcatResolver implements
      */
     public function setConcats(iterable $concats): void
     {
-        $this->concats = Value::array(ArrayUtils::iteratorToArray(iterator: $concats));
+        $this->concats = ArrayUtils::iteratorToArray(iterator: $concats);
     }
 
     /**
@@ -108,10 +109,7 @@ class ConcatResolver implements
     #[Override]
     public function getAggregateResolver(): ResolverInterface
     {
-        return Value::instance(
-            $this->aggregateResolver,
-            \Jield\AssetManager\Resolver\ResolverInterface::class,
-        );
+        return Assert::isInstanceOf($this->aggregateResolver, \Jield\AssetManager\Resolver\ResolverInterface::class);
     }
 
     /**
@@ -141,7 +139,7 @@ class ConcatResolver implements
                 throw new Exception\RuntimeException(message: sprintf(
                     'Asset "%s" from collection "%s" can\'t be resolved '
                     . 'to an Asset implementing \Jield\AssetManager\Asset\AssetInterface.',
-                    Value::scalar($assetName),
+                    $assetName,
                     $fileName,
                 ));
             }
@@ -150,10 +148,7 @@ class ConcatResolver implements
                 filename: (string) $resolvedAsset->getSourceRoot() . (string) $resolvedAsset->getSourcePath(),
             ));
 
-            $this->getAssetFilterManager()->setFilters(
-                path: Value::string($assetName),
-                asset: $resolvedAsset,
-            );
+            $this->getAssetFilterManager()->setFilters(path: $assetName, asset: $resolvedAsset);
 
             $resolvedAssets[] = $resolvedAsset;
         }
@@ -182,10 +177,7 @@ class ConcatResolver implements
     #[Override]
     public function getAssetFilterManager(): AssetFilterManager
     {
-        return Value::instance(
-            $this->filterManager,
-            \Jield\AssetManager\Service\AssetFilterManager::class,
-        );
+        return Assert::isInstanceOf($this->filterManager, \Jield\AssetManager\Service\AssetFilterManager::class);
     }
 
     public function collect(): array

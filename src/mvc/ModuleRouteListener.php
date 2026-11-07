@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Jield\Mvc;
 
 use Jield\Mvc\Router\RouteMatch;
-use Jield\Stdlib\Value;
 use Laminas\EventManager\AbstractListenerAggregate;
 use Laminas\EventManager\EventManagerInterface;
 
@@ -57,7 +56,7 @@ class ModuleRouteListener extends AbstractListenerAggregate
         }
 
         // Ensure the module namespace has not already been applied
-        if (str_starts_with(Value::string($controller), Value::string($module))) {
+        if (str_starts_with($controller, $module)) {
             return;
         }
 

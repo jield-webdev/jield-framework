@@ -6,13 +6,12 @@ namespace Jield\ApiTools\Hal\Metadata;
 
 use Jield\ApiTools\Hal\Exception;
 use Jield\Stdlib\Value;
-use Laminas\Filter\FilterChain;
 use Laminas\Hydrator\ExtractionInterface;
 use Laminas\Hydrator\HydratorPluginManager;
 use Laminas\Hydrator\HydratorPluginManagerInterface;
+use Webmozart\Assert\Assert;
 
 use function class_exists;
-use function gettype;
 use function is_object;
 use function is_string;
 use function method_exists;
@@ -282,9 +281,9 @@ class Metadata
     {
         if (null === $this->entityRoute) {
             if ($this->hasRoute()) {
-                $this->setEntityRoute(route: Value::string($this->getRoute()));
+                $this->setEntityRoute(route: Assert::string($this->getRoute()));
             } else {
-                $this->setEntityRoute(route: Value::string($this->getUrl()));
+                $this->setEntityRoute(route: Assert::string($this->getUrl()));
             }
         }
 
@@ -404,22 +403,14 @@ class Metadata
     {
         if (is_string(value: $hydrator)) {
             if ($this->hydrators->has($hydrator)) {
-                /** @var mixed $hydrator */
                 $hydrator = $this->hydrators->get($hydrator);
             } elseif (class_exists(class: $hydrator)) {
-                /** @var ExtractionInterface $hydrator */
                 $hydrator = Value::instantiate($hydrator);
             }
         }
 
         if (!$hydrator instanceof ExtractionInterface) {
-            if (is_object(value: $hydrator)) {
-                $type = $hydrator::class;
-            } elseif (is_string(value: $hydrator)) {
-                $type = $hydrator;
-            } else {
-                $type = gettype(value: $hydrator);
-            }
+            $type = is_object($hydrator) ? $hydrator::class : $hydrator;
 
             throw new Exception\InvalidArgumentException(message: sprintf(
                 'Hydrator class must implement Laminas\Hydrator\ExtractionInterface; received "%s"',

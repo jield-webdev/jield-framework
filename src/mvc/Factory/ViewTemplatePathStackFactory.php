@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Jield\Mvc\Factory;
 
-use Jield\Stdlib\Value;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Laminas\View\Factory\Configuration;
 use Laminas\View\Resolver as ViewResolver;
 use Psr\Container\ContainerInterface;
+use Webmozart\Assert\Assert;
 
 use function is_array;
 
@@ -31,10 +31,9 @@ class ViewTemplatePathStackFactory implements FactoryInterface
         ?array $options = null,
     ): ViewResolver\TemplatePathStack {
         $config = Configuration::get($container);
-        /** @var mixed $paths */
         $paths = $config['view_manager']['template_path_stack'] ?? [];
 
-        $paths = is_array($paths) ? array_values(array_map(Value::nonEmptyString(...), $paths)) : [];
+        $paths = is_array($paths) ? array_values(array_map(Assert::stringNotEmpty(...), $paths)) : [];
 
         return new ViewResolver\TemplatePathStack([
             'default_suffix' => Configuration::defaultTemplateSuffix($container),

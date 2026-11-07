@@ -13,6 +13,7 @@ use Laminas\EventManager\EventInterface;
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\InputFilter\InputFilter;
 use Laminas\Stdlib\ArrayObject;
+use Webmozart\Assert\Assert;
 
 use function array_merge;
 use function assert;
@@ -105,7 +106,7 @@ final class ElementAnnotationsListener extends AbstractAnnotationsListener
         $elementSpec = $e->getParam('elementSpec');
         if (isset($elementSpec['spec']['attributes'])) {
             $elementSpec['spec']['attributes'] = array_merge(
-                Value::array($elementSpec['spec']['attributes']),
+                $elementSpec['spec']['attributes'],
                 $annotation->getAttributes(),
             );
             return;
@@ -126,11 +127,7 @@ final class ElementAnnotationsListener extends AbstractAnnotationsListener
 
         $class = $annotation->getComposedObject();
         $annotationManager = $e->getTarget();
-        $specification = Value::call(
-            Value::present(Value::object($annotationManager)),
-            'getFormSpecification',
-            [$class],
-        );
+        $specification = Value::call(Assert::object($annotationManager), 'getFormSpecification', [$class]);
 
         $name = $e->getParam('name');
         $elementSpec = $e->getParam('elementSpec');
@@ -144,17 +141,15 @@ final class ElementAnnotationsListener extends AbstractAnnotationsListener
                 Value::setPath($specification, ['type'], InputFilterProviderFieldset::class);
             }
 
-            $inputFilter = Value::accessible($specification)['input_filter'];
+            $inputFilter = $specification['input_filter'];
             if (!isset($inputFilter['type'])) {
                 Value::setPath($inputFilter, ['type'], InputFilter::class);
             }
-            $specification = Value::accessible($specification);
             unset($specification['input_filter']);
 
             Value::setPath($elementSpec, ['spec', 'type'], Collection::class);
             Value::setPath($elementSpec, ['spec', 'name'], $name);
 
-            /** @var mixed $targetElementOptions */
             $targetElementOptions = $specification['options'] ?? [];
             assert(is_array($targetElementOptions));
             $targetElementOptions['input_filter_spec'] = $inputFilter;
@@ -174,17 +169,14 @@ final class ElementAnnotationsListener extends AbstractAnnotationsListener
             }
         } else {
             // Compose input filter into parent input filter
-            $inputFilter = Value::accessible($specification)['input_filter'];
+            $inputFilter = $specification['input_filter'];
             if (!isset($inputFilter['type'])) {
                 Value::setPath($inputFilter, ['type'], InputFilter::class);
             }
             $inputSpec = $e->getParam('inputSpec');
             Value::call($inputSpec, 'exchangeArray', [
-                $inputFilter instanceof \ArrayObject
-                    ? $inputFilter->getArrayCopy()
-                    : Value::toArray($inputFilter),
+                $inputFilter instanceof \ArrayObject ? $inputFilter->getArrayCopy() : Value::toArray($inputFilter),
             ]);
-            $specification = Value::accessible($specification);
             unset($specification['input_filter']);
 
             // Compose specification as a fieldset into parent form/fieldset
@@ -197,10 +189,7 @@ final class ElementAnnotationsListener extends AbstractAnnotationsListener
                 Value::setPath(
                     $specification,
                     ['options'],
-                    array_merge(
-                        Value::array($elementSpec['spec']['options']),
-                        Value::array(Value::accessible($specification)['options']),
-                    ),
+                    array_merge($elementSpec['spec']['options'], Assert::isArray($specification['options'])),
                 );
             }
 
@@ -359,11 +348,7 @@ final class ElementAnnotationsListener extends AbstractAnnotationsListener
         }
 
         $elementSpec = $e->getParam('elementSpec');
-        Value::setPath(
-            $elementSpec,
-            ['spec', 'options'],
-            $this->mergeOptions(Value::accessible($elementSpec), $annotation),
-        );
+        Value::setPath($elementSpec, ['spec', 'options'], $this->mergeOptions($elementSpec, $annotation));
     }
 
     /**

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Jield\Search\Command;
 
 use Jield\Search\Service\ConsoleService;
-use Jield\Stdlib\Value;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -26,11 +25,7 @@ final class ListCores extends Command
         $cores = $this->consoleService->getCores();
 
         foreach ($cores as $key => $core) {
-            $output->writeln(messages: sprintf(
-                'Core for %s with service %s',
-                $key,
-                Value::scalar(Value::accessible($core)['service']),
-            ));
+            $output->writeln(messages: sprintf('Core for %s with service %s', $key, $core['service']));
         }
 
         $output->writeln(messages: sprintf('<info>In total %d cores are active</info>', count(value: $cores)));

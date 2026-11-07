@@ -15,6 +15,7 @@ use Laminas\ServiceManager\ServiceManager;
 use Laminas\Stdlib\RequestInterface;
 use Laminas\Stdlib\ResponseInterface;
 use Psr\Container\ContainerInterface;
+use Webmozart\Assert\Assert;
 
 use function array_merge;
 use function array_unique;
@@ -87,11 +88,7 @@ class Application implements ApplicationInterface, EventManagerAwareInterface
                 'EventManager',
             ),
         );
-        $this->request = $request ?: Service::get(
-            $serviceManager,
-            \Laminas\Stdlib\RequestInterface::class,
-            'Request',
-        );
+        $this->request = $request ?: Service::get($serviceManager, \Laminas\Stdlib\RequestInterface::class, 'Request');
         $this->response = $response ?: Service::get(
             $serviceManager,
             \Laminas\Stdlib\ResponseInterface::class,
@@ -106,7 +103,7 @@ class Application implements ApplicationInterface, EventManagerAwareInterface
      */
     public function getConfig(): object|array
     {
-        return Value::arrayOrObject($this->serviceManager->get('config'));
+        return $this->serviceManager->get('config');
     }
 
     /**
@@ -128,11 +125,7 @@ class Application implements ApplicationInterface, EventManagerAwareInterface
         $listeners = array_unique(array: array_merge($this->defaultListeners, $listeners));
 
         foreach ($listeners as $listener) {
-            Value::call(
-                $serviceManager->get(Value::string($listener)),
-                'attach',
-                [$events],
-            );
+            Value::call($serviceManager->get($listener), 'attach', [$events]);
         }
 
         // Setup MVC Event
@@ -140,22 +133,12 @@ class Application implements ApplicationInterface, EventManagerAwareInterface
         $event->setName(name: MvcEvent::EVENT_BOOTSTRAP);
         $event->setTarget(target: $this);
         $event->setApplication(application: $this);
-        $event->setRequest(request: Value::instance(
-            $this->request,
-            \Laminas\Stdlib\RequestInterface::class,
-        ));
-        $event->setResponse(response: Value::instance(
-            $this->response,
-            \Laminas\Stdlib\ResponseInterface::class,
-        ));
-        $event->setRouter(router: Service::get(
-            $serviceManager,
-            RouteStackInterface::class,
-            'Router',
-        ));
+        $event->setRequest(request: Assert::isInstanceOf($this->request, \Laminas\Stdlib\RequestInterface::class));
+        $event->setResponse(response: Assert::isInstanceOf($this->response, \Laminas\Stdlib\ResponseInterface::class));
+        $event->setRouter(router: Service::get($serviceManager, RouteStackInterface::class, 'Router'));
 
         // Trigger bootstrap events
-        Value::present($events)->triggerEvent(event: $event);
+        Assert::notNull($events)->triggerEvent(event: $event);
 
         return $this;
     }
@@ -175,7 +158,7 @@ class Application implements ApplicationInterface, EventManagerAwareInterface
      */
     public function getRequest(): RequestInterface
     {
-        return Value::instance($this->request, \Laminas\Stdlib\RequestInterface::class);
+        return Assert::isInstanceOf($this->request, \Laminas\Stdlib\RequestInterface::class);
     }
 
     /**
@@ -185,7 +168,7 @@ class Application implements ApplicationInterface, EventManagerAwareInterface
      */
     public function getResponse(): ResponseInterface
     {
-        return Value::instance($this->response, \Laminas\Stdlib\ResponseInterface::class);
+        return Assert::isInstanceOf($this->response, \Laminas\Stdlib\ResponseInterface::class);
     }
 
     /**
@@ -221,7 +204,7 @@ class Application implements ApplicationInterface, EventManagerAwareInterface
      */
     public function getEventManager(): EventManagerInterface
     {
-        return Value::instance($this->events, \Laminas\EventManager\EventManagerInterface::class);
+        return Assert::isInstanceOf($this->events, \Laminas\EventManager\EventManagerInterface::class);
     }
 
     /**
@@ -246,40 +229,28 @@ class Application implements ApplicationInterface, EventManagerAwareInterface
     public static function init($configuration = []): Application
     {
         // Prepare the service manager
-        /** @var mixed $smConfig */
         $smConfig = $configuration['service_manager'] ?? [];
-        $smConfig = new ServiceManagerConfig(config: Value::array($smConfig));
+        $smConfig = new ServiceManagerConfig(config: $smConfig);
 
         $serviceManager = new ServiceManager();
         $smConfig->configureServiceManager(services: $serviceManager);
         $serviceManager->setService(name: 'ApplicationConfig', service: $configuration);
 
         // Load modules
-        Service::get(
-            $serviceManager,
-            ModuleManager::class,
-            'ModuleManager',
-        )->loadModules();
+        Service::get($serviceManager, ModuleManager::class, 'ModuleManager')->loadModules();
 
         // Prepare list of listeners to bootstrap
-        /** @var mixed $listenersFromAppConfig */
         $listenersFromAppConfig = $configuration['listeners'] ?? [];
-        /** @var mixed $config */
         $config = $serviceManager->get('config');
-        /** @var mixed $listenersFromConfigService */
         $listenersFromConfigService = $config['listeners'] ?? [];
 
         $listeners = array_unique(array: array_merge(
-            Value::array($listenersFromConfigService),
-            Value::array($listenersFromAppConfig),
+            $listenersFromConfigService,
+            Assert::isArray($listenersFromAppConfig),
         ));
 
-        return Value::instance(
-            Service::get(
-                $serviceManager,
-                \Jield\Mvc\ApplicationInterface::class,
-                'Application',
-            )->bootstrap(Value::strings($listeners)),
+        return Assert::isInstanceOf(
+            Service::get($serviceManager, \Jield\Mvc\ApplicationInterface::class, 'Application')->bootstrap($listeners),
             \Jield\Mvc\Application::class,
         );
     }
@@ -319,16 +290,15 @@ class Application implements ApplicationInterface, EventManagerAwareInterface
         // Trigger route event
         $event->setName(name: MvcEvent::EVENT_ROUTE);
         $event->stopPropagation(flag: false); // Clear before triggering
-        $result = Value::present($events)->triggerEventUntil(callback: $shortCircuit, event: $event);
+        $result = Assert::notNull($events)->triggerEventUntil(callback: $shortCircuit, event: $event);
         if ($result->stopped()) {
-            /** @var mixed $response */
             $response = $result->last();
             if ($response instanceof ResponseInterface) {
                 $event->setName(name: MvcEvent::EVENT_FINISH);
                 $event->setTarget(target: $this);
                 $event->setResponse(response: $response);
                 $event->stopPropagation(flag: false); // Clear before triggering
-                Value::present($events)->triggerEvent(event: $event);
+                Assert::notNull($events)->triggerEvent(event: $event);
                 $this->response = $response;
                 return $this;
             }
@@ -341,26 +311,22 @@ class Application implements ApplicationInterface, EventManagerAwareInterface
         // Trigger dispatch event
         $event->setName(name: MvcEvent::EVENT_DISPATCH);
         $event->stopPropagation(flag: false); // Clear before triggering
-        $result = Value::present($events)->triggerEventUntil(callback: $shortCircuit, event: $event);
+        $result = Assert::notNull($events)->triggerEventUntil(callback: $shortCircuit, event: $event);
 
         // Complete response
-        /** @var mixed $response */
         $response = $result->last();
         if ($response instanceof ResponseInterface) {
             $event->setName(name: MvcEvent::EVENT_FINISH);
             $event->setTarget(target: $this);
             $event->setResponse(response: $response);
             $event->stopPropagation(flag: false); // Clear before triggering
-            Value::present($events)->triggerEvent(event: $event);
+            Assert::notNull($events)->triggerEvent(event: $event);
             $this->response = $response;
             return $this;
         }
 
         $response = $this->response;
-        $event->setResponse(response: Value::instance(
-            $response,
-            \Laminas\Stdlib\ResponseInterface::class,
-        ));
+        $event->setResponse(response: Assert::isInstanceOf($response, \Laminas\Stdlib\ResponseInterface::class));
         return $this->completeRequest(event: $event);
     }
 
@@ -379,11 +345,11 @@ class Application implements ApplicationInterface, EventManagerAwareInterface
 
         $event->setName(name: MvcEvent::EVENT_RENDER);
         $event->stopPropagation(flag: false); // Clear before triggering
-        Value::present($events)->triggerEvent(event: $event);
+        Assert::notNull($events)->triggerEvent(event: $event);
 
         $event->setName(name: MvcEvent::EVENT_FINISH);
         $event->stopPropagation(flag: false); // Clear before triggering
-        Value::present($events)->triggerEvent(event: $event);
+        Assert::notNull($events)->triggerEvent(event: $event);
 
         return $this;
     }

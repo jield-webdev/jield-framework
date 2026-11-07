@@ -59,14 +59,11 @@ class ConsoleService
         $entities = [];
 
         foreach ($this->moduleOptions->getEntities() as $entityInformation) {
-            if (!array_key_exists('columns', Value::array($entityInformation))) {
+            if (!array_key_exists('columns', $entityInformation)) {
                 continue;
             }
 
-            $this->collectDocumentationEntities(
-                entityColumnsName: Value::string($entityInformation['columns']),
-                entities: $entities,
-            );
+            $this->collectDocumentationEntities(entityColumnsName: $entityInformation['columns'], entities: $entities);
         }
 
         uasort($entities, static fn(AbstractEntityColumns $left, AbstractEntityColumns $right): int => strcasecmp(
@@ -75,18 +72,12 @@ class ConsoleService
         ));
 
         foreach ($entities as $entity) {
-            $output->writeln(messages: sprintf(
-                '<info>Writing MarkDown file for %s</info>',
-                Value::scalar(Value::call($entity, 'getName')),
-            ));
+            $output->writeln(messages: sprintf('<info>Writing MarkDown file for %s</info>', Value::call(
+                $entity,
+                'getName',
+            )));
 
-            $this->writeMarkdownContent(
-                createColumnsClass: Value::instance(
-                    $entity,
-                    \Jield\Export\Columns\AbstractEntityColumns::class,
-                ),
-                handle: $handle,
-            );
+            $this->writeMarkdownContent(createColumnsClass: $entity, handle: $handle);
         }
 
         fclose(stream: $handle);
@@ -102,10 +93,7 @@ class ConsoleService
         $entities[$entityColumnsName] = $createColumnsClass;
 
         foreach ($createColumnsClass->getDependencies() as $dependency) {
-            $this->collectDocumentationEntities(
-                entityColumnsName: Value::string($dependency),
-                entities: $entities,
-            );
+            $this->collectDocumentationEntities(entityColumnsName: $dependency, entities: $entities);
         }
     }
 
@@ -144,7 +132,7 @@ class ConsoleService
                 MARKDOWN;
         }
 
-        fwrite(stream: Value::resource($handle), data: $markDown);
+        fwrite(stream: $handle, data: $markDown);
     }
 
     /**
@@ -160,10 +148,10 @@ class ConsoleService
                 foreach ($storageLocations as $storageLocation) {
                     $columnKey = $storageLocation->getExportFileType()->getColumnKey();
 
-                    if (array_key_exists($columnKey, Value::array($entityInformation))) {
+                    if (array_key_exists($columnKey, $entityInformation)) {
                         $this->handleEntity(
                             storageLocation: $storageLocation,
-                            columnOrJsonClass: Value::string($entityInformation[$columnKey]),
+                            columnOrJsonClass: $entityInformation[$columnKey],
                             output: $output,
                         );
                     }
@@ -186,9 +174,7 @@ class ConsoleService
 
             $this->handleEntity(
                 storageLocation: $storageLocation,
-                columnOrJsonClass: Value::string(
-                    Value::accessible($this->entities[$entity])[$columnKey],
-                ),
+                columnOrJsonClass: $this->entities[$entity][$columnKey],
                 output: $output,
             );
         }
@@ -268,13 +254,8 @@ class ConsoleService
         ));
 
         //Check if the entity has dependencies
-        /** @var mixed $dependency */
         foreach ($createColumnsOrJsonClass->getDependencies() as $dependency) {
-            $this->handleEntity(
-                storageLocation: $storageLocation,
-                columnOrJsonClass: Value::string($dependency),
-                output: $output,
-            );
+            $this->handleEntity(storageLocation: $storageLocation, columnOrJsonClass: $dependency, output: $output);
         }
     }
 
@@ -309,7 +290,7 @@ class ConsoleService
         $this->getBlobClient()->createBlockBlob(
             container: $storageLocation->getContainer(),
             blob: $this->generateBlobName(storageLocation: $storageLocation, name: $columnsHelper->getName()),
-            content: Value::string(file_get_contents(filename: $fileName)),
+            content: Assert::string(file_get_contents(filename: $fileName)),
         );
     }
 
@@ -360,15 +341,12 @@ class ConsoleService
                 //When we accept a string, we explicitly set the type to string to avoid issues with formulas
                 if ($column->getType() === Column::TYPE_STRING) {
                     $worksheet->setCellValueExplicit(
-                        coordinate: $excelColumn . (Value::int($row) + 2),
+                        coordinate: $excelColumn . (Assert::integer($row) + 2),
                         value: $data,
                         dataType: DataType::TYPE_STRING,
                     );
                 } else {
-                    $worksheet->setCellValue(
-                        coordinate: $excelColumn . (Value::int($row) + 2),
-                        value: $data,
-                    );
+                    $worksheet->setCellValue(coordinate: $excelColumn . (Assert::integer($row) + 2), value: $data);
                 }
             }
 
@@ -389,7 +367,7 @@ class ConsoleService
         $this->getBlobClient()->createBlockBlob(
             container: $storageLocation->getContainer(),
             blob: $this->generateBlobName(storageLocation: $storageLocation, name: $columnsHelper->getName()),
-            content: Value::string(file_get_contents(filename: $fileName)),
+            content: Assert::string(file_get_contents(filename: $fileName)),
         );
 
         $spreadsheet->disconnectWorksheets();
@@ -421,10 +399,7 @@ class ConsoleService
                 throw new InvalidArgumentException('StorageLocationServiceInterface not found in container');
             }
 
-            $this->storageLocationService = Service::get(
-                $this->container,
-                StorageLocationServiceInterface::class,
-            );
+            $this->storageLocationService = Service::get($this->container, StorageLocationServiceInterface::class);
 
             $this->blobClient = $this->storageLocationService->getBlobService();
         }
@@ -442,10 +417,8 @@ class ConsoleService
     {
         if (null === $this->storageLocations) {
             //Find the entity which holds the storage location
-            $storageLocationEntity = Value::subclass(
-                $this->moduleOptions->getStorageLocationEntity(),
-                StorageLocationInterface::class,
-            );
+            $storageLocationEntity = $this->moduleOptions->getStorageLocationEntity();
+            Assert::isAOf($storageLocationEntity, StorageLocationInterface::class);
 
             //This entity has to implement the StorageLocationInterface
             Assert::implementsInterface(
@@ -453,10 +426,9 @@ class ConsoleService
                 interface: StorageLocationInterface::class,
             );
 
-            $storageLocations = $this->entityManager->getRepository($storageLocationEntity)->findBy(
-                criteria: [],
-                orderBy: ['name' => Order::Ascending->value],
-            );
+            $storageLocations = $this->entityManager->getRepository(
+                $storageLocationEntity,
+            )->findBy(criteria: [], orderBy: ['name' => Order::Ascending->value]);
 
             //Based on the getType() of the storage location, we filter the storage locations on the export file type
             //This does not have to be a column but can also be derived from a local purpose or ID

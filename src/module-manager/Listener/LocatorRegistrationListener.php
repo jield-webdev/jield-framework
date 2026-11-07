@@ -14,6 +14,7 @@ use Laminas\EventManager\ListenerAggregateInterface;
 use Laminas\EventManager\ListenerAggregateTrait;
 use Laminas\ServiceManager\ServiceManager;
 use Override;
+use Webmozart\Assert\Assert;
 
 use function end;
 use function explode;
@@ -44,13 +45,7 @@ class LocatorRegistrationListener extends AbstractListener implements ListenerAg
     public function onLoadModules(ModuleEvent $e): void
     {
         $moduleManager = $e->getTarget();
-        $events        = Value::call(
-            Value::call(
-                Value::present(Value::object($moduleManager)),
-                'getEventManager',
-            ),
-            'getSharedManager',
-        );
+        $events = Value::call(Value::call(Assert::object($moduleManager), 'getEventManager'), 'getSharedManager');
 
         if (!$events) {
             return;
@@ -61,12 +56,12 @@ class LocatorRegistrationListener extends AbstractListener implements ListenerAg
             Application::class,
             ModuleManager::EVENT_BOOTSTRAP,
             static function (MvcEvent $e) use ($moduleManager): void {
-                $moduleClassName      = $moduleManager::class;
+                $moduleClassName = $moduleManager::class;
                 $moduleClassNameArray = explode(separator: '\\', string: $moduleClassName);
                 $moduleClassNameAlias = end(array: $moduleClassNameArray);
-                $application          = $e->getApplication();
+                $application = $e->getApplication();
                 /** @var ServiceManager $services */
-                $services = Value::present($application)->getServiceManager();
+                $services = Assert::notNull($application)->getServiceManager();
                 if (!$services->has($moduleClassName)) {
                     $services->setAlias(alias: $moduleClassName, target: $moduleClassNameAlias);
                 }
@@ -99,13 +94,12 @@ class LocatorRegistrationListener extends AbstractListener implements ListenerAg
     {
         $application = $e->getApplication();
         /** @var ServiceManager $services */
-        $services = Value::present($application)->getServiceManager();
+        $services = Assert::notNull($application)->getServiceManager();
 
         foreach ($this->modules as $module) {
-            /** @var mixed $moduleClassName */
             $moduleClassName = $module::class;
-            if (!$services->has(Value::string($moduleClassName))) {
-                $services->setService(name: Value::string($moduleClassName), service: $module);
+            if (!$services->has($moduleClassName)) {
+                $services->setService(name: $moduleClassName, service: $module);
             }
         }
     }

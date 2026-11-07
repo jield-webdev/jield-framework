@@ -20,32 +20,29 @@ final class PdoAdapterFactory implements FactoryInterface
     {
         $config = $container->get('config');
 
-        $oauthConfig = Value::accessible($config)['api-tools-oauth2'];
+        $oauthConfig = $config['api-tools-oauth2'];
 
         //Grab the params directly from the Doctrine Params
-        /** @var mixed $username */
         $username = $config['doctrine']['connection']['orm_default']['params']['user'] ?? null;
-        /** @var mixed $password */
         $password = $config['doctrine']['connection']['orm_default']['params']['password'] ?? null;
-        /** @var mixed $options */
         $options = $config['doctrine']['connection']['orm_default']['params']['driverOptions'] ?? [];
 
         $dsn = sprintf(
             'mysql:dbname=%s;host=%s',
-            Value::scalar(Value::path($config, [
+            Value::path($config, [
                 'doctrine',
                 'connection',
                 'orm_default',
                 'params',
                 'dbname',
-            ])),
-            Value::scalar(Value::path($config, [
+            ]),
+            Value::path($config, [
                 'doctrine',
                 'connection',
                 'orm_default',
                 'params',
                 'host',
-            ])),
+            ]),
         );
 
         $oauth2ServerConfig = [];

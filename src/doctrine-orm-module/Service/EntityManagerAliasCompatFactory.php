@@ -7,9 +7,9 @@ namespace DoctrineORMModule\Service;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Jield\Stdlib\Service;
-use Jield\Stdlib\Value;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Psr\Container\ContainerInterface;
+use Webmozart\Assert\Assert;
 
 /**
  * Factory that provides the `Doctrine\ORM\EntityManager` alias for `doctrine.entitymanager.orm_default`
@@ -31,12 +31,8 @@ final class EntityManagerAliasCompatFactory implements FactoryInterface
         string $requestedName,
         ?array $options = null,
     ): EntityManager {
-        return Value::instance(
-            Service::get(
-                $container,
-                EntityManagerInterface::class,
-                'doctrine.entitymanager.orm_default',
-            ),
+        return Assert::isInstanceOf(
+            Service::get($container, EntityManagerInterface::class, 'doctrine.entitymanager.orm_default'),
             \Doctrine\ORM\EntityManager::class,
         );
     }

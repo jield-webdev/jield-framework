@@ -36,6 +36,7 @@ use Laminas\Hydrator\HydratorPluginManager;
 use Laminas\Paginator\Paginator;
 use Laminas\Stdlib\DispatchableInterface;
 use Override;
+use Webmozart\Assert\Assert;
 
 use function array_key_exists;
 use function array_merge;
@@ -114,7 +115,7 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
     #[Override]
     public function getController(): DispatchableInterface
     {
-        return Value::instance($this->controller, \Laminas\Stdlib\DispatchableInterface::class);
+        return Assert::isInstanceOf($this->controller, \Laminas\Stdlib\DispatchableInterface::class);
     }
 
     /**
@@ -133,7 +134,6 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
         $this->events = $eventManager;
 
         $eventManager->attach(eventName: 'getIdFromEntity', listener: static function (EventInterface $e) {
-            /** @var mixed $entity */
             $entity = $e->getParam(name: 'entity');
 
             // Found id in array
@@ -335,7 +335,7 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
      */
     public function getLinkCollectionExtractor(): LinkCollectionExtractorInterface
     {
-        return Value::instance(
+        return Assert::isInstanceOf(
             $this->linkCollectionExtractor,
             \Jield\ApiTools\Hal\Extractor\LinkCollectionExtractorInterface::class,
         );
@@ -540,10 +540,7 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
 
         /** @psalm-suppress PossiblyFalseReference */
         $maxDepth = is_object(value: $collection) && $metadataMap->has(class: $collection)
-            ? Value::instance(
-                $metadataMap->get(class: $collection),
-                Metadata::class,
-            )->getMaxDepth()
+            ? Assert::isInstanceOf($metadataMap->get(class: $collection), Metadata::class)->getMaxDepth()
             : null;
 
         /** @var array<string,mixed> $payload */
@@ -599,10 +596,7 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
         if (is_object(value: $entity)) {
             if ($maxDepth === null && $metadataMap->has(class: $entity)) {
                 /** @psalm-suppress PossiblyFalseReference */
-                $maxDepth = Value::instance(
-                    $metadataMap->get(class: $entity),
-                    Metadata::class,
-                )->getMaxDepth();
+                $maxDepth = Assert::isInstanceOf($metadataMap->get(class: $entity), Metadata::class)->getMaxDepth();
             }
 
             if ($maxDepth === null) {
@@ -635,10 +629,7 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
                 /** @psalm-suppress PossiblyFalseArgument,ArgumentTypeCoercion */
                 $value = $this->getResourceFactory()->createEntityFromMetadata(
                     object: $value,
-                    metadata: Value::instance(
-                        $metadataMap->get(class: $value),
-                        Metadata::class,
-                    ),
+                    metadata: Assert::isInstanceOf($metadataMap->get(class: $value), Metadata::class),
                     renderEmbeddedEntities: $this->getRenderEmbeddedEntities(),
                 );
             }
@@ -701,14 +692,13 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
 
         if (is_object($entity) && $metadataMap->has($entity)) {
             /** @psalm-suppress PossiblyFalseArgument,ArgumentTypeCoercion */
-            $halEntity = $this->getResourceFactory()->createEntityFromMetadata($entity, Value::instance(
+            $halEntity = $this->getResourceFactory()->createEntityFromMetadata($entity, Assert::isInstanceOf(
                 $metadataMap->get($entity),
                 Metadata::class,
             ));
         } elseif (!$entity instanceof \Jield\ApiTools\Hal\Entity) {
-            /** @var mixed $id */
-            $id = $this->getIdFromEntity(Value::arrayOrObject($entity)) ?: null;
-            $halEntity = new Entity(Value::arrayOrObject($entity), $id);
+            $id = $this->getIdFromEntity($entity) ?: null;
+            $halEntity = new Entity($entity, $id);
         } else {
             $halEntity = $entity;
         }
@@ -727,14 +717,14 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
      */
     public function fromLinkCollection(LinkCollection $collection): array
     {
-        return Value::present($this->linkCollectionExtractor)->extract(collection: $collection);
+        return Assert::notNull($this->linkCollectionExtractor)->extract(collection: $collection);
     }
 
     public function fromLink(\Jield\ApiTools\Hal\Link\Link $linkDefinition): array
     {
         $this->getEventManager()->trigger(__FUNCTION__ . '.pre', $this, ['linkDefinition' => $linkDefinition]);
 
-        $linkExtractor = Value::present($this->linkCollectionExtractor)->getLinkExtractor();
+        $linkExtractor = Assert::notNull($this->linkCollectionExtractor)->getLinkExtractor();
 
         return $linkExtractor->extract($linkDefinition);
     }
@@ -755,7 +745,7 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
         $metadataMap = $this->getMetadataMap();
         if (is_object(value: $collection) && $metadataMap->has(class: $collection)) {
             /** @psalm-suppress PossiblyFalseArgument */
-            $collection = $this->getResourceFactory()->createCollectionFromMetadata(object: $collection, metadata: Value::instance(
+            $collection = $this->getResourceFactory()->createCollectionFromMetadata(object: $collection, metadata: Assert::isInstanceOf(
                 $metadataMap->get(class: $collection),
                 Metadata::class,
             ));
@@ -768,7 +758,7 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
         $metadata = $metadataMap->get(class: $collection);
         /** @psalm-suppress RedundantConditionGivenDocblockType */
         if (!$metadata || $metadata->getForceSelfLink()) {
-            $this->injectSelfLink(resource: $collection, route: Value::string($route));
+            $this->injectSelfLink(resource: $collection, route: Assert::string($route));
         }
 
         return $collection;
@@ -865,7 +855,6 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
         $entityRouteOptions = $halCollection->getEntityRouteOptions();
         $metadataMap = $this->getMetadataMap();
 
-        /** @var mixed $entity */
         foreach ($halCollection->getCollection() as $entity) {
             $eventParams = new ArrayObject([
                 'collection' => $halCollection,
@@ -884,7 +873,7 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
             /** @psalm-suppress RedundantConditionGivenDocblockType */
             if (is_object(value: $entity) && $metadataMap->has(class: $entity)) {
                 /** @psalm-suppress PossiblyFalseArgument,ArgumentTypeCoercion */
-                $entity = $this->getResourceFactory()->createEntityFromMetadata(object: $entity, metadata: Value::instance(
+                $entity = $this->getResourceFactory()->createEntityFromMetadata(object: $entity, metadata: Assert::isInstanceOf(
                     $metadataMap->get(class: $entity),
                     Metadata::class,
                 ));
@@ -903,14 +892,13 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
 
             /** @psalm-suppress RedundantConditionGivenDocblockType */
             if (!is_array(value: $entity)) {
-                $entity = $this->getEntityExtractor()->extract(object: Value::object($entity));
+                $entity = $this->getEntityExtractor()->extract(object: Assert::object($entity));
             }
 
-            /** @var mixed $value */
             foreach ($entity as $key => $value) {
                 if (is_object(value: $value) && $metadataMap->has(class: $value)) {
                     /** @psalm-suppress PossiblyFalseArgument,ArgumentTypeCoercion */
-                    $value = $this->getResourceFactory()->createEntityFromMetadata(object: $value, metadata: Value::instance(
+                    $value = $this->getResourceFactory()->createEntityFromMetadata(object: $value, metadata: Assert::isInstanceOf(
                         $metadataMap->get(class: $value),
                         Metadata::class,
                     ));

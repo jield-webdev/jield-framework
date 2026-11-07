@@ -15,6 +15,7 @@ use Laminas\EventManager\EventManagerInterface;
 use Laminas\ServiceManager\Exception\InvalidServiceException;
 use Laminas\Stdlib\ArrayUtils;
 use Throwable;
+use Webmozart\Assert\Assert;
 
 use function is_object;
 
@@ -69,7 +70,6 @@ class DispatchListener extends AbstractListenerAggregate
         }
 
         $routeMatch = $e->getRouteMatch();
-        /** @var mixed $controllerName */
         $controllerName = $routeMatch instanceof RouteMatch
             ? $routeMatch->getParam(name: 'controller', default: 'not-found')
             : 'not-found';
@@ -77,33 +77,32 @@ class DispatchListener extends AbstractListenerAggregate
         $controllerManager = $this->controllerManager;
 
         // Query abstract controllers, too!
-        if (!$controllerManager->has(Value::string($controllerName))) {
+        if (!$controllerManager->has($controllerName)) {
             $return = $this->marshalControllerNotFoundEvent(
                 type: Application::ERROR_CONTROLLER_NOT_FOUND,
-                controllerName: Value::string($controllerName),
+                controllerName: $controllerName,
                 event: $e,
-                application: Value::instance($application, \Jield\Mvc\Application::class),
+                application: Assert::isInstanceOf($application, \Jield\Mvc\Application::class),
             );
             return $this->complete(return: $return, event: $e);
         }
 
         try {
-            /** @var mixed $controller */
-            $controller = $controllerManager->get(Value::string($controllerName));
+            $controller = $controllerManager->get($controllerName);
         } catch (InvalidControllerException|InvalidServiceException $exception) {
             $return = $this->marshalControllerNotFoundEvent(
                 type: Application::ERROR_CONTROLLER_INVALID,
-                controllerName: Value::string($controllerName),
+                controllerName: $controllerName,
                 event: $e,
-                application: Value::instance($application, \Jield\Mvc\Application::class),
+                application: Assert::isInstanceOf($application, \Jield\Mvc\Application::class),
                 exception: $exception,
             );
             return $this->complete(return: $return, event: $e);
         } catch (Throwable $exception) {
             $return = $this->marshalBadControllerEvent(
-                controllerName: Value::string($controllerName),
+                controllerName: $controllerName,
                 event: $e,
-                application: Value::instance($application, \Jield\Mvc\Application::class),
+                application: Assert::isInstanceOf($application, \Jield\Mvc\Application::class),
                 exception: $exception,
             );
             return $this->complete(return: $return, event: $e);
@@ -114,9 +113,8 @@ class DispatchListener extends AbstractListenerAggregate
         }
 
         $request = $e->getRequest();
-        $response = Value::present($application)->getResponse();
+        $response = Assert::notNull($application)->getResponse();
         $caughtException = null;
-        /** @var mixed $return */
         $return = null;
 
         try {
@@ -131,12 +129,11 @@ class DispatchListener extends AbstractListenerAggregate
         if ($caughtException !== null) {
             $e->setName(MvcEvent::EVENT_DISPATCH_ERROR);
             $e->setError(Application::ERROR_EXCEPTION);
-            $e->setController(Value::string($controllerName));
-            $e->setControllerClass(Value::string($controller::class));
+            $e->setController($controllerName);
+            $e->setControllerClass($controller::class);
             $e->setParam(name: 'exception', value: $caughtException);
 
-            /** @var mixed $return */
-            $return = Value::present($application)->getEventManager()->triggerEvent($e)->last();
+            $return = Assert::notNull($application)->getEventManager()->triggerEvent($e)->last();
             if (!$return) {
                 $return = $e->getResult();
             }
@@ -153,7 +150,7 @@ class DispatchListener extends AbstractListenerAggregate
     protected function complete(mixed $return, MvcEvent $event): mixed
     {
         if (!is_object($return) && ArrayUtils::hasStringKeys($return)) {
-            $return = new ArrayObject(Value::array($return), flags: ArrayObject::ARRAY_AS_PROPS);
+            $return = new ArrayObject(Assert::isArray($return), flags: ArrayObject::ARRAY_AS_PROPS);
         }
         $event->setResult($return);
         return $return;

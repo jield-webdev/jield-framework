@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Jield\Form;
 
 use Jield\Stdlib\Service;
-use Jield\Stdlib\Value;
 use Laminas\InputFilter\InputFilterInterface;
 use Laminas\InputFilter\InputFilterPluginManager;
 use Laminas\ServiceManager\Factory\AbstractFactoryInterface;
 use Psr\Container\ContainerInterface;
+use Webmozart\Assert\Assert;
 
 use function is_array;
 use function is_string;
@@ -37,7 +37,7 @@ final class FormAbstractServiceFactory implements AbstractFactoryInterface
         ?array $options = null,
     ): FormInterface {
         $config = $this->getConfig(container: $container);
-        $config = Value::array($config[$requestedName]);
+        $config = Assert::isArray($config[$requestedName]);
         $factory = $this->getFormFactory(container: $container);
 
         $this->marshalInputFilter(config: $config, container: $container, formFactory: $factory);

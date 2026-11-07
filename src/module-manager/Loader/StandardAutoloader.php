@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Jield\ModuleManager\Loader;
 
-use Jield\Stdlib\Value;
 use Traversable;
+use Webmozart\Assert\Assert;
 
 use function dirname;
 use function file_exists;
@@ -92,9 +92,6 @@ class StandardAutoloader implements SplAutoloader
             throw new Exception\InvalidArgumentException('Options must be either an array or Traversable');
         }
 
-        /** @var mixed $type
-         * @var mixed $pairs
-         */
         foreach ($options as $type => $pairs) {
             switch ($type) {
                 case self::AUTOREGISTER_LAMINAS:
@@ -104,16 +101,16 @@ class StandardAutoloader implements SplAutoloader
                     break;
                 case self::LOAD_NS:
                     if (is_iterable($pairs)) {
-                        $this->registerNamespaces(Value::array($pairs));
+                        $this->registerNamespaces(Assert::isArray($pairs));
                     }
                     break;
                 case self::LOAD_PREFIX:
                     if (is_iterable($pairs)) {
-                        $this->registerPrefixes(Value::array($pairs));
+                        $this->registerPrefixes(Assert::isArray($pairs));
                     }
                     break;
                 case self::ACT_AS_FALLBACK:
-                    $this->setFallbackAutoloader(Value::bool($pairs));
+                    $this->setFallbackAutoloader(Assert::boolean($pairs));
                     break;
                 default:
                     // ignore
@@ -172,11 +169,8 @@ class StandardAutoloader implements SplAutoloader
             throw new Exception\InvalidArgumentException('Namespace pairs must be either an array or Traversable');
         }
 
-        /** @var mixed $directory
-         * @var mixed $namespace
-         */
         foreach ($namespaces as $namespace => $directory) {
-            $this->registerNamespace(Value::string($namespace), Value::string($directory));
+            $this->registerNamespace(Assert::string($namespace), Assert::string($directory));
         }
         return $this;
     }
@@ -209,11 +203,8 @@ class StandardAutoloader implements SplAutoloader
             throw new Exception\InvalidArgumentException('Prefix pairs must be either an array or Traversable');
         }
 
-        /** @var mixed $directory
-         * @var mixed $prefix
-         */
         foreach ($prefixes as $prefix => $directory) {
-            $this->registerPrefix(Value::string($prefix), Value::string($directory));
+            $this->registerPrefix(Assert::string($prefix), Assert::string($directory));
         }
         return $this;
     }
@@ -313,15 +304,15 @@ class StandardAutoloader implements SplAutoloader
 
         // Namespace and/or prefix autoloading
         foreach ($this->$type as $leader => $path) {
-            if (!str_starts_with($class, Value::string($leader))) {
+            if (!str_starts_with($class, Assert::string($leader))) {
                 continue;
             }
 
             // Trim off leader (namespace or prefix)
-            $trimmedClass = substr($class, strlen(Value::string($leader)));
+            $trimmedClass = substr($class, strlen(Assert::string($leader)));
 
             // create filename
-            $filename = $this->transformClassNameToFilename($trimmedClass, Value::string($path));
+            $filename = $this->transformClassNameToFilename($trimmedClass, Assert::string($path));
             if (file_exists($filename)) {
                 include $filename;
                 return $class;

@@ -7,17 +7,14 @@ namespace Jield\Mvc\Plugin\FlashMessenger\View\Helper;
 use Jield\Mvc\Plugin\FlashMessenger\FlashMessenger as PluginFlashMessenger;
 use Jield\Mvc\View\Helper\AbstractTranslatorHelper;
 use Jield\Stdlib\Value;
-use Laminas\Escaper\Escaper;
 use Laminas\View\Exception\InvalidArgumentException;
 use Laminas\View\Helper\EscapeHtml;
+use Webmozart\Assert\Assert;
 
 use function array_walk_recursive;
 use function assert;
 use function call_user_func_array;
-use function gettype;
 use function implode;
-use function is_object;
-use function method_exists;
 use function sprintf;
 
 /**
@@ -155,7 +152,7 @@ class FlashMessenger extends AbstractTranslatorHelper
     public function __call(string $method, array $argv)
     {
         $flashMessenger = $this->getPluginFlashMessenger();
-        return call_user_func_array(Value::callback([$flashMessenger, $method]), $argv);
+        return call_user_func_array(Assert::isCallable([$flashMessenger, $method]), $argv);
     }
 
     /**
@@ -202,9 +199,7 @@ class FlashMessenger extends AbstractTranslatorHelper
         // Flatten message array
         $escapeHtml = $this->getEscapeHtmlHelper();
         $messagesToPrint = [];
-        /** @var mixed $translator */
         $translator = $this->getTranslator();
-        /** @var mixed $translatorTextDomain */
         $translatorTextDomain = $this->getTranslatorTextDomain();
         array_walk_recursive($messages, static function ($item) use (
             &$messagesToPrint,
@@ -214,7 +209,6 @@ class FlashMessenger extends AbstractTranslatorHelper
             $translatorTextDomain,
         ): void {
             if ($translator !== null) {
-                /** @var mixed $item */
                 $item = Value::call($translator, 'translate', [$item, $translatorTextDomain]);
             }
 
@@ -234,7 +228,7 @@ class FlashMessenger extends AbstractTranslatorHelper
         $markup = sprintf($this->getMessageOpenFormat($namespace), ' class="' . implode(' ', $classes) . '"');
         $markup .= implode(
             sprintf($this->getMessageSeparatorString($namespace), ' class="' . implode(' ', $classes) . '"'),
-            Value::scalars($messagesToPrint),
+            $messagesToPrint,
         );
         $markup .= $this->getMessageCloseString($namespace);
         return $markup;
@@ -262,22 +256,7 @@ class FlashMessenger extends AbstractTranslatorHelper
      */
     protected function getEscapeHtmlHelper()
     {
-        if ($this->escapeHtmlHelper) {
-            return $this->escapeHtmlHelper;
-        }
-
-        /** @var mixed $view */
-        $view = $this->getView();
-
-        if (Value::truthy($view) && method_exists(Value::objectOrString($view), 'plugin')) {
-            $plugin = Value::call($view, 'plugin', ['escapehtml']);
-            assert($plugin instanceof EscapeHtml);
-            $this->escapeHtmlHelper = $plugin;
-        }
-
-        if (!$this->escapeHtmlHelper instanceof EscapeHtml) {
-            $this->escapeHtmlHelper = new EscapeHtml(new Escaper());
-        }
+        $this->escapeHtmlHelper ??= $this->getView()->plugin('escapehtml');
 
         return $this->escapeHtmlHelper;
     }
@@ -404,7 +383,7 @@ class FlashMessenger extends AbstractTranslatorHelper
     {
         $flashMessenger = $this->getPluginFlashMessenger();
         $messages = $flashMessenger->getCurrentMessagesFromNamespace($namespace);
-        return $this->renderMessages($namespace, $messages, Value::strings($classes), $autoEscape);
+        return $this->renderMessages($namespace, $messages, $classes, $autoEscape);
     }
 
     /**

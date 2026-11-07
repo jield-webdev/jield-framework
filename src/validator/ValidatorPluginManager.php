@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Jield\Validator;
 
-use Closure;
-use Jield\Stdlib\Value;
 use Laminas\ServiceManager\AbstractSingleInstancePluginManager;
 use Laminas\ServiceManager\Factory\InvokableFactory;
 use Laminas\ServiceManager\ServiceManager;
@@ -45,7 +43,7 @@ final class ValidatorPluginManager extends AbstractSingleInstancePluginManager
     public function __construct(ContainerInterface $creationContext, array $config = [])
     {
         /** @var ServiceManagerConfiguration $config */
-        $config = array_replace_recursive(self::DEFAULT_CONFIGURATION, Value::stringKeyedArray($config));
+        $config = array_replace_recursive(self::DEFAULT_CONFIGURATION, $config);
         $this->nativePlugins = new \Laminas\Validator\ValidatorPluginManager($creationContext, $config);
         parent::__construct($creationContext, $config);
 

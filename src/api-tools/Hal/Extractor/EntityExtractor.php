@@ -6,7 +6,6 @@ namespace Jield\ApiTools\Hal\Extractor;
 
 use ArrayObject;
 use Jield\ApiTools\Hal\EntityHydratorManager;
-use Jield\Stdlib\Value;
 use JsonSerializable;
 use Laminas\Hydrator\ExtractionInterface;
 use Override;
@@ -41,12 +40,12 @@ class EntityExtractor implements ExtractionInterface
     public function extract(object $object): array
     {
         if ($this->serializedEntities->offsetExists($object)) {
-            return Value::array($this->serializedEntities->offsetGet($object));
+            return $this->serializedEntities->offsetGet($object);
         }
 
         $this->serializedEntities[$object] = $this->extractEntity(entity: $object);
 
-        return Value::array($this->serializedEntities->offsetGet($object));
+        return $this->serializedEntities->offsetGet($object);
     }
 
     private function extractEntity(object $entity): array
@@ -58,7 +57,7 @@ class EntityExtractor implements ExtractionInterface
         }
 
         if ($entity instanceof JsonSerializable) {
-            return Value::array($entity->jsonSerialize());
+            return $entity->jsonSerialize();
         }
 
         if ($entity instanceof ArrayObject) {

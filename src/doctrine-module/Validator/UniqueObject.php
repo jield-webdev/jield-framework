@@ -7,8 +7,9 @@ namespace DoctrineModule\Validator;
 use Doctrine\Persistence\ObjectManager;
 use Jield\Stdlib\Value;
 use Laminas\Validator\Exception;
-
 use Override;
+use Webmozart\Assert\Assert;
+
 use function array_diff_assoc;
 use function array_key_exists;
 use function gettype;
@@ -60,9 +61,7 @@ class UniqueObject extends ObjectExists
         }
 
         $this->objectManager = $options['object_manager'];
-        $this->useContext = isset($options['use_context'])
-            ? Value::truthy($options['use_context'])
-            : false;
+        $this->useContext = isset($options['use_context']) ? Value::truthy($options['use_context']) : false;
     }
 
     /**
@@ -76,15 +75,13 @@ class UniqueObject extends ObjectExists
         }
 
         $cleanedValue = $this->cleanSearchValue(value: $value);
-        $match = $this->objectRepository->findOneBy(criteria: Value::stringKeyedArray($cleanedValue));
+        $match = $this->objectRepository->findOneBy(criteria: $cleanedValue);
 
         if (!is_object(value: $match)) {
             return true;
         }
 
-        $expectedIdentifiers = $this->getExpectedIdentifiers(context: Value::nullableArrayOrObject(
-            $context,
-        ));
+        $expectedIdentifiers = $this->getExpectedIdentifiers(context: $context);
         $foundIdentifiers = $this->getFoundIdentifiers(match: $match);
 
         if (array_diff_assoc($expectedIdentifiers, $foundIdentifiers) === []) {
@@ -133,17 +130,14 @@ class UniqueObject extends ObjectExists
 
         $result = [];
         foreach ($this->getIdentifiers() as $identifierField) {
-            if (!array_key_exists(
-                key: Value::key($identifierField),
-                array: Value::array($context),
-            )) {
+            if (!array_key_exists(key: $identifierField, array: Assert::isArray($context))) {
                 throw new Exception\RuntimeException(message: sprintf(
                     'Expected context to contain %s',
-                    Value::scalar($identifierField),
+                    $identifierField,
                 ));
             }
 
-            $result[Value::key($identifierField)] = $context[$identifierField];
+            $result[$identifierField] = $context[$identifierField];
         }
 
         return $result;

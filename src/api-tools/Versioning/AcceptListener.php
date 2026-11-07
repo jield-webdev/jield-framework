@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Jield\ApiTools\Versioning;
 
-use Jield\Stdlib\Value;
 use Override;
 
 use function array_reverse;
@@ -39,9 +38,8 @@ class AcceptListener extends ContentTypeListener
             $params = explode(separator: ';', string: $mediaRange);
             $mediaType = array_shift(array: $params);
 
-            /** @var mixed $regex */
             foreach (array_reverse(array: $this->regexes) as $regex) {
-                if (!preg_match(pattern: Value::string($regex), subject: $mediaType, matches: $matches)) {
+                if (!preg_match(pattern: $regex, subject: $mediaType, matches: $matches)) {
                     continue;
                 }
 

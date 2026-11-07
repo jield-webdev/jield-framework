@@ -6,8 +6,8 @@ namespace Jield\ModuleManager\Listener;
 
 use Generator;
 use Jield\ModuleManager\ModuleEvent;
-
 use Jield\Stdlib\Value;
+
 use function class_exists;
 use function in_array;
 use function sprintf;

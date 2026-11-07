@@ -7,10 +7,10 @@ namespace Jield\ApiTools\ApiProblem\Listener;
 use Jield\ApiTools\ApiProblem\ApiProblemResponse;
 use Jield\Mvc\ResponseSender\HttpResponseSender;
 use Jield\Mvc\ResponseSender\SendResponseEvent;
-use Jield\Stdlib\Value;
 use Laminas\Http\Header\HeaderInterface;
 use Laminas\Http\Response as HttpResponse;
 use Override;
+use Webmozart\Assert\Assert;
 
 /**
  * Send ApiProblem responses.
@@ -118,15 +118,12 @@ class SendApiProblemResponseListener extends HttpResponseSender
     {
         $apiProblemHeaders = $apiProblemResponse->getHeaders();
         foreach ($applicationResponse->getHeaders() as $header) {
-            $header = Value::instance($header, HeaderInterface::class);
+            $header = Assert::isInstanceOf($header, HeaderInterface::class);
             if ($apiProblemHeaders->has($header->getFieldName())) {
                 continue;
             }
 
-            $apiProblemHeaders->addHeader(header: Value::instance(
-                $header,
-                HeaderInterface::class,
-            ));
+            $apiProblemHeaders->addHeader(header: $header);
         }
     }
 }

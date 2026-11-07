@@ -13,6 +13,7 @@ use InvalidArgumentException;
 use Jield\Stdlib\Value;
 use Psr\Container\ContainerInterface;
 use RuntimeException;
+use Webmozart\Assert\Assert;
 
 use function class_exists;
 use function sprintf;
@@ -95,11 +96,7 @@ final class DriverFactory extends AbstractFactory
                     continue;
                 }
 
-                $options = $this->getOptions(
-                    container: $container,
-                    key: 'driver',
-                    name: Value::nullableString($driverName),
-                );
+                $options = $this->getOptions(container: $container, key: 'driver', name: $driverName);
 
                 if (!$options instanceof Driver) {
                     throw new RuntimeException(message: sprintf(
@@ -111,11 +108,11 @@ final class DriverFactory extends AbstractFactory
 
                 $driver->addDriver(
                     nestedDriver: $this->createDriver(container: $container, options: $options),
-                    namespace: Value::string($namespace),
+                    namespace: Assert::string($namespace),
                 );
             }
         }
 
-        return Value::instance($driver, \Doctrine\Persistence\Mapping\Driver\MappingDriver::class);
+        return Assert::isInstanceOf($driver, \Doctrine\Persistence\Mapping\Driver\MappingDriver::class);
     }
 }

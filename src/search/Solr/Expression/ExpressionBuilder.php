@@ -10,8 +10,8 @@ use JetBrains\PhpStorm\Pure;
 use Jield\Search\Solr\Expression\Exception\InvalidArgumentException;
 use Jield\Search\Solr\ExpressionInterface;
 use Jield\Search\Solr\Util;
-
 use Stringable;
+
 use function array_filter;
 use function array_pop;
 use function array_shift;
@@ -22,7 +22,6 @@ use function is_array;
 use function is_bool;
 use function is_iterable;
 use function is_numeric;
-use function is_object;
 use function is_string;
 use function trim;
 
@@ -85,7 +84,6 @@ class ExpressionBuilder
     public function prx(ExpressionInterface|string|null $word = null, mixed $proximity = null): ?ExpressionInterface
     {
         $arguments = func_get_args();
-        /** @var mixed $proximityElement */
         $proximityElement = array_pop(array: $arguments);
 
         $arguments = $this->flatten(collection: $arguments);
@@ -113,7 +111,6 @@ class ExpressionBuilder
         $result = [];
 
         while (!empty($stack)) {
-            /** @var mixed $item */
             $item = array_shift(array: $stack);
 
             if (is_iterable(value: $item)) {
@@ -279,7 +276,6 @@ class ExpressionBuilder
         $args = $this->flatten(collection: $args);
         $type = CompositeExpression::TYPE_SPACE;
 
-        /** @var mixed $last */
         $last = end(array: $args);
         if ((is_string($last) || $last === null) && CompositeExpression::isValidType(type: $last)) {
             array_pop(array: $args);

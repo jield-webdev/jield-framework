@@ -25,11 +25,7 @@ final class CliFactory implements FactoryInterface
     public function getEventManager(ContainerInterface $container): EventManagerInterface
     {
         if (!$this->events instanceof \Laminas\EventManager\EventManagerInterface) {
-            $events = Service::get(
-                $container,
-                \Laminas\EventManager\EventManagerInterface::class,
-                'EventManager',
-            );
+            $events = Service::get($container, \Laminas\EventManager\EventManagerInterface::class, 'EventManager');
 
             $events->addIdentifiers([self::class, 'doctrine']);
 

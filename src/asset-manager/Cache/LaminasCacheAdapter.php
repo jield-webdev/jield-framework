@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Jield\AssetManager\Cache;
 
 use Assetic\Contracts\Cache\CacheInterface;
-use Jield\Stdlib\Value;
 use Laminas\Cache\Storage\StorageInterface;
 use Override;
+use Webmozart\Assert\Assert;
 
 /**
  * Jield Cache Storage Adapter for Assetic
@@ -29,7 +29,7 @@ class LaminasCacheAdapter implements CacheInterface
     #[Override]
     public function has($key)
     {
-        return $this->jieldCache->hasItem(Value::nonEmptyString($key));
+        return $this->jieldCache->hasItem(Assert::stringNotEmpty($key));
     }
 
     /**
@@ -38,9 +38,7 @@ class LaminasCacheAdapter implements CacheInterface
     #[Override]
     public function get($key)
     {
-        return Value::nullableString($this->jieldCache->getItem(Value::nonEmptyString(
-            $key,
-        )));
+        return Assert::nullOrString($this->jieldCache->getItem(Assert::stringNotEmpty($key)));
     }
 
     /**
@@ -49,7 +47,7 @@ class LaminasCacheAdapter implements CacheInterface
     #[Override]
     public function set($key, $value)
     {
-        return $this->jieldCache->setItem(Value::nonEmptyString($key), $value);
+        return $this->jieldCache->setItem(Assert::stringNotEmpty($key), $value);
     }
 
     /**
@@ -58,6 +56,6 @@ class LaminasCacheAdapter implements CacheInterface
     #[Override]
     public function remove($key)
     {
-        return $this->jieldCache->removeItem(Value::nonEmptyString($key));
+        return $this->jieldCache->removeItem(Assert::stringNotEmpty($key));
     }
 }

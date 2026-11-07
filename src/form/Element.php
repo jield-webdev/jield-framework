@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Jield\Form;
 
-use Jield\Stdlib\Value;
 use Laminas\Stdlib\ArrayUtils;
 use Laminas\Stdlib\InitializableInterface;
 use Traversable;
@@ -99,18 +98,18 @@ class Element implements ElementAttributeRemovalInterface, ElementInterface, Ini
         }
 
         if (isset($options['label'])) {
-            $this->setLabel(label: Value::nullableString($options['label']));
+            $this->setLabel(label: $options['label']);
         }
 
         if (isset($options['label_attributes'])) {
-            $this->setLabelAttributes(labelAttributes: Value::scalarMap($options['label_attributes']));
+            $this->setLabelAttributes(labelAttributes: $options['label_attributes']);
         }
 
         if (isset($options['label_options'])) {
-            $this->setLabelOptions(arrayOrTraversable: Value::iterable($options['label_options']));
+            $this->setLabelOptions(arrayOrTraversable: $options['label_options']);
         }
 
-        $this->options = Value::array($options);
+        $this->options = $options;
 
         return $this;
     }
@@ -284,11 +283,8 @@ class Element implements ElementAttributeRemovalInterface, ElementInterface, Ini
      */
     public function setLabelOptions(iterable $arrayOrTraversable): static
     {
-        /** @var mixed $key
-         * @var mixed $value
-         */
         foreach ($arrayOrTraversable as $key => $value) {
-            $this->setLabelOption(key: Value::string($key), value: $value);
+            $this->setLabelOption(key: $key, value: $value);
         }
         return $this;
     }
@@ -352,7 +348,7 @@ class Element implements ElementAttributeRemovalInterface, ElementInterface, Ini
         if ($messages instanceof Traversable) {
             $messages = ArrayUtils::iteratorToArray(iterator: $messages);
         }
-        $this->messages = Value::array($messages);
+        $this->messages = $messages;
         return $this;
     }
 

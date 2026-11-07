@@ -17,6 +17,7 @@ use OAuth2\Response as OAuth2Response;
 use OAuth2\Server as OAuth2Server;
 use Override;
 use Throwable;
+use Webmozart\Assert\Assert;
 
 use function in_array;
 use function is_array;
@@ -93,10 +94,8 @@ class OAuth2Adapter extends AbstractAdapter
             return 'oauth2';
         }
 
-        $contentTypeHeader = Value::instance($request->getHeaders(), Headers::class)->has(
-            'Content-Type',
-        )
-            ? Value::instance($request->getHeaders(), Headers::class)->get('Content-Type')
+        $contentTypeHeader = Assert::isInstanceOf($request->getHeaders(), Headers::class)->has('Content-Type')
+            ? Assert::isInstanceOf($request->getHeaders(), Headers::class)->get('Content-Type')
             : null;
 
         if (
@@ -135,20 +134,16 @@ class OAuth2Adapter extends AbstractAdapter
         MvcAuthEvent $mvcAuthEvent,
     ): Identity\IdentityInterface|Response {
         $oauth2request = new OAuth2Request(
-            query: Value::array(Value::call($request->getQuery(), 'toArray')),
-            request: Value::array(Value::call($request->getPost(), 'toArray')),
+            query: Value::call($request->getQuery(), 'toArray'),
+            request: Value::call($request->getPost(), 'toArray'),
             attributes: [],
-            cookies: ($cookie = $request->getCookie()) instanceof Cookie
-                ? $cookie->getArrayCopy()
-                : [],
-            files: Value::array($request->getFiles()->toArray()),
-            server: Value::array(
-                method_exists(object_or_class: $request, method: 'getServer')
-                    ? Value::call($request->getServer(), 'toArray')
-                    : $_SERVER,
-            ),
-            content: Value::nullableString($request->getContent()),
-            headers: Value::instance($request->getHeaders(), Headers::class)->toArray(),
+            cookies: ($cookie = $request->getCookie()) instanceof Cookie ? $cookie->getArrayCopy() : [],
+            files: $request->getFiles()->toArray(),
+            server: method_exists(object_or_class: $request, method: 'getServer')
+                ? Value::call($request->getServer(), 'toArray')
+                : $_SERVER,
+            content: Assert::nullOrString($request->getContent()),
+            headers: Assert::isInstanceOf($request->getHeaders(), Headers::class)->toArray(),
         );
 
         try {
@@ -176,7 +171,7 @@ class OAuth2Adapter extends AbstractAdapter
             return $this->processInvalidToken(response: $response);
         }
 
-        $identity = new Identity\AuthenticatedIdentity(identity: Value::array($token));
+        $identity = new Identity\AuthenticatedIdentity(identity: Assert::isArray($token));
         $identity->setName(name: 'user_' . Value::stringify($token['user_id']));
 
         return $identity;
@@ -188,7 +183,6 @@ class OAuth2Adapter extends AbstractAdapter
      */
     private function processInvalidToken(Response $response): Response|Identity\GuestIdentity
     {
-        /** @var mixed $oauth2Response */
         $oauth2Response = $this->oauth2Server->getResponse();
         $status = Value::call($oauth2Response, 'getStatusCode');
 
@@ -197,18 +191,14 @@ class OAuth2Adapter extends AbstractAdapter
             in_array(needle: $status, haystack: [401, 403], strict: true)
             && null !== Value::call($oauth2Response, 'getParameter', ['name' => 'error'])
         ) {
-            return $this->mergeOAuth2Response(
-                status: $status,
-                response: $response,
-                oauth2Response: Value::instance($oauth2Response, \OAuth2\Response::class),
-            );
+            return $this->mergeOAuth2Response(status: $status, response: $response, oauth2Response: $oauth2Response);
         }
 
         // Merge in any headers; typically sets a WWW-Authenticate header.
-        $this->mergeOAuth2ResponseHeaders(
-            response: $response,
-            oauth2Headers: Value::array(Value::call($oauth2Response, 'getHttpHeaders')),
-        );
+        $this->mergeOAuth2ResponseHeaders(response: $response, oauth2Headers: Value::call(
+            $oauth2Response,
+            'getHttpHeaders',
+        ));
 
         // Otherwise, no credentials were present at all, so we just return a guest identity.
         return new Identity\GuestIdentity();
@@ -238,8 +228,8 @@ class OAuth2Adapter extends AbstractAdapter
         $headers = $response->getHeaders();
         foreach ($oauth2Headers as $header => $value) {
             $headers->addHeaderLine(
-                headerFieldNameOrLine: Value::string($header),
-                fieldValue: Value::nullableString($value),
+                headerFieldNameOrLine: Assert::string($header),
+                fieldValue: Assert::nullOrString($value),
             );
         }
 

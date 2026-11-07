@@ -13,6 +13,7 @@ use Laminas\EventManager\EventManagerInterface;
 use Laminas\Http\Header\ContentType;
 use Laminas\Stdlib\ArrayUtils;
 use Override;
+use Webmozart\Assert\Assert;
 
 use function method_exists;
 
@@ -60,8 +61,7 @@ class ContentTypeFilterListener extends AbstractListenerAggregate
             return null;
         }
 
-        /** @var mixed $controllerName */
-        $controllerName = Value::present($e->getRouteMatch())->getParam(name: 'controller');
+        $controllerName = Assert::notNull($e->getRouteMatch())->getParam(name: 'controller');
         if (!isset($this->config[$controllerName])) {
             return null;
         }
@@ -80,7 +80,6 @@ class ContentTypeFilterListener extends AbstractListenerAggregate
             return null;
         }
 
-        /** @var mixed $headers */
         $headers = $request->getHeaders();
         if (!Value::call($headers, 'has', ['content-type'])) {
             return new ApiProblemResponse(apiProblem: new ApiProblem(
@@ -97,7 +96,7 @@ class ContentTypeFilterListener extends AbstractListenerAggregate
             ));
         }
 
-        $matched = $contentTypeHeader->match(Value::arrayOrString($this->config[$controllerName]));
+        $matched = $contentTypeHeader->match($this->config[$controllerName]);
 
         if (false === $matched) {
             return new ApiProblemResponse(apiProblem: new ApiProblem(

@@ -11,6 +11,7 @@ use Jield\Mvc\MvcEvent;
 use Jield\Mvc\View\Model\JsonModel;
 use Jield\Stdlib\Value;
 use Override;
+use Webmozart\Assert\Assert;
 
 use function call_user_func_array;
 use function is_array;
@@ -40,12 +41,10 @@ final class RpcController extends BaseAbstractActionController
     {
         $routeMatch = $e->getRouteMatch();
 
-        /** @var mixed $contentNegotiationParams */
         $contentNegotiationParams = $e->getParam(name: 'LaminasContentNegotiationParameterData');
-        /** @var mixed $routeParameters */
         $routeParameters = $contentNegotiationParams
             ? Value::call($contentNegotiationParams, 'getRouteParams')
-            : Value::present($routeMatch)->getParams();
+            : Assert::notNull($routeMatch)->getParams();
 
         $parameterMatcher = new ParameterMatcher(mvcEvent: $e);
 
@@ -55,11 +54,10 @@ final class RpcController extends BaseAbstractActionController
         } elseif (is_array(value: $this->wrappedCallable) && is_callable(value: $this->wrappedCallable)) {
             $callable = $this->wrappedCallable;
         } elseif (is_object(value: $this->wrappedCallable) || null === $this->wrappedCallable) {
-            /** @var mixed $action */
-            $action = Value::present($routeMatch)->getParam(name: 'action', default: 'not-found');
-            $method = static::getMethodFromAction(action: Value::string($action));
+            $action = Assert::notNull($routeMatch)->getParam(name: 'action', default: 'not-found');
+            $method = static::getMethodFromAction(action: Assert::string($action));
             $callable = null === $this->wrappedCallable && self::class !== self::class ? $this : $this->wrappedCallable;
-            if (!method_exists(object_or_class: Value::objectOrString($callable), method: $method)) {
+            if (!method_exists(object_or_class: $callable, method: $method)) {
                 $method = 'notFoundAction';
             }
 
@@ -69,8 +67,8 @@ final class RpcController extends BaseAbstractActionController
         }
 
         $dispatchParameters = $parameterMatcher->getMatchedParameters(
-            callable: Value::callback($callable),
-            parameters: Value::array($routeParameters ?: []),
+            callable: Assert::isCallable($callable),
+            parameters: $routeParameters ?: [],
         );
         $result = call_user_func_array(callback: $callable, args: $dispatchParameters);
 

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Jield\ApiTools\OAuth2;
 
-use Jield\Stdlib\Value;
 use OAuth2\Encryption\Jwt;
 
 final readonly class TokenExchange
@@ -60,7 +59,7 @@ final readonly class TokenExchange
             throw new EntraException('invalid_grant', 'Entra access token has expired');
         }
         $id = bin2hex(random_bytes(32));
-        $scope = implode(' ', Value::scalars($scopes));
+        $scope = implode(' ', $scopes);
         $token = new Jwt()->encode(
             payload: [
                 'id' => $id,

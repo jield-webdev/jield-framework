@@ -10,6 +10,7 @@ use Jield\Mvc\InjectApplicationEventInterface;
 use Jield\Mvc\MvcEvent;
 use Jield\Stdlib\Value;
 use Laminas\Http\Response;
+use Webmozart\Assert\Assert;
 
 use function is_scalar;
 use function method_exists;
@@ -39,7 +40,6 @@ class Redirect extends AbstractPlugin
             throw new DomainException('Redirect plugin requires a controller that defines the plugin() method');
         }
 
-        /** @var mixed $urlPlugin */
         $urlPlugin = $controller->plugin('url');
 
         if (is_scalar($options)) {
@@ -48,7 +48,7 @@ class Redirect extends AbstractPlugin
             $url = Value::call($urlPlugin, 'fromRoute', [$route, $params, $options, $reuseMatchedParams]);
         }
 
-        return $this->toUrl(Value::string($url));
+        return $this->toUrl(Assert::string($url));
     }
 
     /**
@@ -60,8 +60,8 @@ class Redirect extends AbstractPlugin
     public function toUrl($url): Response
     {
         $response = $this->getResponse();
-        Value::present($response)->getHeaders()->addHeaderLine('Location', $url);
-        Value::present($response)->setStatusCode(302);
+        $response->getHeaders()->addHeaderLine('Location', $url);
+        $response->setStatusCode(302);
         return $response;
     }
 
@@ -88,7 +88,7 @@ class Redirect extends AbstractPlugin
         }
 
         $event = $this->getEvent();
-        $response = Value::present($event)->getResponse();
+        $response = Assert::notNull($event)->getResponse();
         if (!$response instanceof Response) {
             throw new DomainException('Redirect plugin requires event compose a response');
         }

@@ -87,26 +87,18 @@ final class AuthController extends AbstractActionController
         if ($request->isOptions()) {
             // OPTIONS request.
             // This is most likely a CORS attempt; as such, pass the response on.
-            return Value::nullableInstance($this->getResponse(), \Laminas\Http\Response::class);
+            return Assert::nullOrIsInstanceOf($this->getResponse(), \Laminas\Http\Response::class);
         }
 
         $oauth2request = $this->getOAuth2Request();
-        $oauth2server = $this->getOAuth2Server(type: Value::nullableString($this->params('oauth')));
+        $oauth2server = $this->getOAuth2Server(type: $this->params('oauth'));
         try {
             $response = $oauth2server->handleTokenRequest(request: $oauth2request);
         } catch (ProblemExceptionInterface $problemException) {
-            /** @var mixed $status */
             $status = $problemException->getCode() ?: 401;
-            /** @var mixed $status */
-            $status =
-                Value::numeric($status) >= 400 && Value::numeric($status) < 600
-                    ? $status
-                    : 401;
+            $status = $status >= 400 && Assert::numeric($status) < 600 ? $status : 401;
 
-            return new ApiProblemResponse(apiProblem: new ApiProblem(
-                status: Value::key($status),
-                detail: $problemException,
-            ));
+            return new ApiProblemResponse(apiProblem: new ApiProblem(status: $status, detail: $problemException));
         }
 
         Assert::isInstanceOf(
@@ -116,7 +108,7 @@ final class AuthController extends AbstractActionController
         );
 
         if ($response->isClientError()) {
-            return Value::nullableInstance(
+            return Assert::nullOrIsInstanceOf(
                 $this->getErrorResponse(response: $response),
                 \Laminas\Http\Response::class,
             );
@@ -139,13 +131,11 @@ final class AuthController extends AbstractActionController
         if ($request->isOptions()) {
             // OPTIONS request.
             // This is most likely a CORS attempt; as such, pass the response on.
-            return Value::nullableInstance($this->getResponse(), \Laminas\Http\Response::class);
+            return Assert::nullOrIsInstanceOf($this->getResponse(), \Laminas\Http\Response::class);
         }
 
         $oauth2request = $this->getOAuth2Request();
-        $response = $this->getOAuth2Server(type: Value::nullableString($this->params(
-            'oauth',
-        )))->handleRevokeRequest(request: $oauth2request);
+        $response = $this->getOAuth2Server(type: $this->params('oauth'))->handleRevokeRequest(request: $oauth2request);
         Assert::isInstanceOf(
             value: $response,
             class: OAuth2Response::class,
@@ -153,7 +143,7 @@ final class AuthController extends AbstractActionController
         );
 
         if ($response->isClientError()) {
-            return Value::nullableInstance(
+            return Assert::nullOrIsInstanceOf(
                 $this->getErrorResponse(response: $response),
                 \Laminas\Http\Response::class,
             );
@@ -167,11 +157,10 @@ final class AuthController extends AbstractActionController
      */
     public function resourceAction(): Response
     {
-        $server = $this->getOAuth2Server(type: Value::nullableString($this->params('oauth')));
+        $server = $this->getOAuth2Server(type: $this->params('oauth'));
 
         // Handle a request for an OAuth2.0 Access Token and send the response to the client
         if (!$server->verifyResourceRequest(request: $this->getOAuth2Request())) {
-            /** @var mixed $response */
             $response = $server->getResponse();
             Assert::isInstanceOf(
                 value: $response,
@@ -198,7 +187,6 @@ final class AuthController extends AbstractActionController
      */
     public function authorizeAction(): Response|ViewModel|ResponseInterface|ApiProblemResponse
     {
-        /** @var mixed $serverType */
         $serverType = $this->params('oauth');
         Assert::nullOrStringNotEmpty(value: $serverType);
 
@@ -207,10 +195,7 @@ final class AuthController extends AbstractActionController
         $response = new OAuth2Response();
 
         // validate the authorize request
-        $isValid = Value::present($this->server)->validateAuthorizeRequest(
-            request: $request,
-            response: $response,
-        );
+        $isValid = Assert::notNull($this->server)->validateAuthorizeRequest(request: $request, response: $response);
 
         if (!$isValid) {
             return $this->getErrorResponse(response: $response);
@@ -227,7 +212,7 @@ final class AuthController extends AbstractActionController
         $isAuthorized = $authorized === 'yes';
         $userIdProvider = $this->userIdProvider;
 
-        Value::present($this->server)->handleAuthorizeRequest(
+        Assert::notNull($this->server)->handleAuthorizeRequest(
             request: $request,
             response: $response,
             is_authorized: $isAuthorized,
@@ -236,7 +221,7 @@ final class AuthController extends AbstractActionController
 
         $redirect = $response->getHttpHeader(name: 'Location');
         if (!empty($redirect)) {
-            return $this->redirect()->toUrl(url: Value::string($redirect));
+            return $this->redirect()->toUrl(url: Assert::string($redirect));
         }
 
         return $this->getErrorResponse(response: $response);
@@ -271,18 +256,15 @@ final class AuthController extends AbstractActionController
     protected function getApiProblemResponse(OAuth2Response $response): ApiProblemResponse
     {
         $parameters = $response->getParameters();
-        /** @var mixed $errorUri */
         $errorUri = $parameters['error_uri'] ?? null;
-        /** @var mixed $error */
         $error = $parameters['error'] ?? null;
-        /** @var mixed $errorDescription */
         $errorDescription = $parameters['error_description'] ?? null;
 
         return new ApiProblemResponse(apiProblem: new ApiProblem(
             status: $response->getStatusCode(),
             detail: Value::stringify($errorDescription),
-            type: Value::nullableString($errorUri),
-            title: Value::nullableString($error),
+            type: $errorUri,
+            title: $error,
         ));
     }
 
@@ -313,10 +295,8 @@ final class AuthController extends AbstractActionController
         $headers = $laminasRequest->getHeaders();
 
         // Marshal content type, so we can seed it into the $_SERVER array
-        if (Value::instance($headers, Headers::class)->has('Content-Type')) {
-            $contentTypeHeader = Value::instance($headers, Headers::class)->get(
-                'Content-Type',
-            );
+        if (Assert::isInstanceOf($headers, Headers::class)->has('Content-Type')) {
+            $contentTypeHeader = Assert::isInstanceOf($headers, Headers::class)->get('Content-Type');
             if ($contentTypeHeader instanceof HeaderInterface) {
                 $contentTypeHeader->getFieldValue();
             }
@@ -333,7 +313,7 @@ final class AuthController extends AbstractActionController
         Value::setPath($server, ['REQUEST_METHOD'], $laminasRequest->getMethod());
 
         // Seed headers with HTTP auth information
-        $headers = Value::instance($headers, Headers::class)->toArray();
+        $headers = Assert::isInstanceOf($headers, Headers::class)->toArray();
         if (isset($server['PHP_AUTH_USER'])) {
             $headers['PHP_AUTH_USER'] = $server['PHP_AUTH_USER'];
         }
@@ -346,13 +326,13 @@ final class AuthController extends AbstractActionController
         $bodyParams = $this->bodyParams();
 
         return new OAuth2Request(
-            query: Value::array(Value::call($laminasRequest->getQuery(), 'toArray')),
+            query: Value::call($laminasRequest->getQuery(), 'toArray'),
             request: $bodyParams,
             attributes: [], // attributes
             cookies: [], // cookies
             files: [], // files
-            server: Value::array($server),
-            content: Value::nullableString($laminasRequest->getContent()),
+            server: Assert::isArray($server),
+            content: Assert::nullOrString($laminasRequest->getContent()),
             headers: $headers,
         );
     }
@@ -396,7 +376,6 @@ final class AuthController extends AbstractActionController
             return $this->server;
         }
 
-        /** @var mixed $server */
         $server = ($this->serverFactory)($type);
         if (!$server instanceof OAuth2Server) {
             throw new RuntimeException(message: sprintf(

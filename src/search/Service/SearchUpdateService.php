@@ -29,7 +29,7 @@ class SearchUpdateService
         if ($queued) {
             $this->bus->dispatch(new UpdateSearchEntityMessage(
                 entityClassName: $entity::class,
-                entityId: Value::int($entity->getId()),
+                entityId: Assert::integer($entity->getId()),
                 searchServices: $this->findSearchServicesFromEntity(entity: $entity),
             ));
 
@@ -40,7 +40,7 @@ class SearchUpdateService
 
         foreach ($searchServiceNames as $searchServiceName) {
             /** @var AbstractSearchService $searchServiceInstance */
-            $searchServiceInstance = $this->container->get(Value::string($searchServiceName));
+            $searchServiceInstance = $this->container->get($searchServiceName);
             $searchServiceInstance->updateEntity(entity: $entity);
         }
     }
@@ -51,7 +51,7 @@ class SearchUpdateService
 
         foreach ($searchServiceNames as $searchServiceName) {
             /** @var AbstractSearchService $searchServiceInstance */
-            $searchServiceInstance = $this->container->get(Value::string($searchServiceName));
+            $searchServiceInstance = $this->container->get($searchServiceName);
             $searchServiceInstance->deleteDocument(entity: $entity);
         }
     }
@@ -77,17 +77,16 @@ class SearchUpdateService
 
         //We only push the ID's and the classname and the service into the job
         $entityIds = [];
-        /** @var mixed $updateAbleEntity */
         foreach ($entities as $updateAbleEntity) {
             //We only allow entities of the same class
             if (
-                ClassUtils::getRealClass(className: Value::classString(
-                    $updateAbleEntity::class,
-                )) !== ClassUtils::getRealClass(className: $entityClassName)
+                ClassUtils::getRealClass(className: $updateAbleEntity::class) !== ClassUtils::getRealClass(
+                    className: $entityClassName,
+                )
             ) {
                 throw new InvalidArgumentException(
                     message: 'All entities must be of the same class, got '
-                    . ClassUtils::getRealClass(className: Value::classString($updateAbleEntity::class))
+                    . ClassUtils::getRealClass(className: $updateAbleEntity::class)
                     . ' and expected '
                     . $entityClassName,
                 );
@@ -106,13 +105,10 @@ class SearchUpdateService
     public function updateIndex(string $entityClassName): void
     {
         //Sometimes we get proxies, then we need to get the real class
-        $entityClassName = ClassUtils::getRealClass(className: Value::classString($entityClassName));
+        $entityClassName = ClassUtils::getRealClass(className: $entityClassName);
 
         //Only entity classnames which implement interface can be used
-        Assert::isInstanceOf(
-            value: Value::instantiate($entityClassName),
-            class: HasSearchInterface::class,
-        );
+        Assert::isInstanceOf(value: Value::instantiate($entityClassName), class: HasSearchInterface::class);
 
         $this->bus->dispatch(new UpdateSearchIndexMessage(
             entityClassName: $entityClassName,
@@ -132,11 +128,11 @@ class SearchUpdateService
         $services = [];
 
         foreach ($this->cores as $core) {
-            if (Value::accessible($core)['entity'] !== $entity) {
+            if ($core['entity'] !== $entity) {
                 continue;
             }
 
-            $services[] = Value::accessible($core)['service'];
+            $services[] = $core['service'];
         }
 
         return array_unique(array: $services);

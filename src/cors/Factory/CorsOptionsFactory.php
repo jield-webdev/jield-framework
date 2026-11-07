@@ -22,7 +22,6 @@ declare(strict_types=1);
 namespace Jield\Cors\Factory;
 
 use Jield\Cors\Options\CorsOptions;
-use Jield\Stdlib\Value;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
@@ -42,9 +41,8 @@ class CorsOptionsFactory implements FactoryInterface
     {
         /** @var array $config */
         $config = $container->has('config') ? $container->get('config') : [];
-        /** @var mixed $config */
         $config = $config['lmc_cors'] ?? [];
 
-        return new CorsOptions(Value::stringKeyedArray($config));
+        return new CorsOptions($config);
     }
 }

@@ -11,6 +11,7 @@ use Laminas\Cache\Service\StorageAdapterFactoryInterface;
 use Laminas\Cache\Storage\StorageInterface;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Psr\Container\ContainerInterface;
+use Webmozart\Assert\Assert;
 
 use function is_array;
 
@@ -24,17 +25,14 @@ class CacheFactory implements FactoryInterface
      *
      * @see \Laminas\ServiceManager\Factory\FactoryInterface::__invoke()
      */
-    public function __invoke(
-        ContainerInterface $container,
-        $requestedName,
-        ?array $options = null,
-    ): StorageInterface {
+    public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): StorageInterface
+    {
         $storageFactory = Service::get($container, StorageAdapterFactoryInterface::class);
 
-        $cacheOptions = Value::array($container->get(Config::class))['cache_options'];
+        $cacheOptions = Assert::isArray($container->get(Config::class))['cache_options'];
 
         $plugins = [];
-        foreach (Value::iterable(Value::accessible($cacheOptions)['plugins']) as $plugin) {
+        foreach (Assert::isIterable($cacheOptions['plugins']) as $plugin) {
             $plugins[] = is_array(value: $plugin)
                 ? $plugin
                 : [
@@ -43,8 +41,8 @@ class CacheFactory implements FactoryInterface
         }
 
         $configuration = [
-            'adapter' => Value::nonEmptyString(Value::path($cacheOptions, ['adapter', 'name'])),
-            'options' => Value::stringKeyedArray($cacheOptions['options'] ?? []),
+            'adapter' => Assert::stringNotEmpty(Value::path($cacheOptions, ['adapter', 'name'])),
+            'options' => $cacheOptions['options'] ?? [],
             'plugins' => $plugins,
         ];
         $storageFactory->assertValidConfigurationStructure($configuration);

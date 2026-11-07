@@ -8,10 +8,10 @@ use ArrayIterator;
 use Jield\ApiTools\ApiProblem\ApiProblem;
 use Jield\ApiTools\ApiProblem\ApiProblemResponse;
 use Jield\Mvc\MvcEvent;
-use Jield\Stdlib\Value;
 use Laminas\Http\Header\Accept as AcceptHeader;
 use Laminas\Http\Headers as HttpHeaders;
 use Override;
+use Webmozart\Assert\Assert;
 
 use function is_array;
 use function is_string;
@@ -30,8 +30,7 @@ class AcceptFilterListener extends ContentTypeFilterListener
             return null;
         }
 
-        /** @var mixed $controllerName */
-        $controllerName = Value::present($e->getRouteMatch())->getParam(name: 'controller');
+        $controllerName = Assert::notNull($e->getRouteMatch())->getParam(name: 'controller');
         if (!isset($this->config[$controllerName])) {
             return null;
         }
@@ -42,21 +41,14 @@ class AcceptFilterListener extends ContentTypeFilterListener
             return null;
         }
 
-        /** @var mixed $headers */
         $headers = $request->getHeaders();
 
         $matched = false;
         if (is_string(value: $this->config[$controllerName])) {
-            $matched = $this->validateMediaType(
-                match: $this->config[$controllerName],
-                headers: Value::instance($headers, \Laminas\Http\Headers::class),
-            );
+            $matched = $this->validateMediaType(match: $this->config[$controllerName], headers: $headers);
         } elseif (is_array(value: $this->config[$controllerName])) {
             foreach ($this->config[$controllerName] as $whitelistType) {
-                $matched = $this->validateMediaType(
-                    match: Value::string($whitelistType),
-                    headers: Value::instance($headers, \Laminas\Http\Headers::class),
-                );
+                $matched = $this->validateMediaType(match: $whitelistType, headers: $headers);
                 if ($matched) {
                     break;
                 }

@@ -12,6 +12,7 @@ use Jield\Stdlib\Service;
 use Jield\Stdlib\Value;
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\Http\Response;
+use Webmozart\Assert\Assert;
 
 /**
  * Route Guard listener, allows checking of permissions
@@ -52,7 +53,7 @@ class Route extends AbstractGuard
     {
         $service = Service::get($this->container, AuthorizeService::class);
         $match = $event->getRouteMatch();
-        $routeName = Value::present($match)->getMatchedRouteName();
+        $routeName = Assert::notNull($match)->getMatchedRouteName();
 
         if ($service->isAllowed(resource: 'route/' . $routeName)) {
             return null;

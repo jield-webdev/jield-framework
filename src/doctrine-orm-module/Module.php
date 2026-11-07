@@ -11,6 +11,7 @@ use Jield\ModuleManager\Feature\InitProviderInterface;
 use Jield\ModuleManager\ModuleManagerInterface;
 use Jield\Stdlib\Value;
 use Laminas\EventManager\EventInterface;
+use Webmozart\Assert\Assert;
 
 /**
  * Base module for Doctrine ORM.
@@ -24,16 +25,12 @@ final class Module implements
     public function init(ModuleManagerInterface $manager): void
     {
         // Initialize the console
-        Value::present($manager->getEventManager()->getSharedManager())->attach(
+        Assert::notNull($manager->getEventManager()->getSharedManager())->attach(
             'doctrine',
             'loadCli.post',
             listener: static function (EventInterface $event): void {
                 Value::call(
-                    Value::call(
-                        $event->getParam(name: 'ServiceManager'),
-                        'get',
-                        [CliConfigurator::class],
-                    ),
+                    Value::call($event->getParam(name: 'ServiceManager'), 'get', [CliConfigurator::class]),
                     'configure',
                     [$event->getTarget()],
                 );

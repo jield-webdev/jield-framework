@@ -7,11 +7,10 @@ namespace Jield\Mvc\View\Http;
 use Jield\Mvc\Application;
 use Jield\Mvc\MvcEvent;
 use Jield\Mvc\View\Model\ViewModel;
-use Jield\Stdlib\Value;
 use Laminas\EventManager\AbstractListenerAggregate;
 use Laminas\EventManager\EventManagerInterface;
-use Laminas\Http\Response as HttpResponse;
 use Laminas\Stdlib\ResponseInterface as Response;
+use Webmozart\Assert\Assert;
 
 class ExceptionStrategy extends AbstractListenerAggregate
 {
@@ -120,13 +119,13 @@ class ExceptionStrategy extends AbstractListenerAggregate
                     'exception' => $e->getParam('exception'),
                     'display_exceptions' => $this->displayExceptions(),
                 ]);
-                $model->setTemplate(Value::nonEmptyString($this->getExceptionTemplate()));
+                $model->setTemplate(Assert::stringNotEmpty($this->getExceptionTemplate()));
                 $e->setResult($model);
 
                 $response = $e->getResponse();
-                $statusCode = Value::instance($response, \Laminas\Http\Response::class)->getStatusCode();
+                $statusCode = Assert::isInstanceOf($response, \Laminas\Http\Response::class)->getStatusCode();
                 if ($statusCode === 200) {
-                    Value::instance($response, \Laminas\Http\Response::class)->setStatusCode(500);
+                    Assert::isInstanceOf($response, \Laminas\Http\Response::class)->setStatusCode(500);
                 }
 
                 break;

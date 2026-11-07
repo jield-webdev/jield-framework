@@ -14,7 +14,7 @@ use Laminas\Stdlib\PriorityQueue;
 use Laminas\Stdlib\SplStack;
 use Override;
 use SplFileInfo;
-use Traversable;
+use Webmozart\Assert\Assert;
 
 /**
  * This resolver allows you to resolve from a multitude of prioritized paths.
@@ -90,10 +90,7 @@ class PrioritizedPathsResolver implements ResolverInterface, MimeResolverAwareIn
         }
 
         if (isset($path['priority'], $path['path'])) {
-            $this->paths->insert(
-                data: $this->normalizePath(path: Value::string($path['path'])),
-                priority: Value::int($path['priority']),
-            );
+            $this->paths->insert(data: $this->normalizePath(path: $path['path']), priority: $path['priority']);
 
             return;
         }
@@ -194,14 +191,12 @@ class PrioritizedPathsResolver implements ResolverInterface, MimeResolverAwareIn
         }
 
         foreach ($this->getPaths() as $fileName) {
-            $file = new SplFileInfo(
-                filename: Value::stringify($fileName) . Value::stringify($fileName),
-            );
+            $file = new SplFileInfo(filename: Value::stringify($fileName) . Value::stringify($fileName));
 
             if ($file->isReadable() && !$file->isDir()) {
                 $filePath = $file->getRealPath();
-                $mimeType = $this->getMimeResolver()->getMimeType(filename: Value::string($filePath));
-                $asset = new FileAsset(source: Value::string($filePath));
+                $mimeType = $this->getMimeResolver()->getMimeType(filename: Assert::string($filePath));
+                $asset = new FileAsset(source: Assert::string($filePath));
                 $asset->setMimetype(mimetype: $mimeType);
 
                 return $asset;
@@ -217,9 +212,9 @@ class PrioritizedPathsResolver implements ResolverInterface, MimeResolverAwareIn
 
         foreach ($this->getPaths() as $path) {
             $locations = new SplStack();
-            $pathInfo = new SplFileInfo(filename: Value::string($path));
+            $pathInfo = new SplFileInfo(filename: $path);
             $locations->push(value: $pathInfo);
-            $basePath = $this->normalizePath(path: Value::string($pathInfo->getRealPath()));
+            $basePath = $this->normalizePath(path: Assert::string($pathInfo->getRealPath()));
 
             while (!$locations->isEmpty()) {
                 /** @var SplFileInfo $pathInfo */
@@ -229,15 +224,12 @@ class PrioritizedPathsResolver implements ResolverInterface, MimeResolverAwareIn
                 }
 
                 if ($pathInfo->isDir()) {
-                    /** @var mixed $resource */
-                    foreach (new DirectoryResource(
-                        path: Value::string($pathInfo->getRealPath()),
-                    ) as $resource) {
-                        $locations->push(value: new SplFileInfo(filename: Value::string($resource)));
+                    foreach (new DirectoryResource(path: Assert::string($pathInfo->getRealPath())) as $resource) {
+                        $locations->push(value: new SplFileInfo(filename: $resource));
                     }
                 } else {
                     $collection[] = substr(
-                        string: Value::string($pathInfo->getRealPath()),
+                        string: Assert::string($pathInfo->getRealPath()),
                         offset: strlen(string: $basePath),
                     );
                 }

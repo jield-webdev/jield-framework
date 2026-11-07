@@ -26,14 +26,14 @@ use Jield\Cors\Exception\DisallowedOriginException;
 use Jield\Cors\Exception\InvalidOriginException;
 use Jield\Cors\Options\CorsOptions;
 use Jield\Mvc\Router\RouteMatch;
-use Jield\Stdlib\Value;
-use Laminas\Http\Header\HeaderInterface;
-use Laminas\Router\RouteMatchInterface;
 use Laminas\Http\Header;
+use Laminas\Http\Header\HeaderInterface;
 use Laminas\Http\Headers;
 use Laminas\Http\Request as HttpRequest;
 use Laminas\Http\Response as HttpResponse;
+use Laminas\Router\RouteMatchInterface;
 use Laminas\Uri\UriFactory;
+use Webmozart\Assert\Assert;
 
 use function fnmatch;
 use function implode;
@@ -60,11 +60,11 @@ class CorsService
     {
         $headers = $request->getHeaders();
 
-        if (!Value::instance($headers, \Laminas\Http\Headers::class)->has('Origin')) {
+        if (!Assert::isInstanceOf($headers, \Laminas\Http\Headers::class)->has('Origin')) {
             return false;
         }
 
-        $origin = Value::instance($headers, \Laminas\Http\Headers::class)->get('Origin');
+        $origin = Assert::isInstanceOf($headers, \Laminas\Http\Headers::class)->get('Origin');
 
         if (!$origin instanceof Header\Origin) {
             throw InvalidOriginException::fromInvalidHeaderValue();
@@ -90,7 +90,7 @@ class CorsService
         return (
             $this->isCorsRequest($request)
             && strtoupper($request->getMethod()) === 'OPTIONS'
-            && Value::instance($request->getHeaders(), \Laminas\Http\Headers::class)->has(
+            && Assert::isInstanceOf($request->getHeaders(), \Laminas\Http\Headers::class)->has(
                 'Access-Control-Request-Method',
             )
         );
@@ -107,14 +107,8 @@ class CorsService
         $headers = $response->getHeaders();
 
         $headers->addHeaderLine('Access-Control-Allow-Origin', $this->getAllowedOriginValue($request));
-        $headers->addHeaderLine('Access-Control-Allow-Methods', implode(
-            ', ',
-            Value::scalars($this->options->getAllowedMethods()),
-        ));
-        $headers->addHeaderLine('Access-Control-Allow-Headers', implode(
-            ', ',
-            Value::scalars($this->options->getAllowedHeaders()),
-        ));
+        $headers->addHeaderLine('Access-Control-Allow-Methods', implode(', ', $this->options->getAllowedMethods()));
+        $headers->addHeaderLine('Access-Control-Allow-Headers', implode(', ', $this->options->getAllowedHeaders()));
         $headers->addHeaderLine('Access-Control-Max-Age', (string) $this->options->getMaxAge());
         $headers->addHeaderLine('Content-Length', '0');
 
@@ -129,14 +123,12 @@ class CorsService
      * Create a preflight response by adding the corresponding headers which are merged with per-route configuration
      */
     public function createPreflightCorsResponseWithRouteOptions(
-        HttpRequest                         $request,
+        HttpRequest $request,
         RouteMatchInterface|RouteMatch|null $routeMatch = null,
     ): HttpResponse {
         $options = $this->options;
         if ($routeMatch !== null) {
-            $options->setFromArray(Value::stringKeyedArray(
-                $routeMatch->getParam(CorsOptions::ROUTE_PARAM) ?: [],
-            ));
+            $options->setFromArray($routeMatch->getParam(CorsOptions::ROUTE_PARAM) ?: []);
         }
         return $this->createPreflightCorsResponse($request);
     }
@@ -147,14 +139,12 @@ class CorsService
      * @throws DisallowedOriginException
      */
     public function populateCorsResponse(
-        HttpRequest                         $request,
-        HttpResponse                        $response,
+        HttpRequest $request,
+        HttpResponse $response,
         RouteMatchInterface|RouteMatch|null $routeMatch = null,
     ): HttpResponse {
         if ($routeMatch !== null) {
-            $this->options->setFromArray(Value::stringKeyedArray(
-                $routeMatch->getParam(CorsOptions::ROUTE_PARAM) ?: [],
-            ));
+            $this->options->setFromArray($routeMatch->getParam(CorsOptions::ROUTE_PARAM) ?: []);
         }
 
         $origin = $this->getAllowedOriginValue($request);
@@ -164,18 +154,13 @@ class CorsService
         // by the browser anyway, so we throw an exception
         if ($origin === 'null') {
             $origin = $request->getHeader('Origin');
-            $originHeader = $origin
-                ? Value::instance($origin, HeaderInterface::class)->getFieldValue()
-                : '';
+            $originHeader = $origin ? Assert::isInstanceOf($origin, HeaderInterface::class)->getFieldValue() : '';
             throw new DisallowedOriginException(sprintf('The origin "%s" is not authorized', $originHeader));
         }
 
         $headers = $response->getHeaders();
         $headers->addHeaderLine('Access-Control-Allow-Origin', $origin);
-        $headers->addHeaderLine('Access-Control-Expose-Headers', implode(
-            ', ',
-            Value::scalars($this->options->getExposedHeaders()),
-        ));
+        $headers->addHeaderLine('Access-Control-Expose-Headers', implode(', ', $this->options->getExposedHeaders()));
 
         $headers = $this->ensureVaryHeader($response);
 
@@ -203,15 +188,12 @@ class CorsService
         $origin = $request->getHeader('Origin');
 
         if ($origin) {
-            $origin = Value::instance(
-                $origin,
-                HeaderInterface::class,
-            )->getFieldValue();
+            $origin = Assert::isInstanceOf($origin, HeaderInterface::class)->getFieldValue();
             if (in_array('*', $allowedOrigins, strict: true)) {
                 return $origin;
             }
             foreach ($allowedOrigins as $allowedOrigin) {
-                if (fnmatch(Value::string($allowedOrigin), $origin)) {
+                if (fnmatch($allowedOrigin, $origin)) {
                     return $origin;
                 }
             }
@@ -237,9 +219,7 @@ class CorsService
         }
         if ($headers->has('Vary')) {
             $varyHeader = $headers->get('Vary');
-            $varyValue =
-                Value::instance($varyHeader, HeaderInterface::class)->getFieldValue()
-                . ', Origin';
+            $varyValue = Assert::isInstanceOf($varyHeader, HeaderInterface::class)->getFieldValue() . ', Origin';
 
             $headers->removeHeader($varyHeader);
             $headers->addHeaderLine('Vary', $varyValue);

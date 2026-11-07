@@ -39,11 +39,7 @@ final class AuthenticationHttpAdapterFactory
 
         return new HttpAdapter(
             httpAuth: HttpAdapterFactory::factory(config: $config['options'], container: $container),
-            authenticationService: Service::get(
-                $container,
-                AuthenticationServiceInterface::class,
-                'authentication',
-            ),
+            authenticationService: Service::get($container, AuthenticationServiceInterface::class, 'authentication'),
             providesBase: $type,
         );
     }

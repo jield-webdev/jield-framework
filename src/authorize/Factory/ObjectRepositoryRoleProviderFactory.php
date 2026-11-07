@@ -8,9 +8,9 @@ use Doctrine\Persistence\ObjectManager;
 use Jield\Authorize\Config;
 use Jield\Authorize\Exception\InvalidArgumentException;
 use Jield\Authorize\Provider\Role\ObjectRepositoryProvider;
-use Jield\Stdlib\Value;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Psr\Container\ContainerInterface;
+use Webmozart\Assert\Assert;
 
 /**
  * Factory responsible of instantiating {@see \Jield\Authorize\Provider\Role\ObjectRepositoryProvider}
@@ -22,7 +22,7 @@ class ObjectRepositoryRoleProviderFactory implements FactoryInterface
         $requestedName,
         ?array $options = null,
     ): ObjectRepositoryProvider {
-        $config = Value::array($container->get(Config::class));
+        $config = Assert::isArray($container->get(Config::class));
 
         if (!isset($config['role_providers'][ObjectRepositoryProvider::class])) {
             throw new InvalidArgumentException(
@@ -45,10 +45,10 @@ class ObjectRepositoryRoleProviderFactory implements FactoryInterface
         }
 
         /** @var ObjectManager $objectManager */
-        $objectManager = $container->get(Value::string($providerConfig['object_manager']));
+        $objectManager = $container->get($providerConfig['object_manager']);
 
-        return new ObjectRepositoryProvider(objectRepository: $objectManager->getRepository(className: Value::classString(
-            $providerConfig['role_entity_class'],
-        )));
+        return new ObjectRepositoryProvider(objectRepository: $objectManager->getRepository(
+            className: $providerConfig['role_entity_class'],
+        ));
     }
 }

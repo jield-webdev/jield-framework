@@ -7,8 +7,8 @@ namespace Jield\Form\Annotation;
 use Attribute;
 use Doctrine\Common\Annotations\Annotation;
 use Doctrine\Common\Annotations\Annotation\NamedArgumentConstructor;
+use Webmozart\Assert\Assert;
 
-use Jield\Stdlib\Value;
 use function is_array;
 use function sprintf;
 use function trigger_error;
@@ -56,9 +56,9 @@ final class ComposedObject
                 E_USER_DEPRECATED,
             );
 
-            $this->targetObject = Value::nullableString($targetObject['target_object'] ?? null);
-            $this->isCollection = Value::bool($targetObject['is_collection'] ?? $isCollection);
-            $this->options = Value::array($targetObject['options'] ?? $options);
+            $this->targetObject = Assert::nullOrString($targetObject['target_object'] ?? null);
+            $this->isCollection = Assert::boolean($targetObject['is_collection'] ?? $isCollection);
+            $this->options = Assert::isArray($targetObject['options'] ?? $options);
         } else {
             $this->targetObject = $targetObject;
             $this->isCollection = $isCollection;

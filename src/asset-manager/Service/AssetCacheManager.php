@@ -39,7 +39,6 @@ class AssetCacheManager
      */
     public function setCache(string $path, AssetInterface $asset): AssetInterface|AssetCache
     {
-        /** @var mixed $provider */
         $provider = $this->getProvider(path: $path);
 
         if (!$provider instanceof CacheInterface) {
@@ -75,14 +74,13 @@ class AssetCacheManager
         }
 
         $dir = '';
-        /** @var mixed $class */
         $class = $cacheProvider['cache'];
 
         if (!empty($cacheProvider['options']['dir'])) {
             $dir = $cacheProvider['options']['dir'];
         }
 
-        $class = $this->classMapper(class: Value::string($class));
+        $class = $this->classMapper(class: $class);
         return Value::instantiate($class, [$dir, $path]);
     }
 

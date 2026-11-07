@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Jield\ApiTools\Rpc;
 
 use Jield\Mvc\MvcEvent;
-use Jield\Stdlib\Value;
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\EventManager\ListenerAggregateInterface;
 use Laminas\EventManager\ListenerAggregateTrait;
@@ -13,6 +12,7 @@ use Laminas\Http\Request;
 use Laminas\Http\Response;
 use Override;
 use Stringable;
+use Webmozart\Assert\Assert;
 
 use function array_key_exists;
 use function implode;
@@ -58,17 +58,14 @@ class OptionsListener implements ListenerAggregateInterface
             return null;
         }
 
-        if (!array_key_exists(key: Value::key($controller), array: $this->config)) {
+        if (!array_key_exists(key: $controller, array: $this->config)) {
             // No matching controller in our configuration, nothing to do
             return null;
         }
 
         $config = $this->config[$controller];
 
-        if (
-            !array_key_exists(key: 'http_methods', array: Value::array($config))
-            || empty($config['http_methods'])
-        ) {
+        if (!array_key_exists(key: 'http_methods', array: $config) || empty($config['http_methods'])) {
             // No HTTP methods set for controller, nothing to do
             return null;
         }
@@ -79,9 +76,11 @@ class OptionsListener implements ListenerAggregateInterface
             return null;
         }
 
-        $methods = $this->normalizeMethods(methods: is_array($config['http_methods'])
-            ? Value::strings($config['http_methods'])
-            : Value::string($config['http_methods']));
+        $methods = $this->normalizeMethods(
+            methods: is_array($config['http_methods'])
+                ? $config['http_methods']
+                : Assert::string($config['http_methods']),
+        );
 
         $method = $request->getMethod();
         if ($method === Request::METHOD_OPTIONS) {
@@ -143,7 +142,7 @@ class OptionsListener implements ListenerAggregateInterface
     protected function getOptionsResponse(MvcEvent $event, array $options): Response
     {
         $response = $event->getResponse();
-        $this->createAllowHeader(options: $options, response: Value::instance(
+        $this->createAllowHeader(options: $options, response: Assert::isInstanceOf(
             $response,
             \Laminas\Http\Response::class,
         ));

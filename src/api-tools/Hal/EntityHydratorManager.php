@@ -6,10 +6,10 @@ namespace Jield\ApiTools\Hal;
 
 use Jield\ApiTools\Hal\Metadata\Metadata;
 use Jield\ApiTools\Hal\Metadata\MetadataMap;
-use Jield\Stdlib\Value;
 use Laminas\Hydrator\ExtractionInterface;
 use Laminas\Hydrator\HydratorPluginManager;
 use Laminas\Hydrator\HydratorPluginManagerInterface;
+use Webmozart\Assert\Assert;
 
 use function is_string;
 use function strtolower;
@@ -93,14 +93,11 @@ class EntityHydratorManager
         $classLower = strtolower(string: $class);
 
         if (isset($this->hydratorMap[$classLower])) {
-            return Value::instance($this->hydratorMap[$classLower], ExtractionInterface::class);
+            return Assert::isInstanceOf($this->hydratorMap[$classLower], ExtractionInterface::class);
         }
 
         if ($this->metadataMap->has(class: $entity)) {
-            $metadata = Value::instance(
-                $this->metadataMap->get(class: $class),
-                Metadata::class,
-            );
+            $metadata = Assert::isInstanceOf($this->metadataMap->get(class: $class), Metadata::class);
             /** @psalm-suppress PossiblyFalseReference */
             $hydrator = $metadata->getHydrator();
             if ($hydrator instanceof ExtractionInterface) {

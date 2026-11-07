@@ -13,7 +13,6 @@ use DateTimeInterface;
 use DateTimeZone;
 use InvalidArgumentException;
 use Jield\Export\Helper\TextHelpers;
-use Jield\Stdlib\Value;
 use Webmozart\Assert\Assert;
 
 final class Column
@@ -92,7 +91,7 @@ final class Column
                     $data = $data->format(format: 'H:i:s');
                 }
 
-                $data = TextHelpers::beautifyTextValue(value: Value::nullableString($data));
+                $data = TextHelpers::beautifyTextValue(value: Assert::nullOrString($data));
                 break;
             case self::TYPE_DATE:
                 if (null !== $data) {

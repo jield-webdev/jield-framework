@@ -5,15 +5,15 @@ declare(strict_types=1);
 namespace Jield\Test\PHPUnit\Controller;
 
 use ArrayIterator;
-use Jield\Stdlib\Value;
 use Jield\Test\PHPUnit\Constraint\HasRedirectConstraint;
 use Jield\Test\PHPUnit\Constraint\IsRedirectedRouteNameConstraint;
 use Jield\Test\PHPUnit\FailureMessage;
 use Laminas\Http\Header\HeaderInterface;
 use PHPUnit\Framework\ExpectationFailedException;
 use Symfony\Component\DomCrawler\Crawler;
-
 use UnexpectedValueException;
+use Webmozart\Assert\Assert;
+
 use function count;
 use function implode;
 use function preg_match;
@@ -47,10 +47,9 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
     {
         $result = $this->getResponseHeader($header);
         if ($result instanceof ArrayIterator) {
-            /** @var mixed $result */
             $result = $result->valid() ? $result->current() : false;
         }
-        return $result === false ? false : Value::instance($result, HeaderInterface::class);
+        return $result === false ? false : Assert::isInstanceOf($result, HeaderInterface::class);
     }
 
     /**
@@ -110,10 +109,16 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
     public function assertResponseHeaderContains($header, $match)
     {
         $values = $this->responseHeaderValues($header);
-        $this->assertContains($match, $values, sprintf(
-            'Failed asserting response header "%s" exists and contains "%s", actual content is "%s"',
-            $header, $match, implode(', ', $values),
-        ));
+        $this->assertContains(
+            $match,
+            $values,
+            sprintf(
+                'Failed asserting response header "%s" exists and contains "%s", actual content is "%s"',
+                $header,
+                $match,
+                implode(', ', $values),
+            ),
+        );
     }
 
     /**
@@ -126,10 +131,11 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
     public function assertNotResponseHeaderContains($header, $match)
     {
         $values = $this->responseHeaderValues($header);
-        $this->assertNotContains($match, $values, sprintf(
-            'Failed asserting response header "%s" DOES NOT CONTAIN "%s"',
-            $header, $match,
-        ));
+        $this->assertNotContains(
+            $match,
+            $values,
+            sprintf('Failed asserting response header "%s" DOES NOT CONTAIN "%s"', $header, $match),
+        );
     }
 
     /**
@@ -151,7 +157,9 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
         }
         $this->assertTrue($matched, sprintf(
             'Failed asserting response header "%s" exists and matches regex "%s", actual content is "%s"',
-            $header, $pattern, implode(', ', $values),
+            $header,
+            $pattern,
+            implode(', ', $values),
         ));
     }
 
@@ -163,9 +171,8 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
             throw new ExpectationFailedException(sprintf('Response header "%s" does not exist.', $header));
         }
         $values = [];
-        /** @var mixed $currentHeader */
         foreach ($responseHeader instanceof ArrayIterator ? $responseHeader : [$responseHeader] as $currentHeader) {
-            $values[] = Value::instance($currentHeader, HeaderInterface::class)->getFieldValue();
+            $values[] = Assert::isInstanceOf($currentHeader, HeaderInterface::class)->getFieldValue();
         }
         return $values;
     }
@@ -193,16 +200,10 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
 
         $headerMatched = false;
 
-        /** @var mixed $currentHeader */
         foreach ($responseHeader as $currentHeader) {
             $headerMatched = (bool) preg_match(
                 $pattern,
-                Value::string(
-                    Value::instance(
-                        $currentHeader,
-                        \Laminas\Http\Header\HeaderInterface::class,
-                    )->getFieldValue(),
-                ),
+                Assert::isInstanceOf($currentHeader, \Laminas\Http\Header\HeaderInterface::class)->getFieldValue(),
             );
 
             if ($headerMatched) {
@@ -395,7 +396,7 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
     private function query($path, $useXpath = false)
     {
         $response = $this->getResponse();
-        $document = new Crawler(Value::string($response->getContent()));
+        $document = new Crawler(Assert::string($response->getContent()));
 
         if ($useXpath) {
             foreach ($this->xpathNamespaces as $prefix => $namespace) {

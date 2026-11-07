@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Jield\ApiTools\ApiProblem;
 
-use Jield\Stdlib\Value;
 use Laminas\Http\Headers;
 use Laminas\Http\Response;
 use Override;
@@ -32,7 +31,7 @@ class ApiProblemResponse extends Response
         $this->setCustomStatusCode(code: $this->apiProblem->getStatus());
 
         if ($this->apiProblem->getTitle() !== null) {
-            $this->setReasonPhrase(reasonPhrase: Value::string($this->apiProblem->getTitle()));
+            $this->setReasonPhrase(reasonPhrase: $this->apiProblem->getTitle());
         }
 
         $this->jsonFlags = JSON_UNESCAPED_SLASHES | JSON_PARTIAL_OUTPUT_ON_ERROR;
@@ -93,6 +92,6 @@ class ApiProblemResponse extends Response
             return $this->reasonPhrase;
         }
 
-        return Value::string($this->recommendedReasonPhrases[$this->statusCode] ?? 'Unknown Error');
+        return $this->recommendedReasonPhrases[$this->statusCode] ?? 'Unknown Error';
     }
 }

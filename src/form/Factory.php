@@ -13,6 +13,7 @@ use Laminas\InputFilter\InputFilterInterface;
 use Laminas\ServiceManager\ServiceManager;
 use Laminas\Stdlib\ArrayUtils;
 use Traversable;
+use Webmozart\Assert\Assert;
 
 use function assert;
 use function class_exists;
@@ -108,10 +109,9 @@ class Factory
     public function create(Traversable|ArrayAccess|array $spec): ElementInterface
     {
         $spec = $this->validateSpecification(spec: $spec, method: __METHOD__);
-        /** @var mixed $type */
         $type = $spec['type'] ?? Element::class;
 
-        $element = $this->getFormElementManager()->get(Value::string($type));
+        $element = $this->getFormElementManager()->get($type);
 
         if ($element instanceof FormInterface) {
             return $this->configureForm(form: $element, spec: $spec);
@@ -129,7 +129,7 @@ class Factory
             ElementInterface::class,
             FieldsetInterface::class,
             FormInterface::class,
-            Value::scalar($type),
+            $type,
         ));
     }
 
@@ -150,7 +150,7 @@ class Factory
     {
         $spec['type'] ??= Fieldset::class;
 
-        return Value::instance($this->create(spec: $spec), \Jield\Form\FieldsetInterface::class);
+        return Assert::isInstanceOf($this->create(spec: $spec), \Jield\Form\FieldsetInterface::class);
     }
 
     /**
@@ -160,7 +160,7 @@ class Factory
     {
         $spec['type'] ??= Form::class;
 
-        return Value::instance($this->create(spec: $spec), \Jield\Form\FormInterface::class);
+        return Assert::isInstanceOf($this->create(spec: $spec), \Jield\Form\FormInterface::class);
     }
 
     /**
@@ -179,15 +179,12 @@ class Factory
     {
         $spec = $this->validateSpecification(spec: $spec, method: __METHOD__);
 
-        /** @var mixed $name */
         $name = $spec['name'] ?? null;
-        /** @var mixed $options */
         $options = $spec['options'] ?? null;
-        /** @var mixed $attributes */
         $attributes = $spec['attributes'] ?? null;
 
         if ($name !== null && $name !== '') {
-            $element->setName(name: Value::string($name));
+            $element->setName(name: $name);
         }
 
         if (is_iterable(value: $options)) {
@@ -195,7 +192,9 @@ class Factory
         }
 
         if (is_iterable(value: $attributes)) {
-            $element->setAttributes(arrayOrTraversable: Value::scalarMap(is_array($attributes) ? $attributes : iterator_to_array($attributes)));
+            $element->setAttributes(
+                arrayOrTraversable: is_array($attributes) ? $attributes : iterator_to_array($attributes),
+            );
         }
 
         return $element;
@@ -227,38 +226,37 @@ class Factory
         assert(assertion: $fieldset instanceof FieldsetInterface);
 
         if (isset($spec['object'])) {
-            $this->prepareAndInjectObject(
-                objectName: Value::string($spec['object']),
-                fieldset: $fieldset,
-                method: __METHOD__,
-            );
+            $this->prepareAndInjectObject(objectName: $spec['object'], fieldset: $fieldset, method: __METHOD__);
         }
 
         if (isset($spec['hydrator'])) {
             $hydrator = $spec['hydrator'];
             $this->prepareAndInjectHydrator(
-                hydratorOrName: is_array($hydrator) ? $hydrator : Value::instanceOrString($hydrator, HydratorInterface::class),
+                hydratorOrName: is_array($hydrator) ? $hydrator : $hydrator,
                 fieldset: $fieldset,
                 method: __METHOD__,
             );
         }
 
         if (isset($spec['elements'])) {
-            $this->prepareAndInjectElements(elements: Value::iterable($spec['elements']), fieldset: $fieldset, method: __METHOD__);
+            $this->prepareAndInjectElements(
+                elements: Assert::isIterable($spec['elements']),
+                fieldset: $fieldset,
+                method: __METHOD__,
+            );
         }
 
         if (isset($spec['fieldsets'])) {
             $this->prepareAndInjectFieldsets(
-                fieldsets: Value::iterable($spec['fieldsets']),
+                fieldsets: Assert::isIterable($spec['fieldsets']),
                 masterFieldset: $fieldset,
                 method: __METHOD__,
             );
         }
 
-        /** @var mixed $factory */
         $factory = $spec['factory'] ?? $this;
         $this->prepareAndInjectFactory(
-            factoryOrName: is_array($factory) ? $factory : Value::instanceOrString($factory, \Jield\Form\Factory::class),
+            factoryOrName: is_array($factory) ? $factory : $factory,
             fieldset: $fieldset,
             method: __METHOD__,
         );
@@ -285,11 +283,17 @@ class Factory
         assert(assertion: $form instanceof FormInterface);
 
         if (isset($spec['input_filter'])) {
-            $this->prepareAndInjectInputFilter(spec: is_string($spec['input_filter']) ? Value::string($spec['input_filter']) : Value::iterable($spec['input_filter']), form: $form, method: __METHOD__);
+            $this->prepareAndInjectInputFilter(
+                spec: is_string($spec['input_filter'])
+                    ? $spec['input_filter']
+                    : Assert::isIterable($spec['input_filter']),
+                form: $form,
+                method: __METHOD__,
+            );
         }
 
         if (isset($spec['validation_group'])) {
-            $form->setValidationGroup(group: Value::array($spec['validation_group']));
+            $form->setValidationGroup(group: $spec['validation_group']);
         }
 
         return $form;
@@ -312,7 +316,7 @@ class Factory
         }
 
         if ($spec instanceof Traversable) {
-            return Value::array(ArrayUtils::iteratorToArray(iterator: $spec));
+            return ArrayUtils::iteratorToArray(iterator: $spec);
         }
 
         return $spec;
@@ -331,14 +335,12 @@ class Factory
     ): void {
         $elements = $this->validateSpecification(spec: $elements, method: $method);
 
-        foreach (Value::iterable($elements) as $elementSpecification) {
+        foreach (Assert::isIterable($elements) as $elementSpecification) {
             if (null === $elementSpecification) {
                 continue;
             }
 
-            /** @var mixed $flags */
             $flags = $elementSpecification['flags'] ?? [];
-            /** @var mixed $spec */
             $spec = $elementSpecification['spec'] ?? [];
 
             if (!isset($spec['type'])) {
@@ -346,7 +348,7 @@ class Factory
             }
 
             $element = $this->create(spec: $spec);
-            $fieldset->add(elementOrFieldset: $element, flags: Value::array($flags));
+            $fieldset->add(elementOrFieldset: $element, flags: $flags);
         }
     }
 
@@ -363,14 +365,12 @@ class Factory
     ): void {
         $fieldsets = $this->validateSpecification(spec: $fieldsets, method: $method);
 
-        foreach (Value::iterable($fieldsets) as $fieldsetSpecification) {
-            /** @var mixed $flags */
+        foreach (Assert::isIterable($fieldsets) as $fieldsetSpecification) {
             $flags = $fieldsetSpecification['flags'] ?? [];
-            /** @var mixed $spec */
             $spec = $fieldsetSpecification['spec'] ?? [];
 
-            $fieldset = $this->createFieldset(spec: Value::array($spec));
-            $masterFieldset->add(elementOrFieldset: $fieldset, flags: Value::array($flags));
+            $fieldset = $this->createFieldset(spec: $spec);
+            $masterFieldset->add(elementOrFieldset: $fieldset, flags: $flags);
         }
     }
 
@@ -422,16 +422,13 @@ class Factory
                     $method,
                 ));
             }
-            /** @var mixed $hydratorOptions */
             $hydratorOptions = $hydratorOrName['options'] ?? [];
-            /** @var mixed $hydratorOrName */
             $hydratorOrName = $hydratorOrName['type'];
         } else {
             $hydratorOptions = [];
         }
 
         if (is_string(value: $hydratorOrName)) {
-            /** @var mixed $hydrator */
             $hydrator = $this->getFormElementManager()->getHydratorFromName(hydratorName: $hydratorOrName);
         }
 
@@ -439,12 +436,12 @@ class Factory
             throw new Exception\DomainException(message: sprintf(
                 '%s expects a valid implementation of Laminas\Hydrator\HydratorInterface; received "%s"',
                 $method,
-                Value::scalar($hydratorOrName),
+                $hydratorOrName,
             ));
         }
 
         if (!empty($hydratorOptions) && $hydrator instanceof Hydrator\HydratorOptionsInterface) {
-            $hydrator->setOptions(options: Value::array($hydratorOptions));
+            $hydrator->setOptions(options: Assert::isArray($hydratorOptions));
         }
 
         $fieldset->setHydrator(hydrator: $hydrator);
@@ -472,12 +469,10 @@ class Factory
                     $method,
                 ));
             }
-            /** @var mixed $factoryOrName */
             $factoryOrName = $factoryOrName['type'];
         }
 
         if (is_string(value: $factoryOrName)) {
-            /** @var mixed $factoryOrName */
             $factoryOrName = $this->getFormElementManager()->getFactoryFromName(factoryName: $factoryOrName);
         }
 
@@ -485,7 +480,7 @@ class Factory
             throw new Exception\DomainException(message: sprintf(
                 '%s expects a valid extension of Jield\Form\Factory; received "%s"',
                 $method,
-                Value::scalar($factoryOrName),
+                $factoryOrName,
             ));
         }
 
@@ -536,7 +531,7 @@ class Factory
         }
 
         $factory = $this->getInputFilterFactory();
-        $filter = $factory->createInputFilter(inputFilterSpecification: \Jield\Form\InputFilterFactory::normalizeSpecification(Value::array(
+        $filter = $factory->createInputFilter(inputFilterSpecification: \Jield\Form\InputFilterFactory::normalizeSpecification(Assert::isArray(
             $spec,
         )));
         if (method_exists(object_or_class: $filter, method: 'setFactory')) {

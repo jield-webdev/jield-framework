@@ -7,8 +7,8 @@ namespace Jield\ModuleManager\Listener;
 use Jield\ModuleManager\Feature\AutoloaderProviderInterface;
 use Jield\ModuleManager\Loader\AutoloaderFactory;
 use Jield\ModuleManager\ModuleEvent;
-
 use Jield\Stdlib\Value;
+
 use function method_exists;
 
 class AutoloaderListener extends AbstractListener
@@ -18,14 +18,11 @@ class AutoloaderListener extends AbstractListener
         $module = $e->getModule();
         if (
             !$module instanceof AutoloaderProviderInterface
-            && !method_exists(
-                object_or_class: Value::objectOrString($module),
-                method: 'getAutoloaderConfig',
-            )
+            && !method_exists(object_or_class: $module, method: 'getAutoloaderConfig')
         ) {
             return;
         }
-        $autoloaderConfig = Value::call(Value::present($module), 'getAutoloaderConfig');
+        $autoloaderConfig = Value::call($module, 'getAutoloaderConfig');
         AutoloaderFactory::factory($autoloaderConfig);
     }
 }

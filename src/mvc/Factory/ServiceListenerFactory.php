@@ -10,7 +10,6 @@ use Jield\ModuleManager\Listener\ServiceListenerInterface;
 use Jield\Mvc;
 use Jield\Mvc\View\Http\JsonStrategy;
 use Jield\Mvc\View\Renderer\PhpRenderer;
-use Jield\Stdlib\Value;
 use Laminas\Router\Http\TreeRouteStack;
 use Laminas\Router\RoutePluginManager;
 use Laminas\Router\RouteStackInterface;
@@ -20,6 +19,7 @@ use Laminas\ServiceManager\Factory\InvokableFactory;
 use Laminas\ServiceManager\ServiceManager;
 use Laminas\View;
 use Psr\Container\ContainerInterface;
+use Webmozart\Assert\Assert;
 
 use function get_debug_type;
 use function gettype;
@@ -134,13 +134,9 @@ class ServiceListenerFactory implements FactoryInterface
     ): ServiceListenerInterface {
         $configuration = $container->get('ApplicationConfig');
 
-        /** @var mixed $serviceListener */
         $serviceListener = $container->has('ServiceListenerInterface')
             ? $container->get('ServiceListenerInterface')
-            : new ServiceListener(Value::instance(
-                $container,
-                ServiceManager::class,
-            ));
+            : new ServiceListener(Assert::isInstanceOf($container, ServiceManager::class));
 
         if (!$serviceListener instanceof ServiceListenerInterface) {
             throw new ServiceNotCreatedException('The service named ServiceListenerInterface must implement '
@@ -151,7 +147,7 @@ class ServiceListenerFactory implements FactoryInterface
 
         if (isset($configuration['service_listener_options'])) {
             $this->injectServiceListenerOptions(
-                Value::array($configuration['service_listener_options']),
+                Assert::isArray($configuration['service_listener_options']),
                 $serviceListener,
             );
         }
@@ -175,16 +171,13 @@ class ServiceListenerFactory implements FactoryInterface
         }
 
         foreach ($options as $key => $newServiceManager) {
-            $this->validatePluginManagerOptions(
-                Value::array($newServiceManager),
-                Value::string($key),
-            );
+            $this->validatePluginManagerOptions(Assert::isArray($newServiceManager), Assert::string($key));
 
             $serviceListener->addServiceManager(
-                Value::string($newServiceManager['service_manager']),
-                Value::string($newServiceManager['config_key']),
-                Value::string($newServiceManager['interface']),
-                Value::string($newServiceManager['method']),
+                Assert::string($newServiceManager['service_manager']),
+                $newServiceManager['config_key'],
+                $newServiceManager['interface'],
+                $newServiceManager['method'],
             );
         }
     }

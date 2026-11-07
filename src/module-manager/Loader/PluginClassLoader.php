@@ -11,6 +11,7 @@ use IteratorAggregate;
 use Jield\Stdlib\Value;
 use ReturnTypeWillChange;
 use Traversable;
+use Webmozart\Assert\Assert;
 
 use function array_key_exists;
 use function class_exists;
@@ -77,11 +78,8 @@ class PluginClassLoader implements PluginClassLocator
         if (!is_array($map) && !$map instanceof Traversable) {
             throw new Exception\InvalidArgumentException('Expects an array or Traversable object');
         }
-        /** @var mixed $key
-         * @var mixed $value
-         */
         foreach ($map as $key => $value) {
-            static::$staticMap[Value::key($key)] = $value;
+            static::$staticMap[$key] = $value;
         }
     }
 
@@ -135,12 +133,9 @@ class PluginClassLoader implements PluginClassLocator
             $map = $map->getIterator();
         }
 
-        /** @var mixed $name
-         * @var mixed $class
-         */
         foreach ($map as $name => $class) {
             if (is_int($name) || is_numeric($name)) {
-                if (!is_object($class) && class_exists(Value::string($class))) {
+                if (!is_object($class) && class_exists($class)) {
                     $class = Value::instantiate($class);
                 }
 
@@ -150,7 +145,7 @@ class PluginClassLoader implements PluginClassLocator
                 }
             }
 
-            $this->registerPlugin(Value::string($name), Value::string($class));
+            $this->registerPlugin(Assert::string($name), Assert::string($class));
         }
 
         return $this;
@@ -164,7 +159,7 @@ class PluginClassLoader implements PluginClassLocator
      */
     public function unregisterPlugin($shortName)
     {
-        $lookup = strtolower(Value::string($shortName));
+        $lookup = strtolower($shortName);
         if (array_key_exists($lookup, $this->plugins)) {
             unset($this->plugins[$lookup]);
         }
@@ -215,7 +210,7 @@ class PluginClassLoader implements PluginClassLocator
         if (!$this->isLoaded($name)) {
             return false;
         }
-        return Value::string($this->plugins[strtolower($name)]);
+        return Assert::string($this->plugins[strtolower($name)]);
     }
 
     /**

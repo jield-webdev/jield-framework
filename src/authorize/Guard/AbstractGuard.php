@@ -10,6 +10,7 @@ use Jield\Authorize\Provider\Resource\ProviderInterface as ResourceProviderInter
 use Jield\Authorize\Provider\Rule\ProviderInterface as RuleProviderInterface;
 use Laminas\EventManager\AbstractListenerAggregate;
 use Psr\Container\ContainerInterface;
+use Webmozart\Assert\Assert;
 
 use function array_keys;
 
@@ -30,27 +31,19 @@ abstract class AbstractGuard extends AbstractListenerAggregate implements
     public function __construct(array $rules, ContainerInterface $container)
     {
         $this->container = $container;
-        /** @var mixed $rule */
         foreach ($rules as $rule) {
-            \Jield\Stdlib\Value::setPath(
-                $rule,
-                ['roles'],
-                \Jield\Stdlib\Value::toArray(\Jield\Stdlib\Value::accessible($rule)['roles']),
-            );
+            \Jield\Stdlib\Value::setPath($rule, ['roles'], \Jield\Stdlib\Value::toArray($rule['roles']));
             \Jield\Stdlib\Value::setPath(
                 $rule,
                 ['action'],
                 isset($rule['action']) ? \Jield\Stdlib\Value::toArray($rule['action']) : [null],
             );
-            /** @var mixed $resource */
-            foreach (\Jield\Stdlib\Value::iterable($this->extractResourcesFromRule(\Jield\Stdlib\Value::array(
-                $rule,
-            ))) as $resource) {
-                $this->rules[\Jield\Stdlib\Value::key($resource)] = [
+            foreach (Assert::isIterable($this->extractResourcesFromRule(Assert::isArray($rule))) as $resource) {
+                $this->rules[$resource] = [
                     'roles' => \Jield\Stdlib\Value::toArray($rule['roles']),
                 ];
                 if (isset($rule['assertion'])) {
-                    $this->rules[\Jield\Stdlib\Value::key($resource)]['assertion'] = $rule['assertion'];
+                    $this->rules[$resource]['assertion'] = $rule['assertion'];
                 }
             }
         }

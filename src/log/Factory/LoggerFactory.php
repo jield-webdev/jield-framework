@@ -110,13 +110,11 @@ final class LoggerFactory
      */
     public function getConfig(ContainerInterface $container): array
     {
-        /** @var mixed $config */
         $config = $container->has('config') ? $container->get('config') : [];
         if (!is_array($config)) {
             return [];
         }
 
-        /** @var mixed $monologConfig */
         $monologConfig = $config['monolog'] ?? [];
         if (!is_array($monologConfig)) {
             return [];

@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Jield\Export\Command;
 
 use Jield\Export\Service\ConsoleService;
-use Jield\Stdlib\Value;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use Webmozart\Assert\Assert;
 
 #[AsCommand(name: 'search:list')]
 final class ListEntities extends Command
@@ -30,8 +30,8 @@ final class ListEntities extends Command
             $output->writeln(messages: sprintf(
                 'Entity for %s (%s) is active: (%s)',
                 $key,
-                key(Value::array($entityInfo)),
-                implode(', ', Value::scalars($entityInfo)),
+                key(Assert::isArray($entityInfo)),
+                implode(', ', $entityInfo),
             ));
         }
 

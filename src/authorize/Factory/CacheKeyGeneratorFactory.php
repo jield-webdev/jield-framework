@@ -6,9 +6,9 @@ namespace Jield\Authorize\Factory;
 
 use Closure;
 use Jield\Authorize\Config;
-use Jield\Stdlib\Value;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Psr\Container\ContainerInterface;
+use Webmozart\Assert\Assert;
 
 /**
  * Factory for building a cache key generator
@@ -22,7 +22,7 @@ class CacheKeyGeneratorFactory implements FactoryInterface
      */
     public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): Closure
     {
-        $config = Value::array($container->get(Config::class));
+        $config = Assert::isArray($container->get(Config::class));
         $cacheKey = empty($config['cache_key']) ? 'bjyauthorize_acl' : (string) $config['cache_key'];
 
         return static fn() => $cacheKey;

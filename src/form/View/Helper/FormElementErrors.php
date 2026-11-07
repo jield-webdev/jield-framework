@@ -6,8 +6,8 @@ namespace Jield\Form\View\Helper;
 
 use Jield\Form\ElementInterface;
 use Jield\Form\Exception;
+use Webmozart\Assert\Assert;
 
-use Jield\Stdlib\Value;
 use function array_merge;
 use function array_walk_recursive;
 use function count;
@@ -86,10 +86,7 @@ class FormElementErrors extends AbstractHelper
 
         // Generate markup
         $markup = sprintf($this->getMessageOpenFormat(), $attributes);
-        $markup .= implode(
-            separator: $this->getMessageSeparatorString(),
-            array: Value::scalars($messages),
-        );
+        $markup .= implode(separator: $this->getMessageSeparatorString(), array: $messages);
         $markup .= $this->getMessageCloseString();
 
         return $markup;
@@ -205,10 +202,7 @@ class FormElementErrors extends AbstractHelper
         $textDomain = $this->getTranslatorTextDomain();
         $messagesToPrint = [];
         $messageCallback = static function ($item) use (&$messagesToPrint, $translator, $textDomain): void {
-            $messagesToPrint[] = Value::present($translator)->translate(
-                Value::string($item),
-                $textDomain,
-            );
+            $messagesToPrint[] = Assert::notNull($translator)->translate($item, $textDomain);
         };
         array_walk_recursive(array: $messages, callback: $messageCallback);
         return $messagesToPrint;
