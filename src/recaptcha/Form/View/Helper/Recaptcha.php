@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Jield\Recaptcha\Form\View\Helper;
 
-use Jield\Form\View\Helper\AbstractHelper;
 use Jield\Form\ElementInterface;
+use Jield\Form\View\Helper\AbstractHelper;
 use Override;
 
 class Recaptcha extends AbstractHelper

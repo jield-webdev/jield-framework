@@ -25,27 +25,27 @@ use Jield\Cors\Exception\DisallowedOriginException;
 use Jield\Cors\Exception\InvalidOriginException;
 use Jield\Cors\Service\CorsService;
 use Jield\Mvc\MvcEvent;
+use Jield\Stdlib\Value;
 use Laminas\EventManager\AbstractListenerAggregate;
 use Laminas\EventManager\EventManagerInterface;
+use Laminas\Http\Header\HeaderInterface;
 use Laminas\Http\Request as HttpRequest;
 use Laminas\Http\Response as HttpResponse;
+use Psr\Http\Message\RequestInterface;
 
 /**
  * CorsRequestListener
  */
 class CorsRequestListener extends AbstractListenerAggregate
 {
-    protected CorsService $corsService;
-
     /**
      * Whether or not a preflight request was detected
      */
     protected bool $isPreflight = false;
 
-    public function __construct(CorsService $corsService)
-    {
-        $this->corsService = $corsService;
-    }
+    public function __construct(
+        protected CorsService $corsService,
+    ) {}
 
     /**
      * {@inheritDoc}
@@ -53,10 +53,10 @@ class CorsRequestListener extends AbstractListenerAggregate
     public function attach(EventManagerInterface $events, $priority = 1): void
     {
         // Preflight can be handled during the route event, and should return early
-        $this->listeners[] = $events->attach(MvcEvent::EVENT_ROUTE, [$this, 'onCorsPreflight'], 2);
+        $this->listeners[] = $events->attach(MvcEvent::EVENT_ROUTE, $this->onCorsPreflight(...), 2);
 
         // "in"flight should be handled during "FINISH" to ensure we operate on the actual route being returned
-        $this->listeners[] = $events->attach(MvcEvent::EVENT_FINISH, [$this, 'onCorsRequest'], 100);
+        $this->listeners[] = $events->attach(MvcEvent::EVENT_FINISH, $this->onCorsRequest(...), 100);
     }
 
     /**
@@ -78,7 +78,7 @@ class CorsRequestListener extends AbstractListenerAggregate
         try {
             $isCorsRequest = $this->corsService->isCorsRequest($request);
         } catch (InvalidOriginException $exception) {
-                $response = \Jield\Stdlib\Value::instance($event->getResponse(), HttpResponse::class);
+            $response = Value::instance($event->getResponse(), HttpResponse::class);
             $response->setStatusCode(400);
             $response->setReasonPhrase($exception->getMessage());
             return $response;
@@ -96,9 +96,17 @@ class CorsRequestListener extends AbstractListenerAggregate
 
         $requestForMatching = clone $request;
         // Use the request method for route detection, which is being used during the request.
-        $requestForMatching->setMethod(\Jield\Stdlib\Value::instance($request->getHeader('Access-Control-Request-Method'), \Laminas\Http\Header\HeaderInterface::class)->getFieldValue());
+        $requestForMatching->setMethod(
+            Value::instance(
+                $request->getHeader('Access-Control-Request-Method'),
+                HeaderInterface::class,
+            )->getFieldValue(),
+        );
 
-        $routeMatch = $router->match(\Jield\Stdlib\Value::instance($requestForMatching, \Psr\Http\Message\RequestInterface::class));
+        $routeMatch = $router->match(Value::instance(
+            $requestForMatching,
+            RequestInterface::class,
+        ));
 
         return $this->corsService->createPreflightCorsResponseWithRouteOptions($request, $routeMatch);
     }
@@ -114,7 +122,7 @@ class CorsRequestListener extends AbstractListenerAggregate
         }
 
         $request = $event->getRequest();
-        $response = \Jield\Stdlib\Value::instance($event->getResponse(), HttpResponse::class);
+        $response = Value::instance($event->getResponse(), HttpResponse::class);
 
         if (!$request instanceof HttpRequest) {
             return;

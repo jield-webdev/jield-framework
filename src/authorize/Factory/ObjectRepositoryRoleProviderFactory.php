@@ -8,6 +8,7 @@ use Doctrine\Persistence\ObjectManager;
 use Jield\Authorize\Config;
 use Jield\Authorize\Exception\InvalidArgumentException;
 use Jield\Authorize\Provider\Role\ObjectRepositoryProvider;
+use Jield\Stdlib\Value;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Psr\Container\ContainerInterface;
 
@@ -21,7 +22,7 @@ class ObjectRepositoryRoleProviderFactory implements FactoryInterface
         $requestedName,
         ?array $options = null,
     ): ObjectRepositoryProvider {
-        $config = \Jield\Stdlib\Value::array($container->get(Config::class));
+        $config = Value::array($container->get(Config::class));
 
         if (!isset($config['role_providers'][ObjectRepositoryProvider::class])) {
             throw new InvalidArgumentException(
@@ -29,7 +30,6 @@ class ObjectRepositoryRoleProviderFactory implements FactoryInterface
             );
         }
 
-        /** @var mixed $providerConfig */
         $providerConfig = $config['role_providers'][ObjectRepositoryProvider::class];
 
         if (!isset($providerConfig['role_entity_class'])) {
@@ -45,10 +45,10 @@ class ObjectRepositoryRoleProviderFactory implements FactoryInterface
         }
 
         /** @var ObjectManager $objectManager */
-        $objectManager = $container->get(\Jield\Stdlib\Value::string($providerConfig['object_manager']));
+        $objectManager = $container->get(Value::string($providerConfig['object_manager']));
 
-        return new ObjectRepositoryProvider(objectRepository: $objectManager->getRepository(
-            className: \Jield\Stdlib\Value::classString($providerConfig['role_entity_class']),
-        ));
+        return new ObjectRepositoryProvider(objectRepository: $objectManager->getRepository(className: Value::classString(
+            $providerConfig['role_entity_class'],
+        )));
     }
 }

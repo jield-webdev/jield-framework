@@ -4,16 +4,19 @@ declare(strict_types=1);
 
 namespace Jield\Mvc\View\Renderer;
 
+use Jield\Stdlib\Service;
+use Laminas\View\Helper\HeadLink;
+use Laminas\View\Helper\HeadScript;
 use Laminas\View\HelperPluginManagerInterface;
 use Laminas\View\Model\ModelInterface;
 use Laminas\View\Renderer\PhpRenderer as NativeRenderer;
 use Laminas\View\Renderer\RendererInterface;
 
-final class PhpRenderer implements RendererInterface
+final readonly class PhpRenderer implements RendererInterface
 {
     public function __construct(
-        private readonly NativeRenderer $renderer,
-        private readonly HelperPluginManagerInterface $plugins,
+        private NativeRenderer $renderer,
+        private HelperPluginManagerInterface $plugins,
     ) {}
 
     public function render(string|ModelInterface $templateNameOrModel, ?iterable $variables = null): string
@@ -29,20 +32,20 @@ final class PhpRenderer implements RendererInterface
     public function plugin(string $name, ?string $type = null): mixed
     {
         if ($type !== null) {
-            return \Jield\Stdlib\Service::get($this->plugins, $type, $name);
+            return Service::get($this->plugins, $type, $name);
         }
 
         return $this->plugins->get($name);
     }
 
-    public function headLink(): \Laminas\View\Helper\HeadLink
+    public function headLink(): HeadLink
     {
-        return $this->plugin('headLink', \Laminas\View\Helper\HeadLink::class);
+        return $this->plugin('headLink', HeadLink::class);
     }
 
-    public function headScript(): \Laminas\View\Helper\HeadScript
+    public function headScript(): HeadScript
     {
-        return $this->plugin('headScript', \Laminas\View\Helper\HeadScript::class);
+        return $this->plugin('headScript', HeadScript::class);
     }
 
     public function getHelperPluginManager(): HelperPluginManagerInterface

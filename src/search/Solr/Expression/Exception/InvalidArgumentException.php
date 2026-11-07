@@ -42,6 +42,6 @@ class InvalidArgumentException extends BaseInvalidArgumentException implements E
 
     private static function getType(mixed $actual): string
     {
-        return is_object(value: $actual) ? $actual::class : gettype(value: $actual);
+        return get_debug_type($actual);
     }
 }

@@ -9,6 +9,7 @@ use Jield\ApiTools\Hal\Extractor\EntityExtractor;
 use Jield\ApiTools\Hal\Link\Link;
 use Jield\ApiTools\Hal\Link\LinkCollection;
 use Jield\ApiTools\Hal\Metadata\Metadata;
+use Jield\Stdlib\Value;
 use Laminas\Paginator\Paginator;
 
 use function array_merge;
@@ -33,11 +34,14 @@ class ResourceFactory
         bool $renderEmbeddedEntities = true,
     ): Entity|Collection {
         if ($metadata->isCollection()) {
-            return $this->createCollectionFromMetadata(object: \Jield\Stdlib\Value::iterable($object), metadata: $metadata);
+            return $this->createCollectionFromMetadata(
+                object: Value::iterable($object),
+                metadata: $metadata,
+            );
         }
 
         /** @psalm-var array<string,mixed> $data */
-        $data = $this->entityExtractor->extract(object: \Jield\Stdlib\Value::object($object));
+        $data = $this->entityExtractor->extract(object: Value::object($object));
 
         $entityIdentifierName = $metadata->getEntityIdentifierName();
         if ($entityIdentifierName && !isset($data[$entityIdentifierName])) {
@@ -78,8 +82,8 @@ class ResourceFactory
     {
         $halCollection = new Collection(collection: $object);
         $halCollection->setCollectionName(name: $metadata->getCollectionName());
-        $halCollection->setCollectionRoute(route: \Jield\Stdlib\Value::string($metadata->getRoute()));
-        $halCollection->setEntityRoute(route: \Jield\Stdlib\Value::string($metadata->getEntityRoute()));
+        $halCollection->setCollectionRoute(route: Value::string($metadata->getRoute()));
+        $halCollection->setEntityRoute(route: Value::string($metadata->getEntityRoute()));
         $halCollection->setRouteIdentifierName(identifier: $metadata->getRouteIdentifierName());
         $halCollection->setEntityIdentifierName(identifier: $metadata->getEntityIdentifierName());
 
@@ -88,7 +92,10 @@ class ResourceFactory
 
         $forceSelfLink = $metadata->getForceSelfLink();
         if ($forceSelfLink && !$links->has(relation: 'self') && ($metadata->hasUrl() || $metadata->hasRoute())) {
-            $link = $this->marshalLinkFromMetadata(metadata: $metadata, object: \Jield\Stdlib\Value::arrayOrObject($object));
+            $link = $this->marshalLinkFromMetadata(
+                metadata: $metadata,
+                object: Value::arrayOrObject($object),
+            );
             $links->idempotentAdd(link: $link);
         }
 
@@ -107,7 +114,7 @@ class ResourceFactory
     ): Link {
         $link = new Link(relation: $relation);
         if ($metadata->hasUrl()) {
-            $link->setUrl(href: \Jield\Stdlib\Value::string($metadata->getUrl()));
+            $link->setUrl(href: Value::string($metadata->getUrl()));
             return $link;
         }
 
@@ -121,7 +128,6 @@ class ResourceFactory
         $params = $metadata->getRouteParams();
 
         // process any callbacks
-        /** @var mixed $param */
         foreach ($params as $key => $param) {
             // bind to the object
             if ($param instanceof Closure && is_object($object)) {
@@ -140,7 +146,11 @@ class ResourceFactory
             $params = array_merge($params, [$routeIdentifierName => $id]);
         }
 
-        $link->setRoute(route: \Jield\Stdlib\Value::string($metadata->getRoute()), params: $params, options: $metadata->getRouteOptions());
+        $link->setRoute(
+            route: Value::string($metadata->getRoute()),
+            params: $params,
+            options: $metadata->getRouteOptions(),
+        );
         return $link;
     }
 

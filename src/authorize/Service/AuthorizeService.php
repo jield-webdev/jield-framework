@@ -19,11 +19,14 @@ use Jield\Authorize\Role\Role;
 use Jield\Authorize\Role\UserAsRole;
 use Jield\Authorize\RoleProviders;
 use Jield\Authorize\RuleProviders;
-use Laminas\Cache\Storage\Adapter\AbstractAdapter;
+use Jield\Stdlib\Service;
+use Jield\Stdlib\Value;
+use Laminas\Cache\Storage\StorageInterface;
 use Laminas\Permissions\Acl\Acl;
 use Laminas\Permissions\Acl\Exception\InvalidArgumentException;
 use Laminas\Permissions\Acl\Resource\GenericResource;
 use Laminas\Permissions\Acl\Resource\ResourceInterface;
+use Laminas\Permissions\Acl\Role\RoleInterface;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Container\NotFoundExceptionInterface;
@@ -64,39 +67,38 @@ class AuthorizeService
 
     protected ?Closure $loaded = null;
 
-    private AbstractAdapter $cache;
+    private StorageInterface $cache;
 
-    private AuthenticationIdentityProvider $authenticationIdentityProvider;
+    private readonly AuthenticationIdentityProvider $authenticationIdentityProvider;
 
     /** @var array */
     protected array $config;
 
     /**
-     * @param array $config
-     
- *
      * @throws ContainerExceptionInterface
      * @throws NotFoundExceptionInterface
      */
     public function __construct(
         private readonly ContainerInterface $container,
     ) {
-        $this->authenticationIdentityProvider = \Jield\Stdlib\Service::get($container, AuthenticationIdentityProvider::class);
-        $this->config = \Jield\Stdlib\Value::array($container->get(Config::class));
+        $this->authenticationIdentityProvider = Service::get(
+            $container,
+            AuthenticationIdentityProvider::class,
+        );
+        $this->config = Value::array($container->get(Config::class));
         $this->loaded = $this->load(...);
 
         /** @var mixed $cacheEnabled */
         $cacheEnabled = $this->config['cache_enabled'] ?? false;
         if ($cacheEnabled) {
-            /** @var AbstractAdapter $cache */
-            $cache = \Jield\Stdlib\Service::get($container, Cache::class);
+            $cache = Value::instance($container->get(Cache::class), StorageInterface::class);
             $this->cache = $cache;
         }
     }
 
     public function addRoleProvider(RoleProvider $provider): static
     {
-        $this->loaded && \Jield\Stdlib\Value::truthy($this->loaded->__invoke());
+        $this->loaded && Value::truthy($this->loaded->__invoke());
 
         $this->roleProviders[] = $provider;
 
@@ -105,7 +107,7 @@ class AuthorizeService
 
     public function addResourceProvider(ResourceProvider $provider): static
     {
-        $this->loaded && \Jield\Stdlib\Value::truthy($this->loaded->__invoke());
+        $this->loaded && Value::truthy($this->loaded->__invoke());
 
         $this->resourceProviders[] = $provider;
 
@@ -114,7 +116,7 @@ class AuthorizeService
 
     public function addRuleProvider(RuleProvider $provider): static
     {
-        $this->loaded && \Jield\Stdlib\Value::truthy($this->loaded->__invoke());
+        $this->loaded && Value::truthy($this->loaded->__invoke());
 
         $this->ruleProviders[] = $provider;
 
@@ -123,7 +125,7 @@ class AuthorizeService
 
     public function setIdentityProvider(IdentityProvider $provider): static
     {
-        $this->loaded && \Jield\Stdlib\Value::truthy($this->loaded->__invoke());
+        $this->loaded && Value::truthy($this->loaded->__invoke());
 
         $this->identityProvider = $provider;
 
@@ -132,14 +134,14 @@ class AuthorizeService
 
     public function getIdentityProvider(): IdentityProvider
     {
-        $this->loaded && \Jield\Stdlib\Value::truthy($this->loaded->__invoke());
+        $this->loaded && Value::truthy($this->loaded->__invoke());
 
         return $this->identityProvider;
     }
 
     public function addGuard(GuardInterface $guard): static
     {
-        $this->loaded && \Jield\Stdlib\Value::truthy($this->loaded->__invoke());
+        $this->loaded && Value::truthy($this->loaded->__invoke());
 
         $this->guards[] = $guard;
 
@@ -156,7 +158,7 @@ class AuthorizeService
 
     public function getGuards(): array
     {
-        $this->loaded && \Jield\Stdlib\Value::truthy($this->loaded->__invoke());
+        $this->loaded && Value::truthy($this->loaded->__invoke());
 
         return $this->guards;
     }
@@ -166,9 +168,9 @@ class AuthorizeService
      */
     public function getAcl(): Acl
     {
-        $this->loaded && \Jield\Stdlib\Value::truthy($this->loaded->__invoke());
+        $this->loaded && Value::truthy($this->loaded->__invoke());
 
-        return \Jield\Stdlib\Value::instance($this->acl, \Laminas\Permissions\Acl\Acl::class);
+        return Value::instance($this->acl, \Laminas\Permissions\Acl\Acl::class);
     }
 
     /**
@@ -178,10 +180,14 @@ class AuthorizeService
      */
     public function isAllowed(ResourceInterface|string $resource, ?string $privilege = null): bool
     {
-        $this->loaded && \Jield\Stdlib\Value::truthy($this->loaded->__invoke());
+        $this->loaded && Value::truthy($this->loaded->__invoke());
 
         try {
-            return \Jield\Stdlib\Value::present($this->acl)->isAllowed(role: $this->getIdentity(), resource: $resource, privilege: $privilege);
+            return Value::present($this->acl)->isAllowed(
+                role: $this->getIdentity(),
+                resource: $resource,
+                privilege: $privilege,
+            );
         } catch (InvalidArgumentException) {
             return false;
         }
@@ -195,15 +201,23 @@ class AuthorizeService
 
         $this->loaded = null;
 
-        $aclKacheKey = sprintf('%s_acl', \Jield\Stdlib\Value::scalar($this->config['cache_key']));
-        $rulesWithAssertions = sprintf('%s_rules_with_assertion', \Jield\Stdlib\Value::scalar($this->config['cache_key']));
+        $aclKacheKey = sprintf('%s_acl', Value::scalar($this->config['cache_key']));
+        $rulesWithAssertions = sprintf(
+            '%s_rules_with_assertion',
+            Value::scalar($this->config['cache_key']),
+        );
 
         $success = false;
         /** @var mixed $cacheEnabled */
         $cacheEnabled = $this->config['cache_enabled'] ?? false;
         if ($cacheEnabled) {
-            $this->rulesWithAssertions = \Jield\Stdlib\Value::array($this->cache->getItem($rulesWithAssertions, $success) ?? []);
-            $this->acl = \Jield\Stdlib\Value::nullableInstance($this->cache->getItem($aclKacheKey, $success), \Laminas\Permissions\Acl\Acl::class);
+            $this->rulesWithAssertions = Value::array(
+                $this->cache->getItem($rulesWithAssertions, $success) ?? [],
+            );
+            $this->acl = Value::nullableInstance(
+                $this->cache->getItem($aclKacheKey, $success),
+                \Laminas\Permissions\Acl\Acl::class,
+            );
         }
 
         if (!$this->acl instanceof Acl || !$success) {
@@ -217,7 +231,7 @@ class AuthorizeService
         //$this->setIdentityProvider($this->authenticationIdentityProvider);
         $parentRoles = $this->authenticationIdentityProvider->getIdentityRoles();
 
-        \Jield\Stdlib\Value::present($this->acl)->addRole($this->getIdentityAsRole(), $parentRoles);
+        Value::present($this->acl)->addRole($this->getIdentityAsRole(), $parentRoles);
     }
 
     protected function addRoles($roles): void
@@ -228,15 +242,15 @@ class AuthorizeService
 
         /** @var Role $role */
         foreach ($roles as $role) {
-            if (\Jield\Stdlib\Value::present($this->acl)->hasRole(role: $role)) {
+            if (Value::present($this->acl)->hasRole(role: $role)) {
                 continue;
             }
 
             if ($role->getParent() !== null) {
                 $this->addRoles(roles: [$role->getParent()]);
-                \Jield\Stdlib\Value::present($this->acl)->addRole(role: $role, parents: $role->getParent());
-            } elseif (!\Jield\Stdlib\Value::present($this->acl)->hasRole(role: $role)) {
-                \Jield\Stdlib\Value::present($this->acl)->addRole(role: $role);
+                Value::present($this->acl)->addRole(role: $role, parents: $role->getParent());
+            } elseif (!Value::present($this->acl)->hasRole(role: $role)) {
+                Value::present($this->acl)->addRole(role: $role);
             }
         }
     }
@@ -258,14 +272,35 @@ class AuthorizeService
             } elseif (is_string(value: $key)) {
                 $key = new GenericResource(resourceId: $key);
             } elseif (is_int(value: $key)) {
-                $key = new GenericResource(resourceId: \Jield\Stdlib\Value::string($value));
+                $key = new GenericResource(resourceId: Value::string($value));
             }
 
             if (is_iterable(value: $value)) {
-                \Jield\Stdlib\Value::present($this->acl)->addResource(resource: \Jield\Stdlib\Value::instanceOrString($key, \Laminas\Permissions\Acl\Resource\ResourceInterface::class), parent: \Jield\Stdlib\Value::nullableInstanceOrString($parent, \Laminas\Permissions\Acl\Resource\ResourceInterface::class));
+                Value::present($this->acl)->addResource(
+                    resource: Value::instanceOrString(
+                        $key,
+                        \Laminas\Permissions\Acl\Resource\ResourceInterface::class,
+                    ),
+                    parent: Value::nullableInstanceOrString(
+                        $parent,
+                        \Laminas\Permissions\Acl\Resource\ResourceInterface::class,
+                    ),
+                );
                 $this->loadResource(resources: $value, parent: $key);
-            } elseif (!\Jield\Stdlib\Value::present($this->acl)->hasResource(resource: \Jield\Stdlib\Value::instanceOrString($key, \Laminas\Permissions\Acl\Resource\ResourceInterface::class))) {
-                \Jield\Stdlib\Value::present($this->acl)->addResource(resource: \Jield\Stdlib\Value::instanceOrString($key, \Laminas\Permissions\Acl\Resource\ResourceInterface::class), parent: \Jield\Stdlib\Value::nullableInstanceOrString($parent, \Laminas\Permissions\Acl\Resource\ResourceInterface::class));
+            } elseif (!Value::present($this->acl)->hasResource(resource: Value::instanceOrString(
+                $key,
+                \Laminas\Permissions\Acl\Resource\ResourceInterface::class,
+            ))) {
+                Value::present($this->acl)->addResource(
+                    resource: Value::instanceOrString(
+                        $key,
+                        \Laminas\Permissions\Acl\Resource\ResourceInterface::class,
+                    ),
+                    parent: Value::nullableInstanceOrString(
+                        $parent,
+                        \Laminas\Permissions\Acl\Resource\ResourceInterface::class,
+                    ),
+                );
             }
         }
     }
@@ -282,7 +317,7 @@ class AuthorizeService
              * @var mixed $assertion
              */
             [$roles, $resources, $privileges, $assertion] = $rule;
-            $this->rulesWithAssertions[\Jield\Stdlib\Value::key($resources)] = $assertion;
+            $this->rulesWithAssertions[Value::key($resources)] = $assertion;
         } elseif (3 === $ruleSize) {
             /** @var mixed $roles
              * @var mixed $resources
@@ -301,7 +336,14 @@ class AuthorizeService
         }
 
         //We only do allow rules
-        \Jield\Stdlib\Value::present($this->acl)->allow(\Jield\Stdlib\Value::instanceOrArrayOrString($roles, \Laminas\Permissions\Acl\Role\RoleInterface::class), \Jield\Stdlib\Value::instanceOrArrayOrString($resources, \Laminas\Permissions\Acl\Resource\ResourceInterface::class), \Jield\Stdlib\Value::nullableArrayOrString($privileges));
+        Value::present($this->acl)->allow(
+            Value::instanceOrArrayOrString($roles, RoleInterface::class),
+            Value::instanceOrArrayOrString(
+                $resources,
+                \Laminas\Permissions\Acl\Resource\ResourceInterface::class,
+            ),
+            Value::nullableArrayOrString($privileges),
+        );
     }
 
     public function getIdentityAsRole(): UserAsRole
@@ -327,28 +369,33 @@ class AuthorizeService
         $this->acl = new Acl();
 
         //Set the role provider first
-        /** @var mixed $provider */
-        foreach (\Jield\Stdlib\Value::array($this->container->get(RoleProviders::class)) as $provider) {
-            $this->addRoleProvider(provider: \Jield\Stdlib\Value::instance($provider, \Jield\Authorize\Provider\Role\ProviderInterface::class));
+        foreach (Value::array($this->container->get(RoleProviders::class)) as $provider) {
+            $this->addRoleProvider(provider: Value::instance(
+                $provider,
+                \Jield\Authorize\Provider\Role\ProviderInterface::class,
+            ));
         }
 
         foreach ($this->roleProviders as $provider) {
             $this->addRoles(roles: $provider->getRoles());
         }
 
-        /** @var mixed $guard */
-        foreach (\Jield\Stdlib\Value::array($this->container->get(Guards::class)) as $guard) {
-            $this->addGuard(guard: \Jield\Stdlib\Value::instance($guard, \Jield\Authorize\Guard\GuardInterface::class));
+        foreach (Value::array($this->container->get(Guards::class)) as $guard) {
+            $this->addGuard(guard: Value::instance($guard, \Jield\Authorize\Guard\GuardInterface::class));
         }
 
-        /** @var mixed $provider */
-        foreach (\Jield\Stdlib\Value::array($this->container->get(ResourceProviders::class)) as $provider) {
-            $this->addResourceProvider(provider: \Jield\Stdlib\Value::instance($provider, \Jield\Authorize\Provider\Resource\ProviderInterface::class));
+        foreach (Value::array($this->container->get(ResourceProviders::class)) as $provider) {
+            $this->addResourceProvider(provider: Value::instance(
+                $provider,
+                \Jield\Authorize\Provider\Resource\ProviderInterface::class,
+            ));
         }
 
-        /** @var mixed $provider */
-        foreach (\Jield\Stdlib\Value::array($this->container->get(RuleProviders::class)) as $provider) {
-            $this->addRuleProvider(provider: \Jield\Stdlib\Value::instance($provider, \Jield\Authorize\Provider\Rule\ProviderInterface::class));
+        foreach (Value::array($this->container->get(RuleProviders::class)) as $provider) {
+            $this->addRuleProvider(provider: Value::instance(
+                $provider,
+                \Jield\Authorize\Provider\Rule\ProviderInterface::class,
+            ));
         }
 
         foreach ($this->resourceProviders as $provider) {
@@ -359,9 +406,8 @@ class AuthorizeService
             $rules = $provider->getRules();
 
             if (isset($rules['allow'])) {
-                /** @var mixed $rule */
-                foreach (\Jield\Stdlib\Value::iterable($rules['allow']) as $rule) {
-                    $this->loadRule(rule: \Jield\Stdlib\Value::array($rule), type: static::TYPE_ALLOW);
+                foreach (Value::iterable($rules['allow']) as $rule) {
+                    $this->loadRule(rule: Value::array($rule), type: static::TYPE_ALLOW);
                 }
             }
         }

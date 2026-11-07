@@ -6,6 +6,7 @@ namespace Jield\ApiTools\Hal\Extractor;
 
 use ArrayObject;
 use Jield\ApiTools\Hal\EntityHydratorManager;
+use Jield\Stdlib\Value;
 use JsonSerializable;
 use Laminas\Hydrator\ExtractionInterface;
 use Override;
@@ -18,20 +19,19 @@ use function get_object_vars;
  */
 class EntityExtractor implements ExtractionInterface
 {
-    /** @var EntityHydratorManager */
-    protected EntityHydratorManager $entityHydratorManager;
-
     /**
      * Map of entities to their Jield\ApiTools\Hal\Entity serializations
      *
-     * @var SplObjectStorage
+     * @var SplObjectStorage<object, array<array-key, mixed>>
      */
     protected SplObjectStorage $serializedEntities;
 
-    public function __construct(EntityHydratorManager $entityHydratorManager)
-    {
-        $this->entityHydratorManager = $entityHydratorManager;
-        $this->serializedEntities = new SplObjectStorage();
+    public function __construct(
+        protected EntityHydratorManager $entityHydratorManager,
+    ) {
+        /** @var SplObjectStorage<object, array<array-key, mixed>> $serializedEntities */
+        $serializedEntities = new SplObjectStorage();
+        $this->serializedEntities = $serializedEntities;
     }
 
     /**
@@ -40,15 +40,13 @@ class EntityExtractor implements ExtractionInterface
     #[Override]
     public function extract(object $object): array
     {
-        if (isset($this->serializedEntities[$object])) {
-            /** @psalm-var array<array-key, mixed> */
-            return $this->serializedEntities[$object];
+        if ($this->serializedEntities->offsetExists($object)) {
+            return Value::array($this->serializedEntities->offsetGet($object));
         }
 
         $this->serializedEntities[$object] = $this->extractEntity(entity: $object);
 
-        
-        return $this->serializedEntities[$object];
+        return Value::array($this->serializedEntities->offsetGet($object));
     }
 
     private function extractEntity(object $entity): array
@@ -60,8 +58,7 @@ class EntityExtractor implements ExtractionInterface
         }
 
         if ($entity instanceof JsonSerializable) {
-            /** @psalm-var array<array-key, mixed> */
-            return $entity->jsonSerialize();
+            return Value::array($entity->jsonSerialize());
         }
 
         if ($entity instanceof ArrayObject) {

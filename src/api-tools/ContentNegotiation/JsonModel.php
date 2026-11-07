@@ -8,9 +8,11 @@ use Jield\ApiTools\Hal\Collection as HalCollection;
 use Jield\ApiTools\Hal\Entity as HalEntity;
 use Jield\Mvc\View\Model\JsonModel as BaseJsonModel;
 use Jield\Stdlib\Json;
+use Jield\Stdlib\Value;
 use JsonSerializable;
 use Override;
 
+use Traversable;
 use function json_last_error;
 
 use const JSON_ERROR_CTRL_CHAR;
@@ -26,7 +28,7 @@ class JsonModel extends BaseJsonModel
      *
      * Overrides parent to extract variables from JsonSerializable objects.
      *
-     * @param array|\Traversable|JsonSerializable $variables
+     * @param array|Traversable|JsonSerializable $variables
      * @param bool $overwrite
      * @return static
      */
@@ -38,7 +40,7 @@ class JsonModel extends BaseJsonModel
             $variables = $variables->jsonSerialize();
         }
 
-        return parent::setVariables(variables: \Jield\Stdlib\Value::namedValues($variables), overwrite: $overwrite);
+        return parent::setVariables(variables: Value::namedValues($variables), overwrite: $overwrite);
     }
 
     /**

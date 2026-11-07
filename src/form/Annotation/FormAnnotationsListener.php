@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Jield\Form\Annotation;
 
+use Jield\Stdlib\Value;
 use Laminas\EventManager\EventInterface;
 use Laminas\EventManager\EventManagerInterface;
 
@@ -54,15 +55,13 @@ final class FormAnnotationsListener extends AbstractAnnotationsListener
      */
     public function handleAttributesAnnotation(EventInterface $e): void
     {
-        /** @var mixed $annotation */
         $annotation = $e->getParam('annotation');
         if (!$annotation instanceof Attributes) {
             return;
         }
 
-        /** @var mixed $formSpec */
         $formSpec = $e->getParam('formSpec');
-        \Jield\Stdlib\Value::setPath($formSpec, ['attributes'], $annotation->getAttributes());
+        Value::setPath($formSpec, ['attributes'], $annotation->getAttributes());
     }
 
     /**
@@ -72,15 +71,13 @@ final class FormAnnotationsListener extends AbstractAnnotationsListener
      */
     public function handleFlagsAnnotation(EventInterface $e): void
     {
-        /** @var mixed $annotation */
         $annotation = $e->getParam('annotation');
         if (!$annotation instanceof Flags) {
             return;
         }
 
-        /** @var mixed $formSpec */
         $formSpec = $e->getParam('formSpec');
-        \Jield\Stdlib\Value::setPath($formSpec, ['flags'], $annotation->getFlags());
+        Value::setPath($formSpec, ['flags'], $annotation->getFlags());
     }
 
     /**
@@ -90,15 +87,13 @@ final class FormAnnotationsListener extends AbstractAnnotationsListener
      */
     public function handleHydratorAnnotation(EventInterface $e): void
     {
-        /** @var mixed $annotation */
         $annotation = $e->getParam('annotation');
         if (!$annotation instanceof Hydrator) {
             return;
         }
 
-        /** @var mixed $formSpec */
         $formSpec = $e->getParam('formSpec');
-        \Jield\Stdlib\Value::setPath($formSpec, ['hydrator'], $annotation->getHydratorSpecification());
+        Value::setPath($formSpec, ['hydrator'], $annotation->getHydratorSpecification());
     }
 
     /**
@@ -108,15 +103,13 @@ final class FormAnnotationsListener extends AbstractAnnotationsListener
      */
     public function handleInputFilterAnnotation(EventInterface $e): void
     {
-        /** @var mixed $annotation */
         $annotation = $e->getParam('annotation');
         if (!$annotation instanceof InputFilter) {
             return;
         }
 
-        /** @var mixed $formSpec */
         $formSpec = $e->getParam('formSpec');
-        \Jield\Stdlib\Value::setPath($formSpec, ['input_filter'], $annotation->getInputFilter());
+        Value::setPath($formSpec, ['input_filter'], $annotation->getInputFilter());
     }
 
     /**
@@ -126,15 +119,13 @@ final class FormAnnotationsListener extends AbstractAnnotationsListener
      */
     public function handleInstanceAnnotation(EventInterface $e): void
     {
-        /** @var mixed $annotation */
         $annotation = $e->getParam('annotation');
         if (!$annotation instanceof Instance) {
             return;
         }
 
-        /** @var mixed $formSpec */
         $formSpec = $e->getParam('formSpec');
-        \Jield\Stdlib\Value::setPath($formSpec, ['object'], $annotation->getInstance());
+        Value::setPath($formSpec, ['object'], $annotation->getInstance());
     }
 
     /**
@@ -144,15 +135,13 @@ final class FormAnnotationsListener extends AbstractAnnotationsListener
      */
     public function handleOptionsAnnotation(EventInterface $e): void
     {
-        /** @var mixed $annotation */
         $annotation = $e->getParam('annotation');
         if (!$annotation instanceof Options) {
             return;
         }
 
-        /** @var mixed $formSpec */
         $formSpec = $e->getParam('formSpec');
-        \Jield\Stdlib\Value::setPath($formSpec, ['options'], $annotation->getOptions());
+        Value::setPath($formSpec, ['options'], $annotation->getOptions());
     }
 
     /**
@@ -162,15 +151,13 @@ final class FormAnnotationsListener extends AbstractAnnotationsListener
      */
     public function handleTypeAnnotation(EventInterface $e): void
     {
-        /** @var mixed $annotation */
         $annotation = $e->getParam('annotation');
         if (!$annotation instanceof Type) {
             return;
         }
 
-        /** @var mixed $formSpec */
         $formSpec = $e->getParam('formSpec');
-        \Jield\Stdlib\Value::setPath($formSpec, ['type'], $annotation->getType());
+        Value::setPath($formSpec, ['type'], $annotation->getType());
     }
 
     /**
@@ -180,14 +167,12 @@ final class FormAnnotationsListener extends AbstractAnnotationsListener
      */
     public function handleValidationGroupAnnotation(EventInterface $e): void
     {
-        /** @var mixed $annotation */
         $annotation = $e->getParam('annotation');
         if (!$annotation instanceof ValidationGroup) {
             return;
         }
 
-        /** @var mixed $formSpec */
         $formSpec = $e->getParam('formSpec');
-        \Jield\Stdlib\Value::setPath($formSpec, ['validation_group'], $annotation->getValidationGroup());
+        Value::setPath($formSpec, ['validation_group'], $annotation->getValidationGroup());
     }
 }

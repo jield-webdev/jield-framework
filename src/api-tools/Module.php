@@ -33,10 +33,18 @@ use Jield\ModuleManager\Feature\ConfigProviderInterface;
 use Jield\Mvc\ApplicationInterface;
 use Jield\Mvc\MvcEvent;
 use Jield\Mvc\ResponseSender\SendResponseEvent;
+use Jield\Mvc\SendResponseListener;
+use Jield\Mvc\View\Http\JsonStrategy;
 use Jield\Mvc\View\Model\JsonModel;
+use Jield\Stdlib\Service;
+use Jield\Stdlib\Value;
+use Laminas\Authentication\AuthenticationService;
+use Laminas\Authentication\AuthenticationServiceInterface;
 use Laminas\ConfigAggregator\ConfigAggregator;
 use Laminas\EventManager\EventInterface;
 use Laminas\EventManager\EventManager;
+use Laminas\EventManager\EventManagerInterface;
+use Laminas\EventManager\SharedEventManagerInterface;
 use Laminas\Http\Request as HttpRequest;
 use Laminas\ServiceManager\ServiceManager;
 use Laminas\Stdlib\DispatchableInterface;
@@ -58,7 +66,10 @@ final class Module implements ConfigProviderInterface, BootstrapListenerInterfac
 
     public function init($moduleManager): void
     {
-        $this->getPrototypeRouteListener()->attach(events: \Jield\Stdlib\Value::instance(\Jield\Stdlib\Value::call($moduleManager, 'getEventManager'), \Laminas\EventManager\EventManagerInterface::class));
+        $this->getPrototypeRouteListener()->attach(events: Value::instance(
+            Value::call($moduleManager, 'getEventManager'),
+            EventManagerInterface::class,
+        ));
     }
 
     #[Override]
@@ -68,139 +79,171 @@ final class Module implements ConfigProviderInterface, BootstrapListenerInterfac
         $app = $e->getParam(name: 'application');
 
         /** @var ServiceManager $serviceManager */
-        $serviceManager = \Jield\Stdlib\Value::call($app, 'getServiceManager');
+        $serviceManager = Value::call($app, 'getServiceManager');
         /** @var EventManager $eventManager */
-        $eventManager = \Jield\Stdlib\Value::call($app, 'getEventManager');
+        $eventManager = Value::call($app, 'getEventManager');
 
-        \Jield\Stdlib\Service::get($serviceManager, \Jield\ApiTools\Versioning\AcceptListener::class)->attach($eventManager);
-        \Jield\Stdlib\Service::get($serviceManager, \Jield\ApiTools\Versioning\ContentTypeListener::class)->attach($eventManager);
-        \Jield\Stdlib\Service::get($serviceManager, VersionListener::class)->attach($eventManager);
+        Service::get($serviceManager, \Jield\ApiTools\Versioning\AcceptListener::class)->attach(
+            $eventManager,
+        );
+        Service::get($serviceManager, \Jield\ApiTools\Versioning\ContentTypeListener::class)->attach(
+            $eventManager,
+        );
+        Service::get($serviceManager, VersionListener::class)->attach($eventManager);
 
         //ApiProblem
-        \Jield\Stdlib\Service::get($serviceManager, ApiProblemListener::class)->attach($eventManager);
-        \Jield\Stdlib\Service::get($serviceManager, ApiProblemStrategy::class)->attach($eventManager, 400);
-        \Jield\Stdlib\Service::get($serviceManager, HalJsonStrategy::class)->attach($eventManager, 300);
+        Service::get($serviceManager, ApiProblemListener::class)->attach($eventManager);
+        Service::get($serviceManager, ApiProblemStrategy::class)->attach($eventManager, 400);
+        Service::get($serviceManager, HalJsonStrategy::class)->attach($eventManager, 300);
 
-        $sendResponseListener = \Jield\Stdlib\Service::get($serviceManager, \Jield\Mvc\SendResponseListener::class, 'SendResponseListener');
+        $sendResponseListener = Service::get(
+            $serviceManager,
+            SendResponseListener::class,
+            'SendResponseListener',
+        );
         $sendResponseListener->getEventManager()->attach(
             SendResponseEvent::EVENT_SEND_RESPONSE,
-            \Jield\Stdlib\Service::get($serviceManager, SendApiProblemResponseListener::class),
+            Service::get($serviceManager, SendApiProblemResponseListener::class),
             -500,
         );
 
         $eventManager->attach(
             eventName: MvcEvent::EVENT_ROUTE,
-            listener: \Jield\Stdlib\Service::get($serviceManager, ContentTypeListener::class),
+            listener: Service::get($serviceManager, ContentTypeListener::class),
             priority: -625,
         );
 
-        \Jield\Stdlib\Service::get($serviceManager, AcceptFilterListener::class)->attach($eventManager);
-        \Jield\Stdlib\Service::get($serviceManager, ContentTypeFilterListener::class)->attach($eventManager);
+        Service::get($serviceManager, AcceptFilterListener::class)->attach($eventManager);
+        Service::get($serviceManager, ContentTypeFilterListener::class)->attach($eventManager);
 
-        $contentNegotiationOptions = \Jield\Stdlib\Service::get($serviceManager, ContentNegotiationOptions::class);
+        $contentNegotiationOptions = Service::get($serviceManager, ContentNegotiationOptions::class);
         if ($contentNegotiationOptions->getXHttpMethodOverrideEnabled()) {
-            \Jield\Stdlib\Service::get($serviceManager, HttpMethodOverrideListener::class)->attach($eventManager);
+            Service::get($serviceManager, HttpMethodOverrideListener::class)->attach($eventManager);
         }
 
         $sharedEventManager = $eventManager->getSharedManager();
-        \Jield\Stdlib\Value::present($sharedEventManager)->attach(
+        Value::present($sharedEventManager)->attach(
             DispatchableInterface::class,
             MvcEvent::EVENT_DISPATCH,
-            listener: \Jield\Stdlib\Service::get($serviceManager, AcceptListener::class),
+            listener: Service::get($serviceManager, AcceptListener::class),
             priority: -10,
         );
 
         $eventManager->attach(
             eventName: MvcAuthEvent::EVENT_AUTHENTICATION_POST,
-            listener: \Jield\Stdlib\Service::get($serviceManager, MvcAuth\UnauthenticatedListener::class),
+            listener: Service::get($serviceManager, MvcAuth\UnauthenticatedListener::class),
             priority: 100,
         );
         $eventManager->attach(
             eventName: MvcAuthEvent::EVENT_AUTHORIZATION_POST,
-            listener: \Jield\Stdlib\Service::get($serviceManager, MvcAuth\UnauthorizedListener::class),
+            listener: Service::get($serviceManager, MvcAuth\UnauthorizedListener::class),
             priority: 100,
         );
         $eventManager->attach(eventName: MvcEvent::EVENT_RENDER, listener: $this->onRenderMain(...), priority: 400);
 
-        \Jield\Stdlib\Service::get($serviceManager, ContentValidationListener::class)->attach($eventManager);
+        Service::get($serviceManager, ContentValidationListener::class)->attach($eventManager);
 
         if ($e instanceof MvcEvent && $e->getRequest() instanceof HttpRequest) {
-            $authentication = \Jield\Stdlib\Service::get($serviceManager, \Laminas\Authentication\AuthenticationServiceInterface::class, 'authentication');
+            $authentication = Service::get(
+                $serviceManager,
+                AuthenticationServiceInterface::class,
+                'authentication',
+            );
             $mvcAuthEvent = new MvcAuthEvent(
                 mvcEvent: $e,
                 authentication: $authentication,
                 authorization: $serviceManager->get('authorization'),
             );
 
-            new MvcRouteListener(mvcAuthEvent: $mvcAuthEvent, events: $eventManager, authentication: \Jield\Stdlib\Value::instance($authentication, \Laminas\Authentication\AuthenticationService::class));
+            new MvcRouteListener(
+                mvcAuthEvent: $mvcAuthEvent,
+                events: $eventManager,
+                authentication: Value::instance(
+                    $authentication,
+                    AuthenticationService::class,
+                ),
+            );
 
-            $eventManager->attach(
-                eventName: MvcAuthEvent::EVENT_AUTHENTICATION,
-                listener: \Jield\Stdlib\Service::get($serviceManager, DefaultAuthenticationListener::class),
-            );
-            $eventManager->attach(
-                eventName: MvcAuthEvent::EVENT_AUTHENTICATION_POST,
-                listener: \Jield\Stdlib\Service::get($serviceManager, DefaultAuthenticationPostListener::class),
-            );
+            $eventManager->attach(eventName: MvcAuthEvent::EVENT_AUTHENTICATION, listener: Service::get(
+                $serviceManager,
+                DefaultAuthenticationListener::class,
+            ));
+            $eventManager->attach(eventName: MvcAuthEvent::EVENT_AUTHENTICATION_POST, listener: Service::get(
+                $serviceManager,
+                DefaultAuthenticationPostListener::class,
+            ));
             $eventManager->attach(
                 eventName: MvcAuthEvent::EVENT_AUTHORIZATION,
-                listener: \Jield\Stdlib\Service::get($serviceManager, DefaultResourceResolverListener::class),
+                listener: Service::get($serviceManager, DefaultResourceResolverListener::class),
                 priority: 1000,
             );
-            $eventManager->attach(
-                eventName: MvcAuthEvent::EVENT_AUTHORIZATION,
-                listener: \Jield\Stdlib\Service::get($serviceManager, DefaultAuthorizationListener::class),
-            );
-            $eventManager->attach(
-                eventName: MvcAuthEvent::EVENT_AUTHORIZATION_POST,
-                listener: \Jield\Stdlib\Service::get($serviceManager, DefaultAuthorizationPostListener::class),
-            );
+            $eventManager->attach(eventName: MvcAuthEvent::EVENT_AUTHORIZATION, listener: Service::get(
+                $serviceManager,
+                DefaultAuthorizationListener::class,
+            ));
+            $eventManager->attach(eventName: MvcAuthEvent::EVENT_AUTHORIZATION_POST, listener: Service::get(
+                $serviceManager,
+                DefaultAuthorizationPostListener::class,
+            ));
         }
 
-        \Jield\Stdlib\Service::get($serviceManager, \Jield\ApiTools\Rest\Listener\OptionsListener::class)->attach($eventManager);
-        \Jield\Stdlib\Service::get($serviceManager, RestParametersListener::class)->attachShared(\Jield\Stdlib\Value::instance($sharedEventManager, \Laminas\EventManager\SharedEventManagerInterface::class));
+        Service::get($serviceManager, \Jield\ApiTools\Rest\Listener\OptionsListener::class)->attach(
+            $eventManager,
+        );
+        Service::get(
+            $serviceManager,
+            RestParametersListener::class,
+        )->attachShared(Value::instance(
+            $sharedEventManager,
+            SharedEventManagerInterface::class,
+        ));
 
         // Attach OptionsListener
-        $optionsListener = \Jield\Stdlib\Service::get($serviceManager, OptionsListener::class);
-        $optionsListener->attach(\Jield\Stdlib\Value::instance(\Jield\Stdlib\Value::call($app, 'getEventManager'), \Laminas\EventManager\EventManagerInterface::class));
+        $optionsListener = Service::get($serviceManager, OptionsListener::class);
+        $optionsListener->attach(Value::instance(
+            Value::call($app, 'getEventManager'),
+            EventManagerInterface::class,
+        ));
 
         // Setup json strategy
-        $strategy = \Jield\Stdlib\Service::get($serviceManager, \Jield\Mvc\View\Http\JsonStrategy::class, 'ViewJsonStrategy');
+        $strategy = Service::get(
+            $serviceManager,
+            JsonStrategy::class,
+            'ViewJsonStrategy',
+        );
         $strategy->attach($eventManager, 100);
     }
 
     public function onRenderMain(MvcEvent $e): void
     {
-        /** @var mixed $result */
         $result = $e->getResult();
         if (!$result instanceof JsonModel) {
             return;
         }
 
         $app = $e->getApplication();
-        $services = \Jield\Stdlib\Value::present($app)->getServiceManager();
-        $events = \Jield\Stdlib\Value::present($app)->getEventManager();
-        \Jield\Stdlib\Service::get($services, RenderErrorListener::class)->attach($events);
+        $services = Value::present($app)->getServiceManager();
+        $events = Value::present($app)->getEventManager();
+        Service::get($services, RenderErrorListener::class)->attach($events);
     }
 
     public function onRenderApiProblem(MvcEvent $e): void
     {
         $app = $e->getApplication();
-        $services = \Jield\Stdlib\Value::present($app)->getServiceManager();
+        $services = Value::present($app)->getServiceManager();
 
         if ($services->has('View')) {
-            $view = \Jield\Stdlib\Service::get($services, \Laminas\View\View::class, 'View');
-            $events = \Jield\Stdlib\Value::present($app)->getEventManager();
+            $view = Service::get($services, \Laminas\View\View::class, 'View');
+            $events = Value::present($app)->getEventManager();
 
             // register at high priority, to "beat" normal json strategy registered
             // via view manager, as well as HAL strategy.
-            \Jield\Stdlib\Service::get($services, ApiProblemStrategy::class)->attach($events, 400);
+            Service::get($services, ApiProblemStrategy::class)->attach($events, 400);
         }
     }
 
     public function onRenderHal(MvcEvent $e): void
     {
-        /** @var mixed $result */
         $result = $e->getResult();
         if (!$result instanceof HalJsonModel) {
             return;
@@ -209,14 +252,14 @@ final class Module implements ConfigProviderInterface, BootstrapListenerInterfac
         /** @var ApplicationInterface $application */
         $application = $e->getTarget();
         $services = $application->getServiceManager();
-        
-        $view = \Jield\Stdlib\Service::get($services, \Laminas\View\View::class, 'View');
+
+        $view = Service::get($services, \Laminas\View\View::class, 'View');
         $events = $application->getEventManager();
 
         // register at high priority, to "beat" normal json strategy registered
         // via view manager
-        
-        $halStrategy = \Jield\Stdlib\Service::get($services, HalJsonStrategy::class);
+
+        $halStrategy = Service::get($services, HalJsonStrategy::class);
         $halStrategy->attach(events: $events, priority: 200);
     }
 

@@ -8,6 +8,7 @@ use Exception;
 use Jield\Mvc\Application;
 use Jield\Mvc\MvcEvent;
 use Jield\Mvc\View\Model\ViewModel;
+use Jield\Stdlib\Value;
 use Laminas\EventManager\AbstractListenerAggregate;
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\Http\Response as HttpResponse;
@@ -51,9 +52,9 @@ class RouteNotFoundStrategy extends AbstractListenerAggregate
      */
     public function attach(EventManagerInterface $events, $priority = 1): void
     {
-        $this->listeners[] = $events->attach(MvcEvent::EVENT_DISPATCH, [$this, 'prepareNotFoundViewModel'], -90);
-        $this->listeners[] = $events->attach(MvcEvent::EVENT_DISPATCH_ERROR, [$this, 'detectNotFoundError']);
-        $this->listeners[] = $events->attach(MvcEvent::EVENT_DISPATCH_ERROR, [$this, 'prepareNotFoundViewModel']);
+        $this->listeners[] = $events->attach(MvcEvent::EVENT_DISPATCH, $this->prepareNotFoundViewModel(...), -90);
+        $this->listeners[] = $events->attach(MvcEvent::EVENT_DISPATCH_ERROR, $this->detectNotFoundError(...));
+        $this->listeners[] = $events->attach(MvcEvent::EVENT_DISPATCH_ERROR, $this->prepareNotFoundViewModel(...));
     }
 
     /**
@@ -143,8 +144,8 @@ class RouteNotFoundStrategy extends AbstractListenerAggregate
             case Application::ERROR_ROUTER_NO_MATCH:
                 $this->reason = $error;
                 $response = $e->getResponse();
-                
-                \Jield\Stdlib\Value::instance($response, \Laminas\Http\Response::class)->setStatusCode(404);
+
+                Value::instance($response, \Laminas\Http\Response::class)->setStatusCode(404);
                 break;
             default:
                 return;
@@ -158,7 +159,6 @@ class RouteNotFoundStrategy extends AbstractListenerAggregate
      */
     public function prepareNotFoundViewModel(MvcEvent $e): void
     {
-        /** @var mixed $vars */
         $vars = $e->getResult();
         if ($vars instanceof Response) {
             // Already have a response as the result
@@ -166,7 +166,7 @@ class RouteNotFoundStrategy extends AbstractListenerAggregate
         }
 
         $response = $e->getResponse();
-        if (\Jield\Stdlib\Value::instance($response, \Laminas\Http\Response::class)->getStatusCode() !== 404) {
+        if (Value::instance($response, \Laminas\Http\Response::class)->getStatusCode() !== 404) {
             // Only handle 404 responses
             return;
         }
@@ -185,7 +185,7 @@ class RouteNotFoundStrategy extends AbstractListenerAggregate
             }
         }
 
-        $model->setTemplate(\Jield\Stdlib\Value::nonEmptyString($this->getNotFoundTemplate()));
+        $model->setTemplate(Value::nonEmptyString($this->getNotFoundTemplate()));
 
         // If displaying reasons, inject the reason
         $this->injectNotFoundReason($model);
@@ -280,7 +280,6 @@ class RouteNotFoundStrategy extends AbstractListenerAggregate
                 return;
             }
 
-            /** @var mixed $controller */
             $controller = $routeMatch->getParam('controller', false);
             if (!$controller) {
                 return;

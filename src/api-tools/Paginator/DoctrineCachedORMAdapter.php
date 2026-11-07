@@ -6,6 +6,7 @@ namespace Jield\ApiTools\Paginator;
 
 use Doctrine\ORM\QueryBuilder;
 use Jield\ApiTools\Provider\ProviderInterface;
+use Jield\Stdlib\Value;
 use Laminas\Cache\Storage\Adapter\AbstractAdapter;
 use Laminas\Paginator\Adapter\AdapterInterface;
 use Override;
@@ -17,9 +18,9 @@ class DoctrineCachedORMAdapter extends AbstractDoctrinePaginator implements Adap
 {
     public function __construct(
         QueryBuilder $query,
-        private ProviderInterface $provider,
-        private AbstractAdapter $cache,
-        private string $cacheKey,
+        private readonly ProviderInterface $provider,
+        private readonly AbstractAdapter $cache,
+        private readonly string $cacheKey,
     ) {
         parent::__construct($query, true);
     }
@@ -47,6 +48,6 @@ class DoctrineCachedORMAdapter extends AbstractDoctrinePaginator implements Adap
             $this->cache->setItem($cacheKey, $results);
         }
 
-        return \Jield\Stdlib\Value::array($this->cache->getItem($cacheKey));
+        return Value::array($this->cache->getItem($cacheKey));
     }
 }

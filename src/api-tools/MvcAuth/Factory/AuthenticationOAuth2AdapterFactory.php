@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Jield\ApiTools\MvcAuth\Factory;
 
 use Jield\ApiTools\MvcAuth\Authentication\OAuth2Adapter;
+use Jield\Stdlib\Value;
 use Laminas\ServiceManager\Exception\ServiceNotCreatedException;
 use Psr\Container\ContainerInterface;
 
@@ -33,7 +34,7 @@ final class AuthenticationOAuth2AdapterFactory
 
         return new OAuth2Adapter(
             oauth2Server: OAuth2ServerFactory::factory(config: $config['storage'], container: $container),
-            types: \Jield\Stdlib\Value::nullableArrayOrString($type),
+            types: is_array($type) ? Value::strings($type) : $type,
         );
     }
 }

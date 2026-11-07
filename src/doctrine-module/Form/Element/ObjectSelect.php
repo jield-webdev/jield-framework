@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace DoctrineModule\Form\Element;
 
 use Jield\Form\Element\Select as SelectElement;
+use Jield\Stdlib\Value;
 use Laminas\Stdlib\ArrayUtils;
+use Override;
 use Traversable;
 
 use function array_map;
@@ -21,16 +23,16 @@ class ObjectSelect extends SelectElement
      *
      * @return static
      */
-    #[\Override]
+    #[Override]
     public function setOptions(iterable $options): static
     {
-        $this->getProxy()->setOptions(options: \Jield\Stdlib\Value::array($options));
+        $this->getProxy()->setOptions(options: Value::array($options));
 
         return parent::setOptions(options: $options);
     }
 
     /** @return $this */
-    #[\Override]
+    #[Override]
     public function setOption(string $key, mixed $value): static
     {
         $this->getProxy()->setOptions(options: [$key => $value]);
@@ -42,7 +44,7 @@ class ObjectSelect extends SelectElement
     /**
      * {@inheritDoc}
      */
-    #[\Override]
+    #[Override]
     public function setValue($value): static
     {
         $multiple = $this->getAttribute(key: 'multiple');
@@ -53,10 +55,13 @@ class ObjectSelect extends SelectElement
             } elseif ($value === null) {
                 return parent::setValue(value: []);
             } elseif (!is_array(value: $value)) {
-                $value = \Jield\Stdlib\Value::toArray($value);
+                $value = Value::toArray($value);
             }
 
-            return parent::setValue(value: array_map(callback: [$this->getProxy(), 'getValue'], array: \Jield\Stdlib\Value::array($value)));
+            return parent::setValue(value: array_map(
+                callback: [$this->getProxy(), 'getValue'],
+                array: Value::array($value),
+            ));
         }
 
         return parent::setValue(value: $this->getProxy()->getValue(value: $value));
@@ -65,9 +70,9 @@ class ObjectSelect extends SelectElement
     /**
      * {@inheritDoc}
      *
-     * @return array<array-key,mixed>
+     * @return ValueOptions
      */
-    #[\Override]
+    #[Override]
     public function getValueOptions(): array
     {
         if ($this->valueOptions !== []) {

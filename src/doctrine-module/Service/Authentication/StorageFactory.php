@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace DoctrineModule\Service\Authentication;
 
+use Doctrine\Persistence\ObjectManager;
 use DoctrineModule\Authentication\Storage\ObjectRepository;
 use DoctrineModule\Options\Authentication;
 use DoctrineModule\Service\AbstractFactory;
+use Jield\Stdlib\Value;
+use Laminas\Authentication\Storage\StorageInterface;
 use Psr\Container\ContainerInterface;
 use RuntimeException;
 
@@ -36,12 +39,18 @@ final class StorageFactory extends AbstractFactory
         /** @var mixed $objectManager */
         $objectManager = $containerOptions->getObjectManager();
         if (is_string(value: $objectManager)) {
-            $containerOptions->setObjectManager(objectManager: \Jield\Stdlib\Value::instanceOrString($container->get($objectManager), \Doctrine\Persistence\ObjectManager::class));
+            $containerOptions->setObjectManager(objectManager: Value::instanceOrString(
+                $container->get($objectManager),
+                ObjectManager::class,
+            ));
         }
 
         $storage = $containerOptions->getStorage();
         if (is_string(value: $storage)) {
-            $containerOptions->setStorage(storage: \Jield\Stdlib\Value::instanceOrString($container->get($storage), \Laminas\Authentication\Storage\StorageInterface::class));
+            $containerOptions->setStorage(storage: Value::instanceOrString(
+                $container->get($storage),
+                StorageInterface::class,
+            ));
         }
 
         return new ObjectRepository(options: $containerOptions);

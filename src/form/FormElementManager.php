@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Jield\Form;
 
+use Jield\Stdlib\Service;
+use Jield\Stdlib\Value;
 use Laminas\Hydrator\HydratorInterface;
 use Laminas\Hydrator\HydratorPluginManager;
 use Laminas\InputFilter\InputFilterPluginManager;
 use Laminas\ServiceManager\AbstractPluginManager;
 use Laminas\ServiceManager\Exception\InvalidServiceException;
+use Laminas\ServiceManager\ServiceManager;
 use Laminas\Stdlib\InitializableInterface;
 use Psr\Container\ContainerInterface;
 
@@ -24,8 +27,8 @@ use function sprintf;
  *
  * @final
  * @extends AbstractPluginManager<ElementInterface>
- * @psalm-import-type FactoriesConfiguration from \Laminas\ServiceManager\ServiceManager
-  * @psalm-import-type ServiceManagerConfiguration from \Laminas\ServiceManager\ServiceManager
+ * @psalm-import-type FactoriesConfiguration from ServiceManager
+ * @psalm-import-type ServiceManagerConfiguration from ServiceManager
  */
 class FormElementManager extends AbstractPluginManager
 {
@@ -148,19 +151,16 @@ class FormElementManager extends AbstractPluginManager
         Element\Week::class => ElementFactory::class,
     ];
 
-    /**
-     * Don't share form elements by default (v3)
-     *
-     * @var bool
-     */
-    protected readonly ContainerInterface $creationContext;
-
-    public function __construct(ContainerInterface $creationContext, array $config = [])
-    {
-        $this->creationContext = $creationContext;
+    public function __construct(
+        /**
+         * Don't share form elements by default (v3)
+         */
+        protected readonly ContainerInterface $creationContext,
+        array $config = [],
+    ) {
         /** @var ServiceManagerConfiguration $managerConfiguration */
         $managerConfiguration = $config;
-        parent::__construct($creationContext, $managerConfiguration);
+        parent::__construct($this->creationContext, $managerConfiguration);
     }
 
     protected bool $sharedByDefault = false;
@@ -189,11 +189,13 @@ class FormElementManager extends AbstractPluginManager
 
         /** @var mixed $factory */
         $factory = $instance->getFormFactory();
-        \Jield\Stdlib\Value::call($factory, 'setFormElementManager', [$this]);
+        Value::call($factory, 'setFormElementManager', [$this]);
 
         if ($container->has(InputFilterPluginManager::class)) {
-            $inputFilters = \Jield\Stdlib\Service::get($container, InputFilterPluginManager::class);
-            \Jield\Stdlib\Value::call($factory, 'setInputFilterFactory', [\Jield\Form\InputFilterFactory::create($container)]);
+            $inputFilters = Service::get($container, InputFilterPluginManager::class);
+            Value::call($factory, 'setInputFilterFactory', [\Jield\Form\InputFilterFactory::create(
+                $container,
+            )]);
         }
     }
 
@@ -266,10 +268,11 @@ class FormElementManager extends AbstractPluginManager
      */
     public function configure(array $config): static
     {
-        $config['initializers'] = array_merge([[$this, 'injectFactory']], $config['initializers'] ?? [], [[
-            $this,
-            'callElementInit',
-        ]]);
+        $config['initializers'] = array_merge(
+            [$this->injectFactory(...)],
+            $config['initializers'] ?? [],
+            [$this->callElementInit(...)],
+        );
         parent::configure($config);
         return $this;
     }
@@ -299,7 +302,9 @@ class FormElementManager extends AbstractPluginManager
 
             $this->setInvokableClass(name: $id, class: $id);
         }
-        return $options === null ? parent::get($id) : parent::build($id, $options);
+        /** @var ($id is class-string<ElementInterface> ? T : ElementInterface) $element */
+        $element = $options === null ? parent::get($id) : parent::build($id, $options);
+        return $element;
     }
 
     /**
@@ -315,7 +320,7 @@ class FormElementManager extends AbstractPluginManager
         $services = $this->creationContext;
 
         if ($services->has(HydratorPluginManager::class)) {
-            $hydrators = \Jield\Stdlib\Service::get($services, HydratorPluginManager::class);
+            $hydrators = Service::get($services, HydratorPluginManager::class);
             if ($hydrators->has($hydratorName)) {
                 return $hydrators->get($hydratorName);
             }
@@ -332,7 +337,7 @@ class FormElementManager extends AbstractPluginManager
             ));
         }
 
-        return \Jield\Stdlib\Value::instantiate($hydratorName);
+        return Value::instantiate($hydratorName);
     }
 
     /**
@@ -356,6 +361,6 @@ class FormElementManager extends AbstractPluginManager
             ));
         }
 
-        return \Jield\Stdlib\Value::instantiate($factoryName);
+        return Value::instantiate($factoryName);
     }
 }

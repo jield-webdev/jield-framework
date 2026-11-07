@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Jield\ApiTools\OAuth2;
 
+use SensitiveParameter;
+
 final readonly class IssuedAccessToken
 {
     public function __construct(
-        #[\SensitiveParameter]
+        #[SensitiveParameter]
         public string $accessToken,
         public int $issuedAt,
         public int $expiresAt,

@@ -9,7 +9,7 @@ use Laminas\EventManager\Event;
 /**
  * Custom event for use with module manager
  * Composes Module objects
- 
+ *
  *
  * @extends \Laminas\EventManager\Event<object|string|null, array<string, mixed>>
  */

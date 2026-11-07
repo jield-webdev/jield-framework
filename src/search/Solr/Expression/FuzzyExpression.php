@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace Jield\Search\Solr\Expression;
 
-use Jield\Search\Solr\ExpressionInterface;
-
 use JetBrains\PhpStorm\Pure;
+use Jield\Search\Solr\ExpressionInterface;
 use Jield\Search\Solr\Util;
 use Stringable;
 

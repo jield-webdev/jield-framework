@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Jield\ApiTools\Hal\Metadata;
 
 use Jield\ApiTools\Hal\Exception;
+use Jield\Stdlib\Value;
 use Laminas\Filter\FilterChain;
 use Laminas\Hydrator\ExtractionInterface;
 use Laminas\Hydrator\HydratorPluginManager;
@@ -136,7 +137,6 @@ class Metadata
      */
     public function __construct(string $class, array $options = [], ?HydratorPluginManagerInterface $hydrators = null)
     {
-
         if (!class_exists(class: $class)) {
             throw new Exception\InvalidArgumentException(message: sprintf(
                 'Class provided to %s must exist; received "%s"',
@@ -154,9 +154,7 @@ class Metadata
         /** @var string|bool $legacyIdentifierName */
         $legacyIdentifierName = false;
 
-        /** @var mixed $value */
         foreach ($options as $key => $value) {
-            /** @var string $filteredKey */
             $filteredKey = strtolower(str_replace('_', '', (string) $key));
 
             if ($filteredKey === 'class') {
@@ -180,14 +178,13 @@ class Metadata
 
             // Fix BC issue: s/identifier_name/route_identifier_name/
             if ($filteredKey === 'identifiername') {
-                /** @var mixed $legacyIdentifierName */
                 $legacyIdentifierName = $value;
                 continue;
             }
 
             $method = 'set' . $filteredKey;
             if (method_exists(object_or_class: $this, method: $method)) {
-                \Jield\Stdlib\Value::call($this, $method, [$value], scope: self::class);
+                Value::call($this, $method, [$value], scope: self::class);
             } else {
                 throw new Exception\InvalidArgumentException(message: sprintf(
                     'Unhandled option passed to Metadata constructor: %s %s',
@@ -285,9 +282,9 @@ class Metadata
     {
         if (null === $this->entityRoute) {
             if ($this->hasRoute()) {
-                $this->setEntityRoute(route: \Jield\Stdlib\Value::string($this->getRoute()));
+                $this->setEntityRoute(route: Value::string($this->getRoute()));
             } else {
-                $this->setEntityRoute(route: \Jield\Stdlib\Value::string($this->getUrl()));
+                $this->setEntityRoute(route: Value::string($this->getUrl()));
             }
         }
 
@@ -411,7 +408,7 @@ class Metadata
                 $hydrator = $this->hydrators->get($hydrator);
             } elseif (class_exists(class: $hydrator)) {
                 /** @var ExtractionInterface $hydrator */
-                $hydrator = \Jield\Stdlib\Value::instantiate($hydrator);
+                $hydrator = Value::instantiate($hydrator);
             }
         }
 

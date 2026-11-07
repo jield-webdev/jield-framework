@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Jield\AssetManager\Service;
 
+use Jield\Stdlib\Value;
 use Laminas\ServiceManager\Factory\FactoryInterface;
+use Laminas\ServiceManager\ServiceLocatorInterface;
 use Override;
 use Psr\Container\ContainerInterface;
 
@@ -23,14 +25,18 @@ class AssetCacheManagerServiceFactory implements FactoryInterface
     {
         $config = [];
 
-        /** @var mixed $globalConfig */
         $globalConfig = $container->get('config');
 
         if (!empty($globalConfig['asset_manager']['caching'])) {
-            /** @var mixed $config */
             $config = $globalConfig['asset_manager']['caching'];
         }
 
-        return new AssetCacheManager(container: \Jield\Stdlib\Value::instance($container, \Laminas\ServiceManager\ServiceLocatorInterface::class), config: \Jield\Stdlib\Value::array($config));
+        return new AssetCacheManager(
+            container: Value::instance(
+                $container,
+                ServiceLocatorInterface::class,
+            ),
+            config: Value::array($config),
+        );
     }
 }

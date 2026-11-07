@@ -4,15 +4,18 @@ declare(strict_types=1);
 
 namespace Jield\Mvc\View\Model;
 
+use InvalidArgumentException;
+use Jield\Stdlib\Value;
+
 class JsonModel extends ViewModel
 {
     protected ?string $jsonpCallback = null;
-    protected array $options = [];
 
-    public function __construct(iterable $variables = [], array $options = [])
-    {
-        parent::__construct(\Jield\Stdlib\Value::namedValues($variables));
-        $this->options = $options;
+    public function __construct(
+        iterable $variables = [],
+        protected array $options = [],
+    ) {
+        parent::__construct(Value::namedValues($variables));
         parent::setTerminal(true);
     }
 
@@ -30,7 +33,7 @@ class JsonModel extends ViewModel
     public function setJsonpCallback(?string $callback): static
     {
         if ($callback !== null && !preg_match('/^[a-zA-Z_$][a-zA-Z0-9_$.]*$/D', $callback)) {
-            throw new \InvalidArgumentException('Invalid JSONP callback.');
+            throw new InvalidArgumentException('Invalid JSONP callback.');
         }
         $this->jsonpCallback = $callback;
         return $this;

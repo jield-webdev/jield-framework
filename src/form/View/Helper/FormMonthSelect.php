@@ -9,6 +9,7 @@ use Jield\Form\Element\MonthSelect as MonthSelectElement;
 use Jield\Form\ElementInterface;
 use Jield\Form\Exception;
 
+use Jield\Stdlib\Value;
 use function is_numeric;
 use function sprintf;
 
@@ -73,7 +74,7 @@ class FormMonthSelect extends AbstractFormDateSelect
         unset($pattern['day']);
         unset($pattern[0]);
 
-        $monthsOptions = $this->getMonthsOptions(pattern: \Jield\Stdlib\Value::string($pattern['month']));
+        $monthsOptions = $this->getMonthsOptions(pattern: Value::string($pattern['month']));
         $yearOptions = $this->getYearsOptions(minYear: $element->getMinYear(), maxYear: $element->getMaxYear());
 
         $monthElement = $element->getMonthElement()->setValueOptions(options: $monthsOptions);
@@ -86,14 +87,13 @@ class FormMonthSelect extends AbstractFormDateSelect
 
         $data = [];
         $data[$pattern['month']] = $selectHelper->render(element: $monthElement);
-        $data[\Jield\Stdlib\Value::key($pattern['year'])] = $selectHelper->render(element: $yearElement);
+        $data[Value::key($pattern['year'])] = $selectHelper->render(element: $yearElement);
 
         $markup = '';
-        /** @var mixed $value */
         foreach ($pattern as $key => $value) {
             // Delimiter
             if (is_numeric(value: $key)) {
-                $markup .= \Jield\Stdlib\Value::stringify($value);
+                $markup .= Value::stringify($value);
             } else {
                 $markup .= $data[$value];
             }

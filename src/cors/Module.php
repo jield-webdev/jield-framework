@@ -25,6 +25,7 @@ use Jield\Cors\Mvc\CorsRequestListener;
 use Jield\ModuleManager\Feature\BootstrapListenerInterface;
 use Jield\ModuleManager\Feature\ConfigProviderInterface;
 use Jield\Mvc\Application;
+use Jield\Stdlib\Service;
 use Laminas\EventManager\EventInterface;
 
 /**
@@ -42,8 +43,7 @@ class Module implements BootstrapListenerInterface, ConfigProviderInterface
         $serviceManager = $application->getServiceManager();
         $eventManager = $application->getEventManager();
 
-        
-        $listener = \Jield\Stdlib\Service::get($serviceManager, CorsRequestListener::class);
+        $listener = Service::get($serviceManager, CorsRequestListener::class);
         $listener->attach($eventManager);
     }
 

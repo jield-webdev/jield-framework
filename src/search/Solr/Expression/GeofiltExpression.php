@@ -11,7 +11,7 @@ use function array_merge;
 
 class GeofiltExpression extends Expression implements Stringable
 {
-    private int $distance;
+    private readonly int $distance;
 
     /**
      * @param mixed[] $additionalParams

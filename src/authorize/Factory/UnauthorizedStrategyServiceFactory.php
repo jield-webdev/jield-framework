@@ -6,6 +6,9 @@ namespace Jield\Authorize\Factory;
 
 use Jield\Authorize\Config;
 use Jield\Authorize\View\UnauthorizedStrategy;
+use Jield\Stdlib\Service;
+use Jield\Stdlib\Value;
+use Laminas\Authentication\AuthenticationService;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Psr\Container\ContainerInterface;
 
@@ -24,12 +27,15 @@ class UnauthorizedStrategyServiceFactory implements FactoryInterface
         $requestedName,
         ?array $options = null,
     ): UnauthorizedStrategy {
-        $config = \Jield\Stdlib\Value::array($container->get(Config::class));
+        $config = Value::array($container->get(Config::class));
         $strategy = new UnauthorizedStrategy(
-            authenticationService: \Jield\Stdlib\Service::get($container, \Laminas\Authentication\AuthenticationService::class),
+            authenticationService: Service::get(
+                $container,
+                AuthenticationService::class,
+            ),
             config: $config,
         );
-        $strategy->setTemplate(\Jield\Stdlib\Value::string($config['template']));
+        $strategy->setTemplate(Value::string($config['template']));
         return $strategy;
     }
 }

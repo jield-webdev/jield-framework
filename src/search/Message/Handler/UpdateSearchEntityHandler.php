@@ -8,16 +8,17 @@ use Doctrine\ORM\EntityManager;
 use Jield\Search\Entity\HasSearchInterface;
 use Jield\Search\Message\UpdateSearchEntityMessage;
 use Jield\Search\Service\AbstractSearchService;
+use Jield\Stdlib\Value;
 use Psr\Container\ContainerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 use Webmozart\Assert\Assert;
 
 #[AsMessageHandler]
-final class UpdateSearchEntityHandler
+final readonly class UpdateSearchEntityHandler
 {
     public function __construct(
-        private readonly ContainerInterface $container,
-        private readonly EntityManager $entityManager,
+        private ContainerInterface $container,
+        private EntityManager $entityManager,
     ) {}
 
     public function __invoke(UpdateSearchEntityMessage $updateSearchEntityMessage): int
@@ -31,14 +32,14 @@ final class UpdateSearchEntityHandler
 
         //Just use the entityManager to get the entity
         /** @var HasSearchInterface $entity */
-        $entity = $this->entityManager->getRepository(className: \Jield\Stdlib\Value::classString($entityClassName))->find(id: $entityId);
+        $entity = $this->entityManager
+            ->getRepository(className: Value::classString($entityClassName))
+            ->find(id: $entityId);
 
-
-        /** @var mixed $searchService */
         foreach ($searchServices as $searchService) {
             //I have to tell the system which search service we have to take (to have the correct connection)
             /** @var AbstractSearchService $searchServiceInstance */
-            $searchServiceInstance = $this->container->get(\Jield\Stdlib\Value::string($searchService));
+            $searchServiceInstance = $this->container->get(Value::string($searchService));
             $searchServiceInstance->updateEntity(entity: $entity);
         }
 

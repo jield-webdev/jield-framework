@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Jield\ApiTools\ApiProblem\Factory;
 
 use Jield\ApiTools\ApiProblem\Listener\ApiProblemListener;
+use Jield\Stdlib\Value;
 use Psr\Container\ContainerInterface;
 
 class ApiProblemListenerFactory
@@ -15,15 +16,13 @@ class ApiProblemListenerFactory
         $config = [];
 
         if ($container->has('config')) {
-            /** @var mixed $config */
             $config = $container->get('config');
         }
 
         if (isset($config['api-tools-api-problem']['accept_filters'])) {
-            /** @var mixed $filters */
             $filters = $config['api-tools-api-problem']['accept_filters'];
         }
 
-        return new ApiProblemListener(filters: \Jield\Stdlib\Value::nullableArrayOrString($filters));
+        return new ApiProblemListener(filters: Value::nullableArrayOrString($filters));
     }
 }

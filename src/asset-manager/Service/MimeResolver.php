@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Jield\AssetManager\Service;
 
+use Jield\Stdlib\Value;
+
 /**
  * File extension based MIME detector.
  */
@@ -565,7 +567,7 @@ class MimeResolver
     {
         $extension = strtolower(string: pathinfo(path: $filename, flags: PATHINFO_EXTENSION));
 
-        return \Jield\Stdlib\Value::string($this->mimeTypes[$extension] ?? 'text/plain');
+        return Value::string($this->mimeTypes[$extension] ?? 'text/plain');
     }
 
     /**

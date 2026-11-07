@@ -22,6 +22,8 @@ final class IsFloat extends AbstractValidator
         'type' => 'type',
     ];
 
+    // AbstractValidator reads this property through the messageVariables map.
+    // @mago-expect analysis:write-only-property
     protected ?string $type = null;
 
     public function isValid(mixed $value): bool

@@ -6,7 +6,11 @@ namespace Jield\Mvc\Factory;
 
 // phpcs:ignore
 use Jield\Mvc\Application;
+use Jield\Stdlib\Service;
+use Laminas\EventManager\EventManagerInterface;
 use Laminas\ServiceManager\Factory\FactoryInterface;
+use Laminas\Stdlib\RequestInterface;
+use Laminas\Stdlib\ResponseInterface;
 use Psr\Container\ContainerInterface;
 
 class ApplicationFactory implements FactoryInterface
@@ -25,9 +29,9 @@ class ApplicationFactory implements FactoryInterface
     {
         return new Application(
             $container,
-            \Jield\Stdlib\Service::get($container, \Laminas\EventManager\EventManagerInterface::class, 'EventManager'),
-            \Jield\Stdlib\Service::get($container, \Laminas\Stdlib\RequestInterface::class, 'Request'),
-            \Jield\Stdlib\Service::get($container, \Laminas\Stdlib\ResponseInterface::class, 'Response'),
+            Service::get($container, EventManagerInterface::class, 'EventManager'),
+            Service::get($container, RequestInterface::class, 'Request'),
+            Service::get($container, ResponseInterface::class, 'Response'),
         );
     }
 }

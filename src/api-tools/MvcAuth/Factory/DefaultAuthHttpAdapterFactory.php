@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Jield\ApiTools\MvcAuth\Factory;
 
+use Jield\Stdlib\Value;
 use Laminas\Authentication\Adapter\Http as HttpAuth;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Override;
@@ -27,7 +28,6 @@ class DefaultAuthHttpAdapterFactory implements FactoryInterface
             return false;
         }
 
-        /** @var mixed $config */
         $config = $container->get('config');
 
         // If no HTTP adapter configuration present, nothing to create
@@ -36,7 +36,7 @@ class DefaultAuthHttpAdapterFactory implements FactoryInterface
         }
 
         return HttpAdapterFactory::factory(
-            config: \Jield\Stdlib\Value::array($config['api-tools-mvc-auth']['authentication']['http']),
+            config: Value::array($config['api-tools-mvc-auth']['authentication']['http']),
             container: $container,
         );
     }

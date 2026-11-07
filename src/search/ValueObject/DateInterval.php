@@ -7,7 +7,7 @@ namespace Jield\Search\ValueObject;
 use DateTime;
 use JetBrains\PhpStorm\Pure;
 
-final class DateInterval
+final readonly class DateInterval
 {
     private const string DATE_FORMAT = 'd-m-Y'; //This has to match the format in the JS file
 
@@ -37,9 +37,9 @@ final class DateInterval
         }
 
         return (
-            (string) ($this->startDate?->format(format: self::DATE_FORMAT))
+            (string) $this->startDate?->format(format: self::DATE_FORMAT)
             . ' - '
-            . (string) ($this->endDate?->format(format: self::DATE_FORMAT))
+            . (string) $this->endDate?->format(format: self::DATE_FORMAT)
         );
     }
 

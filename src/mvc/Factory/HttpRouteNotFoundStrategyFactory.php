@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Jield\Mvc\Factory;
 
 // phpcs:ignore
+use ArrayAccess;
 use Jield\Mvc\Service\HttpViewManagerConfigTrait;
 use Jield\Mvc\View\Http\RouteNotFoundStrategy;
+use Jield\Stdlib\Value;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Psr\Container\ContainerInterface;
 
@@ -37,30 +39,30 @@ class HttpRouteNotFoundStrategyFactory implements FactoryInterface
     /**
      * Inject strategy with configured display_exceptions flag.
      */
-    private function injectDisplayExceptions(RouteNotFoundStrategy $strategy, array $config): void
+    private function injectDisplayExceptions(RouteNotFoundStrategy $strategy, array|ArrayAccess $config): void
     {
         /** @var mixed $flag */
         $flag = $config['display_exceptions'] ?? false;
-        $strategy->setDisplayExceptions(\Jield\Stdlib\Value::bool($flag));
+        $strategy->setDisplayExceptions(Value::bool($flag));
     }
 
     /**
      * Inject strategy with configured display_not_found_reason flag.
      */
-    private function injectDisplayNotFoundReason(RouteNotFoundStrategy $strategy, array $config): void
+    private function injectDisplayNotFoundReason(RouteNotFoundStrategy $strategy, array|ArrayAccess $config): void
     {
         /** @var mixed $flag */
         $flag = $config['display_not_found_reason'] ?? false;
-        $strategy->setDisplayNotFoundReason(\Jield\Stdlib\Value::bool($flag));
+        $strategy->setDisplayNotFoundReason(Value::bool($flag));
     }
 
     /**
      * Inject strategy with configured not_found_template.
      */
-    private function injectNotFoundTemplate(RouteNotFoundStrategy $strategy, array $config): void
+    private function injectNotFoundTemplate(RouteNotFoundStrategy $strategy, array|ArrayAccess $config): void
     {
         /** @var mixed $template */
         $template = $config['not_found_template'] ?? '404';
-        $strategy->setNotFoundTemplate(\Jield\Stdlib\Value::string($template));
+        $strategy->setNotFoundTemplate(Value::string($template));
     }
 }

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Jield\Search\Solr\Expression;
 
 use Jield\Search\Solr\ExpressionInterface;
-
 use Stringable;
 
 use function substr;
@@ -25,9 +24,9 @@ class WildcardExpression extends Expression implements Stringable
      * @param string|ExpressionInterface $suffix
      */
     public function __construct(
-        private string $wildcard,
-        private ExpressionInterface|string $prefix = '*',
-        private ExpressionInterface|string $suffix = '*',
+        private readonly string $wildcard,
+        private readonly ExpressionInterface|string $prefix = '*',
+        private readonly ExpressionInterface|string $suffix = '*',
     ) {}
 
     public function __toString(): string

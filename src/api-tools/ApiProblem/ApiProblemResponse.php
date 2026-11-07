@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Jield\ApiTools\ApiProblem;
 
+use Jield\Stdlib\Value;
 use Laminas\Http\Headers;
 use Laminas\Http\Response;
 use Override;
@@ -18,9 +19,6 @@ use const JSON_UNESCAPED_SLASHES;
  */
 class ApiProblemResponse extends Response
 {
-    /** @var ApiProblem */
-    protected ApiProblem $apiProblem;
-
     /**
      * Flags to use with json_encode.
      *
@@ -28,13 +26,13 @@ class ApiProblemResponse extends Response
      */
     protected int $jsonFlags;
 
-    public function __construct(ApiProblem $apiProblem)
-    {
-        $this->apiProblem = $apiProblem;
-        $this->setCustomStatusCode(code: $apiProblem->getStatus());
+    public function __construct(
+        protected ApiProblem $apiProblem,
+    ) {
+        $this->setCustomStatusCode(code: $this->apiProblem->getStatus());
 
-        if ($apiProblem->getTitle() !== null) {
-            $this->setReasonPhrase(reasonPhrase: \Jield\Stdlib\Value::string($apiProblem->getTitle()));
+        if ($this->apiProblem->getTitle() !== null) {
+            $this->setReasonPhrase(reasonPhrase: Value::string($this->apiProblem->getTitle()));
         }
 
         $this->jsonFlags = JSON_UNESCAPED_SLASHES | JSON_PARTIAL_OUTPUT_ON_ERROR;
@@ -95,6 +93,6 @@ class ApiProblemResponse extends Response
             return $this->reasonPhrase;
         }
 
-        return \Jield\Stdlib\Value::string($this->recommendedReasonPhrases[$this->statusCode] ?? 'Unknown Error');
+        return Value::string($this->recommendedReasonPhrases[$this->statusCode] ?? 'Unknown Error');
     }
 }

@@ -10,9 +10,7 @@ trait GetProxy
 
     public function getProxy(): Proxy
     {
-        if ($this->proxy === null) {
-            $this->proxy = new Proxy();
-        }
+        $this->proxy ??= new Proxy();
 
         return $this->proxy;
     }

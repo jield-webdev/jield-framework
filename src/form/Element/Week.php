@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Jield\Form\Element;
 
 use DateInterval;
-use Laminas\Validator\DateStep as DateStepValidator;
 use Jield\Validator\WeekComparison;
+use Laminas\Validator\DateStep as DateStepValidator;
 use Laminas\Validator\Regex as RegexValidator;
 use Laminas\Validator\ValidatorInterface;
 

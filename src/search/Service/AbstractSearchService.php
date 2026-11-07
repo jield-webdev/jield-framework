@@ -10,16 +10,21 @@ use Doctrine\ORM\EntityManager;
 use Jield\Search\Document\DocumentHelperInterface;
 use Jield\Search\Entity\HasSearchInterface;
 use Jield\Search\ValueObject\FacetField;
+use Jield\Stdlib\Service;
+use Jield\Stdlib\Value;
 use Laminas\Translator\TranslatorInterface;
 use Psr\Container\ContainerInterface;
 use RuntimeException;
 use Solarium\Client;
+use Solarium\Component\Facet\Field;
 use Solarium\Component\FacetSet;
 use Solarium\Core\Client\Adapter\Http;
 use Solarium\Core\Query\DocumentInterface;
 use Solarium\Exception\HttpException;
 use Solarium\QueryType\Select\Query\Query;
+use Solarium\QueryType\Select\Result\Document;
 use Solarium\QueryType\Update\Result;
+use stdClass;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Webmozart\Assert\Assert;
@@ -53,12 +58,12 @@ abstract class AbstractSearchService implements SearchServiceInterface
     public function __construct(
         protected readonly ContainerInterface $container,
     ) {
-        $this->translator = \Jield\Stdlib\Service::get($container, TranslatorInterface::class);
-        $this->entityManager = \Jield\Stdlib\Service::get($container, EntityManager::class);
-        $this->config = \Jield\Stdlib\Value::array($container->get('Config'));
+        $this->translator = Service::get($container, TranslatorInterface::class);
+        $this->entityManager = Service::get($container, EntityManager::class);
+        $this->config = Value::array($container->get('Config'));
 
         $this->query = $this->getSolrClient()->createSelect();
-        $this->facetSet = \Jield\Stdlib\Value::present($this->query)->getFacetSet();
+        $this->facetSet = Value::present($this->query)->getFacetSet();
     }
 
     public function getSolrClient(): Client
@@ -68,7 +73,7 @@ abstract class AbstractSearchService implements SearchServiceInterface
             $prefix = $this->config['solr']['prefix'] ?? '';
             $connection = static::SOLR_CONNECTION;
             if (!empty($prefix)) {
-                $connection = sprintf('%s_%s', \Jield\Stdlib\Value::scalar($prefix), $connection);
+                $connection = sprintf('%s_%s', Value::scalar($prefix), $connection);
             }
 
             $this->connection = $connection;
@@ -78,41 +83,60 @@ abstract class AbstractSearchService implements SearchServiceInterface
 
             //Only change the core when this is different from the already given core
             if (!isset($params['endpoint']['server']['core'])) {
-                \Jield\Stdlib\Value::setPath($params, ['endpoint', 'server', 'core'], $connection);
+                Value::setPath($params, ['endpoint', 'server', 'core'], $connection);
             }
 
             if (isset($this->config['solr']['host'])) {
-                \Jield\Stdlib\Value::setPath($params, ['endpoint', 'server', 'host'], $this->config['solr']['host']);
+                Value::setPath($params, ['endpoint', 'server', 'host'], $this->config['solr']['host']);
             }
 
             if (isset($this->config['solr']['username'])) {
-                \Jield\Stdlib\Value::setPath($params, ['endpoint', 'server', 'username'], $this->config['solr']['username']);
-                \Jield\Stdlib\Value::setPath($params, ['endpoint', 'server', 'password'], $this->config['solr']['password']);
+                Value::setPath(
+                    $params,
+                    ['endpoint', 'server', 'username'],
+                    $this->config['solr']['username'],
+                );
+                Value::setPath(
+                    $params,
+                    ['endpoint', 'server', 'password'],
+                    $this->config['solr']['password'],
+                );
             }
 
             $adapter = new Http();
 
-            if (isset($this->config['solr']['timeout']) && \Jield\Stdlib\Value::truthy($this->config['solr']['timeout'])) {
+            if (
+                isset($this->config['solr']['timeout']) && Value::truthy($this->config['solr']['timeout'])
+            ) {
                 $adapter->setTimeout(timeoutInSeconds: (int) $this->config['solr']['timeout']);
             }
 
             $eventDispatcher = new EventDispatcher();
 
-            $this->solrClient = new Client(adapter: $adapter, eventDispatcher: $eventDispatcher, options: \Jield\Stdlib\Value::array($params));
+            $this->solrClient = new Client(
+                adapter: $adapter,
+                eventDispatcher: $eventDispatcher,
+                options: Value::array($params),
+            );
             $this->solrClient->getPlugin(key: 'postbigrequest');
         }
 
-        return \Jield\Stdlib\Value::instance($this->solrClient, \Solarium\Client::class);
+        return Value::instance($this->solrClient, \Solarium\Client::class);
     }
 
     public function updateEntity(HasSearchInterface $entity): void
     {
         $update = $this->getSolrClient()->createUpdate();
 
-        $document = $this->getSearchDocumentFromEntity(update: \Jield\Stdlib\Value::instance($update, \Solarium\QueryType\Update\Query\Query::class), entity: $entity);
+        $document = $this->getSearchDocumentFromEntity(
+            update: Value::instance($update, \Solarium\QueryType\Update\Query\Query::class),
+            entity: $entity,
+        );
 
-        \Jield\Stdlib\Value::instance($update, \Solarium\QueryType\Update\Query\Query::class)->addDocument(document: $document);
-        \Jield\Stdlib\Value::instance($update, \Solarium\QueryType\Update\Query\Query::class)->addCommit();
+        Value::instance($update, \Solarium\QueryType\Update\Query\Query::class)->addDocument(
+            document: $document,
+        );
+        Value::instance($update, \Solarium\QueryType\Update\Query\Query::class)->addCommit();
 
         $this->getSolrClient()->update(query: $update);
     }
@@ -137,7 +161,13 @@ abstract class AbstractSearchService implements SearchServiceInterface
 
         Assert::implementsInterface(value: $searchDocumentHelper, interface: DocumentHelperInterface::class);
 
-        return $searchDocumentHelper->getDocument(document: \Jield\Stdlib\Value::instance($update->createDocument(), \Solarium\QueryType\Update\Query\Document::class), entity: $entity);
+        return $searchDocumentHelper->getDocument(
+            document: Value::instance(
+                $update->createDocument(),
+                \Solarium\QueryType\Update\Query\Document::class,
+            ),
+            entity: $entity,
+        );
     }
 
     public function updateEntities(array|Collection $entities): void
@@ -147,11 +177,16 @@ abstract class AbstractSearchService implements SearchServiceInterface
         $update = $this->getSolrClient()->createUpdate();
 
         foreach ($entities as $entity) {
-            $document = $this->getSearchDocumentFromEntity(update: \Jield\Stdlib\Value::instance($update, \Solarium\QueryType\Update\Query\Query::class), entity: \Jield\Stdlib\Value::instance($entity, \Jield\Search\Entity\HasSearchInterface::class));
-            \Jield\Stdlib\Value::instance($update, \Solarium\QueryType\Update\Query\Query::class)->addDocument(document: $document);
+            $document = $this->getSearchDocumentFromEntity(
+                update: Value::instance($update, \Solarium\QueryType\Update\Query\Query::class),
+                entity: Value::instance($entity, \Jield\Search\Entity\HasSearchInterface::class),
+            );
+            Value::instance($update, \Solarium\QueryType\Update\Query\Query::class)->addDocument(
+                document: $document,
+            );
         }
 
-        \Jield\Stdlib\Value::instance($update, \Solarium\QueryType\Update\Query\Query::class)->addCommit();
+        Value::instance($update, \Solarium\QueryType\Update\Query\Query::class)->addCommit();
 
         $this->getSolrClient()->update(query: $update);
     }
@@ -194,11 +229,15 @@ abstract class AbstractSearchService implements SearchServiceInterface
 
             $elements = $this->findSliced(entity: $entity::class, limit: $limit, offset: $i, criteria: $criteria);
 
-            /** @var mixed $element */
             foreach ($elements as $element) {
-                $document = $this->getSearchDocumentFromEntity(update: \Jield\Stdlib\Value::instance($update, \Solarium\QueryType\Update\Query\Query::class), entity: \Jield\Stdlib\Value::instance($element, \Jield\Search\Entity\HasSearchInterface::class));
+                $document = $this->getSearchDocumentFromEntity(
+                    update: Value::instance($update, \Solarium\QueryType\Update\Query\Query::class),
+                    entity: Value::instance($element, \Jield\Search\Entity\HasSearchInterface::class),
+                );
 
-                \Jield\Stdlib\Value::instance($update, \Solarium\QueryType\Update\Query\Query::class)->addDocument(document: $document);
+                Value::instance($update, \Solarium\QueryType\Update\Query\Query::class)->addDocument(
+                    document: $document,
+                );
                 $output->write(messages: '.');
 
                 if (($total % 100) === 0) {
@@ -209,7 +248,7 @@ abstract class AbstractSearchService implements SearchServiceInterface
                 $total++;
             }
 
-            \Jield\Stdlib\Value::instance($update, \Solarium\QueryType\Update\Query\Query::class)->addCommit();
+            Value::instance($update, \Solarium\QueryType\Update\Query\Query::class)->addCommit();
             $this->updateIndex(output: $output, update: $update);
 
             //clear the entity manager to prevent piling up entities
@@ -230,14 +269,16 @@ abstract class AbstractSearchService implements SearchServiceInterface
     public function clearIndex(bool $optimize = true): Result
     {
         $update = $this->getSolrClient()->createUpdate();
-        \Jield\Stdlib\Value::instance($update, \Solarium\QueryType\Update\Query\Query::class)->addDeleteQuery(query: '*:*');
-        \Jield\Stdlib\Value::instance($update, \Solarium\QueryType\Update\Query\Query::class)->addCommit();
+        Value::instance($update, \Solarium\QueryType\Update\Query\Query::class)->addDeleteQuery(
+            query: '*:*',
+        );
+        Value::instance($update, \Solarium\QueryType\Update\Query\Query::class)->addCommit();
         $result = $this->getSolrClient()->update(query: $update);
         if ($optimize) {
             $this->optimizeIndex();
         }
 
-        return \Jield\Stdlib\Value::instance($result, \Solarium\QueryType\Update\Result::class);
+        return Value::instance($result, \Solarium\QueryType\Update\Result::class);
     }
 
     /**
@@ -250,7 +291,10 @@ abstract class AbstractSearchService implements SearchServiceInterface
         $update = $this->getSolrClient()->createUpdate();
         $update->addOptimize(); // No params, just use Solr's default optimization settings
 
-        return \Jield\Stdlib\Value::instance($this->getSolrClient()->update(query: $update), \Solarium\QueryType\Update\Result::class);
+        return Value::instance(
+            $this->getSolrClient()->update(query: $update),
+            \Solarium\QueryType\Update\Result::class,
+        );
     }
 
     protected function removeDeletedItemsFromIndex(
@@ -270,27 +314,35 @@ abstract class AbstractSearchService implements SearchServiceInterface
 
         $searchIndexIds = $this->findAllIdsFromSearchIndex(entity: $entity);
 
-        $toBeDeletedItemsInSearchIndex = array_diff(\Jield\Stdlib\Value::scalars($searchIndexIds), \Jield\Stdlib\Value::scalars($databaseIds));
+        $toBeDeletedItemsInSearchIndex = array_diff(
+            Value::scalars($searchIndexIds),
+            Value::scalars($databaseIds),
+        );
 
         $update = $this->getSolrClient()->createUpdate();
         foreach ($toBeDeletedItemsInSearchIndex as $remainderId) {
             /**
              * To be able to delete by id we need to reconstruct the resource id, therefore we create a new entity
              */
-            $entity = \Jield\Stdlib\Value::instance(\Jield\Stdlib\Value::instantiate($entity), HasSearchInterface::class);
-            \Jield\Stdlib\Value::call($entity, 'setId', [$remainderId]);
+            $entity = Value::instance(
+                Value::instantiate($entity),
+                HasSearchInterface::class,
+            );
+            Value::call($entity, 'setId', [$remainderId]);
 
-            \Jield\Stdlib\Value::instance($update, \Solarium\QueryType\Update\Query\Query::class)->addDeleteById(id: \Jield\Stdlib\Value::key($entity->getResourceId()));
+            Value::instance($update, \Solarium\QueryType\Update\Query\Query::class)->addDeleteById(
+                id: Value::key($entity->getResourceId()),
+            );
             $output->writeln(messages: sprintf(
                 '<comment>Id %d of %s has been deleted</comment>',
-                \Jield\Stdlib\Value::scalar($remainderId),
+                Value::scalar($remainderId),
                 $entity::class,
             ));
         }
 
         $output->writeln(messages: sprintf('Deleted %d orphaned items', count(value: $toBeDeletedItemsInSearchIndex)));
 
-        \Jield\Stdlib\Value::instance($update, \Solarium\QueryType\Update\Query\Query::class)->addCommit();
+        Value::instance($update, \Solarium\QueryType\Update\Query\Query::class)->addCommit();
         $this->getSolrClient()->update(query: $update);
     }
 
@@ -303,16 +355,26 @@ abstract class AbstractSearchService implements SearchServiceInterface
     {
         //Get all ids from the index
         $query = $this->getSolrClient()->createSelect();
-        \Jield\Stdlib\Value::instance($query, \Solarium\QueryType\Select\Query\Query::class)->setQuery(query: '*:*')->setRows(rows: 1_000_000);
+        Value::instance($query, \Solarium\QueryType\Select\Query\Query::class)
+            ->setQuery(query: '*:*')
+            ->setRows(rows: 1_000_000);
         $ids = [];
-        /** @var mixed $document */
-        foreach (\Jield\Stdlib\Value::instance($this->getSolrClient()->select($query), \Solarium\QueryType\Select\Result\Result::class)->getIterator() as $document) {
+        foreach (Value::instance(
+            $this->getSolrClient()->select($query),
+            \Solarium\QueryType\Select\Result\Result::class,
+        )->getIterator() as $document) {
             /**
              * The document->id is the resource id in SOLR (sprintf('%s-%s', $this->get('underscore_entity_name'), $this->getId());)
              *
              * For this function we are only interested in the "real" id, so we will remove the first part
              */
-            $id = explode(separator: '-', string: \Jield\Stdlib\Value::string(\Jield\Stdlib\Value::instance($document, \Solarium\QueryType\Select\Result\Document::class)->offsetGet('id')));
+            $id = explode(
+                separator: '-',
+                string: Value::string(Value::instance(
+                    $document,
+                    Document::class,
+                )->offsetGet('id')),
+            );
             if (isset($id[1])) {
                 $ids[] = (int) $id[1];
             }
@@ -327,7 +389,6 @@ abstract class AbstractSearchService implements SearchServiceInterface
         $queryBuilder->select('e.id');
         $queryBuilder->from(from: $entity::class, alias: 'e');
         if (!empty($criteria)) {
-            /** @var mixed $value */
             foreach ($criteria as $key => $value) {
                 $queryBuilder->andWhere(sprintf('e.%s = :%s', $key, $key));
                 $queryBuilder->setParameter(key: ':' . $key, value: $value);
@@ -347,7 +408,6 @@ abstract class AbstractSearchService implements SearchServiceInterface
         $queryBuilder->from(from: $entity, alias: 'e');
 
         if (!empty($criteria)) {
-            /** @var mixed $value */
             foreach ($criteria as $key => $value) {
                 $queryBuilder->andWhere(sprintf('e.%s = :%s', $key, $key));
                 $queryBuilder->setParameter(key: ':' . $key, value: $value);
@@ -361,7 +421,7 @@ abstract class AbstractSearchService implements SearchServiceInterface
     protected function findSliced(string $entity, int $limit, int $offset, array $criteria = []): array
     {
         return $this->entityManager->getRepository(className: $entity)->findBy(
-            criteria: \Jield\Stdlib\Value::stringKeyedArray($criteria),
+            criteria: Value::stringKeyedArray($criteria),
             orderBy: ['id' => Order::Descending->value],
             limit: $limit,
             offset: $offset,
@@ -376,16 +436,24 @@ abstract class AbstractSearchService implements SearchServiceInterface
             $responseBody = $e->getBody();
 
             if (!empty($responseBody)) {
-                /** @var mixed $response */
                 $response = json_decode(json: $responseBody);
                 if (isset($response->responseHeader)) {
                     $output->writeln(messages: sprintf(
                         '<error>Solr HTTP response code: %s</error>',
-                        \Jield\Stdlib\Value::scalar(\Jield\Stdlib\Value::instance(\Jield\Stdlib\Value::instance($response, \stdClass::class)->responseHeader, \stdClass::class)->status),
+                        Value::scalar(Value::instance(
+                            Value::instance($response, stdClass::class)->responseHeader,
+                            stdClass::class,
+                        )->status),
                     ));
                 }
                 if (isset($response->error)) {
-                    $output->writeln(messages: sprintf('<error>Solr error message: %s</error>', \Jield\Stdlib\Value::scalar(\Jield\Stdlib\Value::instance(\Jield\Stdlib\Value::instance($response, \stdClass::class)->error, \stdClass::class)->msg)));
+                    $output->writeln(messages: sprintf(
+                        '<error>Solr error message: %s</error>',
+                        Value::scalar(Value::instance(
+                            Value::instance($response, stdClass::class)->error,
+                            stdClass::class,
+                        )->msg),
+                    ));
                 }
             }
         }
@@ -419,7 +487,10 @@ abstract class AbstractSearchService implements SearchServiceInterface
 
         $searchIndexIds = $this->findAllIdsFromSearchIndex(entity: $entity);
 
-        $toBeAddedItemsInSearchIndex = array_diff(\Jield\Stdlib\Value::scalars($databaseIds), \Jield\Stdlib\Value::scalars($searchIndexIds));
+        $toBeAddedItemsInSearchIndex = array_diff(
+            Value::scalars($databaseIds),
+            Value::scalars($searchIndexIds),
+        );
 
         if (count(value: $toBeAddedItemsInSearchIndex) > 200) {
             $output->writeln(messages: sprintf(
@@ -434,14 +505,19 @@ abstract class AbstractSearchService implements SearchServiceInterface
         $update = $this->getSolrClient()->createUpdate();
         foreach ($toBeAddedItemsInSearchIndex as $newId) {
             $entity = $this->entityManager->getRepository(className: $entity::class)->find(id: $newId);
-            $document = $this->getSearchDocumentFromEntity(update: \Jield\Stdlib\Value::instance($update, \Solarium\QueryType\Update\Query\Query::class), entity: \Jield\Stdlib\Value::instance($entity, \Jield\Search\Entity\HasSearchInterface::class));
+            $document = $this->getSearchDocumentFromEntity(
+                update: Value::instance($update, \Solarium\QueryType\Update\Query\Query::class),
+                entity: Value::instance($entity, \Jield\Search\Entity\HasSearchInterface::class),
+            );
 
-            \Jield\Stdlib\Value::instance($update, \Solarium\QueryType\Update\Query\Query::class)->addDocument(document: $document);
+            Value::instance($update, \Solarium\QueryType\Update\Query\Query::class)->addDocument(
+                document: $document,
+            );
 
             $output->write(messages: '.');
         }
 
-        \Jield\Stdlib\Value::instance($update, \Solarium\QueryType\Update\Query\Query::class)->addCommit();
+        Value::instance($update, \Solarium\QueryType\Update\Query\Query::class)->addCommit();
         $this->updateIndex(output: $output, update: $update);
 
         $output->writeln(messages: sprintf('Added %d items', count(value: $toBeAddedItemsInSearchIndex)));
@@ -450,33 +526,38 @@ abstract class AbstractSearchService implements SearchServiceInterface
     public function deleteDocument(HasSearchInterface $entity, bool $optimize = false): Result
     {
         $update = $this->getSolrClient()->createUpdate();
-        \Jield\Stdlib\Value::instance($update, \Solarium\QueryType\Update\Query\Query::class)->addDeleteById(id: $entity->getResourceId());
-        \Jield\Stdlib\Value::instance($update, \Solarium\QueryType\Update\Query\Query::class)->addCommit();
+        Value::instance($update, \Solarium\QueryType\Update\Query\Query::class)->addDeleteById(
+            id: $entity->getResourceId(),
+        );
+        Value::instance($update, \Solarium\QueryType\Update\Query\Query::class)->addCommit();
         $result = $this->getSolrClient()->update(query: $update);
         if ($optimize) {
             $this->optimizeIndex();
         }
 
-        return \Jield\Stdlib\Value::instance($result, \Solarium\QueryType\Update\Result::class);
+        return Value::instance($result, \Solarium\QueryType\Update\Result::class);
     }
 
     public function addFilterQuery($key, $value): void
     {
-        \Jield\Stdlib\Value::present($this->query)->addFilterQuery(filterQuery: [
+        Value::present($this->query)->addFilterQuery(filterQuery: [
             'key' => $key,
-            'query' => \Jield\Stdlib\Value::stringify($key) . ':(' . \Jield\Stdlib\Value::stringify($value) . ')',
+            'query' => Value::stringify($key) . ':(' . Value::stringify($value) . ')',
             'tag' => $key,
         ]);
     }
 
     public function getResultSet(): \Solarium\QueryType\Select\Result\Result
     {
-        return \Jield\Stdlib\Value::instance($this->getSolrClient()->select($this->getQuery()), \Solarium\QueryType\Select\Result\Result::class);
+        return Value::instance(
+            $this->getSolrClient()->select($this->getQuery()),
+            \Solarium\QueryType\Select\Result\Result::class,
+        );
     }
 
     public function getQuery(): Query
     {
-        return \Jield\Stdlib\Value::instance($this->query, \Solarium\QueryType\Select\Query\Query::class);
+        return Value::instance($this->query, \Solarium\QueryType\Select\Query\Query::class);
     }
 
     protected function setQuery(Query $query): AbstractSearchService
@@ -501,21 +582,21 @@ abstract class AbstractSearchService implements SearchServiceInterface
     {
         $key = 0;
 
-        /** @var mixed $facet */
         foreach ($facets as $field => $facet) {
             //Skip when we have no values
-            if (!array_key_exists(key: 'values', array: \Jield\Stdlib\Value::array($facet)) || empty($facet['values'])) {
+            if (
+                !array_key_exists(key: 'values', array: Value::array($facet)) || empty($facet['values'])
+            ) {
                 continue;
             }
 
             //When we have an AND we need all values
             if (isset($facet['andOr']) && $facet['andOr'] === 'and') {
-                /** @var mixed $value */
-                foreach (\Jield\Stdlib\Value::iterable($facet['values']) as $value) {
+                foreach (Value::iterable($facet['values']) as $value) {
                     $this->addFilterQueryFromFacet(
                         key: $key++,
-                        field: \Jield\Stdlib\Value::string($field),
-                        value: \Jield\Stdlib\Value::arrayOrIntOrString($value),
+                        field: Value::string($field),
+                        value: Value::arrayOrIntOrString($value),
                         exclude: isset($facet['yesNo']) && $facet['yesNo'] === 'no',
                         and: true,
                     );
@@ -526,8 +607,8 @@ abstract class AbstractSearchService implements SearchServiceInterface
             if (!isset($facet['andOr'])) {
                 $this->addFilterQueryFromFacet(
                     key: $key++,
-                    field: \Jield\Stdlib\Value::string($field),
-                    value: \Jield\Stdlib\Value::arrayOrIntOrString($facet['values']),
+                    field: Value::string($field),
+                    value: Value::arrayOrIntOrString($facet['values']),
                     exclude: isset($facet['yesNo']) && $facet['yesNo'] === 'no',
                 );
             }
@@ -552,7 +633,7 @@ abstract class AbstractSearchService implements SearchServiceInterface
                 //Take the last element of the array
                 /** @var mixed $value */
                 $value = $value[0] ?? '';
-                $query = sprintf('%s%s:[%d TO *]', $exclude ? '-' : '', $field, \Jield\Stdlib\Value::scalar($value));
+                $query = sprintf('%s%s:[%d TO *]', $exclude ? '-' : '', $field, Value::scalar($value));
                 break;
             case !$facetField->isSlider():
                 if (is_string(value: $value)) {
@@ -568,7 +649,7 @@ abstract class AbstractSearchService implements SearchServiceInterface
                 $query = sprintf('%s%s:(%s)', $exclude ? '-' : '', $field, $value);
                 break;
             default:
-                $values = explode(separator: ',', string: \Jield\Stdlib\Value::string($value));
+                $values = explode(separator: ',', string: Value::string($value));
                 $min = $values[0];
                 $max = $values[1] ?? '';
 
@@ -584,21 +665,23 @@ abstract class AbstractSearchService implements SearchServiceInterface
                 break;
         }
 
-        \Jield\Stdlib\Value::present($this->query)
+        Value::present($this->query)
             ->createFilterQuery(options: $key . $field)
             ->setQuery(query: $query)
             ->getLocalParameters()
             ->addTags(tags: [$facetField->getField()]);
 
         if ($and) {
-            $facet = \Jield\Stdlib\Value::present($this->facetSet)->getFacet(key: $this->getFacet(fieldName: $field)->getField());
-            \Jield\Stdlib\Value::instance($facet, \Solarium\Component\Facet\Field::class)->setMinCount(1);
+            $facet = Value::present($this->facetSet)->getFacet(
+                key: $this->getFacet(fieldName: $field)->getField(),
+            );
+            Value::instance($facet, Field::class)->setMinCount(1);
         }
     }
 
     public function getFacet(string $fieldName): FacetField
     {
-        return \Jield\Stdlib\Value::instance($this->facets[$fieldName], \Jield\Search\ValueObject\FacetField::class);
+        return Value::instance($this->facets[$fieldName], \Jield\Search\ValueObject\FacetField::class);
     }
 
     public function hasFacet(string $fieldName): bool
@@ -629,58 +712,75 @@ abstract class AbstractSearchService implements SearchServiceInterface
 
         //Grab an array with all ids from the database
         $qb = $this->entityManager->createQueryBuilder();
-        $result = \Jield\Stdlib\Value::array($qb
-            ->select('e')
-            ->from(from: $entity::class, alias: 'e')
-            ->setMaxResults(maxResults: 1)
-            ->getQuery()
-            ->getResult());
+        $result = Value::array(
+            $qb
+                ->select('e')
+                ->from(from: $entity::class, alias: 'e')
+                ->setMaxResults(maxResults: 1)
+                ->getQuery()
+                ->getResult(),
+        );
 
         $update = $this->getSolrClient()->createUpdate();
 
         $requireDelete = false;
 
         if (count($result) === 0) {
-            $entity = \Jield\Stdlib\Value::instance(\Jield\Stdlib\Value::instantiate($entity), HasSearchInterface::class);
+            $entity = Value::instance(
+                Value::instantiate($entity),
+                HasSearchInterface::class,
+            );
 
             $output->writeln(messages: sprintf('<comment>Test with empty object %s</comment>', $entity::class));
 
             $requireDelete = true;
         } else {
-            /** @var mixed $entity */
             $entity = $result[0];
         }
 
-        $document = $this->getSearchDocumentFromEntity(update: \Jield\Stdlib\Value::instance($update, \Solarium\QueryType\Update\Query\Query::class), entity: \Jield\Stdlib\Value::instance($entity, \Jield\Search\Entity\HasSearchInterface::class));
-        \Jield\Stdlib\Value::instance($update, \Solarium\QueryType\Update\Query\Query::class)->addDocument(document: $document);
-        \Jield\Stdlib\Value::instance($update, \Solarium\QueryType\Update\Query\Query::class)->addCommit();
+        $document = $this->getSearchDocumentFromEntity(
+            update: Value::instance($update, \Solarium\QueryType\Update\Query\Query::class),
+            entity: Value::instance($entity, \Jield\Search\Entity\HasSearchInterface::class),
+        );
+        Value::instance($update, \Solarium\QueryType\Update\Query\Query::class)->addDocument(
+            document: $document,
+        );
+        Value::instance($update, \Solarium\QueryType\Update\Query\Query::class)->addCommit();
 
         try {
             $this->getSolrClient()->update(query: $update);
             $output->writeln(messages: '<comment>Test successful</comment>');
 
             if ($requireDelete) {
-                $this->deleteDocument(entity: \Jield\Stdlib\Value::instance($entity, \Jield\Search\Entity\HasSearchInterface::class));
+                $this->deleteDocument(entity: Value::instance(
+                    $entity,
+                    \Jield\Search\Entity\HasSearchInterface::class,
+                ));
                 $output->writeln(messages: '<comment>Test document deleted</comment>');
             }
         } catch (HttpException $e) {
             $responseBody = $e->getBody();
-            /** @var mixed $response */
-            $response = json_decode(json: \Jield\Stdlib\Value::string($responseBody));
+            $response = json_decode(json: Value::string($responseBody));
 
             $output->writeln(messages: sprintf(
                 '<error>Error updating %s: %s</error>',
-                \Jield\Stdlib\Value::scalar($entity::class),
-                \Jield\Stdlib\Value::scalar(\Jield\Stdlib\Value::instance(\Jield\Stdlib\Value::instance($response, \stdClass::class)->error, \stdClass::class)->msg),
+                Value::scalar($entity::class),
+                Value::scalar(Value::instance(
+                    Value::instance($response, stdClass::class)->error,
+                    stdClass::class,
+                )->msg),
             ));
         }
     }
 
     protected function createFacet(FacetField $facetField): void
     {
-        $facet = \Jield\Stdlib\Value::instance(\Jield\Stdlib\Value::present($this->facetSet)
-            ->createFacetField(options: $facetField->getField()), \Solarium\Component\Facet\Field::class);
-        $facet->setField(field: $facetField->getField())
+        $facet = Value::instance(
+            Value::present($this->facetSet)->createFacetField(options: $facetField->getField()),
+            Field::class,
+        );
+        $facet
+            ->setField(field: $facetField->getField())
             ->setMinCount(minCount: $facetField->getMinCount())
             ->setLimit(limit: $facetField->getLimit())
             ->setSort(sort: $facetField->getSort());

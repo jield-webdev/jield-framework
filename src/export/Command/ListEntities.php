@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Jield\Export\Command;
 
 use Jield\Export\Service\ConsoleService;
+use Jield\Stdlib\Value;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -24,14 +25,13 @@ final class ListEntities extends Command
         $output->writeln(messages: '<info>List of all entities in index</info>');
         $entities = $this->consoleService->getEntities();
 
-        /** @var mixed $entityInfo */
         foreach ($entities as $key => $entityInfo) {
             //Try to instantiate the core and see if we have a valid entity
             $output->writeln(messages: sprintf(
                 'Entity for %s (%s) is active: (%s)',
                 $key,
-                key($entityInfo),
-                implode(', ', \Jield\Stdlib\Value::scalars($entityInfo)),
+                key(Value::array($entityInfo)),
+                implode(', ', Value::scalars($entityInfo)),
             ));
         }
 

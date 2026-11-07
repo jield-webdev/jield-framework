@@ -6,6 +6,7 @@ namespace Jield\ApiTools\Hal;
 
 use Exception;
 use Jield\ApiTools\Hal\Exception\InvalidArgumentException;
+use Jield\Stdlib\Value;
 use Laminas\Paginator\Paginator;
 use Laminas\Stdlib\ArrayUtils;
 use Traversable;
@@ -23,8 +24,6 @@ class Collection implements Link\LinkCollectionAwareInterface
      * Additional attributes to render with the collection
      */
     protected array $attributes = [];
-
-    protected Paginator|iterable $collection;
 
     /**
      * Name of a collection (used to identify it in the "_embedded" object)
@@ -66,14 +65,11 @@ class Collection implements Link\LinkCollectionAwareInterface
     protected array $entityRouteParams = [];
 
     public function __construct(
-        Paginator|iterable $collection,
+        protected Paginator|iterable $collection,
         ?string $entityRoute = null,
         ?iterable $entityRouteParams = null,
         ?iterable $entityRouteOptions = null,
     ) {
-        /** @psalm-suppress PossiblyInvalidPropertyAssignmentValue */
-        $this->collection = $collection;
-
         if (null !== $entityRoute) {
             $this->setEntityRoute(route: $entityRoute);
         }
@@ -146,7 +142,7 @@ class Collection implements Link\LinkCollectionAwareInterface
     {
         $options = ArrayUtils::iteratorToArray(iterator: $options);
 
-        $this->collectionRouteOptions = \Jield\Stdlib\Value::array($options);
+        $this->collectionRouteOptions = Value::array($options);
         return $this;
     }
 
@@ -227,7 +223,7 @@ class Collection implements Link\LinkCollectionAwareInterface
     {
         $options = ArrayUtils::iteratorToArray(iterator: $options);
 
-        $this->entityRouteOptions = \Jield\Stdlib\Value::array($options);
+        $this->entityRouteOptions = Value::array($options);
         return $this;
     }
 
@@ -235,7 +231,7 @@ class Collection implements Link\LinkCollectionAwareInterface
     {
         $params = ArrayUtils::iteratorToArray(iterator: $params);
 
-        $this->entityRouteParams = \Jield\Stdlib\Value::array($params);
+        $this->entityRouteParams = Value::array($params);
         return $this;
     }
 

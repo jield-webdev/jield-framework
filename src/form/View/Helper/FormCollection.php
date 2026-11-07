@@ -7,6 +7,7 @@ namespace Jield\Form\View\Helper;
 use Jield\Form\Element\Collection as CollectionElement;
 use Jield\Form\ElementInterface;
 use Jield\Form\FieldsetInterface;
+use Jield\Stdlib\Value;
 use Laminas\View\Helper\HelperInterface;
 use RuntimeException;
 
@@ -105,7 +106,7 @@ class FormCollection extends AbstractHelper
     public function render(ElementInterface $element): string
     {
         $renderer = $this->getView();
-        if ($renderer !== null && !method_exists(object_or_class: $renderer, method: 'plugin')) {
+        if (!method_exists(object_or_class: $renderer, method: 'plugin')) {
             // Bail early if renderer is not pluggable
             return '';
         }
@@ -122,12 +123,12 @@ class FormCollection extends AbstractHelper
             $templateMarkup = $this->renderTemplate(collection: $element);
         }
 
-        $element = \Jield\Stdlib\Value::instance($element, FieldsetInterface::class);
+        $element = Value::instance($element, FieldsetInterface::class);
         foreach ($element->getIterator() as $elementOrFieldset) {
             if ($elementOrFieldset instanceof FieldsetInterface) {
-                $markup .= \Jield\Stdlib\Value::stringify($fieldsetHelper($elementOrFieldset, $this->shouldWrap()));
-            } elseif ($elementOrFieldset instanceof ElementInterface) {
-                $markup .= \Jield\Stdlib\Value::stringify($elementHelper($elementOrFieldset));
+                $markup .= Value::stringify($fieldsetHelper($elementOrFieldset, $this->shouldWrap()));
+            } else {
+                $markup .= Value::stringify($elementHelper($elementOrFieldset));
             }
         }
 
@@ -171,12 +172,15 @@ class FormCollection extends AbstractHelper
         $elementOrFieldset = $collection->getTemplateElement();
 
         if ($elementOrFieldset instanceof FieldsetInterface) {
-            $templateMarkup .= \Jield\Stdlib\Value::stringify($fieldsetHelper($elementOrFieldset, $this->shouldWrap()));
-        } elseif ($elementOrFieldset instanceof ElementInterface) {
-            $templateMarkup .= \Jield\Stdlib\Value::stringify($elementHelper($elementOrFieldset));
+            $templateMarkup .= Value::stringify($fieldsetHelper($elementOrFieldset, $this->shouldWrap()));
+        } else {
+            $templateMarkup .= Value::stringify($elementHelper($elementOrFieldset));
         }
 
-        return sprintf($this->getTemplateWrapper(), \Jield\Stdlib\Value::scalar($escapeHtmlAttribHelper(value: $templateMarkup)));
+        return sprintf(
+            $this->getTemplateWrapper(),
+            Value::scalar($escapeHtmlAttribHelper(value: $templateMarkup)),
+        );
     }
 
     /**
@@ -242,7 +246,10 @@ class FormCollection extends AbstractHelper
         }
 
         if ($this->view !== null && method_exists(object_or_class: $this->view, method: 'plugin')) {
-            $this->elementHelper = \Jield\Stdlib\Value::nullableInstance($this->getView()->plugin($this->getDefaultElementHelper()), \Laminas\View\Helper\HelperInterface::class);
+            $this->elementHelper = Value::nullableInstance(
+                $this->getView()->plugin($this->getDefaultElementHelper()),
+                \Laminas\View\Helper\HelperInterface::class,
+            );
         }
 
         if (!$this->elementHelper instanceof HelperInterface) {

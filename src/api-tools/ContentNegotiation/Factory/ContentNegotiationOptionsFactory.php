@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Jield\ApiTools\ContentNegotiation\Factory;
 
 use Jield\ApiTools\ContentNegotiation\ContentNegotiationOptions;
+use Jield\Stdlib\Value;
 use Psr\Container\ContainerInterface;
 
 use function is_array;
@@ -13,7 +14,9 @@ class ContentNegotiationOptionsFactory
 {
     public function __invoke(ContainerInterface $container): ContentNegotiationOptions
     {
-        return new ContentNegotiationOptions(options: \Jield\Stdlib\Value::stringKeyedArray($this->getConfig(container: $container)));
+        return new ContentNegotiationOptions(options: Value::stringKeyedArray($this->getConfig(
+            container: $container,
+        )));
     }
 
     /**
@@ -31,7 +34,6 @@ class ContentNegotiationOptionsFactory
             return [];
         }
 
-        /** @var mixed $config */
         $config = $container->get('config');
 
         if (

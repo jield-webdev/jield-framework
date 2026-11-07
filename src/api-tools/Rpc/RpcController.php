@@ -9,6 +9,7 @@ use Exception;
 use Jield\Mvc\Controller\AbstractActionController as BaseAbstractActionController;
 use Jield\Mvc\MvcEvent;
 use Jield\Mvc\View\Model\JsonModel;
+use Jield\Stdlib\Value;
 use Override;
 
 use function call_user_func_array;
@@ -43,8 +44,8 @@ final class RpcController extends BaseAbstractActionController
         $contentNegotiationParams = $e->getParam(name: 'LaminasContentNegotiationParameterData');
         /** @var mixed $routeParameters */
         $routeParameters = $contentNegotiationParams
-            ? \Jield\Stdlib\Value::call($contentNegotiationParams, 'getRouteParams')
-            : \Jield\Stdlib\Value::present($routeMatch)->getParams();
+            ? Value::call($contentNegotiationParams, 'getRouteParams')
+            : Value::present($routeMatch)->getParams();
 
         $parameterMatcher = new ParameterMatcher(mvcEvent: $e);
 
@@ -55,11 +56,10 @@ final class RpcController extends BaseAbstractActionController
             $callable = $this->wrappedCallable;
         } elseif (is_object(value: $this->wrappedCallable) || null === $this->wrappedCallable) {
             /** @var mixed $action */
-            $action = \Jield\Stdlib\Value::present($routeMatch)->getParam(name: 'action', default: 'not-found');
-            $method = static::getMethodFromAction(action: \Jield\Stdlib\Value::string($action));
-            $callable =
-                null === $this->wrappedCallable && static::class !== self::class ? $this : $this->wrappedCallable;
-            if (!method_exists(object_or_class: \Jield\Stdlib\Value::objectOrString($callable), method: $method)) {
+            $action = Value::present($routeMatch)->getParam(name: 'action', default: 'not-found');
+            $method = static::getMethodFromAction(action: Value::string($action));
+            $callable = null === $this->wrappedCallable && self::class !== self::class ? $this : $this->wrappedCallable;
+            if (!method_exists(object_or_class: Value::objectOrString($callable), method: $method)) {
                 $method = 'notFoundAction';
             }
 
@@ -69,10 +69,9 @@ final class RpcController extends BaseAbstractActionController
         }
 
         $dispatchParameters = $parameterMatcher->getMatchedParameters(
-            callable: \Jield\Stdlib\Value::callback($callable),
-            parameters: \Jield\Stdlib\Value::array($routeParameters ?: []),
+            callable: Value::callback($callable),
+            parameters: Value::array($routeParameters ?: []),
         );
-        /** @var mixed $result */
         $result = call_user_func_array(callback: $callable, args: $dispatchParameters);
 
         $e->setParam(name: 'LaminasContentNegotiationFallback', value: [JsonModel::class => ['application/json']]);

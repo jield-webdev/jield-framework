@@ -9,7 +9,9 @@ use Doctrine\DBAL\Driver\Middleware;
 use Doctrine\DBAL\Types\Type;
 use DoctrineORMModule\Options\Configuration as DoctrineORMModuleConfiguration;
 use InvalidArgumentException;
+use Jield\Stdlib\Value;
 use Laminas\ServiceManager\Factory\FactoryInterface;
+use Psr\Cache\CacheItemPoolInterface;
 use Psr\Container\ContainerInterface;
 use RuntimeException;
 use UnexpectedValueException;
@@ -47,7 +49,10 @@ class DBALConfigurationFactory implements FactoryInterface
     public function setupDBALConfiguration(ContainerInterface $container, Configuration $config): void
     {
         $options = $this->getOptions(container: $container);
-        $config->setResultCache(\Jield\Stdlib\Value::instance($container->get(\Jield\Stdlib\Value::string($options->getResultCache())), \Psr\Cache\CacheItemPoolInterface::class));
+        $config->setResultCache(Value::instance(
+            $container->get(Value::string($options->getResultCache())),
+            CacheItemPoolInterface::class,
+        ));
 
         if (method_exists(object_or_class: $config, method: 'setMiddlewares')) {
             $middlewares = [];
@@ -57,7 +62,6 @@ class DBALConfigurationFactory implements FactoryInterface
                     throw new InvalidArgumentException(message: 'Middleware not exists');
                 }
 
-                /** @var mixed $middleware */
                 $middleware = $container->get($middlewareName);
                 if (!$middleware instanceof Middleware) {
                     throw new UnexpectedValueException(message: sprintf(
@@ -76,11 +80,12 @@ class DBALConfigurationFactory implements FactoryInterface
         /** @var mixed $name
          * @var mixed $class
          */
-        foreach ($options->getTypes() as $name => $class) {
-            if (Type::hasType(name: \Jield\Stdlib\Value::string($name))) {
-                Type::overrideType(name: \Jield\Stdlib\Value::string($name), type: $class);
+        foreach (Value::array($options->getTypes()) as $name => $class) {
+            $class = $class instanceof Type ? $class : Value::subclass($class, Type::class);
+            if (Type::hasType(name: Value::string($name))) {
+                Type::overrideType(name: Value::string($name), type: $class);
             } else {
-                Type::addType(name: \Jield\Stdlib\Value::string($name), type: $class);
+                Type::addType(name: Value::string($name), type: $class);
             }
         }
     }
@@ -88,10 +93,9 @@ class DBALConfigurationFactory implements FactoryInterface
     /** @throws \RuntimeException */
     public function getOptions(ContainerInterface $container): DoctrineORMModuleConfiguration
     {
-        /** @var mixed $options */
         $options = $container->get('config');
         /** @var mixed $options */
-        $options = \Jield\Stdlib\Value::accessible($options)['doctrine'];
+        $options = Value::accessible($options)['doctrine'];
         /** @var mixed $options */
         $options = $options['configuration'][$this->name] ?? null;
 
@@ -104,7 +108,7 @@ class DBALConfigurationFactory implements FactoryInterface
 
         $optionsClass = $this->getOptionsClass();
 
-        return new $optionsClass(\Jield\Stdlib\Value::stringKeyedArray($options));
+        return new $optionsClass(Value::stringKeyedArray($options));
     }
 
     /** @return class-string<DoctrineORMModuleConfiguration> */

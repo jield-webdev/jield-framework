@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Jield\Search\Solr\Expression;
 
 use Jield\Search\Solr\ExpressionInterface;
-
 use Jield\Search\Solr\Util;
 use Stringable;
 
@@ -20,7 +19,7 @@ class LocalParamsExpression extends Expression implements Stringable
      * @param mixed[] $params
      */
     public function __construct(
-        private ExpressionInterface|string $type,
+        private readonly ExpressionInterface|string $type,
         private readonly array $params = [],
         private readonly bool $shortForm = true,
     ) {}
@@ -41,7 +40,6 @@ class LocalParamsExpression extends Expression implements Stringable
 
         $paramsString = '';
 
-        /** @var mixed $value */
         foreach ($this->params as $key => $value) {
             $paramsString .= ' ' . $key . '=' . Util::sanitize(value: $value);
         }

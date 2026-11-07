@@ -46,11 +46,11 @@ interface AdapterInterface
     /**
      * Attempt to authenticate the current request.
      *
-     * @return IdentityInterface|\Laminas\Http\PhpEnvironment\Response
+     * @return IdentityInterface|Response
      */
     public function authenticate(
         Request $request,
         Response $response,
         MvcAuthEvent $mvcAuthEvent,
-    ): IdentityInterface|\Laminas\Http\PhpEnvironment\Response;
+    ): IdentityInterface|Response;
 }

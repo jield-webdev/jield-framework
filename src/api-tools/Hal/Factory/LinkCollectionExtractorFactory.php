@@ -6,6 +6,7 @@ namespace Jield\ApiTools\Hal\Factory;
 
 use Jield\ApiTools\Hal\Extractor\LinkCollectionExtractor;
 use Jield\ApiTools\Hal\Extractor\LinkExtractor;
+use Jield\Stdlib\Service;
 use Laminas\ServiceManager\ServiceLocatorInterface;
 use Psr\Container\ContainerInterface;
 
@@ -17,6 +18,6 @@ class LinkCollectionExtractorFactory
      */
     public function __invoke(ServiceLocatorInterface|ContainerInterface $container): LinkCollectionExtractor
     {
-        return new LinkCollectionExtractor(linkExtractor: \Jield\Stdlib\Service::get($container, LinkExtractor::class));
+        return new LinkCollectionExtractor(linkExtractor: Service::get($container, LinkExtractor::class));
     }
 }

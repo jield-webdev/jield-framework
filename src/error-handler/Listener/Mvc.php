@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Jield\ErrorHandler\Listener;
 
+use ErrorException;
 use Jield\ErrorHandler\Handler\Logging;
 use Jield\ErrorHandler\HeroTrait;
 use Jield\Mvc\MvcEvent;
 use Jield\Mvc\SendResponseListener;
 use Jield\Mvc\View\Renderer\PhpRenderer;
+use Jield\Stdlib\Value;
 use Laminas\EventManager\AbstractListenerAggregate;
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\Http\PhpEnvironment\Request;
@@ -33,6 +35,13 @@ final class Mvc extends AbstractListenerAggregate
     protected function capturesErrorOutput(): bool
     {
         return false;
+    }
+
+    protected function handleShutdownException(ErrorException $exception): void
+    {
+        $event = Value::present($this->mvcEvent);
+        $event->setParam(name: 'exception', value: $exception);
+        $this->exceptionError($event);
     }
 
     private ?MvcEvent $_mvcEvent = null;
@@ -85,7 +94,7 @@ final class Mvc extends AbstractListenerAggregate
         if (
             isset($this->errorHeroModuleConfig[self::DISPLAY_SETTINGS]['exclude-exceptions'])
             && isExcludedException(
-                excludeExceptionsConfig: $this->errorHeroModuleConfig[self::DISPLAY_SETTINGS]['exclude-exceptions'],
+                excludeExceptionsConfig: Value::array($this->errorHeroModuleConfig[self::DISPLAY_SETTINGS]['exclude-exceptions']),
                 throwable: $exception,
             )
         ) {
@@ -95,7 +104,7 @@ final class Mvc extends AbstractListenerAggregate
 
         $this->logging->handleErrorException(throwable: $exception, request: $request = $mvcEvent->getRequest());
 
-        if (\Jield\Stdlib\Value::accessible($this->errorHeroModuleConfig[self::DISPLAY_SETTINGS])['display_errors']) {
+        if (Value::accessible($this->errorHeroModuleConfig[self::DISPLAY_SETTINGS])['display_errors']) {
             // rely on original mvc process
             return;
         }
@@ -113,8 +122,8 @@ final class Mvc extends AbstractListenerAggregate
         $response->setStatusCode(code: 500);
 
         $application = $mvcEvent->getApplication();
-        $eventManager = \Jield\Stdlib\Value::present($application)->getEventManager();
-        $serviceLocator = \Jield\Stdlib\Value::present($application)->getServiceManager();
+        $eventManager = Value::present($application)->getEventManager();
+        $serviceLocator = Value::present($application)->getServiceManager();
 
         /** @var SendResponseListener $sendResponseListener */
         $sendResponseListener = $serviceLocator->get('SendResponseListener');
@@ -122,9 +131,11 @@ final class Mvc extends AbstractListenerAggregate
 
         $isXmlHttpRequest = $request->isXmlHttpRequest();
         if ($isXmlHttpRequest && isset($this->errorHeroModuleConfig[self::DISPLAY_SETTINGS]['ajax'][self::MESSAGE])) {
-            /** @var mixed $message */
-            $message = \Jield\Stdlib\Value::path($this->errorHeroModuleConfig, [self::DISPLAY_SETTINGS, 'ajax', self::MESSAGE]);
-            $contentType = detectMessageContentType(message: \Jield\Stdlib\Value::string($message));
+            $message = Value::path(
+                $this->errorHeroModuleConfig,
+                [self::DISPLAY_SETTINGS, 'ajax', self::MESSAGE],
+            );
+            $contentType = detectMessageContentType(message: Value::string($message));
 
             $response->getHeaders()->addHeaderLine('Content-type', $contentType);
             $response->setContent($message);
@@ -134,10 +145,16 @@ final class Mvc extends AbstractListenerAggregate
         }
 
         $model = $mvcEvent->getViewModel();
-        $model->setTemplate(template: \Jield\Stdlib\Value::nonEmptyString(\Jield\Stdlib\Value::path($this->errorHeroModuleConfig, [self::DISPLAY_SETTINGS, 'template', 'layout'])));
+        $model->setTemplate(template: Value::nonEmptyString(Value::path(
+            $this->errorHeroModuleConfig,
+            [self::DISPLAY_SETTINGS, 'template', 'layout'],
+        )));
         $model->setVariable(
             name: $model->captureTo(),
-            value: $this->phpRenderer->render(\Jield\Stdlib\Value::path($this->errorHeroModuleConfig, [self::DISPLAY_SETTINGS, 'template', 'view'])),
+            value: $this->phpRenderer->render(Value::nonEmptyString(Value::path(
+                $this->errorHeroModuleConfig,
+                [self::DISPLAY_SETTINGS, 'template', 'view'],
+            ))),
         );
 
         $response->setContent($this->phpRenderer->render($model));

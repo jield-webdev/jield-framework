@@ -8,6 +8,7 @@ use Attribute;
 use Doctrine\Common\Annotations\Annotation;
 use Doctrine\Common\Annotations\Annotation\NamedArgumentConstructor;
 
+use Jield\Stdlib\Value;
 use function is_array;
 use function sprintf;
 use function trigger_error;
@@ -55,9 +56,9 @@ final class ComposedObject
                 E_USER_DEPRECATED,
             );
 
-            $this->targetObject = \Jield\Stdlib\Value::nullableString($targetObject['target_object'] ?? null);
-            $this->isCollection = \Jield\Stdlib\Value::bool($targetObject['is_collection'] ?? $isCollection);
-            $this->options = \Jield\Stdlib\Value::array($targetObject['options'] ?? $options);
+            $this->targetObject = Value::nullableString($targetObject['target_object'] ?? null);
+            $this->isCollection = Value::bool($targetObject['is_collection'] ?? $isCollection);
+            $this->options = Value::array($targetObject['options'] ?? $options);
         } else {
             $this->targetObject = $targetObject;
             $this->isCollection = $isCollection;

@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Jield\Test\PHPUnit\Constraint;
 
 use Exception;
+use Jield\Stdlib\Value;
 use Jield\Test\PHPUnit\Controller\AbstractControllerTestCase;
+use Jield\Test\PHPUnit\FailureMessage;
 use Override;
 use PHPUnit\Framework\Constraint\Constraint;
 use PHPUnit\Framework\ExpectationFailedException;
@@ -51,12 +53,14 @@ abstract class LaminasConstraint extends Constraint
     {
         $routeMatch = $this->activeTestCase->getApplication()->getMvcEvent()->getRouteMatch();
         /** @var mixed $controllerIdentifier */
-        $controllerIdentifier = \Jield\Stdlib\Value::present($routeMatch)->getParam('controller');
+        $controllerIdentifier = Value::present($routeMatch)->getParam('controller');
 
         /** @var mixed $controllerManager */
         $controllerManager = $this->activeTestCase->getApplicationServiceLocator()->get('ControllerManager');
 
-        return \Jield\Stdlib\Value::string(\Jield\Stdlib\Value::call($controllerManager, 'get', [$controllerIdentifier])::class);
+        return Value::string(
+            Value::call($controllerManager, 'get', [$controllerIdentifier])::class,
+        );
     }
 
     /**
@@ -66,6 +70,6 @@ abstract class LaminasConstraint extends Constraint
      */
     private function createFailureMessage(string $message): string
     {
-        return \Jield\Test\PHPUnit\FailureMessage::format($this->activeTestCase, $message);
+        return FailureMessage::format($this->activeTestCase, $message);
     }
 }

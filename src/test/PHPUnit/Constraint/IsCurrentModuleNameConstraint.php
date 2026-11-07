@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Jield\Test\PHPUnit\Constraint;
 
+use Jield\Stdlib\Value;
 use Override;
 
 use function ltrim;
@@ -45,13 +46,13 @@ final class IsCurrentModuleNameConstraint extends LaminasConstraint
 
         // Find Module from Controller
         /** @var string $appModules */
-        foreach (\Jield\Stdlib\Value::iterable($applicationConfig['modules']) as $appModules) {
+        foreach (Value::iterable($applicationConfig['modules']) as $appModules) {
             if (!str_contains($controllerClass, $appModules . '\\')) {
                 continue;
             }
 
             if (str_contains($appModules, '\\')) {
-                $match = ltrim(substr($appModules, \Jield\Stdlib\Value::int(strrpos($appModules, '\\'))), '\\');
+                $match = ltrim(substr($appModules, Value::int(strrpos($appModules, '\\'))), '\\');
             } else {
                 $match = ltrim($appModules);
             }

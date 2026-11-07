@@ -7,6 +7,7 @@ namespace DoctrineORMModule\Options;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Driver;
 use Doctrine\DBAL\Driver\PDO\MySQL\Driver as PDOMySQLDriver;
+use Jield\Stdlib\Value;
 use Laminas\Stdlib\AbstractOptions;
 use PDO;
 
@@ -134,7 +135,7 @@ final class DBALConnection extends AbstractOptions
 
     public function setDriverClass(?string $driverClass): void
     {
-        $this->driverClass = $driverClass === null ? null : \Jield\Stdlib\Value::subclass($driverClass, Driver::class);
+        $this->driverClass = $driverClass === null ? null : Value::subclass($driverClass, Driver::class);
     }
 
     /** @return class-string<Driver>|null */
@@ -155,7 +156,7 @@ final class DBALConnection extends AbstractOptions
 
     public function setWrapperClass(string $wrapperClass): void
     {
-        $this->wrapperClass = \Jield\Stdlib\Value::subclass($wrapperClass, Connection::class);
+        $this->wrapperClass = Value::subclass($wrapperClass, Connection::class);
     }
 
     /** @return class-string<Connection>|null */

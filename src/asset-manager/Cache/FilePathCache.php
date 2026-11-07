@@ -6,6 +6,7 @@ namespace Jield\AssetManager\Cache;
 
 use Assetic\Contracts\Cache\CacheInterface;
 use Jield\AssetManager\Exception\RuntimeException;
+use Jield\Stdlib\Value;
 use Laminas\Stdlib\ErrorHandler;
 use Override;
 
@@ -48,10 +49,8 @@ class FilePathCache implements CacheInterface
      */
     protected function cachedFile(): string
     {
-        if (null === $this->cachedFile) {
-            $this->cachedFile =
-                rtrim(string: $this->dir, characters: '/') . '/' . trim(string: $this->filename, characters: '/');
-        }
+        $this->cachedFile ??=
+            rtrim(string: $this->dir, characters: '/') . '/' . trim(string: $this->filename, characters: '/');
 
         return $this->cachedFile;
     }
@@ -60,7 +59,7 @@ class FilePathCache implements CacheInterface
      * {@inheritDoc}
      */
     #[Override]
-    public function get($key): string|null
+    public function get($key): ?string
     {
         $path = $this->cachedFile();
 
@@ -79,14 +78,17 @@ class FilePathCache implements CacheInterface
     public function set($key, $value): void
     {
         $pathInfo = pathInfo(path: $this->cachedFile());
-        $cacheDir = $pathInfo['dirname'];
+        $cacheDir = dirname($this->cachedFile());
         $fileName = $pathInfo['basename'];
 
         ErrorHandler::start();
 
-        if (!is_dir(filename: \Jield\Stdlib\Value::string($cacheDir))) {
+        if (!is_dir(filename: Value::string($cacheDir))) {
             $umask = umask(mask: 0);
-            if (!mkdir(directory: \Jield\Stdlib\Value::string($cacheDir), permissions: 0o777, recursive: true) && !is_dir(filename: \Jield\Stdlib\Value::string($cacheDir))) {
+            if (
+                !mkdir(directory: Value::string($cacheDir), permissions: 0o777, recursive: true)
+                && !is_dir(filename: Value::string($cacheDir))
+            ) {
                 throw new \RuntimeException(message: sprintf('Directory "%s" was not created', $cacheDir));
             }
 
@@ -99,7 +101,7 @@ class FilePathCache implements CacheInterface
 
         ErrorHandler::stop();
 
-        if (!is_writable(filename: \Jield\Stdlib\Value::string($cacheDir))) {
+        if (!is_writable(filename: Value::string($cacheDir))) {
             throw new RuntimeException(message: 'Unable to write file ' . $this->cachedFile());
         }
 

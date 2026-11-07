@@ -35,7 +35,6 @@ class CompositeExpression extends Expression implements Stringable
     {
         $parts = [];
 
-        /** @var mixed $expression */
         foreach ($this->expressions as $expression) {
             if (!$expression) {
                 continue;

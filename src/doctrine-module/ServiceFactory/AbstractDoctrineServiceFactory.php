@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DoctrineModule\ServiceFactory;
 
+use Jield\Stdlib\Value;
 use Laminas\ServiceManager\Exception\ServiceNotFoundException;
 use Laminas\ServiceManager\Factory\AbstractFactoryInterface;
 use Psr\Container\ContainerInterface;
@@ -31,13 +32,16 @@ final class AbstractDoctrineServiceFactory implements AbstractFactoryInterface
     {
         $mappings = $this->getFactoryMapping(serviceLocator: $container, name: $requestedName);
 
-        if (!$mappings) {
+        if (!is_array($mappings)) {
             throw new ServiceNotFoundException();
         }
 
-        /** @var mixed $factoryClass */
         $factoryClass = $mappings['factoryClass'];
-        return \Jield\Stdlib\Value::call(\Jield\Stdlib\Value::instantiate($factoryClass, [$mappings['serviceName']]), '__invoke', [$container, $requestedName]);
+        return Value::call(
+            Value::instantiate($factoryClass, [$mappings['serviceName']]),
+            '__invoke',
+            [$container, $requestedName],
+        );
     }
 
     /** @return array|bool */
@@ -53,7 +57,6 @@ final class AbstractDoctrineServiceFactory implements AbstractFactoryInterface
             return false;
         }
 
-        /** @var mixed $config */
         $config = $serviceLocator->get('config');
         $mappingType = $matches['mappingType'];
         $serviceType = $matches['serviceType'];

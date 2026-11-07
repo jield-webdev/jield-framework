@@ -10,14 +10,10 @@ class Entity implements Link\LinkCollectionAwareInterface
 {
     use Link\LinkCollectionAwareTrait;
 
-    protected object|array $entity = [];
-
     public function __construct(
-        object|array $entity,
+        protected object|array $entity,
         protected mixed $id = null,
-    ) {
-        $this->entity = $entity;
-    }
+    ) {}
 
     public function getId(): mixed
     {

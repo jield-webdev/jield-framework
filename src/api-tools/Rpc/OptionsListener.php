@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Jield\ApiTools\Rpc;
 
 use Jield\Mvc\MvcEvent;
+use Jield\Stdlib\Value;
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\EventManager\ListenerAggregateInterface;
 use Laminas\EventManager\ListenerAggregateTrait;
@@ -23,16 +24,12 @@ class OptionsListener implements ListenerAggregateInterface
 {
     use ListenerAggregateTrait;
 
-    /** @var array */
-    protected array $config;
-
     /**
      * @param  array $config
      */
-    public function __construct(array $config)
-    {
-        $this->config = $config;
-    }
+    public function __construct(
+        protected array $config,
+    ) {}
 
     /**
      * {@inheritDoc}
@@ -55,22 +52,23 @@ class OptionsListener implements ListenerAggregateInterface
             return null;
         }
 
-        /** @var mixed $controller */
         $controller = $matches->getParam(name: 'controller', default: false);
         if (!$controller) {
             // No controller in the matches, nothing to do
             return null;
         }
 
-        if (!array_key_exists(key: \Jield\Stdlib\Value::plainScalar($controller), array: $this->config)) {
+        if (!array_key_exists(key: Value::key($controller), array: $this->config)) {
             // No matching controller in our configuration, nothing to do
             return null;
         }
 
-        /** @var mixed $config */
         $config = $this->config[$controller];
 
-        if (!array_key_exists(key: 'http_methods', array: \Jield\Stdlib\Value::array($config)) || empty($config['http_methods'])) {
+        if (
+            !array_key_exists(key: 'http_methods', array: Value::array($config))
+            || empty($config['http_methods'])
+        ) {
             // No HTTP methods set for controller, nothing to do
             return null;
         }
@@ -81,7 +79,9 @@ class OptionsListener implements ListenerAggregateInterface
             return null;
         }
 
-        $methods = $this->normalizeMethods(methods: \Jield\Stdlib\Value::arrayOrString($config['http_methods']));
+        $methods = $this->normalizeMethods(methods: is_array($config['http_methods'])
+            ? Value::strings($config['http_methods'])
+            : Value::string($config['http_methods']));
 
         $method = $request->getMethod();
         if ($method === Request::METHOD_OPTIONS) {
@@ -143,7 +143,10 @@ class OptionsListener implements ListenerAggregateInterface
     protected function getOptionsResponse(MvcEvent $event, array $options): Response
     {
         $response = $event->getResponse();
-        $this->createAllowHeader(options: $options, response: \Jield\Stdlib\Value::instance($response, \Laminas\Http\Response::class));
+        $this->createAllowHeader(options: $options, response: Value::instance(
+            $response,
+            \Laminas\Http\Response::class,
+        ));
         return $response;
     }
 

@@ -11,9 +11,11 @@ use Jield\Authorize\Guard\Route;
 use Jield\Mvc\Application;
 use Jield\Mvc\MvcEvent;
 use Jield\Mvc\View\Model\ViewModel;
+use Jield\Stdlib\Value;
 use Laminas\Authentication\AuthenticationService;
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\EventManager\ListenerAggregateInterface;
+use Laminas\Http\Request;
 use Laminas\Router\Http\TreeRouteStack;
 use Laminas\Session\Container;
 use Laminas\Stdlib\ResponseInterface as Response;
@@ -79,7 +81,6 @@ class UnauthorizedStrategy implements ListenerAggregateInterface
     public function onDispatchError(MvcEvent $event): \Laminas\Http\PhpEnvironment\Response
     {
         // Do nothing if the result is a response object
-        /** @var mixed $result */
         $result = $event->getResult();
 
         /** @var \Laminas\Http\PhpEnvironment\Response $response */
@@ -111,18 +112,23 @@ class UnauthorizedStrategy implements ListenerAggregateInterface
                     /** @var TreeRouteStack $router */
                     $router = $event->getRouter();
 
-                    $redirect = $router->assemble(params: \Jield\Stdlib\Value::routeParams($event->getRouteMatch()?->getParams()), options: [
-                        'name' => $event->getParam(name: 'route'),
-                    ])->toString();
+                    $redirect = $router->assemble(
+                        params: Value::routeParams($event->getRouteMatch()?->getParams()),
+                        options: [
+                            'name' => $event->getParam(name: 'route'),
+                        ],
+                    )->toString();
 
                     //Store the referrer in a session
                     if ($redirect) {
                         //Grab the query and append it to the URL
                         /** @var mixed $query */
-                        $query = \Jield\Stdlib\Value::instance($event->getRequest(), \Laminas\Http\Request::class)->getUri()->getQuery();
+                        $query = Value::instance($event->getRequest(), Request::class)
+                            ->getUri()
+                            ->getQuery();
                         $session = new Container('session');
-                        /** @phpstan-ignore-next-line */
-                        $session->redirect = $redirect . (empty($query) ? '' : '?' . \Jield\Stdlib\Value::stringify($query));
+                        $session['redirect'] =
+                            $redirect . (empty($query) ? '' : '?' . Value::stringify($query));
                     }
 
                     $response->getHeaders()->addHeaderLine(headerFieldNameOrLine: 'Location', fieldValue: $url);
@@ -135,7 +141,7 @@ class UnauthorizedStrategy implements ListenerAggregateInterface
                 if (!$event->getParam(name: 'exception') instanceof UnAuthorizedException) {
                     return $response;
                 }
-                $viewVariables['reason'] = \Jield\Stdlib\Value::call($event->getParam(name: 'exception'), 'getMessage');
+                $viewVariables['reason'] = Value::call($event->getParam(name: 'exception'), 'getMessage');
                 $viewVariables['error'] = 'error-unauthorized';
                 break;
             default:
@@ -144,7 +150,7 @@ class UnauthorizedStrategy implements ListenerAggregateInterface
 
         $model = new ViewModel(variables: $viewVariables);
 
-        $model->setTemplate(template: \Jield\Stdlib\Value::nonEmptyString($this->getTemplate()));
+        $model->setTemplate(template: Value::nonEmptyString($this->getTemplate()));
         $event->getViewModel()->addChild(child: $model);
         $response->setStatusCode(code: 403);
         $event->setResponse(response: $response);

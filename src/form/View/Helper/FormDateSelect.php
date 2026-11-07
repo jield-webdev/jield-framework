@@ -10,6 +10,7 @@ use Jield\Form\Element\DateSelect as DateSelectElement;
 use Jield\Form\ElementInterface;
 use Jield\Form\Exception;
 
+use Jield\Stdlib\Value;
 use function is_numeric;
 use function sprintf;
 
@@ -70,8 +71,8 @@ class FormDateSelect extends AbstractFormDateSelect
         $selectHelper = $this->getSelectElementHelper();
         $pattern = $this->parsePattern(renderDelimiters: $element->shouldRenderDelimiters());
 
-        $daysOptions = $this->getDaysOptions(pattern: \Jield\Stdlib\Value::string($pattern['day']));
-        $monthsOptions = $this->getMonthsOptions(pattern: \Jield\Stdlib\Value::string($pattern['month']));
+        $daysOptions = $this->getDaysOptions(pattern: Value::string($pattern['day']));
+        $monthsOptions = $this->getMonthsOptions(pattern: Value::string($pattern['month']));
         $yearOptions = $this->getYearsOptions(minYear: $element->getMinYear(), maxYear: $element->getMaxYear());
 
         $dayElement = $element->getDayElement()->setValueOptions(options: $daysOptions);
@@ -87,14 +88,13 @@ class FormDateSelect extends AbstractFormDateSelect
         $data = [];
         $data[$pattern['day']] = $selectHelper->render(element: $dayElement);
         $data[$pattern['month']] = $selectHelper->render(element: $monthElement);
-        $data[\Jield\Stdlib\Value::key($pattern['year'])] = $selectHelper->render(element: $yearElement);
+        $data[Value::key($pattern['year'])] = $selectHelper->render(element: $yearElement);
 
         $markup = '';
-        /** @var mixed $value */
         foreach ($pattern as $key => $value) {
             // Delimiter
             if (is_numeric(value: $key)) {
-                $markup .= \Jield\Stdlib\Value::stringify($value);
+                $markup .= Value::stringify($value);
             } else {
                 $markup .= $data[$value];
             }

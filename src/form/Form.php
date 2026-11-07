@@ -5,13 +5,18 @@ declare(strict_types=1);
 namespace Jield\Form;
 
 use Jield\Form\Element\CollectionInterface;
+use Jield\Form\InputFilterAwareInterface;
+use Jield\Stdlib\InputFilterValidator;
+use Jield\Stdlib\Value;
 use Laminas\Hydrator\HydratorInterface;
 use Laminas\InputFilter\CollectionInputFilter;
 use Laminas\InputFilter\InputFilter;
-use Jield\Form\InputFilterAwareInterface;
 use Laminas\InputFilter\InputFilterInterface;
 use Laminas\InputFilter\InputFilterProviderInterface;
+use Laminas\InputFilter\InputFilterValidationResult;
+use Laminas\InputFilter\InputInterface;
 use Laminas\InputFilter\InputProviderInterface;
+use Laminas\InputFilter\MutableInputInterface;
 use Laminas\InputFilter\ReplaceableInputInterface;
 use Laminas\Stdlib\ArrayUtils;
 use Traversable;
@@ -96,8 +101,8 @@ class Form extends Fieldset implements FormInterface
      */
     protected bool $isValid = false;
 
-    /** @var \Laminas\InputFilter\InputFilterValidationResult<array<array-key, mixed>>|null */
-    protected ?\Laminas\InputFilter\InputFilterValidationResult $validationResult = null;
+    /** @var InputFilterValidationResult<array<array-key, mixed>>|null */
+    protected ?InputFilterValidationResult $validationResult = null;
 
     /**
      * Is the form prepared ?
@@ -146,11 +151,15 @@ class Form extends Fieldset implements FormInterface
         parent::setOptions(options: $options);
 
         if (isset($this->options['prefer_form_input_filter'])) {
-            $this->setPreferFormInputFilter(preferFormInputFilter: \Jield\Stdlib\Value::bool($this->options['prefer_form_input_filter']));
+            $this->setPreferFormInputFilter(preferFormInputFilter: Value::bool(
+                $this->options['prefer_form_input_filter'],
+            ));
         }
 
         if (isset($this->options['use_input_filter_defaults'])) {
-            $this->setUseInputFilterDefaults(useInputFilterDefaults: \Jield\Stdlib\Value::bool($this->options['use_input_filter_defaults']));
+            $this->setUseInputFilterDefaults(useInputFilterDefaults: Value::bool(
+                $this->options['use_input_filter_defaults'],
+            ));
         }
 
         return $this;
@@ -223,7 +232,7 @@ class Form extends Fieldset implements FormInterface
         foreach ($this->iterator as $elementOrFieldset) {
             assert(assertion: $elementOrFieldset instanceof ElementInterface);
             if ($form instanceof Form && $form->wrapElements()) {
-                $elementOrFieldset->setName(name: (string) ($name) . '[' . (string) $elementOrFieldset->getName() . ']');
+                $elementOrFieldset->setName(name: (string) $name . '[' . (string) $elementOrFieldset->getName() . ']');
             }
 
             // Recursively prepare elements
@@ -248,7 +257,7 @@ class Form extends Fieldset implements FormInterface
         }
 
         $this->hasValidated = false;
-        $this->data = $data;
+        $this->data = Value::array($data);
         $this->populateValues(data: $data);
 
         return $this;
@@ -325,26 +334,29 @@ class Form extends Fieldset implements FormInterface
             return null;
         }
 
-        $validationResult = $this->validationResult
-            ?? throw new Exception\DomainException('No validation result is available for binding.');
+        $validationResult = $this->validationResult ?? throw new Exception\DomainException(
+            'No validation result is available for binding.',
+        );
         $data = match ($this->bindAs) {
             FormInterface::VALUES_RAW => $validationResult->rawValue(),
             default => $validationResult->value(),
         };
 
-        $data = $this->prepareBindData(values: \Jield\Stdlib\Value::array($data), match: \Jield\Stdlib\Value::array($this->data));
+        $data = $this->prepareBindData(
+            values: Value::array($data),
+            match: Value::array($this->data),
+        );
         $validationGroup = $this->getValidationGroup();
 
         // If there is a base fieldset, only hydrate beginning from the base fieldset
         if ($this->baseFieldset !== null) {
-            /** @var mixed $data */
-            $data = $data[$this->baseFieldset->getName()] ?? [];
-            $this->object = $this->baseFieldset->bindValues(
-                \Jield\Stdlib\Value::array($data),
-                \Jield\Stdlib\Value::nullableArray($validationGroup[$this->baseFieldset->getName()] ?? []),
-            );
+            $name = Value::string($this->baseFieldset->getName());
+            $this->object = Value::nullableArrayOrObject($this->baseFieldset->bindValues(
+                Value::array($data[$name] ?? []),
+                Value::nullableArray($validationGroup[$name] ?? []),
+            ));
         } else {
-            $this->object = parent::bindValues(values: $data, validationGroup: $validationGroup);
+            $this->object = Value::nullableArrayOrObject(parent::bindValues(values: $data, validationGroup: $validationGroup));
         }
         return null;
     }
@@ -355,7 +367,6 @@ class Form extends Fieldset implements FormInterface
     protected function prepareBindData(array $values, array $match): array
     {
         $data = [];
-        /** @var mixed $value */
         foreach ($values as $name => $value) {
             if (!array_key_exists(key: $name, array: $match)) {
                 continue;
@@ -457,18 +468,24 @@ class Form extends Fieldset implements FormInterface
         if (!is_array(value: $this->data)) {
             $data = $this->extract();
             $this->populateValues(data: $data, onlyBase: true);
-            $this->data = $data;
+            $this->data = Value::array($data);
         }
 
         $filter = $this->getInputFilter();
 
         $validationGroup = $this->getValidationGroup();
         if ($validationGroup !== null) {
-            $this->prepareValidationGroup(formOrFieldset: $this, data: \Jield\Stdlib\Value::array($this->data), validationGroup: $validationGroup);
+            $this->prepareValidationGroup(
+                formOrFieldset: $this,
+                data: Value::array($this->data),
+                validationGroup: $validationGroup,
+            );
         }
 
-        $this->validationResult = \Jield\Stdlib\InputFilterValidator::validate(
-            $filter, \Jield\Stdlib\Value::array($this->data), $validationGroup,
+        $this->validationResult = InputFilterValidator::validate(
+            $filter,
+            Value::array($this->data),
+            $validationGroup,
         );
         $this->isValid = $result = $this->validationResult->valid();
         $this->hasValidated = true;
@@ -506,9 +523,15 @@ class Form extends Fieldset implements FormInterface
             return $this->object;
         }
 
-        $validationResult = $this->validationResult
-            ?? throw new Exception\DomainException('No validation result is available.');
-        return \Jield\Stdlib\Value::arrayOrObject($flag === FormInterface::VALUES_RAW ? $validationResult->rawValue() : $validationResult->value());
+        $validationResult = $this->validationResult ?? throw new Exception\DomainException(
+            'No validation result is available.',
+        );
+        if ($flag === FormInterface::VALUES_RAW) {
+            return $validationResult->rawValue();
+        }
+        /** @var TFilteredValues $values The configured input filter defines the normalized data shape. */
+        $values = $validationResult->value();
+        return $values;
     }
 
     /**
@@ -564,7 +587,6 @@ class Form extends Fieldset implements FormInterface
         array &$validationGroup,
     ): void {
         $elements = iterator_to_array(iterator: $formOrFieldset->getIterator());
-        /** @var mixed $value */
         foreach ($validationGroup as $key => &$value) {
             if (!isset($elements[$key])) {
                 continue;
@@ -580,7 +602,7 @@ class Form extends Fieldset implements FormInterface
                 $values = [];
 
                 if (isset($data[$key])) {
-                    foreach (array_keys(array: \Jield\Stdlib\Value::array($data[$key])) as $cKey) {
+                    foreach (array_keys(array: Value::array($data[$key])) as $cKey) {
                         $values[$cKey] = $value;
                     }
                 }
@@ -588,13 +610,11 @@ class Form extends Fieldset implements FormInterface
                 $value = $values;
             }
 
-            if (!isset($data[$key])) {
-                $data[$key] = [];
-            }
-            $childGroup = \Jield\Stdlib\Value::array($validationGroup[$key]);
+            $data[$key] ??= [];
+            $childGroup = Value::array($validationGroup[$key]);
             $this->prepareFieldsetValidationGroup(
-                formOrFieldset: \Jield\Stdlib\Value::instance($fieldset, \Jield\Form\FieldsetInterface::class),
-                data: \Jield\Stdlib\Value::array($data[$key]),
+                formOrFieldset: Value::instance($fieldset, \Jield\Form\FieldsetInterface::class),
+                data: Value::array($data[$key]),
                 validationGroup: $childGroup,
             );
             $validationGroup[$key] = $childGroup;
@@ -640,16 +660,16 @@ class Form extends Fieldset implements FormInterface
             }
         }
 
-        if (!isset($this->filter)) {
-            $this->filter = new InputFilter($this->getFormFactory()->getInputFilterFactory());
-        }
+        $this->filter ??= new InputFilter($this->getFormFactory()->getInputFilterFactory());
 
         if (!$this->hasAddedInputFilterDefaults && $this->useInputFilterDefaults()) {
             $this->attachInputFilterDefaults(inputFilter: $this->filter, fieldset: $this);
             $this->hasAddedInputFilterDefaults = true;
         }
 
-        return $this->filter;
+        /** @var InputFilterInterface<TFilteredValues> $filter */
+        $filter = $this->filter;
+        return $filter;
     }
 
     /**
@@ -733,8 +753,15 @@ class Form extends Fieldset implements FormInterface
                     $spec = $element->getInputSpecification();
                     $input = $inputFactory->createInput(inputSpecification: $spec);
 
-                    if ($input instanceof \Laminas\InputFilter\MutableInputInterface && $inputFilter->has($name) && $inputFilter instanceof ReplaceableInputInterface) {
-                        $input->merge(input: \Jield\Stdlib\Value::instance($inputFilter->get($name), \Laminas\InputFilter\InputInterface::class));
+                    if (
+                        $input instanceof MutableInputInterface
+                        && $inputFilter->has($name)
+                        && $inputFilter instanceof ReplaceableInputInterface
+                    ) {
+                        $input->merge(input: Value::instance(
+                            $inputFilter->get($name),
+                            InputInterface::class,
+                        ));
                         $inputFilter->replace(input: $input, name: $name);
                         continue;
                     }
@@ -743,14 +770,17 @@ class Form extends Fieldset implements FormInterface
                     // the input filter it composes for an element of the same
                     // name as was done above.
                     if (
-                        $input instanceof \Laminas\InputFilter\MutableInputInterface
+                        $input instanceof MutableInputInterface
                         && $inputFilter instanceof CollectionInputFilter
                         && $inputFilter->getInputFilter()->has($name)
                         && $inputFilter->getInputFilter() instanceof ReplaceableInputInterface
                     ) {
                         $collectionInputFilter = $inputFilter->getInputFilter();
                         assert($collectionInputFilter instanceof ReplaceableInputInterface);
-                        $input->merge(input: \Jield\Stdlib\Value::instance($collectionInputFilter->get($name), \Laminas\InputFilter\InputInterface::class));
+                        $input->merge(input: Value::instance(
+                            $collectionInputFilter->get($name),
+                            InputInterface::class,
+                        ));
                         $collectionInputFilter->replace(input: $input, name: $name);
                         continue;
                     }
@@ -765,13 +795,17 @@ class Form extends Fieldset implements FormInterface
             }
 
             if ($fieldset === $this && $fieldset instanceof InputFilterProviderInterface) {
-                /** @var mixed $name
-                 * @var mixed $spec
-                 */
                 foreach ($fieldset->getInputFilterSpecification() as $name => $spec) {
+                    if ($spec instanceof InputFilterInterface || $spec instanceof InputInterface) {
+                        $inputFilter->add($spec, $name);
+                        continue;
+                    }
+                    if (!is_array($spec)) {
+                        continue;
+                    }
                     $spec['name'] ??= $name;
                     $input = $inputFactory->createInput(inputSpecification: $spec);
-                    $inputFilter->add(input: $input, name: \Jield\Stdlib\Value::nullableKey($name));
+                    $inputFilter->add(input: $input, name: Value::nullableKey($name));
                 }
             }
         }
@@ -782,14 +816,19 @@ class Form extends Fieldset implements FormInterface
                     // Add a new empty input filter if it does not exist (or the fieldset's object input filter),
                     // so that elements of nested fieldsets can be recursively added
                     if ($childFieldset->getObject() instanceof InputFilterAwareInterface) {
-                        $inputFilter->add(input: \Jield\Stdlib\Value::call($childFieldset->getObject(), 'getInputFilter'), name: $name);
+                        $inputFilter->add(
+                            input: Value::instance($childFieldset->getObject(), InputFilterAwareInterface::class)->getInputFilter(),
+                            name: $name,
+                        );
                     } else if (
                         $childFieldset instanceof CollectionInterface
                         && null !== ($targetElement = $childFieldset->getTargetElement())
                         && $targetElement instanceof InputFilterProviderInterface
                     ) {
                         // Add input filter for collections via getInputFilterSpecification()
-                        $collectionContainerFilter = new CollectionInputFilter(\Jield\Form\InputFilterFactory::create());
+                        $collectionContainerFilter = new CollectionInputFilter(
+                            \Jield\Form\InputFilterFactory::create(),
+                        );
 
                         $spec = $targetElement->getInputFilterSpecification();
                         $filter = $inputFactory->createInputFilter(inputFilterSpecification: \Jield\Form\InputFilterFactory::normalizeSpecification(
@@ -824,7 +863,10 @@ class Form extends Fieldset implements FormInterface
 
                 // Traverse the elements of the fieldset, and attach any
                 // defaults to the fieldset's input filter
-                $this->attachInputFilterDefaults(inputFilter: $fieldsetFilter, fieldset: \Jield\Stdlib\Value::instance($childFieldset, \Jield\Form\FieldsetInterface::class));
+                $this->attachInputFilterDefaults(inputFilter: $fieldsetFilter, fieldset: Value::instance(
+                    $childFieldset,
+                    \Jield\Form\FieldsetInterface::class,
+                ));
                 continue;
             }
 
@@ -897,8 +939,8 @@ class Form extends Fieldset implements FormInterface
 
         if ($onlyBase && $this->baseFieldset !== null) {
             $name = (string) $this->baseFieldset->getName();
-            if (array_key_exists(key: $name, array: \Jield\Stdlib\Value::array($data))) {
-                $this->baseFieldset->populateValues(data: \Jield\Stdlib\Value::iterable($data[$name]));
+            if (array_key_exists(key: $name, array: Value::array($data))) {
+                $this->baseFieldset->populateValues(data: Value::iterable($data[$name]));
             }
         } else {
             parent::populateValues(data: $data);
@@ -930,7 +972,11 @@ class Form extends Fieldset implements FormInterface
      */
     public function setInputFilterByName(string $inputFilterName): void
     {
-        $inputFilter = $this->getFormFactory()->getInputFilterFactory()->createInputFilter(['type' => $inputFilterName]);
-        $this->setInputFilter(inputFilter: \Jield\Stdlib\Value::instance($inputFilter, \Laminas\InputFilter\InputFilterInterface::class));
+        $inputFilter = $this
+            ->getFormFactory()
+            ->getInputFilterFactory()
+            ->createInputFilter(['type' => $inputFilterName]);
+        /** @var InputFilterInterface<TFilteredValues> $inputFilter */
+        $this->setInputFilter(inputFilter: $inputFilter);
     }
 }

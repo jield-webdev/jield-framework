@@ -6,6 +6,7 @@ namespace Jield\Bootstrap5\Form\View\Helper;
 
 use Jield\Form\ElementInterface;
 use Jield\Form\View\Helper;
+use function count;
 
 final class FormDateTimeLocal extends Helper\FormDateTimeLocal
 {
@@ -13,7 +14,7 @@ final class FormDateTimeLocal extends Helper\FormDateTimeLocal
     {
         $element->setAttribute(key: 'class', value: 'form-control');
 
-        if (\count(value: $element->getMessages()) > 0) {
+        if (count(value: $element->getMessages()) > 0) {
             $element->setAttribute(key: 'class', value: 'form-control is-invalid');
         }
 

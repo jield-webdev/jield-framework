@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Jield\Mvc\Factory;
 
+use Jield\Stdlib\Value;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Laminas\View\Factory\Configuration;
 use Laminas\View\Resolver\PrefixPathStackResolver;
+use Laminas\View\Resolver\ResolverInterface;
 use Psr\Container\ContainerInterface;
 
 class ViewPrefixPathStackResolverFactory implements FactoryInterface
@@ -30,6 +32,14 @@ class ViewPrefixPathStackResolverFactory implements FactoryInterface
         /** @var mixed $prefixes */
         $prefixes = $config['view_manager']['prefix_template_path_stack'] ?? [];
 
-        return new PrefixPathStackResolver($prefixes, Configuration::defaultTemplateSuffix($container));
+        $paths = [];
+        foreach (Value::namedValues($prefixes) as $prefix => $path) {
+            $paths[$prefix] = $path instanceof ResolverInterface
+                ? $path
+                : (is_array($path)
+                    ? array_values(array_map(Value::nonEmptyString(...), $path))
+                    : Value::nonEmptyString($path));
+        }
+        return new PrefixPathStackResolver($paths, Configuration::defaultTemplateSuffix($container));
     }
 }

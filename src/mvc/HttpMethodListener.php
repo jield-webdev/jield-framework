@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Jield\Mvc;
 
+use Jield\Stdlib\Value;
 use Laminas\EventManager\AbstractListenerAggregate;
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\Http\Request as HttpRequest;
@@ -53,7 +54,7 @@ class HttpMethodListener extends AbstractListenerAggregate
             return;
         }
 
-        $this->listeners[] = $events->attach(MvcEvent::EVENT_ROUTE, [$this, 'onRoute'], 10_000);
+        $this->listeners[] = $events->attach(MvcEvent::EVENT_ROUTE, $this->onRoute(...), 10_000);
     }
 
     /**
@@ -89,9 +90,8 @@ class HttpMethodListener extends AbstractListenerAggregate
 
     public function setAllowedMethods(array $allowedMethods): void
     {
-        /** @var mixed $value */
         foreach ($allowedMethods as &$value) {
-            $value = strtoupper(\Jield\Stdlib\Value::string($value));
+            $value = strtoupper(Value::string($value));
         }
         $this->allowedMethods = $allowedMethods;
     }

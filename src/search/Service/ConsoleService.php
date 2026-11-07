@@ -6,6 +6,7 @@ namespace Jield\Search\Service;
 
 use InvalidArgumentException;
 use Jield\Search\Entity\HasSearchInterface;
+use Jield\Stdlib\Value;
 use Psr\Container\ContainerInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Webmozart\Assert\Assert;
@@ -19,21 +20,28 @@ class ConsoleService
     public function __construct(
         private readonly ContainerInterface $container,
     ) {
-        /** @var mixed $services */
-        $services = \Jield\Stdlib\Value::path($container->get('config'), ['search', 'cores']);
+        $services = Value::path($container->get('config'), ['search', 'cores']);
 
         //Do an init check
         /** @var mixed $key
          * @var mixed $service
          */
-        foreach (\Jield\Stdlib\Value::iterable($services ?? []) as $key => $service) {
-            if (!$this->container->has(\Jield\Stdlib\Value::string(\Jield\Stdlib\Value::accessible($service)['service']))) {
-                throw new InvalidArgumentException(message: sprintf('Service %s not found', \Jield\Stdlib\Value::scalar(\Jield\Stdlib\Value::path($service, ['service']))));
+        foreach (Value::iterable($services ?? []) as $key => $service) {
+            if (!$this->container->has(Value::string(
+                Value::accessible($service)['service'],
+            ))) {
+                throw new InvalidArgumentException(message: sprintf(
+                    'Service %s not found',
+                    Value::scalar(Value::path($service, ['service'])),
+                ));
             }
 
-            Assert::isInstanceOf(value: \Jield\Stdlib\Value::instantiate(\Jield\Stdlib\Value::accessible($service)['entity']), class: HasSearchInterface::class);
+            Assert::isInstanceOf(
+                value: Value::instantiate(Value::accessible($service)['entity']),
+                class: HasSearchInterface::class,
+            );
 
-            $this->services[\Jield\Stdlib\Value::key($key)] = $service;
+            $this->services[Value::key($key)] = $service;
         }
     }
 
@@ -44,12 +52,13 @@ class ConsoleService
         bool $shallow = false,
     ): void {
         if ($index === 'all') {
-            /** @var mixed $service */
             foreach ($this->services as $service) {
                 /** @var AbstractSearchService $serviceInstance */
-                $serviceInstance = $this->container->get(\Jield\Stdlib\Value::string(\Jield\Stdlib\Value::accessible($service)['service']));
+                $serviceInstance = $this->container->get(Value::string(
+                    Value::accessible($service)['service'],
+                ));
                 /** @var HasSearchInterface $entity */
-                $entity = \Jield\Stdlib\Value::instantiate(\Jield\Stdlib\Value::accessible($service)['entity']);
+                $entity = Value::instantiate(Value::accessible($service)['entity']);
 
                 /** @var mixed $limit */
                 $limit = $service['limit'] ?? 50;
@@ -61,8 +70,8 @@ class ConsoleService
                     entity: $entity,
                     clearIndex: $clearIndex,
                     shallow: $shallow,
-                    limit: \Jield\Stdlib\Value::int($limit),
-                    criteria: \Jield\Stdlib\Value::array($criteria),
+                    limit: Value::int($limit),
+                    criteria: Value::array($criteria),
                 );
             }
             return;
@@ -78,9 +87,11 @@ class ConsoleService
 
         //We have the service, so get it
         /** @var AbstractSearchService $serviceInstance */
-        $serviceInstance = $this->container->get(\Jield\Stdlib\Value::string(\Jield\Stdlib\Value::accessible($this->services[$index])['service']));
+        $serviceInstance = $this->container->get(Value::string(
+            Value::accessible($this->services[$index])['service'],
+        ));
         /** @var HasSearchInterface $entity */
-        $entity = \Jield\Stdlib\Value::instantiate(\Jield\Stdlib\Value::accessible($this->services[$index])['entity']);
+        $entity = Value::instantiate(Value::accessible($this->services[$index])['entity']);
 
         /** @var mixed $limit */
         $limit = $this->services[$index]['limit'] ?? 50;
@@ -92,40 +103,49 @@ class ConsoleService
             entity: $entity,
             clearIndex: $clearIndex,
             shallow: $shallow,
-            limit: \Jield\Stdlib\Value::int($limit),
-            criteria: \Jield\Stdlib\Value::array($criteria),
+            limit: Value::int($limit),
+            criteria: Value::array($criteria),
         );
     }
 
     public function syncIndex(OutputInterface $output): void
     {
-        /** @var mixed $service */
         foreach ($this->services as $service) {
             if ($service['skip_sync'] ?? false) {
                 $output->writeln(messages: '');
-                $output->writeln(messages: sprintf('<comment>Skipping sync for %s</comment>', \Jield\Stdlib\Value::scalar(\Jield\Stdlib\Value::accessible($service)['service'])));
+                $output->writeln(messages: sprintf(
+                    '<comment>Skipping sync for %s</comment>',
+                    Value::scalar(Value::accessible($service)['service']),
+                ));
                 continue;
             }
 
             /** @var AbstractSearchService $serviceInstance */
-            $serviceInstance = $this->container->get(\Jield\Stdlib\Value::string(\Jield\Stdlib\Value::accessible($service)['service']));
+            $serviceInstance = $this->container->get(Value::string(
+                Value::accessible($service)['service'],
+            ));
             /** @var HasSearchInterface $entity */
-            $entity = \Jield\Stdlib\Value::instantiate(\Jield\Stdlib\Value::accessible($service)['entity']);
+            $entity = Value::instantiate(Value::accessible($service)['entity']);
             /** @var mixed $criteria */
             $criteria = $service['criteria'] ?? [];
 
-            $serviceInstance->syncIndex(output: $output, entity: $entity, criteria: \Jield\Stdlib\Value::array($criteria));
+            $serviceInstance->syncIndex(
+                output: $output,
+                entity: $entity,
+                criteria: Value::array($criteria),
+            );
         }
     }
 
     public function testIndex(OutputInterface $output, bool $clearIndex = false): void
     {
-        /** @var mixed $service */
         foreach ($this->services as $service) {
             /** @var AbstractSearchService $serviceInstance */
-            $serviceInstance = $this->container->get(\Jield\Stdlib\Value::string(\Jield\Stdlib\Value::accessible($service)['service']));
+            $serviceInstance = $this->container->get(Value::string(
+                Value::accessible($service)['service'],
+            ));
             /** @var HasSearchInterface $entity */
-            $entity = \Jield\Stdlib\Value::instantiate(\Jield\Stdlib\Value::accessible($service)['entity']);
+            $entity = Value::instantiate(Value::accessible($service)['entity']);
 
             $serviceInstance->testIndex(output: $output, entity: $entity, clearIndex: $clearIndex);
         }

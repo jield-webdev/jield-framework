@@ -6,6 +6,7 @@ namespace Jield\Form\View\Helper;
 
 use Jield\Form\Element;
 use Jield\Form\ElementInterface;
+use Jield\Stdlib\Value;
 use Laminas\View\HelperPluginManagerInterface;
 
 use function assert;
@@ -161,7 +162,7 @@ class FormElement extends AbstractHelper
         /** @var mixed $helper */
         $helper = $this->helpers->get($name);
         assert(assertion: is_callable(value: $helper));
-        return \Jield\Stdlib\Value::string($helper($element));
+        return Value::string($helper($element));
     }
 
     /**

@@ -32,11 +32,23 @@ abstract class AbstractGuard extends AbstractListenerAggregate implements
         $this->container = $container;
         /** @var mixed $rule */
         foreach ($rules as $rule) {
-            \Jield\Stdlib\Value::setPath($rule, ['roles'], \Jield\Stdlib\Value::toArray(\Jield\Stdlib\Value::accessible($rule)['roles']));
-            \Jield\Stdlib\Value::setPath($rule, ['action'], isset($rule['action']) ? \Jield\Stdlib\Value::toArray($rule['action']) : [null]);
+            \Jield\Stdlib\Value::setPath(
+                $rule,
+                ['roles'],
+                \Jield\Stdlib\Value::toArray(\Jield\Stdlib\Value::accessible($rule)['roles']),
+            );
+            \Jield\Stdlib\Value::setPath(
+                $rule,
+                ['action'],
+                isset($rule['action']) ? \Jield\Stdlib\Value::toArray($rule['action']) : [null],
+            );
             /** @var mixed $resource */
-            foreach (\Jield\Stdlib\Value::iterable($this->extractResourcesFromRule(\Jield\Stdlib\Value::array($rule))) as $resource) {
-                $this->rules[\Jield\Stdlib\Value::key($resource)] = ['roles' => \Jield\Stdlib\Value::toArray($rule['roles'])];
+            foreach (\Jield\Stdlib\Value::iterable($this->extractResourcesFromRule(\Jield\Stdlib\Value::array(
+                $rule,
+            ))) as $resource) {
+                $this->rules[\Jield\Stdlib\Value::key($resource)] = [
+                    'roles' => \Jield\Stdlib\Value::toArray($rule['roles']),
+                ];
                 if (isset($rule['assertion'])) {
                     $this->rules[\Jield\Stdlib\Value::key($resource)]['assertion'] = $rule['assertion'];
                 }

@@ -100,7 +100,6 @@ class SplPriorityQueue extends \SplPriorityQueue implements Serializable
 
     public function unserialize(string $data): void
     {
-        /** @var mixed $toUnserialize */
         $toUnserialize = unserialize($data);
         if (!is_array($toUnserialize)) {
             throw new UnexpectedValueException(sprintf(
@@ -141,8 +140,14 @@ class SplPriorityQueue extends \SplPriorityQueue implements Serializable
                 ));
             }
 
-            if (!isset($item['priority']) || !is_array($item['priority']) || count($item['priority']) !== 2
-                || !array_key_exists(0, $item['priority']) || !isset($item['priority'][1]) || !is_int($item['priority'][1])) {
+            if (
+                !isset($item['priority'])
+                || !is_array($item['priority'])
+                || count($item['priority']) !== 2
+                || !array_key_exists(0, $item['priority'])
+                || !isset($item['priority'][1])
+                || !is_int($item['priority'][1])
+            ) {
                 throw new UnexpectedValueException(sprintf(
                     'Cannot deserialize %s instance: corrupt item; missing or invalid "priority" element',
                     self::class,

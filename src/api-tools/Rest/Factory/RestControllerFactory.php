@@ -5,10 +5,14 @@ declare(strict_types=1);
 namespace Jield\ApiTools\Rest\Factory;
 
 use Jield\ApiTools\Hal\Collection;
+use Jield\ApiTools\Hal\Link\Link;
 use Jield\ApiTools\Rest\AbstractResourceListener;
 use Jield\ApiTools\Rest\Resource;
 use Jield\ApiTools\Rest\RestController;
+use Jield\Stdlib\Service;
+use Jield\Stdlib\Value;
 use Laminas\EventManager\Event;
+use Laminas\EventManager\EventManagerInterface;
 use Laminas\InputFilter\InputFilter;
 use Laminas\ServiceManager\Exception\ServiceNotCreatedException;
 use Laminas\ServiceManager\Exception\ServiceNotFoundException;
@@ -16,7 +20,6 @@ use Laminas\ServiceManager\Factory\AbstractFactoryInterface;
 use Laminas\Stdlib\Parameters;
 use Override;
 use Psr\Container\ContainerInterface;
-use Webmozart\Assert\Assert;
 
 use function array_key_exists;
 use function array_keys;
@@ -39,8 +42,8 @@ class RestControllerFactory implements AbstractFactoryInterface
     #[Override]
     public function canCreate(ContainerInterface $container, $requestedName): bool
     {
-        if (array_key_exists(key: \Jield\Stdlib\Value::plainScalar($requestedName), array: $this->lookupCache)) {
-            return \Jield\Stdlib\Value::bool($this->lookupCache[$requestedName]);
+        if (array_key_exists(key: Value::key($requestedName), array: $this->lookupCache)) {
+            return Value::bool($this->lookupCache[$requestedName]);
         }
 
         if (!$container->has('config') || !$container->has('EventManager')) {
@@ -48,10 +51,9 @@ class RestControllerFactory implements AbstractFactoryInterface
             return false;
         }
 
-        /** @var mixed $config */
         $config = $container->get('config');
         if (!isset($config['api-tools-rest']) || !is_array(value: $config['api-tools-rest'])) {
-            $this->lookupCache[\Jield\Stdlib\Value::key($requestedName)] = false;
+            $this->lookupCache[Value::key($requestedName)] = false;
             return false;
         }
 
@@ -64,52 +66,54 @@ class RestControllerFactory implements AbstractFactoryInterface
         ) {
             // Configuration, and specifically the listener and route_name
             // keys, is required
-            $this->lookupCache[\Jield\Stdlib\Value::key($requestedName)] = false;
+            $this->lookupCache[Value::key($requestedName)] = false;
             return false;
         }
 
         if (
-            !$container->has(\Jield\Stdlib\Value::string($config[$requestedName]['listener']))
-            && !class_exists(class: \Jield\Stdlib\Value::string($config[$requestedName]['listener']))
+            !$container->has(Value::string($config[$requestedName]['listener']))
+            && !class_exists(class: Value::string($config[$requestedName]['listener']))
         ) {
             // Service referenced by listener key is required
-            $this->lookupCache[\Jield\Stdlib\Value::key($requestedName)] = false;
+            $this->lookupCache[Value::key($requestedName)] = false;
             throw new ServiceNotFoundException(message: sprintf(
                 '%s requires that a valid "listener" service be specified for controller %s; no service found',
                 __METHOD__,
-                \Jield\Stdlib\Value::scalar($requestedName),
+                Value::scalar($requestedName),
             ));
         }
 
-        $this->lookupCache[\Jield\Stdlib\Value::key($requestedName)] = true;
+        $this->lookupCache[Value::key($requestedName)] = true;
         return true;
     }
 
     #[Override]
     public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): RestController
     {
-        /** @var mixed $config */
         $config = $container->get('config');
         /** @var mixed $config */
-        $config = \Jield\Stdlib\Value::path($config, ['api-tools-rest', $requestedName]);
+        $config = Value::path($config, ['api-tools-rest', Value::key($requestedName)]);
 
         /** @var AbstractResourceListener $listener */
-        $listener = $container->has(\Jield\Stdlib\Value::string(\Jield\Stdlib\Value::accessible($config)['listener']))
-            ? $container->get(\Jield\Stdlib\Value::string(\Jield\Stdlib\Value::accessible($config)['listener']))
-            : \Jield\Stdlib\Value::instantiate(\Jield\Stdlib\Value::accessible($config)['listener']);
-
+        $listener = $container->has(Value::string(Value::accessible($config)['listener']))
+            ? $container->get(Value::string(Value::accessible($config)['listener']))
+            : Value::instantiate(Value::accessible($config)['listener']);
 
         $resourceIdentifiers = [$listener::class];
         if (isset($config['resource_identifiers'])) {
             if (!is_array(value: $config['resource_identifiers'])) {
-                $config['resource_identifiers'] = \Jield\Stdlib\Value::toArray($config['resource_identifiers']);
+                $config['resource_identifiers'] = Value::toArray($config['resource_identifiers']);
             }
 
             $resourceIdentifiers = array_merge($resourceIdentifiers, $config['resource_identifiers']);
         }
 
-        $events = \Jield\Stdlib\Service::get($container, \Laminas\EventManager\EventManagerInterface::class, 'EventManager');
-        $events->setIdentifiers(\Jield\Stdlib\Value::strings($resourceIdentifiers));
+        $events = Service::get(
+            $container,
+            EventManagerInterface::class,
+            'EventManager',
+        );
+        $events->setIdentifiers(Value::strings($resourceIdentifiers));
 
         $listener->attach(events: $events);
 
@@ -119,31 +123,34 @@ class RestControllerFactory implements AbstractFactoryInterface
         /** @var mixed $identifier */
         $identifier = $requestedName;
         if (isset($config['identifier'])) {
-            /** @var mixed $identifier */
             $identifier = $config['identifier'];
         }
 
         /** @var mixed $controllerClass */
         $controllerClass = $config['controller_class'] ?? RestController::class;
-        $controller = \Jield\Stdlib\Value::instantiate($controllerClass, [$identifier]);
+        $controller = Value::instantiate($controllerClass, [$identifier]);
 
         if (!$controller instanceof RestController) {
             throw new ServiceNotCreatedException(message: sprintf(
                 '"%s" must be an implementation of Jield\ApiTools\Rest\RestController',
-                \Jield\Stdlib\Value::scalar($controllerClass),
+                Value::scalar($controllerClass),
             ));
         }
 
-        $controller->setEventManager(eventManager: \Jield\Stdlib\Service::get($container, \Laminas\EventManager\EventManagerInterface::class, 'EventManager'));
+        $controller->setEventManager(eventManager: Service::get(
+            $container,
+            EventManagerInterface::class,
+            'EventManager',
+        ));
         $controller->setResource(resource: $resource);
-        $this->setControllerOptions(config: \Jield\Stdlib\Value::array($config), controller: $controller);
+        $this->setControllerOptions(config: Value::array($config), controller: $controller);
 
         if (isset($config['entity_class'])) {
-            $listener->setEntityClass(className: \Jield\Stdlib\Value::string($config['entity_class']));
+            $listener->setEntityClass(className: Value::string($config['entity_class']));
         }
 
         if (isset($config['collection_class'])) {
-            $listener->setCollectionClass(className: \Jield\Stdlib\Value::string($config['collection_class']));
+            $listener->setCollectionClass(className: Value::string($config['collection_class']));
         }
 
         return $controller;
@@ -155,15 +162,14 @@ class RestControllerFactory implements AbstractFactoryInterface
      */
     protected function setControllerOptions(array $config, RestController $controller): void
     {
-        /** @var mixed $value */
         foreach ($config as $option => $value) {
             switch ($option) {
                 case 'collection_http_methods':
-                    $controller->setCollectionHttpMethods(methods: \Jield\Stdlib\Value::array($value));
+                    $controller->setCollectionHttpMethods(methods: Value::array($value));
                     break;
 
                 case 'collection_name':
-                    $controller->setCollectionName(name: \Jield\Stdlib\Value::string($value));
+                    $controller->setCollectionName(name: Value::string($value));
                     break;
 
                 case 'collection_query_whitelist':
@@ -208,19 +214,19 @@ class RestControllerFactory implements AbstractFactoryInterface
                         if ($inputFilter instanceof InputFilter) {
                             $whitelist = array_unique(array: array_merge(
                                 $whitelist,
-                                array_keys(array: \Jield\Stdlib\Value::array($inputFilter->getInputs())),
+                                array_keys(array: Value::array($inputFilter->getInputs())),
                             ));
                         }
 
                         /** @var mixed $key
                          * @var mixed $value
                          */
-                        foreach (\Jield\Stdlib\Value::iterable($query) as $key => $value) {
+                        foreach (Value::iterable($query) as $key => $value) {
                             if (!in_array(needle: $key, haystack: $whitelist, strict: true)) {
                                 continue;
                             }
 
-                            $params->set(name: $key, value: $value);
+                            $params->set(name: Value::key($key), value: $value);
                         }
 
                         $resource->setQueryParams(params: $params);
@@ -262,7 +268,7 @@ class RestControllerFactory implements AbstractFactoryInterface
 
                         // If self link is defined, but is not route-based, return
                         $self = $links->get(relation: 'self');
-                        if (!$self instanceof \Jield\ApiTools\Hal\Link\Link) {
+                        if (!$self instanceof Link) {
                             return;
                         }
 
@@ -273,7 +279,7 @@ class RestControllerFactory implements AbstractFactoryInterface
                         // Otherwise, merge the query string parameters with
                         // the self link's route options
                         $self = $links->get(relation: 'self');
-                        if (!$self instanceof \Jield\ApiTools\Hal\Link\Link) {
+                        if (!$self instanceof Link) {
                             return;
                         }
 
@@ -285,7 +291,7 @@ class RestControllerFactory implements AbstractFactoryInterface
                     break;
 
                 case 'entity_http_methods':
-                    $controller->setEntityHttpMethods(methods: \Jield\Stdlib\Value::array($value));
+                    $controller->setEntityHttpMethods(methods: Value::array($value));
                     break;
 
                     /**
@@ -293,11 +299,11 @@ class RestControllerFactory implements AbstractFactoryInterface
                      * and is described by Laminas API Tools as route_identifier_name
                      */
                 case 'route_identifier_name':
-                    $controller->setIdentifierName(name: \Jield\Stdlib\Value::string($value));
+                    $controller->setIdentifierName(name: Value::string($value));
                     break;
 
                 case 'min_page_size':
-                    $controller->setMinPageSize(count: \Jield\Stdlib\Value::int($value));
+                    $controller->setMinPageSize(count: Value::int($value));
                     break;
 
                 case 'page_size':
@@ -309,11 +315,11 @@ class RestControllerFactory implements AbstractFactoryInterface
                     break;
 
                 case 'page_size_param':
-                    $controller->setPageSizeParam(param: \Jield\Stdlib\Value::string($value));
+                    $controller->setPageSizeParam(param: Value::string($value));
                     break;
 
                 case 'route_name':
-                    $controller->setRoute(route: \Jield\Stdlib\Value::string($value));
+                    $controller->setRoute(route: Value::string($value));
                     break;
             }
         }

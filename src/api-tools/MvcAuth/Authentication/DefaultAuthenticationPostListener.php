@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Jield\ApiTools\MvcAuth\Authentication;
 
 use Jield\ApiTools\MvcAuth\MvcAuthEvent;
+use Jield\Stdlib\Value;
 use Laminas\Http\Response as HttpResponse;
 
 class DefaultAuthenticationPostListener
@@ -20,14 +21,14 @@ class DefaultAuthenticationPostListener
         }
 
         $authResult = $mvcAuthEvent->getAuthenticationResult();
-        if (\Jield\Stdlib\Value::present($authResult)->isValid()) {
+        if (Value::present($authResult)->isValid()) {
             return null;
         }
 
         $mvcEvent = $mvcAuthEvent->getMvcEvent();
         $response = $mvcEvent->getResponse();
         if (!$response instanceof HttpResponse) {
-            return \Jield\Stdlib\Value::nullableInstance($response, \Laminas\Http\Response::class);
+            return Value::nullableInstance($response, \Laminas\Http\Response::class);
         }
 
         $response->setStatusCode(code: 401);

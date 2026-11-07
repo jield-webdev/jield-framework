@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Jield\Twig\Factory;
 
+use Jield\Stdlib\Service;
 use Jield\Twig\View\TwigResolver;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Psr\Container\ContainerInterface;
@@ -13,6 +14,6 @@ class TwigResolverFactory implements FactoryInterface
 {
     public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): TwigResolver
     {
-        return new TwigResolver(\Jield\Stdlib\Service::get($container, Environment::class));
+        return new TwigResolver(Service::get($container, Environment::class));
     }
 }

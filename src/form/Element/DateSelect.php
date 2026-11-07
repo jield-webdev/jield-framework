@@ -9,6 +9,7 @@ use DateTimeInterface;
 use Exception;
 use Jield\Form\Exception\InvalidArgumentException;
 use Jield\Form\FormInterface;
+use Jield\Stdlib\Value;
 use Laminas\Validator\Date as DateValidator;
 use Laminas\Validator\ValidatorInterface;
 
@@ -50,7 +51,7 @@ class DateSelect extends MonthSelect
         parent::setOptions(options: $options);
 
         if (isset($this->options['day_attributes'])) {
-            $this->setDayAttributes(dayAttributes: \Jield\Stdlib\Value::scalarMap($this->options['day_attributes']));
+            $this->setDayAttributes(dayAttributes: Value::scalarMap($this->options['day_attributes']));
         }
 
         return $this;
@@ -137,18 +138,20 @@ class DateSelect extends MonthSelect
 
     public function getValue(): ?string
     {
-        /** @var mixed $year */
         $year = $this->getYearElement()->getValue();
-        /** @var mixed $month */
         $month = $this->getMonthElement()->getValue();
-        /** @var mixed $day */
         $day = $this->getDayElement()->getValue();
 
         if ($this->shouldCreateEmptyOption() && null === $year && null === $month && null === $day) {
             return null;
         }
 
-        return sprintf('%04d-%02d-%02d', \Jield\Stdlib\Value::scalar($year), \Jield\Stdlib\Value::scalar($month), \Jield\Stdlib\Value::scalar($day));
+        return sprintf(
+            '%04d-%02d-%02d',
+            Value::scalar($year),
+            Value::scalar($month),
+            Value::scalar($day),
+        );
     }
 
     /**
@@ -159,7 +162,7 @@ class DateSelect extends MonthSelect
         parent::prepareElement(form: $form);
 
         $name = $this->getName();
-        $this->dayElement->setName(name: (string) ($name) . '[day]');
+        $this->dayElement->setName(name: (string) $name . '[day]');
     }
 
     /**
@@ -167,9 +170,7 @@ class DateSelect extends MonthSelect
      */
     protected function getValidator(): ValidatorInterface
     {
-        if (null === $this->validator) {
-            $this->validator = new DateValidator(options: ['format' => 'Y-m-d']);
-        }
+        $this->validator ??= new DateValidator(options: ['format' => 'Y-m-d']);
 
         return $this->validator;
     }

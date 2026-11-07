@@ -6,9 +6,9 @@ namespace Jield\ErrorHandler;
 
 use ArrayLookup\AtLeast;
 use ErrorException;
-use Jield\ErrorHandler\Command\BaseLoggingCommand;
 use Jield\ErrorHandler\Listener\Mvc;
 use Jield\Mvc\MvcEvent;
+use Jield\Stdlib\Value;
 use Webmozart\Assert\Assert;
 
 use function error_get_last;
@@ -24,7 +24,6 @@ use function set_error_handler;
 use function str_starts_with;
 
 use const E_ALL;
-use const E_STRICT;
 
 trait HeroTrait
 {
@@ -33,7 +32,10 @@ trait HeroTrait
     private ?MvcEvent $mvcEvent = null;
 
     abstract protected function capturesErrorOutput(): bool;
+
     abstract protected function getErrorHandlerConfiguration(): array;
+
+    abstract protected function handleShutdownException(ErrorException $exception): void;
 
     public function phpError(mixed ...$args): void
     {
@@ -44,8 +46,12 @@ trait HeroTrait
             $this->mvcEvent = $args[0];
         }
 
-        if (!\Jield\Stdlib\Value::accessible($this->getErrorHandlerConfiguration()['display-settings'])['display_errors']) {
-            error_reporting(error_level: E_ALL | E_STRICT);
+        if (
+            !Value::accessible(
+                $this->getErrorHandlerConfiguration()['display-settings'],
+            )['display_errors']
+        ) {
+            error_reporting(error_level: E_ALL);
             ini_set(option: 'display_errors', value: '0');
         }
 
@@ -92,29 +98,14 @@ trait HeroTrait
             line: $error['line'],
         );
 
-        // laminas-cli
-        if ($this->capturesErrorOutput()) {
-            ob_start();
-            $this->exceptionError($errorException);
-            $this->result = (string) ob_get_clean();
-
-            return;
-        }
-
-        // Laminas Mvc project
-        Assert::isInstanceOf(value: $this->mvcEvent, class: MvcEvent::class);
         ob_start();
-        $this->mvcEvent->setParam(name: 'exception', value: $errorException);
-        $this->exceptionError($this->mvcEvent);
+        $this->handleShutdownException($errorException);
         $this->result = (string) ob_get_clean();
     }
 
     /**
      * @throws ErrorException When php error happen and error type is not excluded in the config.
      */
-    abstract protected function capturesErrorOutput(): bool;
-    abstract protected function getErrorHandlerConfiguration(): array;
-
     public function phpErrorHandler(int $errorType, string $errorMessage, string $errorFile, int $errorLine): void
     {
         if ((error_reporting() & $errorType) === 0) {
@@ -129,7 +120,10 @@ trait HeroTrait
         );
 
         if (AtLeast::once(
-            data: \Jield\Stdlib\Value::path($this->getErrorHandlerConfiguration(), ['display-settings', 'exclude-php-errors']),
+            data: Value::array(Value::path($this->getErrorHandlerConfiguration(), [
+                'display-settings',
+                'exclude-php-errors',
+            ])),
             filter: $filter,
         )) {
             return;

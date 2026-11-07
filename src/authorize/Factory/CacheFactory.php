@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace Jield\Authorize\Factory;
 
 use Jield\Authorize\Config;
+use Jield\Stdlib\Service;
+use Jield\Stdlib\Value;
 use Laminas\Cache\Service\StorageAdapterFactoryInterface;
+use Laminas\Cache\Storage\StorageInterface;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Psr\Container\ContainerInterface;
 
@@ -25,16 +28,13 @@ class CacheFactory implements FactoryInterface
         ContainerInterface $container,
         $requestedName,
         ?array $options = null,
-    ): \Laminas\Cache\Storage\StorageInterface {
-        
-        $storageFactory = \Jield\Stdlib\Service::get($container, StorageAdapterFactoryInterface::class);
+    ): StorageInterface {
+        $storageFactory = Service::get($container, StorageAdapterFactoryInterface::class);
 
-        /** @var mixed $cacheOptions */
-        $cacheOptions = \Jield\Stdlib\Value::array($container->get(Config::class))['cache_options'];
+        $cacheOptions = Value::array($container->get(Config::class))['cache_options'];
 
         $plugins = [];
-        /** @var mixed $plugin */
-        foreach (\Jield\Stdlib\Value::iterable(\Jield\Stdlib\Value::accessible($cacheOptions)['plugins']) as $plugin) {
+        foreach (Value::iterable(Value::accessible($cacheOptions)['plugins']) as $plugin) {
             $plugins[] = is_array(value: $plugin)
                 ? $plugin
                 : [
@@ -42,10 +42,13 @@ class CacheFactory implements FactoryInterface
                 ];
         }
 
-        return $storageFactory->create(
-            storage: \Jield\Stdlib\Value::nonEmptyString(\Jield\Stdlib\Value::path($cacheOptions, ['adapter', 'name'])),
-            options: \Jield\Stdlib\Value::stringKeyedArray($cacheOptions['options'] ?? []),
-            plugins: $plugins,
-        );
+        $configuration = [
+            'adapter' => Value::nonEmptyString(Value::path($cacheOptions, ['adapter', 'name'])),
+            'options' => Value::stringKeyedArray($cacheOptions['options'] ?? []),
+            'plugins' => $plugins,
+        ];
+        $storageFactory->assertValidConfigurationStructure($configuration);
+
+        return $storageFactory->createFromArrayConfiguration($configuration);
     }
 }

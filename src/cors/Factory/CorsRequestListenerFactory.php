@@ -23,6 +23,7 @@ namespace Jield\Cors\Factory;
 
 use Jield\Cors\Mvc\CorsRequestListener;
 use Jield\Cors\Service\CorsService;
+use Jield\Stdlib\Service;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
@@ -40,8 +41,7 @@ class CorsRequestListenerFactory implements FactoryInterface
      */
     public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): CorsRequestListener
     {
-        
-        $corsService = \Jield\Stdlib\Service::get($container, CorsService::class);
+        $corsService = Service::get($container, CorsService::class);
 
         return new CorsRequestListener($corsService);
     }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Jield\Twig\Factory;
 
+use Jield\Stdlib\Service;
 use Jield\Twig\Extension;
 use Jield\Twig\View\TwigRenderer;
 use Laminas\ServiceManager\Factory\FactoryInterface;
@@ -13,6 +14,6 @@ class ExtensionFactory implements FactoryInterface
 {
     public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): Extension
     {
-        return new Extension(\Jield\Stdlib\Service::get($container, TwigRenderer::class));
+        return new Extension(Service::get($container, TwigRenderer::class));
     }
 }

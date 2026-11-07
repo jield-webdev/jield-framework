@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Jield\Form\Element;
 
 use Jield\Form\Element\Number as NumberElement;
+use Jield\Stdlib\Value;
 use Laminas\Validator\NumberComparison;
 use Laminas\Validator\Step as StepValidator;
 use Laminas\Validator\ValidatorInterface;
@@ -36,16 +37,16 @@ class Range extends NumberElement
         }
 
         $validators[] = new NumberComparison([
-            'min' => \Jield\Stdlib\Value::numeric($this->attributes['min'] ?? 0),
-            'max' => \Jield\Stdlib\Value::numeric($this->attributes['max'] ?? 100),
+            'min' => Value::numeric($this->attributes['min'] ?? 0),
+            'max' => Value::numeric($this->attributes['max'] ?? 100),
             'inclusiveMin' => (bool) $inclusive,
             'inclusiveMax' => (bool) $inclusive,
         ]);
 
         if (!isset($this->attributes['step']) || 'any' !== $this->attributes['step']) {
             $validators[] = new StepValidator(options: [
-                'baseValue' => \Jield\Stdlib\Value::numeric($this->attributes['min'] ?? 0),
-                'step' => \Jield\Stdlib\Value::numeric($this->attributes['step'] ?? 1),
+                'baseValue' => Value::numeric($this->attributes['min'] ?? 0),
+                'step' => Value::numeric($this->attributes['step'] ?? 1),
             ]);
         }
 

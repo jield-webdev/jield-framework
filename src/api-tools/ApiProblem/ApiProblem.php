@@ -7,12 +7,11 @@ namespace Jield\ApiTools\ApiProblem;
 use Exception;
 use Jield\ApiTools\ApiProblem\Exception\InvalidArgumentException;
 use Jield\ApiTools\ApiProblem\Exception\ProblemExceptionInterface;
+use Jield\Stdlib\Value;
 use Throwable;
 
 use function array_key_exists;
-use function array_keys;
 use function array_merge;
-use function in_array;
 use function is_numeric;
 use function sprintf;
 use function strtolower;
@@ -136,13 +135,9 @@ class ApiProblem
         array $additional = [],
     ) {
         if ($detail instanceof ProblemExceptionInterface) {
-            if (null === $type) {
-                $type = $detail->getType();
-            }
+            $type ??= $detail->getType();
 
-            if (null === $title) {
-                $title = $detail->getTitle();
-            }
+            $title ??= $detail->getTitle();
 
             if ($additional === []) {
                 $additional = $detail->getAdditionalDetails();
@@ -162,7 +157,9 @@ class ApiProblem
             $this->type = $type;
         }
 
-        $this->additionalDetails = $additional === null ? [] : (is_array($additional) ? $additional : iterator_to_array($additional));
+        $this->additionalDetails = $additional === null
+            ? []
+            : (is_array($additional) ? $additional : iterator_to_array($additional));
     }
 
     /**
@@ -175,13 +172,15 @@ class ApiProblem
     public function __get(string $name)
     {
         $normalized = strtolower(string: $name);
-        if (in_array(needle: $normalized, haystack: array_keys(array: $this->normalizedProperties), strict: true)) {
+        if (isset($this->normalizedProperties[$normalized])) {
             /** @var mixed $prop */
             $prop = $this->normalizedProperties[$normalized];
 
             return match ($prop) {
-                'detail' => $this->detail, 'status' => $this->status,
-                'title' => $this->title, 'type' => $this->type,
+                'detail' => $this->detail,
+                'status' => $this->status,
+                'title' => $this->title,
+                'type' => $this->type,
                 default => null,
             };
         }
@@ -283,7 +282,7 @@ class ApiProblem
             $this->type === 'https://datatracker.ietf.org/doc/html/rfc7231#section-6'
             && array_key_exists(key: $this->getStatus(), array: $this->problemStatusTitles)
         ) {
-            return \Jield\Stdlib\Value::nullableString($this->problemStatusTitles[$this->status]);
+            return Value::nullableString($this->problemStatusTitles[$this->status]);
         }
 
         if ($this->detail instanceof Throwable) {

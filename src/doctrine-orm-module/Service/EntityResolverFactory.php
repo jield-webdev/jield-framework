@@ -7,6 +7,7 @@ namespace DoctrineORMModule\Service;
 use Doctrine\ORM\Tools\ResolveTargetEntityListener;
 use DoctrineModule\Service\AbstractFactory;
 use DoctrineORMModule\Options\EntityResolver;
+use Jield\Stdlib\Value;
 use Psr\Container\ContainerInterface;
 
 use function assert;
@@ -20,22 +21,20 @@ final class EntityResolverFactory extends AbstractFactory
     {
         $options = $this->getOptions(container: $container, key: 'entity_resolver');
         assert(assertion: $options instanceof EntityResolver);
-        /** @var mixed $eventManager */
         $eventManager = $container->get($options->getEventManager());
         $resolvers = $options->getResolvers();
 
         $targetEntityListener = new ResolveTargetEntityListener();
 
-        /** @var mixed $newEntity */
         foreach ($resolvers as $oldEntity => $newEntity) {
             $targetEntityListener->addResolveTargetEntity(
-                originalEntity: \Jield\Stdlib\Value::string($oldEntity),
-                newEntity: \Jield\Stdlib\Value::string($newEntity),
+                originalEntity: Value::string($oldEntity),
+                newEntity: Value::string($newEntity),
                 mapping: [],
             );
         }
 
-        \Jield\Stdlib\Value::call($eventManager, 'addEventSubscriber', [$targetEntityListener]);
+        Value::call($eventManager, 'addEventSubscriber', [$targetEntityListener]);
 
         return $eventManager;
     }

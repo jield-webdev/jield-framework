@@ -6,6 +6,7 @@ namespace Jield\Search\ValueObject;
 
 use JetBrains\PhpStorm\Pure;
 use Jield\Search\Enum\FacetFieldVisibilityEnum;
+use Jield\Stdlib\Value;
 
 final class FacetField
 {
@@ -31,17 +32,20 @@ final class FacetField
     public static function fromArray(array $params): FacetField
     {
         return new self(
-            field: \Jield\Stdlib\Value::string($params['field'] ?? ''),
-            name: \Jield\Stdlib\Value::string($params['name'] ?? ''),
-            type: \Jield\Stdlib\Value::int($params['name'] ?? self::TYPE_CHECKBOX),
-            minCount: \Jield\Stdlib\Value::int($params['minCount'] ?? 0),
-            sort: \Jield\Stdlib\Value::string($params['sort'] ?? 'index'),
-            reverse: \Jield\Stdlib\Value::bool($params['reverse'] ?? false),
-            hasYesNo: \Jield\Stdlib\Value::bool($params['hasYesNo'] ?? false),
-            hasAndOr: \Jield\Stdlib\Value::bool($params['hasAndOr'] ?? false),
-            defaultValue: \Jield\Stdlib\Value::nullableString($params['defaultValue'] ?? false),
-            limit: \Jield\Stdlib\Value::int($params['limit'] ?? 100),
-            visibility: \Jield\Stdlib\Value::instance($params['visibility'] ?? FacetFieldVisibilityEnum::FILTER_COLUMN, \Jield\Search\Enum\FacetFieldVisibilityEnum::class),
+            field: Value::string($params['field'] ?? ''),
+            name: Value::string($params['name'] ?? ''),
+            type: Value::int($params['name'] ?? self::TYPE_CHECKBOX),
+            minCount: Value::int($params['minCount'] ?? 0),
+            sort: Value::string($params['sort'] ?? 'index'),
+            reverse: Value::bool($params['reverse'] ?? false),
+            hasYesNo: Value::bool($params['hasYesNo'] ?? false),
+            hasAndOr: Value::bool($params['hasAndOr'] ?? false),
+            defaultValue: Value::nullableString($params['defaultValue'] ?? false),
+            limit: Value::int($params['limit'] ?? 100),
+            visibility: Value::instance(
+                $params['visibility'] ?? FacetFieldVisibilityEnum::FILTER_COLUMN,
+                \Jield\Search\Enum\FacetFieldVisibilityEnum::class,
+            ),
         );
     }
 

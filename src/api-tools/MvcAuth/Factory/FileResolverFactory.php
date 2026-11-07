@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Jield\ApiTools\MvcAuth\Factory;
 
+use Jield\Stdlib\Value;
 use Laminas\Authentication\Adapter\Http\FileResolver;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Override;
@@ -23,16 +24,14 @@ class FileResolverFactory implements FactoryInterface
             return false;
         }
 
-        /** @var mixed $config */
         $config = $container->get('config');
 
         if (!isset($config['api-tools-mvc-auth']['authentication']['http']['htdigest'])) {
             return false;
         }
 
-        /** @var mixed $htdigest */
         $htdigest = $config['api-tools-mvc-auth']['authentication']['http']['htdigest'];
 
-        return new FileResolver(path: \Jield\Stdlib\Value::string($htdigest));
+        return new FileResolver(path: Value::string($htdigest));
     }
 }

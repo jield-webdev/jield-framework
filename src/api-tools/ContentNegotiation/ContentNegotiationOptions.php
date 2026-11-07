@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Jield\ApiTools\ContentNegotiation;
 
+use Jield\Stdlib\Value;
 use Laminas\Stdlib\AbstractOptions;
 use Laminas\Stdlib\Exception\BadMethodCallException;
 use Override;
@@ -52,7 +53,9 @@ class ContentNegotiationOptions extends AbstractOptions
     #[Override]
     public function setFromArray($options): AbstractOptions|ContentNegotiationOptions
     {
-        return parent::setFromArray(options: \Jield\Stdlib\Value::stringKeyedArray($this->normalizeOptions(config: \Jield\Stdlib\Value::array($options))));
+        return parent::setFromArray(options: Value::stringKeyedArray($this->normalizeOptions(config: Value::array(
+            $options,
+        ))));
     }
 
     /**
@@ -71,22 +74,25 @@ class ContentNegotiationOptions extends AbstractOptions
         /** @var mixed $key */
         foreach ($this->keysToNormalize as $key) {
             /** @var mixed $normalizedKey */
-            $normalizedKey = $this->normalizeKey(key: \Jield\Stdlib\Value::string($key));
+            $normalizedKey = str_replace('-', '_', Value::string($key));
 
             if (isset($config[$key], $config[$normalizedKey])) {
-                $mergedConfig[\Jield\Stdlib\Value::key($normalizedKey)] = array_merge_recursive(\Jield\Stdlib\Value::array($config[$key]), \Jield\Stdlib\Value::array($config[$normalizedKey]));
+                $mergedConfig[Value::key($normalizedKey)] = array_merge_recursive(
+                    Value::array($config[$key]),
+                    Value::array($config[$normalizedKey]),
+                );
                 unset($mergedConfig[$key]);
                 continue;
             }
 
             if (isset($config[$key])) {
-                $mergedConfig[\Jield\Stdlib\Value::key($normalizedKey)] = $config[$key];
+                $mergedConfig[Value::key($normalizedKey)] = $config[$key];
                 unset($mergedConfig[$key]);
                 continue;
             }
 
             if (isset($config[$normalizedKey])) {
-                $mergedConfig[\Jield\Stdlib\Value::key($normalizedKey)] = $config[$normalizedKey];
+                $mergedConfig[Value::key($normalizedKey)] = $config[$normalizedKey];
                 continue;
             }
         }

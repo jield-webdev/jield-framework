@@ -15,8 +15,8 @@ class FunctionExpression extends Expression implements Stringable
      * @param array|ExpressionInterface|string|null $parameters
      */
     public function __construct(
-        private ExpressionInterface|string $function,
-        private ExpressionInterface|array|string|null $parameters = null,
+        private readonly ExpressionInterface|string $function,
+        private readonly ExpressionInterface|array|string|null $parameters = null,
     ) {}
 
     #[Pure]

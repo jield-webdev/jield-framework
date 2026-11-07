@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Jield\Authorize\Factory;
 
 use Jield\Authorize\Config;
+use Jield\Stdlib\Value;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Psr\Container\ContainerInterface;
 
@@ -23,17 +24,17 @@ abstract class BaseProvidersServiceFactory implements FactoryInterface
      */
     public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): object|array
     {
-        $config = \Jield\Stdlib\Value::array($container->get(Config::class));
+        $config = Value::array($container->get(Config::class));
         $providers = [];
 
         /** @var mixed $providerName
          * @var mixed $providerConfig
          */
-        foreach (\Jield\Stdlib\Value::iterable($config[static::PROVIDER_SETTING]) as $providerName => $providerConfig) {
-            if ($container->has(\Jield\Stdlib\Value::string($providerName))) {
-                $providers[] = $container->get(\Jield\Stdlib\Value::string($providerName));
+        foreach (Value::iterable($config[static::PROVIDER_SETTING]) as $providerName => $providerConfig) {
+            if ($container->has(Value::string($providerName))) {
+                $providers[] = $container->get(Value::string($providerName));
             } else {
-                $providers[] = \Jield\Stdlib\Value::instantiate($providerName, [$providerConfig, $container]);
+                $providers[] = Value::instantiate($providerName, [$providerConfig, $container]);
             }
         }
 

@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace Jield\AssetManager\Service;
 
 use Jield\AssetManager\Exception\InvalidArgumentException;
-use Jield\AssetManager\Resolver\ResolverInterface;
 use Jield\AssetManager\View\Helper\Asset;
+use Jield\Stdlib\Service;
+use Jield\Stdlib\Value;
 use Laminas\Cache\Storage\Adapter\AbstractAdapter as AbstractCacheAdapter;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Laminas\ServiceManager\ServiceLocatorInterface;
@@ -21,16 +22,23 @@ class AssetViewHelperFactory implements FactoryInterface
     #[Override]
     public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): Asset
     {
-        /** @var mixed $config */
-        $config = \Jield\Stdlib\Value::accessible($container->get('config'))['asset_manager'];
+        $config = Value::accessible($container->get('config'))['asset_manager'];
 
-        
-        $assetManagerResolver = \Jield\Stdlib\Service::get($container, AssetManager::class)->getResolver();
+        $assetManagerResolver = Service::get($container, AssetManager::class)->getResolver();
 
-        /** @var AbstractCacheAdapter|null $cache */
-        $cache = $this->loadCache(container: \Jield\Stdlib\Value::instance($container, \Laminas\ServiceManager\ServiceLocatorInterface::class), config: \Jield\Stdlib\Value::array($config));
+        $cache = $this->loadCache(
+            container: Value::instance(
+                $container,
+                \Laminas\ServiceManager\ServiceLocatorInterface::class,
+            ),
+            config: Value::array($config),
+        );
 
-        return new Asset(assetManagerResolver: $assetManagerResolver, cache: $cache, config: \Jield\Stdlib\Value::array($config));
+        return new Asset(
+            assetManagerResolver: $assetManagerResolver,
+            cache: $cache,
+            config: Value::array($config),
+        );
     }
 
     /**
@@ -47,7 +55,6 @@ class AssetViewHelperFactory implements FactoryInterface
         }
 
         // get the cache, if it's a string, search it among services
-        /** @var mixed $cache */
         $cache = $config['view_helper']['cache'];
         if (is_string(value: $cache)) {
             /** @var mixed $cache */

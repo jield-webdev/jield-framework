@@ -16,7 +16,7 @@ final class LoggerAbstractFactory implements AbstractFactoryInterface
             return false;
         }
 
-        $monologConfig = (new LoggerFactory())->getConfig($container);
+        $monologConfig = new LoggerFactory()->getConfig($container);
 
         $loggerName = substr($requestedName, strlen(Logger::class . '.'));
         if ($loggerName === '') {
@@ -34,5 +34,4 @@ final class LoggerAbstractFactory implements AbstractFactoryInterface
 
         return $factory->createLogger(container: $container, config: $config, loggerName: $loggerName);
     }
-
 }

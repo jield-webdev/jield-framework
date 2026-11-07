@@ -28,9 +28,7 @@ class Translate extends AbstractTranslatorHelper
         if (null === $translator) {
             throw new Exception\RuntimeException('Translator has not been set');
         }
-        if (null === $textDomain) {
-            $textDomain = $this->getTranslatorTextDomain();
-        }
+        $textDomain ??= $this->getTranslatorTextDomain();
 
         return $translator->translate($message, $textDomain, $locale);
     }

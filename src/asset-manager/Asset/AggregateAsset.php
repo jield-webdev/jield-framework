@@ -7,6 +7,7 @@ namespace Jield\AssetManager\Asset;
 use Assetic\Asset\BaseAsset;
 use Assetic\Contracts\Filter\FilterInterface;
 use Jield\AssetManager\Exception;
+use Jield\Stdlib\Value;
 use Override;
 
 /**
@@ -51,9 +52,7 @@ class AggregateAsset extends BaseAsset implements AssetInterface
         $this->mimetype = null;
         /** @var AggregateAsset $asset */
         foreach ($content as $asset) {
-            if (null === $this->mimetype) {
-                $this->mimetype = $asset->mimetype;
-            }
+            $this->mimetype ??= $asset->mimetype;
 
             if ($asset->mimetype !== $this->mimetype) {
                 throw new Exception\RuntimeException(message: sprintf(
@@ -63,7 +62,10 @@ class AggregateAsset extends BaseAsset implements AssetInterface
                 ));
             }
 
-            $this->setLastModified(lastModified: \Jield\Stdlib\Value::int(max($asset->getLastModified(), $this->getLastModified())));
+            $this->setLastModified(lastModified: Value::int(max(
+                $asset->getLastModified(),
+                $this->getLastModified(),
+            )));
             $this->setContent(content: $this->getContent() . $asset->dump());
         }
     }

@@ -6,6 +6,7 @@ namespace Jield\ModuleManager\Listener;
 
 use Jield\ModuleManager\Feature\ConfigProviderInterface;
 use Jield\ModuleManager\ModuleEvent;
+use Jield\Stdlib\Value;
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\EventManager\ListenerAggregateInterface;
 use Laminas\EventManager\ListenerAggregateTrait;
@@ -20,7 +21,6 @@ use function gettype;
 use function is_array;
 use function is_callable;
 use function is_file;
-use function is_string;
 use function sprintf;
 
 class ConfigListener extends AbstractListener implements ConfigMergerInterface, ListenerAggregateInterface
@@ -40,7 +40,7 @@ class ConfigListener extends AbstractListener implements ConfigMergerInterface, 
         parent::__construct(options: $options);
         if ($this->hasCachedConfig()) {
             $this->skipConfig = true;
-            $this->setMergedConfig(config: \Jield\Stdlib\Value::array($this->getCachedConfig()));
+            $this->setMergedConfig(config: Value::array($this->getCachedConfig()));
         } else {
             $this->addConfigGlobPaths(globPaths: $this->getOptions()->getConfigGlobPaths());
             $this->addConfigStaticPaths(staticPaths: $this->getOptions()->getConfigStaticPaths());
@@ -52,7 +52,7 @@ class ConfigListener extends AbstractListener implements ConfigMergerInterface, 
     {
         $this->listeners[] = $events->attach(
             eventName: ModuleEvent::EVENT_LOAD_MODULES,
-            listener: [$this, 'onloadModulesPre'],
+            listener: $this->onloadModulesPre(...),
             priority: 1000,
         );
 
@@ -61,18 +61,18 @@ class ConfigListener extends AbstractListener implements ConfigMergerInterface, 
             return;
         }
 
-        $this->listeners[] = $events->attach(eventName: ModuleEvent::EVENT_LOAD_MODULE, listener: [
-            $this,
-            'onLoadModule',
-        ]);
+        $this->listeners[] = $events->attach(
+            eventName: ModuleEvent::EVENT_LOAD_MODULE,
+            listener: $this->onLoadModule(...),
+        );
         $this->listeners[] = $events->attach(
             eventName: ModuleEvent::EVENT_LOAD_MODULES,
-            listener: [$this, 'onLoadModules'],
+            listener: $this->onLoadModules(...),
             priority: -1000,
         );
         $this->listeners[] = $events->attach(
             eventName: ModuleEvent::EVENT_MERGE_CONFIG,
-            listener: [$this, 'onMergeConfig'],
+            listener: $this->onMergeConfig(...),
             priority: 1000,
         );
     }
@@ -100,15 +100,12 @@ class ConfigListener extends AbstractListener implements ConfigMergerInterface, 
         $config = null;
 
         if ($module instanceof ConfigProviderInterface || is_callable(value: [$module, 'getConfig'])) {
-            /** @var mixed $config */
-            $config = \Jield\Stdlib\Value::call(\Jield\Stdlib\Value::present($module), 'getConfig');
+            $config = Value::call(Value::present($module), 'getConfig');
         } elseif (is_callable(value: $module)) {
-            /** @var mixed $config */
             $config = $this->getConfigFromProvider($module);
         } else {
             $configProvider = $this->resolveConfigProvider(moduleName: $e->getModuleName());
             if ($configProvider !== null) {
-                /** @var mixed $config */
                 $config = $this->getConfigFromProvider($configProvider);
             }
         }
@@ -117,7 +114,7 @@ class ConfigListener extends AbstractListener implements ConfigMergerInterface, 
             return $this;
         }
 
-        $config = $this->normalizeServiceManagerConfig(\Jield\Stdlib\Value::array($config));
+        $config = $this->normalizeServiceManagerConfig(Value::array($config));
         $this->addConfig(key: $e->getModuleName(), config: $config);
 
         return $this;
@@ -130,7 +127,7 @@ class ConfigListener extends AbstractListener implements ConfigMergerInterface, 
             return null;
         }
 
-        return \Jield\Stdlib\Value::instantiate($configProviderClass);
+        return Value::instantiate($configProviderClass);
     }
 
     private function getConfigFromProvider(object $provider): mixed
@@ -140,11 +137,11 @@ class ConfigListener extends AbstractListener implements ConfigMergerInterface, 
         }
 
         if (is_callable(value: [$provider, 'getConfig'])) {
-            return \Jield\Stdlib\Value::call($provider, 'getConfig');
+            return Value::call($provider, 'getConfig');
         }
 
         if (is_callable(value: [$provider, 'toArray'])) {
-            return \Jield\Stdlib\Value::call($provider, 'toArray');
+            return Value::call($provider, 'toArray');
         }
 
         return null;
@@ -160,16 +157,18 @@ class ConfigListener extends AbstractListener implements ConfigMergerInterface, 
     public function onMergeConfig(): static
     {
         // Load the config files
-        /** @var mixed $path */
         foreach ($this->paths as $path) {
-            $this->addConfigByPath(path: \Jield\Stdlib\Value::string(\Jield\Stdlib\Value::accessible($path)['path']), type: \Jield\Stdlib\Value::string(\Jield\Stdlib\Value::accessible($path)['type']));
+            $this->addConfigByPath(
+                path: Value::string(Value::accessible($path)['path']),
+                type: Value::string(Value::accessible($path)['type']),
+            );
         }
 
         // Merge all of the collected configs
-        $this->mergedConfig = $this->getOptions()->getExtraConfig() ?: [];
-        /** @var mixed $config */
+        $extraConfig = $this->getOptions()->getExtraConfig();
+        $this->mergedConfig = is_array($extraConfig) ? $extraConfig : iterator_to_array($extraConfig);
         foreach ($this->configs as $config) {
-            $this->mergedConfig = ArrayUtils::merge(a: $this->mergedConfig, b: \Jield\Stdlib\Value::array($config));
+            $this->mergedConfig = ArrayUtils::merge(a: $this->mergedConfig, b: Value::array($config));
         }
         $this->mergedConfig = $this->normalizeServiceManagerConfig($this->mergedConfig);
 
@@ -189,15 +188,25 @@ class ConfigListener extends AbstractListener implements ConfigMergerInterface, 
         // modified before it is cached (In particular, allows the removal of config keys)
         $originalEventName = $e->getName();
         $e->setName(name: ModuleEvent::EVENT_MERGE_CONFIG);
-        \Jield\Stdlib\Value::call(\Jield\Stdlib\Value::call(\Jield\Stdlib\Value::present(\Jield\Stdlib\Value::object($e->getTarget())), 'getEventManager'), 'triggerEvent', [$e]);
+        Value::call(
+            Value::call(
+                Value::present(Value::object($e->getTarget())),
+                'getEventManager',
+            ),
+            'triggerEvent',
+            [$e],
+        );
 
         // Reset event name
-        $e->setName(name: \Jield\Stdlib\Value::string($originalEventName));
+        $e->setName(name: Value::string($originalEventName));
 
         // If enabled, update the config cache
         if ($this->getOptions()->getConfigCacheEnabled() && false === $this->skipConfig) {
             $configFile = $this->getOptions()->getConfigCacheFile();
-            $this->writeArrayToFile(filePath: $configFile, array: \Jield\Stdlib\Value::array($this->getMergedConfig(returnConfigAsObject: false)));
+            $this->writeArrayToFile(
+                filePath: $configFile,
+                array: Value::array($this->getMergedConfig(returnConfigAsObject: false)),
+            );
         }
 
         return $this;
@@ -295,9 +304,8 @@ class ConfigListener extends AbstractListener implements ConfigMergerInterface, 
             ));
         }
 
-        /** @var mixed $path */
         foreach ($paths as $path) {
-            $this->addConfigPath(path: \Jield\Stdlib\Value::string($path), type: $type);
+            $this->addConfigPath(path: Value::string($path), type: $type);
         }
     }
 
@@ -311,7 +319,6 @@ class ConfigListener extends AbstractListener implements ConfigMergerInterface, 
      */
     protected function addConfigPath(string $path, string $type): static
     {
-        
         $this->paths[] = ['type' => $type, 'path' => $path];
         return $this;
     }
@@ -362,7 +369,10 @@ class ConfigListener extends AbstractListener implements ConfigMergerInterface, 
                 // use ConfigFactory::fromFiles() since it does merging internally.
                 /** @var mixed $file */
                 foreach (Glob::glob(pattern: $path, flags: Glob::GLOB_BRACE, forceFallback: true) as $file) {
-                    $this->addConfig(key: \Jield\Stdlib\Value::string($file), config: $this->loadConfigFile(\Jield\Stdlib\Value::string($file)));
+                    $this->addConfig(
+                        key: Value::string($file),
+                        config: $this->loadConfigFile(Value::string($file)),
+                    );
                 }
                 break;
         }
@@ -402,7 +412,6 @@ class ConfigListener extends AbstractListener implements ConfigMergerInterface, 
             ));
         }
 
-        /** @var mixed $config */
         $config = include $path;
         if (!is_array(value: $config)) {
             throw new Exception\InvalidArgumentException(message: sprintf(
@@ -441,8 +450,8 @@ class ConfigListener extends AbstractListener implements ConfigMergerInterface, 
         // Factory callables are atomic pairs; recursive list merging would duplicate them.
         foreach (['factories', 'aliases', 'services'] as $key) {
             $normalized[$key] = array_replace(
-                \Jield\Stdlib\Value::array($config['dependencies'][$key] ?? []),
-                \Jield\Stdlib\Value::array($config['service_manager'][$key] ?? []),
+                Value::array($config['dependencies'][$key] ?? []),
+                Value::array($config['service_manager'][$key] ?? []),
             );
         }
 

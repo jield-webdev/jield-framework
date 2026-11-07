@@ -6,6 +6,7 @@ namespace Jield\ApiTools\MvcAuth\Authentication;
 
 use Jield\ApiTools\MvcAuth\Identity;
 use Jield\ApiTools\MvcAuth\MvcAuthEvent;
+use Jield\Stdlib\Value;
 use Laminas\Authentication\Adapter\Http as HttpAuth;
 use Laminas\Authentication\AuthenticationServiceInterface;
 use Laminas\Http\Request;
@@ -119,7 +120,6 @@ class HttpAdapter extends AbstractAdapter
             return new Identity\GuestIdentity();
         }
 
-        /** @var mixed $resultIdentity */
         $resultIdentity = $result->getIdentity();
 
         // Pass fully discovered identity to AuthenticatedIdentity instance
@@ -132,7 +132,7 @@ class HttpAdapter extends AbstractAdapter
             $name = $resultIdentity['username'] ?? (string) array_shift(array: $resultIdentity);
         }
 
-        $identity->setName(name: \Jield\Stdlib\Value::string($name));
+        $identity->setName(name: Value::string($name));
 
         return $identity;
     }

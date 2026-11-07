@@ -7,6 +7,7 @@ namespace Jield\ApiTools\MvcAuth\Factory;
 use Jield\ApiTools\MvcAuth\Authentication\DefaultAuthenticationListener;
 use Jield\ApiTools\MvcAuth\Authentication\HttpAdapter;
 use Jield\ApiTools\MvcAuth\Authentication\OAuth2Adapter;
+use Jield\Stdlib\Value;
 use Laminas\ServiceManager\Factory\DelegatorFactoryInterface;
 use Override;
 use Psr\Container\ContainerInterface;
@@ -33,21 +34,33 @@ class AuthenticationAdapterDelegatorFactory implements DelegatorFactoryInterface
         /** @var mixed $listener */
         $listener = $callback();
 
-        /** @var mixed $config */
         $config = $container->get('config');
         if (
             !isset($config['api-tools-mvc-auth']['authentication']['adapters'])
             || !is_array(value: $config['api-tools-mvc-auth']['authentication']['adapters'])
         ) {
-            return \Jield\Stdlib\Value::instance($listener, \Jield\ApiTools\MvcAuth\Authentication\DefaultAuthenticationListener::class);
+            return Value::instance(
+                $listener,
+                \Jield\ApiTools\MvcAuth\Authentication\DefaultAuthenticationListener::class,
+            );
         }
 
-        /** @var mixed $data */
         foreach ($config['api-tools-mvc-auth']['authentication']['adapters'] as $type => $data) {
-            $this->attachAdapterOfType(type: \Jield\Stdlib\Value::string($type), adapterConfig: \Jield\Stdlib\Value::array($data), container: $container, listener: \Jield\Stdlib\Value::instance($listener, \Jield\ApiTools\MvcAuth\Authentication\DefaultAuthenticationListener::class));
+            $this->attachAdapterOfType(
+                type: Value::string($type),
+                adapterConfig: Value::array($data),
+                container: $container,
+                listener: Value::instance(
+                    $listener,
+                    \Jield\ApiTools\MvcAuth\Authentication\DefaultAuthenticationListener::class,
+                ),
+            );
         }
 
-        return \Jield\Stdlib\Value::instance($listener, \Jield\ApiTools\MvcAuth\Authentication\DefaultAuthenticationListener::class);
+        return Value::instance(
+            $listener,
+            \Jield\ApiTools\MvcAuth\Authentication\DefaultAuthenticationListener::class,
+        );
     }
 
     /**

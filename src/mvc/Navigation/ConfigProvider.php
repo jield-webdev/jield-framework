@@ -32,16 +32,16 @@ class ConfigProvider
             'abstract_factories' => [
                 Service\NavigationAbstractServiceFactory::class,
             ],
-            'aliases'            => [
-                'navigation'                   => Navigation::class,
+            'aliases' => [
+                'navigation' => Navigation::class,
                 'Zend\\Navigation\\Navigation' => Navigation::class,
             ],
-            'delegators'         => [
+            'delegators' => [
                 'ViewHelperManager' => [
                     View\ViewHelperManagerDelegatorFactory::class,
                 ],
             ],
-            'factories'          => [
+            'factories' => [
                 Navigation::class => Service\DefaultNavigationFactory::class,
             ],
         ];

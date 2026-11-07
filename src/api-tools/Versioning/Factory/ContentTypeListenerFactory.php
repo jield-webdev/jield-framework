@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Jield\ApiTools\Versioning\Factory;
 
 use Jield\ApiTools\Versioning\ContentTypeListener;
+use Jield\Stdlib\Value;
 use Psr\Container\ContainerInterface;
 
 class ContentTypeListenerFactory
@@ -17,9 +18,8 @@ class ContentTypeListenerFactory
         $config = $config['api-tools-versioning']['content-type'] ?? [];
 
         $listener = new ContentTypeListener();
-        /** @var mixed $regexp */
-        foreach (\Jield\Stdlib\Value::iterable($config) as $regexp) {
-            $listener->addRegexp(regex: \Jield\Stdlib\Value::string($regexp));
+        foreach (Value::iterable($config) as $regexp) {
+            $listener->addRegexp(regex: Value::string($regexp));
         }
 
         return $listener;

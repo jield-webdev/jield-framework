@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Jield\ApiTools\ApiProblem\View;
 
 use Jield\Mvc\View\Renderer\JsonRenderer;
-use Laminas\View\Model\ModelInterface;
 use Override;
 
 class ApiProblemRenderer extends JsonRenderer
@@ -31,18 +30,18 @@ class ApiProblemRenderer extends JsonRenderer
     }
 
     /**
-     * @param string|ModelInterface $nameOrModel
-     * @param iterable<non-empty-string, mixed>|null $values
+     * @param mixed $templateNameOrModel
+     * @param iterable<non-empty-string, mixed>|null $variables
      * @return string
      */
     #[Override]
-    public function render($nameOrModel, $values = null): string
+    public function render($templateNameOrModel, $variables = null): string
     {
-        if (!$nameOrModel instanceof ApiProblemModel) {
+        if (!$templateNameOrModel instanceof ApiProblemModel) {
             return '';
         }
 
-        $apiProblem = $nameOrModel->getApiProblem();
+        $apiProblem = $templateNameOrModel->getApiProblem();
 
         if ($this->displayExceptions) {
             $apiProblem->setDetailIncludesStackTrace(flag: true);

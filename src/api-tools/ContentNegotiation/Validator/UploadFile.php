@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Jield\ApiTools\ContentNegotiation\Validator;
 
+use Jield\Validator\Options;
 use Laminas\Stdlib\RequestInterface;
 use Laminas\Validator\File\UploadFile as BaseValidator;
 use Laminas\Validator\ValidatorInterface;
@@ -17,7 +18,7 @@ class UploadFile implements ValidatorInterface
 
     public function __construct(?array $options = null)
     {
-        $this->validator = new BaseValidator($options ?? []);
+        $this->validator = new BaseValidator(Options::normalize($options ?? []));
     }
 
     public function setRequest(RequestInterface $request): void

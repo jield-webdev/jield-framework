@@ -8,6 +8,7 @@ use Attribute;
 use Doctrine\Common\Annotations\Annotation;
 use Doctrine\Common\Annotations\Annotation\NamedArgumentConstructor;
 
+use Jield\Stdlib\Value;
 use function is_array;
 use function sprintf;
 use function trigger_error;
@@ -51,8 +52,8 @@ final class Hydrator
                 E_USER_DEPRECATED,
             );
 
-            $this->type = \Jield\Stdlib\Value::string($type['type'] ?? null);
-            $this->options = \Jield\Stdlib\Value::array($type['options'] ?? $options);
+            $this->type = Value::string($type['type'] ?? null);
+            $this->options = Value::array($type['options'] ?? $options);
         } else {
             $this->type = $type;
             $this->options = $options;

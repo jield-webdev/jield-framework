@@ -6,6 +6,7 @@ namespace Jield\Authorize\Factory;
 
 use Jield\Authorize\Collector\RoleCollector;
 use Jield\Authorize\Provider\Identity\ProviderInterface;
+use Jield\Stdlib\Service;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Psr\Container\ContainerInterface;
 
@@ -21,8 +22,7 @@ class RoleCollectorServiceFactory implements FactoryInterface
      */
     public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): RoleCollector
     {
-        
-        $identityProvider = \Jield\Stdlib\Service::get($container, ProviderInterface::class);
+        $identityProvider = Service::get($container, ProviderInterface::class);
 
         return new RoleCollector(identityProvider: $identityProvider);
     }

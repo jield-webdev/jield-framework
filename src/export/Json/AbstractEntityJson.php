@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Jield\Export\Json;
 
 use Doctrine\ORM\EntityManager;
+use Jield\Stdlib\Service;
+use Jield\Stdlib\Value;
+use JsonException;
 use Psr\Container\ContainerInterface;
 
 abstract class AbstractEntityJson
@@ -22,19 +25,21 @@ abstract class AbstractEntityJson
     public function __construct(
         protected readonly ContainerInterface $container,
     ) {
-        $this->entityManager = \Jield\Stdlib\Service::get($this->container, EntityManager::class);
+        $this->entityManager = Service::get($this->container, EntityManager::class);
         $this->providerInstance = $this->container->get($this->provider);
     }
 
     protected function findCount(array $criteria): int
     {
-        return $this->entityManager->getRepository(\Jield\Stdlib\Value::classString($this->entity))->count(criteria: \Jield\Stdlib\Value::stringKeyedArray($criteria));
+        return $this->entityManager
+            ->getRepository(Value::classString($this->entity))
+            ->count(criteria: Value::stringKeyedArray($criteria));
     }
 
     protected function findSliced(int $offset, array $criteria = []): array
     {
-        return $this->entityManager->getRepository(\Jield\Stdlib\Value::classString($this->entity))->findBy(
-            criteria: \Jield\Stdlib\Value::stringKeyedArray($criteria),
+        return $this->entityManager->getRepository(Value::classString($this->entity))->findBy(
+            criteria: Value::stringKeyedArray($criteria),
             orderBy: [],
             limit: $this->chunkSize,
             offset: $offset,
@@ -47,7 +52,7 @@ abstract class AbstractEntityJson
     }
 
     /**
-     * @throws \JsonException
+     * @throws JsonException
      */
     public function getJsonData(): string
     {
@@ -58,9 +63,8 @@ abstract class AbstractEntityJson
         while ($i < $this->findCount(criteria: [])) {
             $elements = $this->findSliced(offset: $i);
 
-            /** @var mixed $element */
             foreach ($elements as $element) {
-                $jsonData[] = \Jield\Stdlib\Value::call($this->providerInstance, 'generateArray', [$element]);
+                $jsonData[] = Value::call($this->providerInstance, 'generateArray', [$element]);
             }
 
             //clear the entity manager to prevent piling up entities

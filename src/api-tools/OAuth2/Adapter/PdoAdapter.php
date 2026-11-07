@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Jield\ApiTools\OAuth2\Adapter;
 
+use Jield\Stdlib\Value;
 use OAuth2\Storage\Pdo as OAuth2Pdo;
 use Override;
 
+use RuntimeException;
+use SensitiveParameter;
 use function sprintf;
 
 /**
@@ -19,21 +22,21 @@ class PdoAdapter extends OAuth2Pdo
 
     public function __construct($connection, $config = [])
     {
-        parent::__construct(connection: $connection, config: \Jield\Stdlib\Value::array($config));
+        parent::__construct(connection: $connection, config: Value::array($config));
         if (isset($config['bcrypt_cost'])) {
-            $this->bcryptCost = \Jield\Stdlib\Value::int($config['bcrypt_cost']);
+            $this->bcryptCost = Value::int($config['bcrypt_cost']);
         }
     }
 
     #[Override]
-    public function checkClientCredentials($client_id, #[\SensitiveParameter] $client_secret = null): bool
+    public function checkClientCredentials($client_id, #[SensitiveParameter] $client_secret = null): bool
     {
         $stmt = $this->db->prepare(query: sprintf(
             'SELECT * from %s where client_id = :client_id',
-            \Jield\Stdlib\Value::scalar($this->config['client_table']),
+            Value::scalar($this->config['client_table']),
         ));
         if ($stmt === false) {
-            throw new \RuntimeException('Unable to prepare the OAuth client query.');
+            throw new RuntimeException('Unable to prepare the OAuth client query.');
         }
         $stmt->execute(params: ['client_id' => $client_id]);
 
@@ -52,7 +55,7 @@ class PdoAdapter extends OAuth2Pdo
     #[Override]
     public function setClientDetails(
         $client_id,
-        #[\SensitiveParameter]
+        #[SensitiveParameter]
         $client_secret = null,
         $redirect_uri = null,
         $grant_types = null,
@@ -82,9 +85,9 @@ class PdoAdapter extends OAuth2Pdo
         );
     }
 
-    protected function checkPassword($user, #[\SensitiveParameter] $password): bool
+    protected function checkPassword($user, #[SensitiveParameter] $password): bool
     {
-        return password_verify($password, \Jield\Stdlib\Value::string($user['password']));
+        return password_verify($password, Value::string($user['password']));
     }
 
     public function getUser($username): array|bool
@@ -94,6 +97,8 @@ class PdoAdapter extends OAuth2Pdo
         if (!$userInfo) {
             return false;
         }
+
+        $userInfo = Value::array($userInfo);
 
         //Save the ID in the user_id field
         $userInfo['user_id'] = $userInfo['id'];

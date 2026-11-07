@@ -6,6 +6,7 @@ namespace Jield\Mvc\View\Helper;
 
 use Jield\Mvc\ModuleRouteListener;
 use Jield\Mvc\Router\RouteMatch;
+use Jield\Stdlib\Value;
 use Laminas\Router\RouteStackInterface;
 use Laminas\View\Exception;
 use Traversable;
@@ -47,7 +48,7 @@ class Url extends AbstractHelper
      * @see \Laminas\Router\RouteInterface::assemble()
      *
      * @param  string|null $name Name of the route
-     * @param array|Traversable $params Parameters for the link
+     * @param mixed $params Parameters for the link
      * @param array|Traversable|bool $options Options for the route
      * @param  bool $reuseMatchedParams Whether to reuse matched parameters
      * @return string Url For the link href attribute
@@ -104,10 +105,15 @@ class Url extends AbstractHelper
             $params = array_merge($routeMatchParams, $params);
         }
 
-        $options = is_array($options) ? $options : iterator_to_array($options);
+        if ($options instanceof Traversable) {
+            $options = iterator_to_array($options);
+        }
+        $options = Value::array($options);
         $options['name'] = $name;
 
-        return $this->router->assemble(\Jield\Stdlib\Value::routeParams($params), \Jield\Stdlib\Value::array($options))->toString();
+        return $this->router
+            ->assemble(Value::routeParams($params), Value::array($options))
+            ->toString();
     }
 
     /**

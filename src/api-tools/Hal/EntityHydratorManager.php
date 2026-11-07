@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Jield\ApiTools\Hal;
 
+use Jield\ApiTools\Hal\Metadata\Metadata;
 use Jield\ApiTools\Hal\Metadata\MetadataMap;
+use Jield\Stdlib\Value;
 use Laminas\Hydrator\ExtractionInterface;
 use Laminas\Hydrator\HydratorPluginManager;
 use Laminas\Hydrator\HydratorPluginManagerInterface;
@@ -14,12 +16,6 @@ use function strtolower;
 
 class EntityHydratorManager
 {
-    /** @var HydratorPluginManager|HydratorPluginManagerInterface */
-    protected HydratorPluginManagerInterface|HydratorPluginManager $hydrators;
-
-    /** @var MetadataMap */
-    protected MetadataMap $metadataMap;
-
     /**
      * Map of class name/(hydrator instance|name) pairs
      *
@@ -38,11 +34,10 @@ class EntityHydratorManager
      * @param HydratorPluginManager|HydratorPluginManagerInterface $hydrators
      * @throws Exception\InvalidArgumentException If $hydrators is of invalid type.
      */
-    public function __construct(HydratorPluginManager|HydratorPluginManagerInterface $hydrators, MetadataMap $map)
-    {
-        $this->hydrators = $hydrators;
-        $this->metadataMap = $map;
-    }
+    public function __construct(
+        protected HydratorPluginManagerInterface|HydratorPluginManager $hydrators,
+        protected MetadataMap $metadataMap,
+    ) {}
 
     /**
      * @return HydratorPluginManager|HydratorPluginManagerInterface
@@ -98,11 +93,14 @@ class EntityHydratorManager
         $classLower = strtolower(string: $class);
 
         if (isset($this->hydratorMap[$classLower])) {
-            return \Jield\Stdlib\Value::instance($this->hydratorMap[$classLower], ExtractionInterface::class);
+            return Value::instance($this->hydratorMap[$classLower], ExtractionInterface::class);
         }
 
         if ($this->metadataMap->has(class: $entity)) {
-            $metadata = \Jield\Stdlib\Value::instance($this->metadataMap->get(class: $class), \Jield\ApiTools\Hal\Metadata\Metadata::class);
+            $metadata = Value::instance(
+                $this->metadataMap->get(class: $class),
+                Metadata::class,
+            );
             /** @psalm-suppress PossiblyFalseReference */
             $hydrator = $metadata->getHydrator();
             if ($hydrator instanceof ExtractionInterface) {

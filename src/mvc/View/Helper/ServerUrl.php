@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Jield\Mvc\View\Helper;
 
+use Jield\Stdlib\Value;
 use function array_pop;
 use function explode;
 use function in_array;
@@ -134,7 +135,7 @@ class ServerUrl extends AbstractHelper
                 $this->setPort(443);
                 return;
             }
-            $this->setPort(\Jield\Stdlib\Value::numericPort($_SERVER['SERVER_PORT']));
+            $this->setPort(Value::numericPort($_SERVER['SERVER_PORT']));
         }
     }
 
@@ -147,17 +148,14 @@ class ServerUrl extends AbstractHelper
             return;
         }
 
-        switch (true) {
-            case isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on':
-            case isset($_SERVER['HTTP_SCHEME']) && $_SERVER['HTTP_SCHEME'] === 'https':
-            case 443 === $this->getPort():
-            case $this->isReversedProxy():
-                $scheme = 'https';
-                break;
-            default:
-                $scheme = 'http';
-                break;
-        }
+        $scheme = match (true) {
+            isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on',
+            isset($_SERVER['HTTP_SCHEME']) && $_SERVER['HTTP_SCHEME'] === 'https',
+            443 === $this->getPort(),
+            $this->isReversedProxy(),
+                => 'https',
+            default => 'http',
+        };
 
         $this->setScheme($scheme);
     }
@@ -183,14 +181,14 @@ class ServerUrl extends AbstractHelper
         }
 
         $host = $_SERVER['HTTP_X_FORWARDED_HOST'];
-        if (str_contains(\Jield\Stdlib\Value::string($host), ',')) {
-            $hosts = explode(',', \Jield\Stdlib\Value::string($host));
+        if (str_contains(Value::string($host), ',')) {
+            $hosts = explode(',', Value::string($host));
             $host = trim(array_pop($hosts));
         }
         if (empty($host)) {
             return false;
         }
-        $this->setHost(\Jield\Stdlib\Value::string($host));
+        $this->setHost(Value::string($host));
 
         return true;
     }
@@ -211,7 +209,7 @@ class ServerUrl extends AbstractHelper
         }
 
         $port = $_SERVER['HTTP_X_FORWARDED_PORT'];
-        $this->setPort(\Jield\Stdlib\Value::numericPort($port));
+        $this->setPort(Value::numericPort($port));
 
         return true;
     }

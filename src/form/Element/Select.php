@@ -6,8 +6,9 @@ namespace Jield\Form\Element;
 
 use Jield\Form\Element;
 use Jield\Form\Exception\InvalidArgumentException;
-use Laminas\InputFilter\InputProviderInterface;
+use Jield\Stdlib\Value;
 use Jield\Validator\Each;
+use Laminas\InputFilter\InputProviderInterface;
 use Laminas\Validator\InArray as InArrayValidator;
 use Laminas\Validator\ValidatorInterface;
 use Stringable;
@@ -33,6 +34,9 @@ use const E_USER_DEPRECATED;
  *     options: BasicValueOptions,
  *     disabled?: bool,
  *     label?: string,
+ *     value?: string|int|Stringable,
+ *     selected?: bool,
+ *     attributes?: array<array-key, mixed>,
  * }
  * @psalm-type ValueOptions = array<array-key, OptGroup|ValueOption>
  */
@@ -125,19 +129,25 @@ class Select extends Element implements InputProviderInterface
         }
 
         if (isset($this->options['empty_option'])) {
-            $this->setEmptyOption(emptyOption: \Jield\Stdlib\Value::nullableArrayOrString($this->options['empty_option']));
+            /** @var EmptyOption $emptyOption */
+            $emptyOption = $this->options['empty_option'];
+            $this->setEmptyOption(emptyOption: $emptyOption);
         }
 
         if (isset($this->options['disable_inarray_validator'])) {
-            $this->setDisableInArrayValidator(disableOption: \Jield\Stdlib\Value::bool($this->options['disable_inarray_validator']));
+            $this->setDisableInArrayValidator(disableOption: Value::bool(
+                $this->options['disable_inarray_validator'],
+            ));
         }
 
         if (isset($this->options['use_hidden_element'])) {
-            $this->setUseHiddenElement(useHiddenElement: \Jield\Stdlib\Value::bool($this->options['use_hidden_element']));
+            $this->setUseHiddenElement(useHiddenElement: Value::bool(
+                $this->options['use_hidden_element'],
+            ));
         }
 
         if (isset($this->options['unselected_value'])) {
-            $this->setUnselectedValue(unselectedValue: \Jield\Stdlib\Value::string($this->options['unselected_value']));
+            $this->setUnselectedValue(unselectedValue: Value::string($this->options['unselected_value']));
         }
 
         return $this;
@@ -157,7 +167,7 @@ class Select extends Element implements InputProviderInterface
             $this->setValueOptions(options: $value);
             return $this;
         }
-        return parent::setAttribute(key: $key, value: \Jield\Stdlib\Value::plainScalar($value));
+        return parent::setAttribute(key: $key, value: Value::plainScalar($value));
     }
 
     /**

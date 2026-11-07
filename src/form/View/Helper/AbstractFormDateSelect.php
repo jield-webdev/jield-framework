@@ -164,9 +164,7 @@ abstract class AbstractFormDateSelect extends AbstractHelper
      */
     public function getLocale(): string
     {
-        if (null === $this->locale) {
-            $this->locale = Locale::getDefault();
-        }
+        $this->locale ??= Locale::getDefault();
 
         return $this->locale;
     }
@@ -175,6 +173,7 @@ abstract class AbstractFormDateSelect extends AbstractHelper
      * Create a key => value options for months
      *
      * @param string $pattern Pattern to use for months
+     * @return array<array-key, string|false>
      */
     protected function getMonthsOptions(string $pattern): array
     {
@@ -230,9 +229,7 @@ abstract class AbstractFormDateSelect extends AbstractHelper
             $this->selectHelper = $this->getView()->plugin('formselect', \Jield\Form\View\Helper\FormSelect::class);
         }
 
-        if (null === $this->selectHelper) {
-            $this->selectHelper = new FormSelect();
-        }
+        $this->selectHelper ??= new FormSelect();
 
         return $this->selectHelper;
     }

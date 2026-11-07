@@ -4,14 +4,13 @@ declare(strict_types=1);
 
 namespace Jield\ModuleManager\Loader;
 
+use Jield\Stdlib\Value;
 use Traversable;
-
 use function array_filter;
 use function array_values;
 use function array_walk;
 use function explode;
 use function file_exists;
-use function gettype;
 use function implode;
 use function in_array;
 use function is_array;
@@ -54,7 +53,7 @@ class ClassMapAutoloader implements SplAutoloader
      *
      * Create a new instance, and optionally configure the autoloader.
      *
-     * @param  null|array|Traversable $options
+     * @param null|array|Traversable $options
      */
     public function __construct($options = null)
     {
@@ -68,12 +67,12 @@ class ClassMapAutoloader implements SplAutoloader
      *
      * Proxies to {@link registerAutoloadMaps()}.
      *
-     * @param  array|Traversable $options
+     * @param array|Traversable $options
      * @return ClassMapAutoloader
      */
     public function setOptions($options)
     {
-        $this->registerAutoloadMaps(\Jield\Stdlib\Value::array($options));
+        $this->registerAutoloadMaps(Value::array($options));
         return $this;
     }
 
@@ -86,12 +85,13 @@ class ClassMapAutoloader implements SplAutoloader
      * An autoload map should be an associative array containing
      * classname/file pairs.
      *
-     * @param  string|array $map
-     * @throws Exception\InvalidArgumentException
+     * @param string|array $map
      * @return ClassMapAutoloader
+     * @throws Exception\InvalidArgumentException
      */
     public function registerAutoloadMap($map)
     {
+        $location = null;
         if (is_string($map)) {
             $location = $map;
             /** @var mixed $map */
@@ -104,7 +104,7 @@ class ClassMapAutoloader implements SplAutoloader
             require_once __DIR__ . '/Exception/InvalidArgumentException.php';
             throw new Exception\InvalidArgumentException(sprintf(
                 'Map file provided does not return a map. Map file: "%s"',
-                isset($location) ? $location : 'unexpected type: ' . gettype($map),
+                $location,
             ));
         }
 
@@ -120,9 +120,9 @@ class ClassMapAutoloader implements SplAutoloader
     /**
      * Register many autoload maps at once
      *
-     * @param  mixed $locations
-     * @throws Exception\InvalidArgumentException
+     * @param mixed $locations
      * @return ClassMapAutoloader
+     * @throws Exception\InvalidArgumentException
      */
     public function registerAutoloadMaps($locations)
     {
@@ -132,7 +132,7 @@ class ClassMapAutoloader implements SplAutoloader
         }
         /** @var mixed $location */
         foreach ($locations as $location) {
-            $this->registerAutoloadMap(\Jield\Stdlib\Value::arrayOrString($location));
+            $this->registerAutoloadMap(Value::arrayOrString($location));
         }
         return $this;
     }
@@ -153,7 +153,7 @@ class ClassMapAutoloader implements SplAutoloader
     public function autoload($class)
     {
         if (isset($this->map[$class])) {
-            require_once $this->map[$class];
+            require_once Value::string($this->map[$class]);
 
             return $class;
         }
@@ -168,7 +168,7 @@ class ClassMapAutoloader implements SplAutoloader
      */
     public function register()
     {
-        spl_autoload_register([$this, 'autoload'], true, true);
+        spl_autoload_register($this->autoload(...), true, true);
     }
 
     /**
@@ -178,7 +178,7 @@ class ClassMapAutoloader implements SplAutoloader
      * otherwise, returns whatever was returned by calling include() on the
      * location.
      *
-     * @param  string $location
+     * @param string $location
      * @return ClassMapAutoloader|mixed
      * @throws Exception\InvalidArgumentException For nonexistent locations.
      */
@@ -201,6 +201,9 @@ class ClassMapAutoloader implements SplAutoloader
             return $this;
         }
 
+        if ($path === false) {
+            throw new Exception\InvalidArgumentException(sprintf('Cannot resolve map file "%s".', $location));
+        }
         return include $path;
     }
 
@@ -209,7 +212,7 @@ class ClassMapAutoloader implements SplAutoloader
      *
      * @see https://bugs.php.net/bug.php?id=52769
      *
-     * @param  string $path
+     * @param string $path
      * @return string|null
      */
     public static function realPharPath($path)
@@ -220,8 +223,8 @@ class ClassMapAutoloader implements SplAutoloader
         }
 
         $prefixLength = 5 + strlen($match[1]);
-        $parts = explode('/', str_replace(['/', '\\'], '/', substr($path, $prefixLength)));
-        $parts = array_values(array_filter($parts, static fn($p) => $p !== '' && $p !== '.'));
+        $parts        = explode('/', str_replace(['/', '\\'], '/', substr($path, $prefixLength)));
+        $parts        = array_values(array_filter($parts, static fn($p) => $p !== '' && $p !== '.'));
 
         array_walk($parts, static function ($value, $key) use (&$parts): void {
             if ($value === '..') {
@@ -230,7 +233,9 @@ class ClassMapAutoloader implements SplAutoloader
             }
         });
 
-        if (file_exists($realPath = str_pad('phar:', $prefixLength, '/') . implode('/', \Jield\Stdlib\Value::scalars($parts)))) {
+        if (file_exists(
+            $realPath = str_pad('phar:', $prefixLength, '/') . implode('/', Value::scalars($parts)),
+        )) {
             return $realPath;
         }
         return null;

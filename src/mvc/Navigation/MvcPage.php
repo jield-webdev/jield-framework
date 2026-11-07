@@ -4,17 +4,15 @@ declare(strict_types=1);
 
 namespace Jield\Mvc\Navigation;
 
-use Laminas\Navigation\Page\AbstractPage;
-use Jield\Stdlib\Value;
-
-use Laminas\Navigation\Exception;
-use Laminas\Permissions\Acl\Resource\ResourceInterface;
 use Jield\Mvc\Router\RouteMatch;
+use Jield\Stdlib\Value;
+use Laminas\Navigation\Exception;
+use Laminas\Navigation\Page\AbstractPage;
+use Laminas\Permissions\Acl\Resource\ResourceInterface;
 use Laminas\Router\RouteStackInterface;
 
 use function array_intersect_assoc;
 use function array_merge;
-use function assert;
 use function count;
 use function get_debug_type;
 use function is_string;
@@ -33,7 +31,7 @@ use function strlen;
  */
 class MvcPage extends AbstractPage
 {
-    public const MODULE_NAMESPACE    = '__NAMESPACE__';
+    public const MODULE_NAMESPACE = '__NAMESPACE__';
     public const ORIGINAL_CONTROLLER = '__CONTROLLER__';
 
     /**
@@ -141,7 +139,7 @@ class MvcPage extends AbstractPage
      */
     public function isActive($recursive = false)
     {
-        if (! $this->active) {
+        if (!$this->active) {
             $reqParams = [];
             if ($this->routeMatch instanceof RouteMatch) {
                 $reqParams = $this->routeMatch->getParams();
@@ -162,7 +160,7 @@ class MvcPage extends AbstractPage
                 if (null !== $this->getRoute()) {
                     if (
                         Value::present($this->routeMatch)->getMatchedRouteName() === $this->getRoute()
-                        && (count(array_intersect_assoc($reqParams, $pageParams)) === count($pageParams))
+                        && count(array_intersect_assoc($reqParams, $pageParams)) === count($pageParams)
                     ) {
                         $this->active = true;
                         return $this->active;
@@ -219,15 +217,11 @@ class MvcPage extends AbstractPage
         }
 
         $router = $this->router;
-        if (null === $router) {
-            $router = static::$defaultRouter;
-        }
+        $router ??= static::$defaultRouter;
 
-        if (! $router instanceof RouteStackInterface) {
-            throw new Exception\DomainException(
-                __METHOD__
-                . ' cannot execute as no Laminas\Router\RouteStackInterface instance is composed'
-            );
+        if (!$router instanceof RouteStackInterface) {
+            throw new Exception\DomainException(__METHOD__
+            . ' cannot execute as no Laminas\Router\RouteStackInterface instance is composed');
         }
 
         if ($this->useRouteMatch() && $this->getRouteMatch()) {
@@ -259,8 +253,7 @@ class MvcPage extends AbstractPage
         $name = match (true) {
             $this->getRoute() !== null || static::getDefaultRoute() !== null
                 => $this->getRoute() ?? static::getDefaultRoute(),
-            $this->getRouteMatch() !== null
-                => Value::present($this->getRouteMatch())->getMatchedRouteName(),
+            $this->getRouteMatch() !== null => Value::present($this->getRouteMatch())->getMatchedRouteName(),
             default => throw new Exception\DomainException('No route name could be found'),
         };
 
@@ -293,13 +286,11 @@ class MvcPage extends AbstractPage
     public function setAction($action)
     {
         /** @psalm-suppress DocblockTypeContradiction */
-        if (null !== $action && ! is_string($action)) {
-            throw new Exception\InvalidArgumentException(
-                'Invalid argument: $action must be a string or null'
-            );
+        if (null !== $action && !is_string($action)) {
+            throw new Exception\InvalidArgumentException('Invalid argument: $action must be a string or null');
         }
 
-        $this->action    = $action;
+        $this->action = $action;
         $this->hrefCache = null;
         return $this;
     }
@@ -328,14 +319,12 @@ class MvcPage extends AbstractPage
     public function setController($controller)
     {
         /** @psalm-suppress DocblockTypeContradiction */
-        if (null !== $controller && ! is_string($controller)) {
-            throw new Exception\InvalidArgumentException(
-                'Invalid argument: $controller must be a string or null'
-            );
+        if (null !== $controller && !is_string($controller)) {
+            throw new Exception\InvalidArgumentException('Invalid argument: $controller must be a string or null');
         }
 
         $this->controller = $controller;
-        $this->hrefCache  = null;
+        $this->hrefCache = null;
         return $this;
     }
 
@@ -361,7 +350,7 @@ class MvcPage extends AbstractPage
      */
     public function setQuery($query)
     {
-        $this->query     = $query;
+        $this->query = $query;
         $this->hrefCache = null;
         return $this;
     }
@@ -389,7 +378,7 @@ class MvcPage extends AbstractPage
      */
     public function setParams(?array $params = null)
     {
-        $this->params    = $params ?? [];
+        $this->params = $params ?? [];
         $this->hrefCache = null;
         return $this;
     }
@@ -419,13 +408,11 @@ class MvcPage extends AbstractPage
     public function setRoute($route)
     {
         /** @psalm-suppress DocblockTypeContradiction */
-        if (null !== $route && (! is_string($route) || strlen($route) < 1)) {
-            throw new Exception\InvalidArgumentException(
-                'Invalid argument: $route must be a non-empty string or null'
-            );
+        if (null !== $route && (!is_string($route) || strlen($route) < 1)) {
+            throw new Exception\InvalidArgumentException('Invalid argument: $route must be a non-empty string or null');
         }
 
-        $this->route     = $route;
+        $this->route = $route;
         $this->hrefCache = null;
         return $this;
     }
@@ -461,12 +448,12 @@ class MvcPage extends AbstractPage
      */
     public function setRouteMatch($matches)
     {
-        if (! $matches instanceof RouteMatch) {
+        if (!$matches instanceof RouteMatch) {
             throw new Exception\InvalidArgumentException(sprintf(
                 'RouteMatch passed to %s must be a %s instance; received %s',
                 __METHOD__,
                 RouteMatch::class,
-                get_debug_type($matches)
+                get_debug_type($matches),
             ));
         }
         $this->routeMatch = $matches;
@@ -494,8 +481,8 @@ class MvcPage extends AbstractPage
     public function setUseRouteMatch($useRouteMatch = true)
     {
         /** @psalm-suppress RedundantCastGivenDocblockType */
-        $this->useRouteMatch = (bool) $useRouteMatch;
-        $this->hrefCache     = null;
+        $this->useRouteMatch = $useRouteMatch;
+        $this->hrefCache = null;
         return $this;
     }
 
@@ -520,12 +507,12 @@ class MvcPage extends AbstractPage
     public function setRouter($router)
     {
         /** @psalm-suppress DocblockTypeContradiction */
-        if (! $router instanceof RouteStackInterface) {
+        if (!$router instanceof RouteStackInterface) {
             throw new Exception\InvalidArgumentException(sprintf(
                 'Router passed to %s must be a %s instance; received %s',
                 __METHOD__,
                 RouteStackInterface::class,
-                get_debug_type($router)
+                get_debug_type($router),
             ));
         }
         $this->router = $router;
@@ -612,16 +599,13 @@ class MvcPage extends AbstractPage
      */
     public function toArray()
     {
-        return array_merge(
-            parent::toArray(),
-            [
-                'action'      => $this->getAction(),
-                'controller'  => $this->getController(),
-                'params'      => $this->getParams(),
-                'route'       => $this->getRoute(),
-                'router'      => $this->getRouter(),
-                'route_match' => $this->getRouteMatch(),
-            ]
-        );
+        return array_merge(parent::toArray(), [
+            'action' => $this->getAction(),
+            'controller' => $this->getController(),
+            'params' => $this->getParams(),
+            'route' => $this->getRoute(),
+            'router' => $this->getRouter(),
+            'route_match' => $this->getRouteMatch(),
+        ]);
     }
 }

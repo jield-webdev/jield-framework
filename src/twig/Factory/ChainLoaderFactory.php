@@ -5,11 +5,14 @@ declare(strict_types=1);
 namespace Jield\Twig\Factory;
 
 use InvalidArgumentException;
+use Jield\Stdlib\Service;
+use Jield\Stdlib\Value;
 use Jield\Twig\ModuleOptions;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Psr\Container\ContainerInterface;
 use Twig\Loader;
 
+use Twig\Loader\LoaderInterface;
 use function is_string;
 
 class ChainLoaderFactory implements FactoryInterface
@@ -20,8 +23,8 @@ class ChainLoaderFactory implements FactoryInterface
         ?array $options = null,
     ): Loader\ChainLoader {
         $moduleOptions = $options === null
-            ? \Jield\Stdlib\Service::get($container, ModuleOptions::class)
-            : new ModuleOptions(\Jield\Stdlib\Value::stringKeyedArray($options));
+            ? Service::get($container, ModuleOptions::class)
+            : new ModuleOptions(Value::stringKeyedArray($options));
 
         // Setup loader
         $chain = new Loader\ChainLoader();
@@ -31,7 +34,10 @@ class ChainLoaderFactory implements FactoryInterface
             if (!is_string(value: $loader) || !$container->has($loader)) {
                 throw new InvalidArgumentException(message: 'Loaders should be a service manager alias.');
             }
-            $chain->addLoader(loader: \Jield\Stdlib\Value::instance($container->get($loader), \Twig\Loader\LoaderInterface::class));
+            $chain->addLoader(loader: Value::instance(
+                $container->get($loader),
+                LoaderInterface::class,
+            ));
         }
 
         return $chain;

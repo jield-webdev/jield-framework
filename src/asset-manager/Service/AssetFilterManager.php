@@ -8,6 +8,7 @@ use Assetic\Contracts\Asset\AssetInterface;
 use Assetic\Contracts\Filter\FilterInterface;
 use Jield\AssetManager\Exception;
 use Jield\AssetManager\Resolver\MimeResolverAwareInterface;
+use Jield\Stdlib\Value;
 use Override;
 use Psr\Container\ContainerInterface;
 
@@ -48,34 +49,38 @@ class AssetFilterManager implements MimeResolverAwareInterface
     public function setFilters(string $path, \Jield\AssetManager\Asset\AssetInterface $asset): void
     {
         $config = $this->getConfig();
+        $mimeType = $asset->getMimeType() ?? '';
 
         if (!empty($config[$path])) {
-            /** @var mixed $filters */
             $filters = $config[$path];
-        } elseif (!empty($config[$asset->getMimeType()])) {
-            /** @var mixed $filters */
-            $filters = $config[$asset->getMimeType()];
+        } elseif (!empty($config[$mimeType])) {
+            $filters = $config[$mimeType];
         } else {
-            /** @var mixed $extension */
-            $extension = $this->getMimeResolver()->getExtension(mimetype: \Jield\Stdlib\Value::string($asset->getMimeType()));
+            $extension = $this->getMimeResolver()->getExtension(
+                mimetype: $mimeType,
+            );
             if (!empty($config[$extension])) {
-                /** @var mixed $filters */
                 $filters = $config[$extension];
             } else {
                 return;
             }
         }
 
-        /** @var mixed $filter */
-        foreach (\Jield\Stdlib\Value::iterable($filters) as $filter) {
+        foreach (Value::iterable($filters) as $filter) {
             if (is_null(value: $filter)) {
                 continue;
             }
 
             if (!empty($filter['filter'])) {
-                $this->ensureByFilter(asset: $asset, filter: \Jield\Stdlib\Value::instanceOrString($filter['filter'], \Assetic\Contracts\Filter\FilterInterface::class));
+                $this->ensureByFilter(asset: $asset, filter: Value::instanceOrString(
+                    $filter['filter'],
+                    \Assetic\Contracts\Filter\FilterInterface::class,
+                ));
             } elseif (!empty($filter['service'])) {
-                $this->ensureByService(asset: $asset, service: \Jield\Stdlib\Value::string(\Jield\Stdlib\Value::accessible($filter)['service']));
+                $this->ensureByService(
+                    asset: $asset,
+                    service: Value::string(Value::accessible($filter)['service']),
+                );
             } else {
                 throw new Exception\RuntimeException(message: 'Invalid filter supplied. Expected Filter or Service.');
             }
@@ -91,7 +96,10 @@ class AssetFilterManager implements MimeResolverAwareInterface
      */
     protected function ensureByService(AssetInterface $asset, string $service): void
     {
-        $this->ensureByFilter(asset: $asset, filter: \Jield\Stdlib\Value::instanceOrString($this->container->get($service), \Assetic\Contracts\Filter\FilterInterface::class));
+        $this->ensureByFilter(asset: $asset, filter: Value::instanceOrString(
+            $this->container->get($service),
+            \Assetic\Contracts\Filter\FilterInterface::class,
+        ));
     }
 
     /**
@@ -121,13 +129,17 @@ class AssetFilterManager implements MimeResolverAwareInterface
             throw new Exception\RuntimeException(message: 'No filter found for ' . $filter);
         }
 
-        if (!isset($this->filterInstances[$filterClass])) {
-            $this->filterInstances[$filterClass] = \Jield\Stdlib\Value::instantiate($filterClass);
-        }
+        $this->filterInstances[$filterClass] ??= Value::instance(
+            Value::instantiate($filterClass),
+            FilterInterface::class,
+        );
 
         $filterInstance = $this->filterInstances[$filterClass];
 
-        $asset->ensureFilter(filter: \Jield\Stdlib\Value::instance($filterInstance, \Assetic\Contracts\Filter\FilterInterface::class));
+        $asset->ensureFilter(filter: Value::instance(
+            $filterInstance,
+            \Assetic\Contracts\Filter\FilterInterface::class,
+        ));
     }
 
     public function getContainer(): ContainerInterface

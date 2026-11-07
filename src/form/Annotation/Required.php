@@ -7,6 +7,7 @@ namespace Jield\Form\Annotation;
 use Attribute;
 use Doctrine\Common\Annotations\Annotation;
 use Doctrine\Common\Annotations\Annotation\NamedArgumentConstructor;
+use Jield\Stdlib\Value;
 use Laminas\Filter\Boolean as BooleanFilter;
 
 use function is_bool;
@@ -39,7 +40,7 @@ final class Required
             $required = $filter->filter($required);
         }
 
-        $this->required = \Jield\Stdlib\Value::bool($required);
+        $this->required = Value::bool($required);
     }
 
     /**

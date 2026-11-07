@@ -8,6 +8,8 @@ use Jield\Form\ElementInterface;
 use Jield\Form\Exception\InvalidArgumentException;
 use Jield\Form\LabelAwareInterface;
 use Jield\Mvc\View\Helper\AbstractTranslatorHelper as BaseAbstractHelper;
+use Jield\Stdlib\Value;
+use Laminas\Escaper\Escaper;
 use Laminas\Escaper\Exception\RuntimeException as EscaperException;
 use Laminas\View\Helper\Doctype;
 use Laminas\View\Helper\EscapeHtml;
@@ -232,7 +234,7 @@ abstract class AbstractHelper extends BaseAbstractHelper
      */
     public function setEncoding(string $encoding): static
     {
-        $escaper = new \Laminas\Escaper\Escaper(\Jield\Stdlib\Value::nullableNonEmptyString($encoding));
+        $escaper = new Escaper(Value::nullableNonEmptyString($encoding));
         $this->escapeHtmlHelper = new EscapeHtml($escaper);
         $this->escapeHtmlAttrHelper = new EscapeHtmlAttr($escaper);
         $this->encoding = $encoding;
@@ -260,14 +262,13 @@ abstract class AbstractHelper extends BaseAbstractHelper
         $doctypeHelper = $this->getDoctypeHelper();
         $strings = [];
 
-        /** @var mixed $value */
         foreach ($attributes as $key => $value) {
             $key = strtolower(string: (string) $key);
 
             if (isset($this->booleanAttributes[$key])) {
                 if (!$value) {
                     // Skip boolean attributes that expect empty string as false value
-                    if ('' === \Jield\Stdlib\Value::accessible($this->booleanAttributes[$key])['off']) {
+                    if ('' === Value::accessible($this->booleanAttributes[$key])['off']) {
                         continue;
                     }
                 } elseif ($doctypeHelper->isHtml5() && !$doctypeHelper->isXhtml()) {
@@ -277,20 +278,24 @@ abstract class AbstractHelper extends BaseAbstractHelper
             }
 
             //check if attribute is translatable and translate it
-            $value = $this->translateHtmlAttributeValue(key: $key, value: \Jield\Stdlib\Value::nullableString($value));
+            $value = $this->translateHtmlAttributeValue(key: $key, value: Value::nullableString($value));
 
             // @todo Escape event attributes like AbstractHtmlElement view helper does in htmlAttribs ??
             try {
                 /** @var mixed $escapedAttribute */
                 $escapedAttribute = $escapeAttr(value: $value);
-                $strings[] = sprintf('%s="%s"', \Jield\Stdlib\Value::scalar($escape(value: $key)), \Jield\Stdlib\Value::scalar($escapedAttribute));
+                $strings[] = sprintf(
+                    '%s="%s"',
+                    Value::scalar($escape(value: $key)),
+                    Value::scalar($escapedAttribute),
+                );
             } catch (EscaperException) {
                 // If an escaper exception happens, escape only the key, and use a blank value.
-                $strings[] = sprintf('%s=""', \Jield\Stdlib\Value::scalar($escape(value: $key)));
+                $strings[] = sprintf('%s=""', Value::scalar($escape(value: $key)));
             }
         }
 
-        return implode(separator: ' ', array: \Jield\Stdlib\Value::scalars($strings));
+        return implode(separator: ' ', array: Value::scalars($strings));
     }
 
     /**
@@ -357,7 +362,8 @@ abstract class AbstractHelper extends BaseAbstractHelper
         }
 
         if (!$this->escapeHtmlHelper instanceof EscapeHtml) {
-            $this->escapeHtmlHelper = new EscapeHtml(new \Laminas\Escaper\Escaper(\Jield\Stdlib\Value::nullableNonEmptyString($this->encoding)));
+            $this->escapeHtmlHelper =
+                new EscapeHtml(new Escaper(Value::nullableNonEmptyString($this->encoding)));
         }
 
         return $this->escapeHtmlHelper;
@@ -373,11 +379,15 @@ abstract class AbstractHelper extends BaseAbstractHelper
         }
 
         if ($this->view !== null && method_exists(object_or_class: $this->view, method: 'plugin')) {
-            $this->escapeHtmlAttrHelper = $this->getView()->plugin('escapehtmlattr', \Laminas\View\Helper\EscapeHtmlAttr::class);
+            $this->escapeHtmlAttrHelper = $this->getView()->plugin(
+                'escapehtmlattr',
+                \Laminas\View\Helper\EscapeHtmlAttr::class,
+            );
         }
 
         if (!$this->escapeHtmlAttrHelper instanceof EscapeHtmlAttr) {
-            $this->escapeHtmlAttrHelper = new EscapeHtmlAttr(new \Laminas\Escaper\Escaper(\Jield\Stdlib\Value::nullableNonEmptyString($this->encoding)));
+            $this->escapeHtmlAttrHelper =
+                new EscapeHtmlAttr(new Escaper(Value::nullableNonEmptyString($this->encoding)));
         }
 
         return $this->escapeHtmlAttrHelper;
@@ -393,7 +403,6 @@ abstract class AbstractHelper extends BaseAbstractHelper
      */
     protected function prepareAttributes(array $attributes): array
     {
-        /** @var mixed $value */
         foreach ($attributes as $key => $value) {
             $attribute = strtolower(string: (string) $key);
 
@@ -432,13 +441,21 @@ abstract class AbstractHelper extends BaseAbstractHelper
     {
         if (
             !is_bool(value: $value)
-            && in_array(needle: $value, haystack: \Jield\Stdlib\Value::array($this->booleanAttributes[$attribute]), strict: true)
+            && in_array(
+                needle: $value,
+                haystack: Value::array($this->booleanAttributes[$attribute]),
+                strict: true,
+            )
         ) {
-            return \Jield\Stdlib\Value::string($value);
+            return Value::string($value);
         }
 
-        $value = \Jield\Stdlib\Value::truthy($value);
-        return \Jield\Stdlib\Value::string($value ? \Jield\Stdlib\Value::accessible($this->booleanAttributes[$attribute])['on'] : \Jield\Stdlib\Value::accessible($this->booleanAttributes[$attribute])['off']);
+        $value = Value::truthy($value);
+        return Value::string(
+            $value
+                ? Value::accessible($this->booleanAttributes[$attribute])['on']
+                : Value::accessible($this->booleanAttributes[$attribute])['off'],
+        );
     }
 
     /**
@@ -451,20 +468,27 @@ abstract class AbstractHelper extends BaseAbstractHelper
         }
 
         if (isset($this->translatableAttributes[$key]) || isset(self::$defaultTranslatableHtmlAttributes[$key])) {
-            return \Jield\Stdlib\Value::present($this->getTranslator())->translate($value, $this->getTranslatorTextDomain());
+            return Value::present($this->getTranslator())->translate(
+                $value,
+                $this->getTranslatorTextDomain(),
+            );
         } else {
-            /** @var mixed $prefix */
             foreach ($this->translatableAttributePrefixes as $prefix) {
                 if (0 === mb_strpos($key, (string) $prefix)) {
                     // prefix matches => return translated $value
-                    return \Jield\Stdlib\Value::present($this->getTranslator())->translate($value, $this->getTranslatorTextDomain());
+                    return Value::present($this->getTranslator())->translate(
+                        $value,
+                        $this->getTranslatorTextDomain(),
+                    );
                 }
             }
-            /** @var mixed $prefix */
             foreach (self::$defaultTranslatableHtmlAttributePrefixes as $prefix) {
                 if (0 === mb_strpos($key, (string) $prefix)) {
                     // default prefix matches => return translated $value
-                    return \Jield\Stdlib\Value::present($this->getTranslator())->translate($value, $this->getTranslatorTextDomain());
+                    return Value::present($this->getTranslator())->translate(
+                        $value,
+                        $this->getTranslatorTextDomain(),
+                    );
                 }
             }
         }
@@ -561,14 +585,10 @@ abstract class AbstractHelper extends BaseAbstractHelper
      */
     protected function hasAllowedPrefix(string $attribute): bool
     {
-        /** @var mixed $prefix */
-        foreach ($this->validTagAttributePrefixes as $prefix) {
-            if (str_starts_with(haystack: $attribute, needle: (string) $prefix)) {
-                return true;
-            }
-        }
-
-        return false;
+        return array_any($this->validTagAttributePrefixes, fn($prefix) => str_starts_with(
+            haystack: $attribute,
+            needle: (string) $prefix,
+        ));
     }
 
     /**
@@ -577,10 +597,11 @@ abstract class AbstractHelper extends BaseAbstractHelper
      * @internal
      *
      * @todo Reduce argument to only string in the next major
-     * @param string $label
+     * @param int|string|float|bool $label
      */
     protected function translateLabel(int|string|float|bool $label): string
     {
+        $label = (string) $label;
         return $this->getTranslator()?->translate($label, $this->getTranslatorTextDomain()) ?? $label;
     }
 
@@ -591,11 +612,14 @@ abstract class AbstractHelper extends BaseAbstractHelper
      */
     protected function escapeLabel(ElementInterface $element, string $label): string
     {
-        if ($element instanceof LabelAwareInterface && \Jield\Stdlib\Value::truthy($element->getLabelOption(key: 'disable_html_escape'))) {
+        if (
+            $element instanceof LabelAwareInterface
+            && Value::truthy($element->getLabelOption(key: 'disable_html_escape'))
+        ) {
             return $label;
         }
 
         $escapeHtmlHelper = $this->getEscapeHtmlHelper();
-        return \Jield\Stdlib\Value::string($escapeHtmlHelper(value: $label));
+        return Value::string($escapeHtmlHelper(value: $label));
     }
 }

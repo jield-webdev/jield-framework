@@ -5,12 +5,15 @@ declare(strict_types=1);
 namespace Jield\Test\PHPUnit\Controller;
 
 use ArrayIterator;
+use Jield\Stdlib\Value;
 use Jield\Test\PHPUnit\Constraint\HasRedirectConstraint;
 use Jield\Test\PHPUnit\Constraint\IsRedirectedRouteNameConstraint;
+use Jield\Test\PHPUnit\FailureMessage;
 use Laminas\Http\Header\HeaderInterface;
 use PHPUnit\Framework\ExpectationFailedException;
 use Symfony\Component\DomCrawler\Crawler;
 
+use UnexpectedValueException;
 use function count;
 use function implode;
 use function preg_match;
@@ -29,11 +32,25 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
      * Get response header by key
      *
      * @param  string $header
-     * @return HeaderInterface|false
+     * @return HeaderInterface|ArrayIterator|false
      */
     protected function getResponseHeader($header)
     {
-        return $this->getResponse()->getHeaders()->get($header);
+        $result = $this->getResponse()->getHeaders()->get($header);
+        if ($result === false || $result instanceof HeaderInterface || $result instanceof ArrayIterator) {
+            return $result;
+        }
+        throw new UnexpectedValueException('Invalid response header.');
+    }
+
+    private function getSingleResponseHeader(string $header): HeaderInterface|false
+    {
+        $result = $this->getResponseHeader($header);
+        if ($result instanceof ArrayIterator) {
+            /** @var mixed $result */
+            $result = $result->valid() ? $result->current() : false;
+        }
+        return $result === false ? false : Value::instance($result, HeaderInterface::class);
     }
 
     /**
@@ -57,7 +74,7 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
     {
         $responseHeader = $this->getResponseHeader($header);
         if (false === $responseHeader) {
-            throw new ExpectationFailedException(\Jield\Test\PHPUnit\FailureMessage::format($this, sprintf(
+            throw new ExpectationFailedException(FailureMessage::format($this, sprintf(
                 'Failed asserting response header "%s" found',
                 $header,
             )));
@@ -75,7 +92,7 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
     {
         $responseHeader = $this->getResponseHeader($header);
         if (false !== $responseHeader) {
-            throw new ExpectationFailedException(\Jield\Test\PHPUnit\FailureMessage::format($this, sprintf(
+            throw new ExpectationFailedException(FailureMessage::format($this, sprintf(
                 'Failed asserting response header "%s" WAS NOT found',
                 $header,
             )));
@@ -92,40 +109,11 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
      */
     public function assertResponseHeaderContains($header, $match)
     {
-        $responseHeader = $this->getResponseHeader($header);
-        if (!$responseHeader) {
-            throw new ExpectationFailedException(\Jield\Test\PHPUnit\FailureMessage::format($this, sprintf(
-                'Failed asserting response header, header "%s" doesn\'t exist',
-                $header,
-            )));
-        }
-
-        if (!$responseHeader instanceof ArrayIterator) {
-            $responseHeader = [$responseHeader];
-        }
-
-        $headerMatched = false;
-
-        /** @var mixed $currentHeader */
-        foreach ($responseHeader as $currentHeader) {
-            if ($match !== \Jield\Stdlib\Value::instance($currentHeader, \Laminas\Http\Header\HeaderInterface::class)->getFieldValue()) {
-                continue;
-            }
-
-            $headerMatched = true;
-            break;
-        }
-
-        if (!$headerMatched) {
-            throw new ExpectationFailedException(\Jield\Test\PHPUnit\FailureMessage::format($this, sprintf(
-                'Failed asserting response header "%s" exists and contains "%s", actual content is "%s"',
-                $header,
-                $match,
-                \Jield\Stdlib\Value::scalar(\Jield\Stdlib\Value::instance($currentHeader, \Laminas\Http\Header\HeaderInterface::class)->getFieldValue()),
-            )));
-        }
-
-        $this->assertEquals($match, \Jield\Stdlib\Value::instance($currentHeader, \Laminas\Http\Header\HeaderInterface::class)->getFieldValue());
+        $values = $this->responseHeaderValues($header);
+        $this->assertContains($match, $values, sprintf(
+            'Failed asserting response header "%s" exists and contains "%s", actual content is "%s"',
+            $header, $match, implode(', ', $values),
+        ));
     }
 
     /**
@@ -137,30 +125,11 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
      */
     public function assertNotResponseHeaderContains($header, $match)
     {
-        $responseHeader = $this->getResponseHeader($header);
-        if (!$responseHeader) {
-            throw new ExpectationFailedException(\Jield\Test\PHPUnit\FailureMessage::format($this, sprintf(
-                'Failed asserting response header, header "%s" doesn\'t exist',
-                $header,
-            )));
-        }
-
-        if (!$responseHeader instanceof ArrayIterator) {
-            $responseHeader = [$responseHeader];
-        }
-
-        /** @var mixed $currentHeader */
-        foreach ($responseHeader as $currentHeader) {
-            if ($match === \Jield\Stdlib\Value::instance($currentHeader, \Laminas\Http\Header\HeaderInterface::class)->getFieldValue()) {
-                throw new ExpectationFailedException(\Jield\Test\PHPUnit\FailureMessage::format($this, sprintf(
-                    'Failed asserting response header "%s" DOES NOT CONTAIN "%s"',
-                    $header,
-                    $match,
-                )));
-            }
-        }
-
-        $this->assertNotEquals($match, \Jield\Stdlib\Value::instance($currentHeader, \Laminas\Http\Header\HeaderInterface::class)->getFieldValue());
+        $values = $this->responseHeaderValues($header);
+        $this->assertNotContains($match, $values, sprintf(
+            'Failed asserting response header "%s" DOES NOT CONTAIN "%s"',
+            $header, $match,
+        ));
     }
 
     /**
@@ -172,39 +141,33 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
      */
     public function assertResponseHeaderRegex($header, $pattern)
     {
-        $responseHeader = $this->getResponseHeader($header);
-        if (!$responseHeader) {
-            throw new ExpectationFailedException(\Jield\Test\PHPUnit\FailureMessage::format($this, sprintf(
-                'Failed asserting response header, header "%s" doesn\'t exist',
-                $header,
-            )));
-        }
-
-        if (!$responseHeader instanceof ArrayIterator) {
-            $responseHeader = [$responseHeader];
-        }
-
-        $headerMatched = false;
-
-        /** @var mixed $currentHeader */
-        foreach ($responseHeader as $currentHeader) {
-            $headerMatched = (bool) preg_match($pattern, \Jield\Stdlib\Value::string(\Jield\Stdlib\Value::instance($currentHeader, \Laminas\Http\Header\HeaderInterface::class)->getFieldValue()));
-
-            if ($headerMatched) {
+        $values = $this->responseHeaderValues($header);
+        $matched = false;
+        foreach ($values as $value) {
+            if (preg_match($pattern, $value) === 1) {
+                $matched = true;
                 break;
             }
         }
+        $this->assertTrue($matched, sprintf(
+            'Failed asserting response header "%s" exists and matches regex "%s", actual content is "%s"',
+            $header, $pattern, implode(', ', $values),
+        ));
+    }
 
-        if (!$headerMatched) {
-            throw new ExpectationFailedException(\Jield\Test\PHPUnit\FailureMessage::format($this, sprintf(
-                'Failed asserting response header "%s" exists and matches regex "%s", actual content is "%s"',
-                $header,
-                $pattern,
-                \Jield\Stdlib\Value::scalar(\Jield\Stdlib\Value::instance($currentHeader, \Laminas\Http\Header\HeaderInterface::class)->getFieldValue()),
-            )));
+    /** @return list<string> */
+    private function responseHeaderValues(string $header): array
+    {
+        $responseHeader = $this->getResponseHeader($header);
+        if ($responseHeader === false) {
+            throw new ExpectationFailedException(sprintf('Response header "%s" does not exist.', $header));
         }
-
-        $this->assertTrue($headerMatched);
+        $values = [];
+        /** @var mixed $currentHeader */
+        foreach ($responseHeader instanceof ArrayIterator ? $responseHeader : [$responseHeader] as $currentHeader) {
+            $values[] = Value::instance($currentHeader, HeaderInterface::class)->getFieldValue();
+        }
+        return $values;
     }
 
     /**
@@ -218,7 +181,7 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
     {
         $responseHeader = $this->getResponseHeader($header);
         if (!$responseHeader) {
-            throw new ExpectationFailedException(\Jield\Test\PHPUnit\FailureMessage::format($this, sprintf(
+            throw new ExpectationFailedException(FailureMessage::format($this, sprintf(
                 'Failed asserting response header, header "%s" doesn\'t exist',
                 $header,
             )));
@@ -232,10 +195,18 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
 
         /** @var mixed $currentHeader */
         foreach ($responseHeader as $currentHeader) {
-            $headerMatched = (bool) preg_match($pattern, \Jield\Stdlib\Value::string(\Jield\Stdlib\Value::instance($currentHeader, \Laminas\Http\Header\HeaderInterface::class)->getFieldValue()));
+            $headerMatched = (bool) preg_match(
+                $pattern,
+                Value::string(
+                    Value::instance(
+                        $currentHeader,
+                        \Laminas\Http\Header\HeaderInterface::class,
+                    )->getFieldValue(),
+                ),
+            );
 
             if ($headerMatched) {
-                throw new ExpectationFailedException(\Jield\Test\PHPUnit\FailureMessage::format($this, sprintf(
+                throw new ExpectationFailedException(FailureMessage::format($this, sprintf(
                     'Failed asserting response header "%s" DOES NOT MATCH regex "%s"',
                     $header,
                     $pattern,
@@ -253,9 +224,10 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
      */
     public function assertRedirect()
     {
-        $responseHeader = $this->getResponseHeader('Location');
+        $responseHeader = $this->getSingleResponseHeader('Location');
         if (false === $responseHeader) {
-            throw new ExpectationFailedException(\Jield\Test\PHPUnit\FailureMessage::format($this, 
+            throw new ExpectationFailedException(FailureMessage::format(
+                $this,
                 'Failed asserting response is a redirect',
             ));
         }
@@ -269,9 +241,9 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
      */
     public function assertNotRedirect()
     {
-        $responseHeader = $this->getResponseHeader('Location');
+        $responseHeader = $this->getSingleResponseHeader('Location');
         if (false !== $responseHeader) {
-            throw new ExpectationFailedException(\Jield\Test\PHPUnit\FailureMessage::format($this, sprintf(
+            throw new ExpectationFailedException(FailureMessage::format($this, sprintf(
                 'Failed asserting response is NOT a redirect, actual redirection is "%s"',
                 $responseHeader->getFieldValue(),
             )));
@@ -287,14 +259,15 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
      */
     public function assertRedirectTo($url)
     {
-        $responseHeader = $this->getResponseHeader('Location');
+        $responseHeader = $this->getSingleResponseHeader('Location');
         if (!$responseHeader) {
-            throw new ExpectationFailedException(\Jield\Test\PHPUnit\FailureMessage::format($this, 
+            throw new ExpectationFailedException(FailureMessage::format(
+                $this,
                 'Failed asserting response is a redirect',
             ));
         }
         if ($url !== $responseHeader->getFieldValue()) {
-            throw new ExpectationFailedException(\Jield\Test\PHPUnit\FailureMessage::format($this, sprintf(
+            throw new ExpectationFailedException(FailureMessage::format($this, sprintf(
                 'Failed asserting response redirects to "%s", actual redirection is "%s"',
                 $url,
                 $responseHeader->getFieldValue(),
@@ -311,14 +284,15 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
      */
     public function assertNotRedirectTo($url)
     {
-        $responseHeader = $this->getResponseHeader('Location');
+        $responseHeader = $this->getSingleResponseHeader('Location');
         if (!$responseHeader) {
-            throw new ExpectationFailedException(\Jield\Test\PHPUnit\FailureMessage::format($this, 
+            throw new ExpectationFailedException(FailureMessage::format(
+                $this,
                 'Failed asserting response is a redirect',
             ));
         }
         if ($url === $responseHeader->getFieldValue()) {
-            throw new ExpectationFailedException(\Jield\Test\PHPUnit\FailureMessage::format($this, sprintf(
+            throw new ExpectationFailedException(FailureMessage::format($this, sprintf(
                 'Failed asserting response redirects to "%s"',
                 $url,
             )));
@@ -359,14 +333,15 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
      */
     public function assertRedirectRegex($pattern)
     {
-        $responseHeader = $this->getResponseHeader('Location');
+        $responseHeader = $this->getSingleResponseHeader('Location');
         if (!$responseHeader) {
-            throw new ExpectationFailedException(\Jield\Test\PHPUnit\FailureMessage::format($this, 
+            throw new ExpectationFailedException(FailureMessage::format(
+                $this,
                 'Failed asserting response is a redirect',
             ));
         }
         if (!preg_match($pattern, $responseHeader->getFieldValue())) {
-            throw new ExpectationFailedException(\Jield\Test\PHPUnit\FailureMessage::format($this, sprintf(
+            throw new ExpectationFailedException(FailureMessage::format($this, sprintf(
                 'Failed asserting response redirects to URL MATCHING "%s", actual redirection is "%s"',
                 $pattern,
                 $responseHeader->getFieldValue(),
@@ -383,14 +358,15 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
      */
     public function assertNotRedirectRegex($pattern)
     {
-        $responseHeader = $this->getResponseHeader('Location');
+        $responseHeader = $this->getSingleResponseHeader('Location');
         if (!$responseHeader) {
-            throw new ExpectationFailedException(\Jield\Test\PHPUnit\FailureMessage::format($this, 
+            throw new ExpectationFailedException(FailureMessage::format(
+                $this,
                 'Failed asserting response is a redirect',
             ));
         }
         if (preg_match($pattern, $responseHeader->getFieldValue())) {
-            throw new ExpectationFailedException(\Jield\Test\PHPUnit\FailureMessage::format($this, sprintf(
+            throw new ExpectationFailedException(FailureMessage::format($this, sprintf(
                 'Failed asserting response DOES NOT redirect to URL MATCHING "%s"',
                 $pattern,
             )));
@@ -419,7 +395,7 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
     private function query($path, $useXpath = false)
     {
         $response = $this->getResponse();
-        $document = new Crawler($response->getContent());
+        $document = new Crawler(Value::string($response->getContent()));
 
         if ($useXpath) {
             foreach ($this->xpathNamespaces as $prefix => $namespace) {
@@ -485,12 +461,12 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
     {
         $match = $this->queryCountOrxpathQueryCount($path, $useXpath);
         if ($match <= 0) {
-            throw new ExpectationFailedException(\Jield\Test\PHPUnit\FailureMessage::format($this, sprintf(
+            throw new ExpectationFailedException(FailureMessage::format($this, sprintf(
                 'Failed asserting node DENOTED BY %s EXISTS',
                 $path,
             )));
         }
-        $this->assertTrue($match > 0);
+        $this->assertGreaterThan(0, $match);
     }
 
     /**
@@ -525,7 +501,7 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
     {
         $match = $this->queryCountOrxpathQueryCount($path, $useXpath);
         if ($match !== 0) {
-            throw new ExpectationFailedException(\Jield\Test\PHPUnit\FailureMessage::format($this, sprintf(
+            throw new ExpectationFailedException(FailureMessage::format($this, sprintf(
                 'Failed asserting node DENOTED BY %s DOES NOT EXIST',
                 $path,
             )));
@@ -566,7 +542,7 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
     {
         $match = $this->queryCountOrxpathQueryCount($path, $useXpath);
         if ($match !== $count) {
-            throw new ExpectationFailedException(\Jield\Test\PHPUnit\FailureMessage::format($this, sprintf(
+            throw new ExpectationFailedException(FailureMessage::format($this, sprintf(
                 'Failed asserting node DENOTED BY %s OCCURS EXACTLY %d times, actually occurs %d times',
                 $path,
                 $count,
@@ -611,7 +587,7 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
     {
         $match = $this->queryCountOrxpathQueryCount($path, $useXpath);
         if ($match === $count) {
-            throw new ExpectationFailedException(\Jield\Test\PHPUnit\FailureMessage::format($this, sprintf(
+            throw new ExpectationFailedException(FailureMessage::format($this, sprintf(
                 'Failed asserting node DENOTED BY %s DOES NOT OCCUR EXACTLY %d times',
                 $path,
                 $count,
@@ -655,7 +631,7 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
     {
         $match = $this->queryCountOrxpathQueryCount($path, $useXpath);
         if ($match < $count) {
-            throw new ExpectationFailedException(\Jield\Test\PHPUnit\FailureMessage::format($this, sprintf(
+            throw new ExpectationFailedException(FailureMessage::format($this, sprintf(
                 'Failed asserting node DENOTED BY %s OCCURS AT LEAST %d times, actually occurs %d times',
                 $path,
                 $count,
@@ -700,7 +676,7 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
     {
         $match = $this->queryCountOrxpathQueryCount($path, $useXpath);
         if ($match > $count) {
-            throw new ExpectationFailedException(\Jield\Test\PHPUnit\FailureMessage::format($this, sprintf(
+            throw new ExpectationFailedException(FailureMessage::format($this, sprintf(
                 'Failed asserting node DENOTED BY %s OCCURS AT MOST %d times, actually occurs %d times',
                 $path,
                 $count,
@@ -746,7 +722,7 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
         $result = $this->query($path, $useXpath);
 
         if ($result->count() === 0) {
-            throw new ExpectationFailedException(\Jield\Test\PHPUnit\FailureMessage::format($this, sprintf(
+            throw new ExpectationFailedException(FailureMessage::format($this, sprintf(
                 'Failed asserting node DENOTED BY %s EXISTS',
                 $path,
             )));
@@ -754,8 +730,10 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
 
         $nodeValues = [];
 
+        $currentValue = null;
         foreach ($result as $node) {
-            if ($node->nodeValue === $match) {
+            $currentValue = $node->nodeValue;
+            if ($currentValue === $match) {
                 $this->assertEquals($match, $node->nodeValue);
                 return;
             }
@@ -763,7 +741,7 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
             $nodeValues[] = $node->nodeValue;
         }
 
-        throw new ExpectationFailedException(\Jield\Test\PHPUnit\FailureMessage::format($this, sprintf(
+        throw new ExpectationFailedException(FailureMessage::format($this, sprintf(
             'Failed asserting node denoted by %s CONTAINS content "%s", Contents: [%s]',
             $path,
             $match,
@@ -806,22 +784,22 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
     {
         $result = $this->query($path, $useXpath);
         if ($result->count() === 0) {
-            throw new ExpectationFailedException(\Jield\Test\PHPUnit\FailureMessage::format($this, sprintf(
+            throw new ExpectationFailedException(FailureMessage::format($this, sprintf(
                 'Failed asserting node DENOTED BY %s EXISTS',
                 $path,
             )));
         }
+        $currentValue = null;
         foreach ($result as $node) {
-            if ($node->nodeValue === $match) {
-                throw new ExpectationFailedException(\Jield\Test\PHPUnit\FailureMessage::format($this, sprintf(
+            $currentValue = $node->nodeValue;
+            if ($currentValue === $match) {
+                throw new ExpectationFailedException(FailureMessage::format($this, sprintf(
                     'Failed asserting node DENOTED BY %s DOES NOT CONTAIN content "%s"',
                     $path,
                     $match,
                 )));
             }
         }
-        /** @var mixed $currentValue */
-        $currentValue = $node->nodeValue;
         $this->assertNotEquals($currentValue, $match);
     }
 
@@ -860,7 +838,7 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
     {
         $result = $this->query($path, $useXpath);
         if ($result->count() === 0) {
-            throw new ExpectationFailedException(\Jield\Test\PHPUnit\FailureMessage::format($this, sprintf(
+            throw new ExpectationFailedException(FailureMessage::format($this, sprintf(
                 'Failed asserting node DENOTED BY %s EXISTS',
                 $path,
             )));
@@ -878,7 +856,7 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
         }
 
         if (!$found) {
-            throw new ExpectationFailedException(\Jield\Test\PHPUnit\FailureMessage::format($this, sprintf(
+            throw new ExpectationFailedException(FailureMessage::format($this, sprintf(
                 'Failed asserting node denoted by %s CONTAINS content MATCHING "%s", actual content is "%s"',
                 $path,
                 $pattern,
@@ -924,7 +902,7 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
     {
         $result = $this->query($path, $useXpath);
         if ($result->count() === 0) {
-            throw new ExpectationFailedException(\Jield\Test\PHPUnit\FailureMessage::format($this, sprintf(
+            throw new ExpectationFailedException(FailureMessage::format($this, sprintf(
                 'Failed asserting node DENOTED BY %s EXISTS',
                 $path,
             )));
@@ -933,7 +911,7 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
         $nodeValue = $node ? $node->nodeValue : null;
 
         if ($nodeValue === null || preg_match($pattern, $nodeValue)) {
-            throw new ExpectationFailedException(\Jield\Test\PHPUnit\FailureMessage::format($this, sprintf(
+            throw new ExpectationFailedException(FailureMessage::format($this, sprintf(
                 'Failed asserting node DENOTED BY %s DOES NOT CONTAIN content MATCHING "%s"',
                 $path,
                 $pattern,

@@ -10,6 +10,7 @@ use Jield\Mvc\Application;
 use Jield\Mvc\Controller\Plugin\AbstractPlugin;
 use Jield\Search\ValueObject\DateInterval;
 use Jield\Search\ValueObject\SearchFormResult;
+use Jield\Stdlib\Value;
 use Laminas\Http\Request;
 use Laminas\Stdlib\RequestInterface;
 use Psr\Container\ContainerInterface;
@@ -48,8 +49,14 @@ class GetFilter extends AbstractPlugin
 
         //Initiate the filter
         $this->filter = new SearchFormResult(
-            order: \Jield\Stdlib\Value::string(\Jield\Stdlib\Value::instance($request, \Laminas\Http\Request::class)->getQuery(name: 'order', default: 'default')),
-            direction: \Jield\Stdlib\Value::string(\Jield\Stdlib\Value::instance($request, \Laminas\Http\Request::class)->getQuery(name: 'direction', default: Order::Ascending->value)),
+            order: Value::string(Value::instance(
+                $request,
+                \Laminas\Http\Request::class,
+            )->getQuery(name: 'order', default: 'default')),
+            direction: Value::string(Value::instance(
+                $request,
+                \Laminas\Http\Request::class,
+            )->getQuery(name: 'direction', default: Order::Ascending->value)),
         );
 
         if (!empty($encodedFilter)) {
@@ -57,44 +64,95 @@ class GetFilter extends AbstractPlugin
         }
 
         // If the form is submitted, refresh the URL
-        if (\Jield\Stdlib\Value::instance($request, \Laminas\Http\Request::class)->getQuery(name: 'query') !== null) {
-            $this->filter->setQuery(query: \Jield\Stdlib\Value::nullableString(\Jield\Stdlib\Value::instance($request, \Laminas\Http\Request::class)->getQuery(name: 'query')));
-            $this->filter->setFilter(filter: \Jield\Stdlib\Value::toArray(\Jield\Stdlib\Value::instance($request, \Laminas\Http\Request::class)->getQuery(name: 'filter', default: [])));
+        if (Value::instance($request, \Laminas\Http\Request::class)->getQuery(name: 'query') !== null) {
+            $this->filter->setQuery(query: Value::nullableString(Value::instance(
+                $request,
+                \Laminas\Http\Request::class,
+            )->getQuery(name: 'query')));
+            $this->filter->setFilter(filter: Value::toArray(Value::instance(
+                $request,
+                \Laminas\Http\Request::class,
+            )->getQuery(name: 'filter', default: [])));
         }
 
-        if (null !== \Jield\Stdlib\Value::instance($request, \Laminas\Http\Request::class)->getQuery(name: 'facet')) {
-            $this->filter->setFacet(facet: \Jield\Stdlib\Value::array(\Jield\Stdlib\Value::instance($request, \Laminas\Http\Request::class)->getQuery(name: 'facet')));
+        if (null !== Value::instance($request, \Laminas\Http\Request::class)->getQuery(name: 'facet')) {
+            $this->filter->setFacet(facet: Value::array(Value::instance(
+                $request,
+                \Laminas\Http\Request::class,
+            )->getQuery(name: 'facet')));
         }
 
-        if (!empty(\Jield\Stdlib\Value::instance($request, \Laminas\Http\Request::class)->getQuery(name: 'dateInterval'))) {
-            $dateInterval = DateInterval::fromValue(value: \Jield\Stdlib\Value::string(\Jield\Stdlib\Value::instance($request, \Laminas\Http\Request::class)->getQuery(name: 'dateInterval')));
+        if (
+            !empty(Value::instance($request, \Laminas\Http\Request::class)->getQuery(
+                name: 'dateInterval',
+            ))
+        ) {
+            $dateInterval = DateInterval::fromValue(value: Value::string(Value::instance(
+                $request,
+                \Laminas\Http\Request::class,
+            )->getQuery(name: 'dateInterval')));
             $this->filter->setDateInterval(dateInterval: $dateInterval);
         }
 
-        if (null !== \Jield\Stdlib\Value::instance($request, \Laminas\Http\Request::class)->getQuery(name: 'order')) {
-            $this->filter->setOrder(order: \Jield\Stdlib\Value::string(\Jield\Stdlib\Value::instance($request, \Laminas\Http\Request::class)->getQuery(name: 'order')));
+        if (null !== Value::instance($request, \Laminas\Http\Request::class)->getQuery(name: 'order')) {
+            $this->filter->setOrder(order: Value::string(Value::instance(
+                $request,
+                \Laminas\Http\Request::class,
+            )->getQuery(name: 'order')));
         }
 
-        if (null !== \Jield\Stdlib\Value::instance($request, \Laminas\Http\Request::class)->getQuery(name: 'direction')) {
-            $this->filter->setDirection(direction: \Jield\Stdlib\Value::string(\Jield\Stdlib\Value::instance($request, \Laminas\Http\Request::class)->getQuery(name: 'direction')));
+        if (
+            null !== Value::instance($request, \Laminas\Http\Request::class)->getQuery(name: 'direction')
+        ) {
+            $this->filter->setDirection(direction: Value::string(Value::instance(
+                $request,
+                \Laminas\Http\Request::class,
+            )->getQuery(name: 'direction')));
         }
 
         // If the form is submitted, refresh the URL
-        if (\Jield\Stdlib\Value::instance($request, \Laminas\Http\Request::class)->getQuery(name: 'reset') !== null) {
+        if (Value::instance($request, \Laminas\Http\Request::class)->getQuery(name: 'reset') !== null) {
             $this->filter = new SearchFormResult(
-                order: \Jield\Stdlib\Value::string(\Jield\Stdlib\Value::instance($request, \Laminas\Http\Request::class)->getQuery(name: 'order', default: 'default')),
-                direction: \Jield\Stdlib\Value::string(\Jield\Stdlib\Value::instance($request, \Laminas\Http\Request::class)->getQuery(name: 'direction', default: Order::Ascending->value)),
+                order: Value::string(Value::instance(
+                    $request,
+                    \Laminas\Http\Request::class,
+                )->getQuery(name: 'order', default: 'default')),
+                direction: Value::string(Value::instance(
+                    $request,
+                    \Laminas\Http\Request::class,
+                )->getQuery(name: 'direction', default: Order::Ascending->value)),
             );
         }
 
-        if (\Jield\Stdlib\Value::instance($this->request, \Laminas\Http\Request::class)->isPost()) {
+        if (Value::instance($this->request, \Laminas\Http\Request::class)->isPost()) {
             $this->filter = new SearchFormResult(
-                order: \Jield\Stdlib\Value::string(\Jield\Stdlib\Value::instance($this->request, \Laminas\Http\Request::class)->getQuery(name: 'order', default: 'default')),
-                direction: \Jield\Stdlib\Value::string(\Jield\Stdlib\Value::instance($this->request, \Laminas\Http\Request::class)->getQuery(name: 'direction', default: Order::Ascending->value)),
-                query: \Jield\Stdlib\Value::nullableString(\Jield\Stdlib\Value::instance($this->request, \Laminas\Http\Request::class)->getPost(name: 'query')),
-                filter: \Jield\Stdlib\Value::array(\Jield\Stdlib\Value::instance($this->request, \Laminas\Http\Request::class)->getPost(name: 'filter', default: [])),
-                facet: \Jield\Stdlib\Value::array(\Jield\Stdlib\Value::instance($this->request, \Laminas\Http\Request::class)->getPost(name: 'facet', default: [])),
-                dateInterval: \Jield\Stdlib\Value::instance(\Jield\Stdlib\Value::instance($this->request, \Laminas\Http\Request::class)->getPost(name: 'dateInterval', default: new DateInterval()), \Jield\Search\ValueObject\DateInterval::class),
+                order: Value::string(Value::instance(
+                    $this->request,
+                    \Laminas\Http\Request::class,
+                )->getQuery(name: 'order', default: 'default')),
+                direction: Value::string(Value::instance(
+                    $this->request,
+                    \Laminas\Http\Request::class,
+                )->getQuery(name: 'direction', default: Order::Ascending->value)),
+                query: Value::nullableString(Value::instance(
+                    $this->request,
+                    \Laminas\Http\Request::class,
+                )->getPost(name: 'query')),
+                filter: Value::array(Value::instance(
+                    $this->request,
+                    \Laminas\Http\Request::class,
+                )->getPost(name: 'filter', default: [])),
+                facet: Value::array(Value::instance(
+                    $this->request,
+                    \Laminas\Http\Request::class,
+                )->getPost(name: 'facet', default: [])),
+                dateInterval: Value::instance(
+                    Value::instance($this->request, \Laminas\Http\Request::class)->getPost(
+                        name: 'dateInterval',
+                        default: new DateInterval(),
+                    ),
+                    \Jield\Search\ValueObject\DateInterval::class,
+                ),
             );
         }
 
@@ -142,14 +200,20 @@ class GetFilter extends AbstractPlugin
 
     public function setFacetByKey(string $facetKey, array|string $value): void
     {
-        if (\Jield\Stdlib\Value::instance($this->request, \Laminas\Http\Request::class)->getQuery(name: 'query') === null) {
+        if (
+            Value::instance($this->request, \Laminas\Http\Request::class)->getQuery(name: 'query')
+            === null
+        ) {
             $this->filter->setFacetByKey(key: $facetKey, value: $value);
         }
     }
 
     public function setFilterByKey(string $filterKey, array|string|int $value): void
     {
-        if (\Jield\Stdlib\Value::instance($this->request, \Laminas\Http\Request::class)->getQuery(name: 'query') === null) {
+        if (
+            Value::instance($this->request, \Laminas\Http\Request::class)->getQuery(name: 'query')
+            === null
+        ) {
             $this->filter->setFilterByKey(key: $filterKey, value: $value);
         }
     }
@@ -157,7 +221,6 @@ class GetFilter extends AbstractPlugin
     public function parseFilteredSortQuery(array $removeParams = []): string
     {
         $filterCopy = $this->getFilterFormData();
-        /** @var mixed $param */
         foreach ($removeParams as $param) {
             unset($filterCopy[$param]);
         }

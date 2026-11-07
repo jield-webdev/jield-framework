@@ -8,16 +8,17 @@ use Doctrine\ORM\EntityManager;
 use Jield\Search\Entity\HasSearchInterface;
 use Jield\Search\Message\UpdateSearchEntitiesMessage;
 use Jield\Search\Service\AbstractSearchService;
+use Jield\Stdlib\Value;
 use Psr\Container\ContainerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 use Webmozart\Assert\Assert;
 
 #[AsMessageHandler]
-final class UpdateSearchEntitiesHandler
+final readonly class UpdateSearchEntitiesHandler
 {
     public function __construct(
-        private readonly ContainerInterface $container,
-        private readonly EntityManager $entityManager,
+        private ContainerInterface $container,
+        private EntityManager $entityManager,
     ) {}
 
     public function __invoke(UpdateSearchEntitiesMessage $updateSearchEntitiesMessage): int
@@ -32,9 +33,10 @@ final class UpdateSearchEntitiesHandler
         //Grab the entities
         $entities = [];
 
-        /** @var mixed $entityId */
         foreach ($entityIds as $entityId) {
-            $entity = $this->entityManager->getRepository(className: \Jield\Stdlib\Value::classString($entityClassName))->find(id: $entityId);
+            $entity = $this->entityManager
+                ->getRepository(className: Value::classString($entityClassName))
+                ->find(id: $entityId);
 
             Assert::isInstanceOf(value: $entity, class: HasSearchInterface::class);
 
@@ -42,11 +44,10 @@ final class UpdateSearchEntitiesHandler
             $entities[] = $entity;
         }
 
-        /** @var mixed $searchService */
         foreach ($searchServices as $searchService) {
             //I have to tell the system which search service we have to take (to have the correct connection)
             /** @var AbstractSearchService $searchServiceInstance */
-            $searchServiceInstance = $this->container->get(\Jield\Stdlib\Value::string($searchService));
+            $searchServiceInstance = $this->container->get(Value::string($searchService));
             $searchServiceInstance->updateEntities(entities: $entities);
         }
 

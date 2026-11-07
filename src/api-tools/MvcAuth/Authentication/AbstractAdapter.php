@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Jield\ApiTools\MvcAuth\Authentication;
 
+use Jield\Stdlib\Value;
+use Laminas\Http\Header\HeaderInterface;
 use Laminas\Http\Request;
 use Override;
 
@@ -35,7 +37,12 @@ abstract class AbstractAdapter implements AdapterInterface
             return false;
         }
 
-        $authorization = trim(string: \Jield\Stdlib\Value::instance($authorization, \Laminas\Http\Header\HeaderInterface::class)->getFieldValue());
+        $authorization = trim(
+            string: Value::instance(
+                $authorization,
+                HeaderInterface::class,
+            )->getFieldValue(),
+        );
         $type = $this->getTypeFromAuthorizationHeader(header: $authorization);
 
         if (!in_array(needle: $type, haystack: $this->authorizationTokenTypes, strict: true)) {
@@ -63,6 +70,6 @@ abstract class AbstractAdapter implements AdapterInterface
          */
         [$type, $credential] = explode(' ', $header, 2);
 
-        return strtolower(string: \Jield\Stdlib\Value::string($type));
+        return strtolower(string: Value::string($type));
     }
 }

@@ -4,15 +4,18 @@ declare(strict_types=1);
 
 namespace Jield\Log\Factory;
 
+use Doctrine\DBAL\Connection;
 use Jield\Log\Handler\DoctrineDbalHandler;
+use Jield\Stdlib\Service;
 use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\HandlerInterface;
 use Monolog\Handler\StreamHandler;
+use Monolog\Level;
 use Monolog\Logger;
 use Psr\Container\ContainerInterface;
 
 /**
- * @psalm-type HandlerOptions = array{stream?: string, level?: int|string|\Monolog\Level, bubble?: bool, connection?: string, table?: string}
+ * @psalm-type HandlerOptions = array{stream?: string, level?: int|string|Level, bubble?: bool, connection?: string, table?: string}
  * @psalm-type HandlerConfig = array{type?: string, options?: HandlerOptions}
  * @psalm-type MonologConfig = array{default_logger?: string, loggers?: array<string, array{name?: string, handlers?: list<string>}>, handlers?: array<string, HandlerConfig>}
  */
@@ -97,7 +100,7 @@ final class LoggerFactory
         $level = $options['level'] ?? 'error';
         $bubble = $options['bubble'] ?? true;
 
-        $connection = \Jield\Stdlib\Service::get($container, \Doctrine\DBAL\Connection::class, $connectionService);
+        $connection = Service::get($container, Connection::class, $connectionService);
 
         return new DoctrineDbalHandler(connection: $connection, table: $table, level: $level, bubble: $bubble);
     }

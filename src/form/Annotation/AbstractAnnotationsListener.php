@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Jield\Form\Annotation;
 
+use Jield\Stdlib\Value;
 use Laminas\EventManager\AbstractListenerAggregate;
 use Laminas\EventManager\EventInterface;
 use ReflectionClass;
@@ -29,7 +30,6 @@ abstract class AbstractAnnotationsListener extends AbstractListenerAggregate
      */
     public function handleNameAnnotation(EventInterface $e)
     {
-        /** @var mixed $annotations */
         $annotations = $e->getParam('annotations');
         assert($annotations instanceof AnnotationCollection);
 
@@ -52,12 +52,11 @@ abstract class AbstractAnnotationsListener extends AbstractListenerAggregate
      */
     public function discoverFallbackName(EventInterface $e): string
     {
-        /** @var mixed $reflection */
         $reflection = $e->getParam('reflection');
         if ($reflection instanceof ReflectionClass) {
             return $reflection->getShortName();
         }
 
-        return \Jield\Stdlib\Value::string(\Jield\Stdlib\Value::call($reflection, 'getName'));
+        return Value::string(Value::call($reflection, 'getName'));
     }
 }

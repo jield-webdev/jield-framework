@@ -8,9 +8,10 @@ use Doctrine\ORM\Mapping as ORM;
 use Jield\Export\Enum\ExportFileTypeEnum;
 use Jield\Export\Enum\TypeEnum;
 use Override;
+use Stringable;
 
 #[ORM\Table]
-class StorageLocation implements StorageLocationInterface
+class StorageLocation implements StorageLocationInterface, Stringable
 {
     #[ORM\Column(type: 'integer')]
     #[ORM\Id]

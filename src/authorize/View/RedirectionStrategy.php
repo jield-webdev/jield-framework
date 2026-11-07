@@ -58,7 +58,6 @@ class RedirectionStrategy implements ListenerAggregateInterface
     public function onDispatchError(MvcEvent $event): void
     {
         // Do nothing if the result is a response object
-        /** @var mixed $result */
         $result = $event->getResult();
         $routeMatch = $event->getRouteMatch();
         $response = $event->getResponse();
@@ -80,9 +79,7 @@ class RedirectionStrategy implements ListenerAggregateInterface
             return;
         }
 
-        if (null === $url) {
-            $url = $router->assemble(params: [], options: ['name' => $this->redirectRoute])->toString();
-        }
+        $url ??= $router->assemble(params: [], options: ['name' => $this->redirectRoute])->toString();
 
         $response->getHeaders()->addHeaderLine(headerFieldNameOrLine: 'Location', fieldValue: $url);
         $response->setStatusCode(code: 302);

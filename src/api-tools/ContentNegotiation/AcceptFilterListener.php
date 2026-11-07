@@ -8,6 +8,7 @@ use ArrayIterator;
 use Jield\ApiTools\ApiProblem\ApiProblem;
 use Jield\ApiTools\ApiProblem\ApiProblemResponse;
 use Jield\Mvc\MvcEvent;
+use Jield\Stdlib\Value;
 use Laminas\Http\Header\Accept as AcceptHeader;
 use Laminas\Http\Headers as HttpHeaders;
 use Override;
@@ -30,7 +31,7 @@ class AcceptFilterListener extends ContentTypeFilterListener
         }
 
         /** @var mixed $controllerName */
-        $controllerName = \Jield\Stdlib\Value::present($e->getRouteMatch())->getParam(name: 'controller');
+        $controllerName = Value::present($e->getRouteMatch())->getParam(name: 'controller');
         if (!isset($this->config[$controllerName])) {
             return null;
         }
@@ -46,11 +47,16 @@ class AcceptFilterListener extends ContentTypeFilterListener
 
         $matched = false;
         if (is_string(value: $this->config[$controllerName])) {
-            $matched = $this->validateMediaType(match: $this->config[$controllerName], headers: \Jield\Stdlib\Value::instance($headers, \Laminas\Http\Headers::class));
+            $matched = $this->validateMediaType(
+                match: $this->config[$controllerName],
+                headers: Value::instance($headers, \Laminas\Http\Headers::class),
+            );
         } elseif (is_array(value: $this->config[$controllerName])) {
-            /** @var mixed $whitelistType */
             foreach ($this->config[$controllerName] as $whitelistType) {
-                $matched = $this->validateMediaType(match: \Jield\Stdlib\Value::string($whitelistType), headers: \Jield\Stdlib\Value::instance($headers, \Laminas\Http\Headers::class));
+                $matched = $this->validateMediaType(
+                    match: Value::string($whitelistType),
+                    headers: Value::instance($headers, \Laminas\Http\Headers::class),
+                );
                 if ($matched) {
                     break;
                 }
@@ -84,7 +90,6 @@ class AcceptFilterListener extends ContentTypeFilterListener
         }
 
         if ($accept instanceof ArrayIterator) {
-            /** @var mixed $header */
             foreach ($accept as $header) {
                 if ($header instanceof AcceptHeader && $header->match($match)) {
                     return true;

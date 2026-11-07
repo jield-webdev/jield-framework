@@ -7,6 +7,7 @@ namespace Jield\Mvc\View\Http;
 use Jield\Mvc\Application;
 use Jield\Mvc\MvcEvent;
 use Jield\Mvc\View\Model\ViewModel;
+use Jield\Stdlib\Value;
 use Laminas\EventManager\AbstractListenerAggregate;
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\Http\Response as HttpResponse;
@@ -33,8 +34,8 @@ class ExceptionStrategy extends AbstractListenerAggregate
      */
     public function attach(EventManagerInterface $events, $priority = 1): void
     {
-        $this->listeners[] = $events->attach(MvcEvent::EVENT_DISPATCH_ERROR, [$this, 'prepareExceptionViewModel']);
-        $this->listeners[] = $events->attach(MvcEvent::EVENT_RENDER_ERROR, [$this, 'prepareExceptionViewModel']);
+        $this->listeners[] = $events->attach(MvcEvent::EVENT_DISPATCH_ERROR, $this->prepareExceptionViewModel(...));
+        $this->listeners[] = $events->attach(MvcEvent::EVENT_RENDER_ERROR, $this->prepareExceptionViewModel(...));
     }
 
     /**
@@ -100,7 +101,6 @@ class ExceptionStrategy extends AbstractListenerAggregate
         }
 
         // Do nothing if the result is a response object
-        /** @var mixed $result */
         $result = $e->getResult();
         if ($result instanceof Response) {
             return;
@@ -120,14 +120,14 @@ class ExceptionStrategy extends AbstractListenerAggregate
                     'exception' => $e->getParam('exception'),
                     'display_exceptions' => $this->displayExceptions(),
                 ]);
-                $model->setTemplate(\Jield\Stdlib\Value::nonEmptyString($this->getExceptionTemplate()));
+                $model->setTemplate(Value::nonEmptyString($this->getExceptionTemplate()));
                 $e->setResult($model);
 
                 $response = $e->getResponse();
-                $statusCode = \Jield\Stdlib\Value::instance($response, \Laminas\Http\Response::class)->getStatusCode();
-if ($statusCode === 200) {
-    \Jield\Stdlib\Value::instance($response, \Laminas\Http\Response::class)->setStatusCode(500);
-}
+                $statusCode = Value::instance($response, \Laminas\Http\Response::class)->getStatusCode();
+                if ($statusCode === 200) {
+                    Value::instance($response, \Laminas\Http\Response::class)->setStatusCode(500);
+                }
 
                 break;
         }

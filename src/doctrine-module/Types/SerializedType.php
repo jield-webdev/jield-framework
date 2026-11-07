@@ -7,6 +7,7 @@ namespace DoctrineModule\Types;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\DBAL\Types\ConversionException;
 use Doctrine\DBAL\Types\Type;
+use Jield\Stdlib\Value;
 
 final class SerializedType extends Type
 {
@@ -28,8 +29,7 @@ final class SerializedType extends Type
         if (is_resource($value)) {
             $value = stream_get_contents($value);
         }
-        /** @var mixed $result */
-        $result = unserialize(\Jield\Stdlib\Value::string($value));
+        $result = unserialize(Value::string($value));
         if ($result === false && $value !== 'b:0;') {
             throw new ConversionException('Invalid serialized database value.');
         }

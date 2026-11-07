@@ -4,28 +4,29 @@ declare(strict_types=1);
 
 namespace Jield\Mvc\Navigation\View\Navigation;
 
-use Laminas\Navigation;
-use Laminas\Navigation\AbstractContainer;
-use Laminas\Navigation\Page\AbstractPage;
 use Jield\Mvc\Navigation\View\Navigation\Listener\AclListener;
+use Jield\Stdlib\Service;
+use Jield\Stdlib\Value;
 use Laminas\EventManager\EventManager;
 use Laminas\EventManager\EventManagerAwareInterface;
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\EventManager\SharedEventManager;
+use Laminas\Navigation;
+use Laminas\Navigation\AbstractContainer;
+use Laminas\Navigation\Page\AbstractPage;
 use Laminas\Permissions\Acl;
 use Laminas\Permissions\Acl\AclInterface;
 use Laminas\Translator\TranslatorInterface;
 use Laminas\View;
 use Laminas\View\Exception;
+use Laminas\View\Helper\EscapeHtml;
 use Psr\Container\ContainerInterface;
 use RecursiveIteratorIterator;
-use ReflectionClass;
+
 use function assert;
 use function call_user_func_array;
-use function gettype;
 use function in_array;
 use function is_int;
-use function is_object;
 use function is_string;
 use function sprintf;
 use function str_repeat;
@@ -35,6 +36,7 @@ use function strtolower;
 use function substr;
 use function trigger_error;
 use function trim;
+
 use const E_USER_ERROR;
 
 // phpcs:ignore
@@ -136,10 +138,7 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
      */
     public function __call(string $method, array $arguments = [])
     {
-        return call_user_func_array(
-            \Jield\Stdlib\Value::callback([$this->getContainer(), $method]),
-            $arguments
-        );
+        return call_user_func_array(Value::callback([$this->getContainer(), $method]), $arguments);
     }
 
     /**
@@ -152,7 +151,7 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
      *
      * @return string
      */
-    public function __toString()
+    public function __toString(): string
     {
         try {
             return $this->render();
@@ -194,14 +193,10 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
             $maxDepth = $this->getMaxDepth();
         }
 
-        $found      = null;
+        $found = null;
         $foundDepth = -1;
-        $iterator   = new RecursiveIteratorIterator(
-            $container,
-            RecursiveIteratorIterator::CHILD_FIRST
-        );
+        $iterator = new RecursiveIteratorIterator(Value::present($container), RecursiveIteratorIterator::CHILD_FIRST);
 
-        
         foreach ($iterator as $page) {
             $currDepth = $iterator->getDepth();
             if ($currDepth < ($minDepth ?? 0) || !$this->accept($page)) {
@@ -211,7 +206,7 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
 
             if ($page->isActive(false) && $currDepth > $foundDepth) {
                 // found an active page at a deeper level than before
-                $found      = $page;
+                $found = $page;
                 $foundDepth = $currDepth;
             }
         }
@@ -223,7 +218,7 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
                     break;
                 }
 
-                $found = \Jield\Stdlib\Value::present($found)->getParent();
+                $found = Value::present($found)->getParent();
                 if (!$found instanceof AbstractPage) {
                     $found = null;
                     break;
@@ -257,7 +252,7 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
             if (!$services) {
                 throw new Exception\InvalidArgumentException(sprintf(
                     'Attempted to set container with alias "%s" but no ServiceLocator was set',
-                    $container
+                    $container,
                 ));
             }
 
@@ -265,14 +260,14 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
             if (in_array($container, ['default', 'navigation'], true)) {
                 // Uses class name
                 if ($services->has(Navigation\Navigation::class)) {
-                    $container = \Jield\Stdlib\Service::get($services, Navigation\Navigation::class);
+                    $container = Service::get($services, Navigation\Navigation::class);
                     return;
                 }
 
                 // Uses old service name
                 if ($services->has('navigation')) {
                     /** @var mixed $container */
-                    $container = \Jield\Stdlib\Service::get($services, AbstractContainer::class, 'navigation');
+                    $container = Service::get($services, AbstractContainer::class, 'navigation');
                     return;
                 }
             }
@@ -281,11 +276,9 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
              * Load the navigation container from the root service locator
              * @var mixed $container
              */
-            $container = \Jield\Stdlib\Service::get($services, AbstractContainer::class, $container);
+            $container = Service::get($services, AbstractContainer::class, $container);
             return;
         }
-
-        
     }
 
     // Iterator filter methods:
@@ -319,8 +312,8 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
         if (!$page->isVisible(false) && !$this->getRenderInvisible()) {
             $accept = false;
         } elseif ($this->getUseAcl()) {
-            $acl    = $this->getAcl();
-            $role   = $this->getRole();
+            $acl = $this->getAcl();
+            $role = $this->getRole();
             $params = ['acl' => $acl, 'page' => $page, 'role' => $role];
             $accept = $this->isAllowed($params);
         }
@@ -344,9 +337,9 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
      */
     protected function isAllowed(array $params): bool
     {
-        $events  = $this->getEventManager();
+        $events = $this->getEventManager();
         $results = $events->trigger(__FUNCTION__, $this, $params);
-        return \Jield\Stdlib\Value::bool($results->last());
+        return Value::bool($results->last());
     }
 
     // Util methods:
@@ -360,7 +353,7 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
     protected function getWhitespace(int|string $indent): string
     {
         if (is_int($indent)) {
-            $indent = str_repeat(' ', \Jield\Stdlib\Value::nonNegativeInt($indent));
+            $indent = str_repeat(' ', Value::nonNegativeInt($indent));
         }
 
         return $indent;
@@ -378,16 +371,15 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
     protected function htmlAttribs(array $attribs): string
     {
         // filter out null values and empty string values
-        /** @var mixed $value */
         foreach ($attribs as $key => $value) {
-            if ($value === null || (is_string($value) && !strlen($value))) {
+            if ($value === null || is_string($value) && !strlen($value)) {
                 unset($attribs[$key]);
             }
         }
 
         /** @var mixed $attributes */
         $attributes = $this->getView()->plugin('htmlAttributes');
-        $rendered = (string) $attributes($attribs);
+        $rendered = (string) Value::callback($attributes)($attribs);
         return $rendered === '' ? '' : ' ' . ltrim($rendered);
     }
 
@@ -404,10 +396,10 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
 
         // get attribs for anchor element
         $attribs = [
-            'id'     => $page->getId(),
-            'title'  => $title,
-            'class'  => $page->getClass(),
-            'href'   => $page->getHref(),
+            'id' => $page->getId(),
+            'title' => $title,
+            'class' => $page->getClass(),
+            'href' => $page->getHref(),
             'target' => $page->getTarget(),
         ];
 
@@ -415,12 +407,11 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
             $attribs['aria-current'] = 'page';
         }
 
-        
-        $escaper = $this->getView()->plugin('escapeHtml', \Laminas\View\Helper\EscapeHtml::class);
+        $escaper = $this->getView()->plugin('escapeHtml', EscapeHtml::class);
         /** @var mixed $label */
-        $label   = $escaper($label);
+        $label = $escaper($label);
 
-        return '<a' . $this->htmlAttribs($attribs) . '>' . \Jield\Stdlib\Value::stringify($label) . '</a>';
+        return '<a' . $this->htmlAttribs($attribs) . '>' . Value::stringify($label) . '</a>';
     }
 
     /**
@@ -458,7 +449,7 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
     protected function normalizeId(string $value): string
     {
         $prefix = static::class;
-        $prefix = strtolower(trim(substr($prefix, \Jield\Stdlib\Value::int(strrpos($prefix, '\\'))), '\\'));
+        $prefix = strtolower(trim(substr($prefix, Value::int(strrpos($prefix, '\\'))), '\\'));
 
         return $prefix . '-' . $value;
     }
@@ -503,10 +494,7 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
      */
     public function hasAcl(): bool
     {
-        if (
-            $this->acl instanceof Acl\Acl
-            || static::$defaultAcl instanceof Acl\Acl
-        ) {
+        if ($this->acl instanceof Acl\Acl || static::$defaultAcl instanceof Acl\Acl) {
             return true;
         }
 
@@ -530,8 +518,6 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
         if ($eventManager->getSharedManager()) {
             $this->setDefaultListeners();
         }
-
-        
     }
 
     /**
@@ -572,9 +558,7 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
      */
     public function getContainer(): Navigation\Navigation|AbstractContainer
     {
-        if (null === $this->container) {
-            $this->container = new Navigation\Navigation();
-        }
+        $this->container ??= new Navigation\Navigation();
 
         return $this->container;
     }
@@ -625,7 +609,7 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
         if (null === $maxDepth || is_int($maxDepth)) {
             $this->maxDepth = $maxDepth;
         } else {
-            $this->maxDepth = (int)$maxDepth;
+            $this->maxDepth = (int) $maxDepth;
         }
 
         return $this;
@@ -652,7 +636,7 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
         if (null === $minDepth || is_int($minDepth)) {
             $this->minDepth = $minDepth;
         } else {
-            $this->minDepth = (int)$minDepth;
+            $this->minDepth = (int) $minDepth;
         }
 
         return $this;
@@ -707,16 +691,12 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
      */
     public function setRole(mixed $role = null): static
     {
-        if (
-            null === $role || is_string($role) ||
-            $role instanceof Acl\Role\RoleInterface
-        ) {
+        if (null === $role || is_string($role) || $role instanceof Acl\Role\RoleInterface) {
             $this->role = $role;
         } else {
             throw new Exception\InvalidArgumentException(sprintf(
-                '$role must be a string, null, or an instance of '
-                . 'Laminas\Permissions\Role\RoleInterface; %s given',
-                is_object($role) ? $role::class : gettype($role)
+                '$role must be a string, null, or an instance of ' . 'Laminas\Permissions\Role\RoleInterface; %s given',
+                get_debug_type($role),
             ));
         }
 
@@ -838,16 +818,12 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
      */
     public static function setDefaultRole(mixed $role = null): void
     {
-        if (
-            null === $role
-            || is_string($role)
-            || $role instanceof Acl\Role\RoleInterface
-        ) {
+        if (null === $role || is_string($role) || $role instanceof Acl\Role\RoleInterface) {
             static::$defaultRole = $role;
         } else {
             throw new Exception\InvalidArgumentException(sprintf(
                 '$role must be null|string|Laminas\Permissions\Role\RoleInterface; received "%s"',
-                is_object($role) ? $role::class : gettype($role)
+                get_debug_type($role),
             ));
         }
     }
@@ -869,10 +845,10 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
             return;
         }
 
-        \Jield\Stdlib\Value::present($events->getSharedManager())->attach(
+        Value::present($events->getSharedManager())->attach(
             self::class,
             'isAllowed',
-            [AclListener::class, 'accept']
+            AclListener::accept(...),
         );
     }
 

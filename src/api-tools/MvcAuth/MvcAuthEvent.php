@@ -6,6 +6,7 @@ namespace Jield\ApiTools\MvcAuth;
 
 use Jield\ApiTools\MvcAuth\Identity\IdentityInterface;
 use Jield\Mvc\MvcEvent;
+use Jield\Stdlib\Value;
 use Laminas\Authentication\Result;
 use Laminas\EventManager\Event;
 
@@ -77,12 +78,12 @@ class MvcAuthEvent extends Event
 
     public function getIdentity(): mixed
     {
-        return \Jield\Stdlib\Value::call($this->authentication, 'getIdentity');
+        return Value::call($this->authentication, 'getIdentity');
     }
 
     public function setIdentity(IdentityInterface $identity): static
     {
-        \Jield\Stdlib\Value::call(\Jield\Stdlib\Value::call($this->authentication, 'getStorage'), 'write', [$identity]);
+        Value::call(Value::call($this->authentication, 'getStorage'), 'write', [$identity]);
         return $this;
     }
 

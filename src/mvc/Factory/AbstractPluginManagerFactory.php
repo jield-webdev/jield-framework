@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace Jield\Mvc\Factory;
 
 // phpcs:ignore
+use Jield\Stdlib\Value;
 use Laminas\ServiceManager\AbstractPluginManager;
 use Laminas\ServiceManager\Factory\FactoryInterface;
+use Laminas\ServiceManager\ServiceManager;
 use Psr\Container\ContainerInterface;
 
-/** @psalm-import-type ServiceManagerConfiguration from \Laminas\ServiceManager\ServiceManager */
+/** @psalm-import-type ServiceManagerConfiguration from ServiceManager */
 abstract class AbstractPluginManagerFactory implements FactoryInterface
 {
     /** @var class-string<AbstractPluginManager> */
@@ -34,6 +36,9 @@ abstract class AbstractPluginManagerFactory implements FactoryInterface
         $pluginManagerClass = static::PLUGIN_MANAGER_CLASS;
         /** @var ServiceManagerConfiguration $managerConfiguration */
         $managerConfiguration = $options;
-        return \Jield\Stdlib\Value::instance(\Jield\Stdlib\Value::instantiate($pluginManagerClass, [$container, $managerConfiguration]), AbstractPluginManager::class);
+        return Value::instance(
+            Value::instantiate($pluginManagerClass, [$container, $managerConfiguration]),
+            AbstractPluginManager::class,
+        );
     }
 }

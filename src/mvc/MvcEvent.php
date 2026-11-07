@@ -6,6 +6,7 @@ namespace Jield\Mvc;
 
 use Jield\Mvc\Router\RouteMatch;
 use Jield\Mvc\View\Model\ViewModel;
+use Jield\Stdlib\Value;
 use Laminas\EventManager\Event;
 use Laminas\Router\RouteStackInterface;
 use Laminas\Stdlib\RequestInterface as Request;
@@ -165,9 +166,7 @@ class MvcEvent extends Event
 
     public function getViewModel(): Model
     {
-        if (null === $this->viewModel) {
-            $this->viewModel = new ViewModel();
-        }
+        $this->viewModel ??= new ViewModel();
         return $this->viewModel;
     }
 
@@ -198,7 +197,7 @@ class MvcEvent extends Event
      */
     public function isError(): bool
     {
-        return \Jield\Stdlib\Value::truthy($this->getParam('error', false));
+        return Value::truthy($this->getParam('error', false));
     }
 
     /**
@@ -220,7 +219,7 @@ class MvcEvent extends Event
      */
     public function getError(): string
     {
-        return \Jield\Stdlib\Value::string($this->getParam('error', ''));
+        return Value::string($this->getParam('error', ''));
     }
 
     /**
@@ -230,7 +229,7 @@ class MvcEvent extends Event
      */
     public function getController(): ?string
     {
-        return \Jield\Stdlib\Value::nullableString($this->getParam('controller'));
+        return Value::nullableString($this->getParam('controller'));
     }
 
     /**
@@ -252,7 +251,7 @@ class MvcEvent extends Event
      */
     public function getControllerClass(): ?string
     {
-        return \Jield\Stdlib\Value::nullableString($this->getParam('controller-class'));
+        return Value::nullableString($this->getParam('controller-class'));
     }
 
     /**

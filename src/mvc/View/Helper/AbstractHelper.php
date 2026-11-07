@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace Jield\Mvc\View\Helper;
 
-use Laminas\View\Renderer\RendererInterface;
-use Jield\Mvc\View\Renderer\PhpRenderer;
 use InvalidArgumentException;
+use Jield\Mvc\View\Renderer\PhpRenderer;
+use Laminas\View\Helper\HelperInterface;
+use Laminas\View\Renderer\RendererInterface;
 use LogicException;
 
-abstract class AbstractHelper implements \Laminas\View\Helper\HelperInterface
+abstract class AbstractHelper implements HelperInterface
 {
     protected ?PhpRenderer $view = null;
 

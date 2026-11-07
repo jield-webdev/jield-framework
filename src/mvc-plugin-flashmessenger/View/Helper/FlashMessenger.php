@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Jield\Mvc\Plugin\FlashMessenger\View\Helper;
 
 use Jield\Mvc\Plugin\FlashMessenger\FlashMessenger as PluginFlashMessenger;
+use Jield\Mvc\View\Helper\AbstractTranslatorHelper;
+use Jield\Stdlib\Value;
+use Laminas\Escaper\Escaper;
 use Laminas\View\Exception\InvalidArgumentException;
 use Laminas\View\Helper\EscapeHtml;
 
@@ -37,7 +40,7 @@ use function sprintf;
  * @method bool hasCurrentErrorMessages()
  * @method bool hasCurrentWarningMessages()
  */
-class FlashMessenger extends \Jield\Mvc\View\Helper\AbstractTranslatorHelper
+class FlashMessenger extends AbstractTranslatorHelper
 {
     /**
      * Default attributes for the open format tag
@@ -138,8 +141,6 @@ class FlashMessenger extends \Jield\Mvc\View\Helper\AbstractTranslatorHelper
      */
     public function setPluginFlashMessenger(PluginFlashMessenger $pluginFlashMessenger)
     {
-        
-
         $this->pluginFlashMessenger = $pluginFlashMessenger;
         return $this;
     }
@@ -154,7 +155,7 @@ class FlashMessenger extends \Jield\Mvc\View\Helper\AbstractTranslatorHelper
     public function __call(string $method, array $argv)
     {
         $flashMessenger = $this->getPluginFlashMessenger();
-        return call_user_func_array(\Jield\Stdlib\Value::callback([$flashMessenger, $method]), $argv);
+        return call_user_func_array(Value::callback([$flashMessenger, $method]), $argv);
     }
 
     /**
@@ -214,7 +215,7 @@ class FlashMessenger extends \Jield\Mvc\View\Helper\AbstractTranslatorHelper
         ): void {
             if ($translator !== null) {
                 /** @var mixed $item */
-                $item = \Jield\Stdlib\Value::call($translator, 'translate', [$item, $translatorTextDomain]);
+                $item = Value::call($translator, 'translate', [$item, $translatorTextDomain]);
             }
 
             if ($autoEscape) {
@@ -233,7 +234,7 @@ class FlashMessenger extends \Jield\Mvc\View\Helper\AbstractTranslatorHelper
         $markup = sprintf($this->getMessageOpenFormat($namespace), ' class="' . implode(' ', $classes) . '"');
         $markup .= implode(
             sprintf($this->getMessageSeparatorString($namespace), ' class="' . implode(' ', $classes) . '"'),
-            \Jield\Stdlib\Value::scalars($messagesToPrint),
+            Value::scalars($messagesToPrint),
         );
         $markup .= $this->getMessageCloseString($namespace);
         return $markup;
@@ -268,15 +269,14 @@ class FlashMessenger extends \Jield\Mvc\View\Helper\AbstractTranslatorHelper
         /** @var mixed $view */
         $view = $this->getView();
 
-        if (\Jield\Stdlib\Value::truthy($view) && method_exists(\Jield\Stdlib\Value::objectOrString($view), 'plugin')) {
-            /** @var mixed $plugin */
-            $plugin = \Jield\Stdlib\Value::call($view, 'plugin', ['escapehtml']);
+        if (Value::truthy($view) && method_exists(Value::objectOrString($view), 'plugin')) {
+            $plugin = Value::call($view, 'plugin', ['escapehtml']);
             assert($plugin instanceof EscapeHtml);
             $this->escapeHtmlHelper = $plugin;
         }
 
         if (!$this->escapeHtmlHelper instanceof EscapeHtml) {
-            $this->escapeHtmlHelper = new EscapeHtml(new \Laminas\Escaper\Escaper());
+            $this->escapeHtmlHelper = new EscapeHtml(new Escaper());
         }
 
         return $this->escapeHtmlHelper;
@@ -404,7 +404,7 @@ class FlashMessenger extends \Jield\Mvc\View\Helper\AbstractTranslatorHelper
     {
         $flashMessenger = $this->getPluginFlashMessenger();
         $messages = $flashMessenger->getCurrentMessagesFromNamespace($namespace);
-        return $this->renderMessages($namespace, $messages, \Jield\Stdlib\Value::strings($classes), $autoEscape);
+        return $this->renderMessages($namespace, $messages, Value::strings($classes), $autoEscape);
     }
 
     /**

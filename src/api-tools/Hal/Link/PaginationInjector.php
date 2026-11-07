@@ -7,10 +7,10 @@ namespace Jield\ApiTools\Hal\Link;
 use Countable;
 use Jield\ApiTools\ApiProblem\ApiProblem;
 use Jield\ApiTools\Hal\Collection;
+use Jield\Stdlib\Value;
 use Laminas\Paginator\Paginator;
 use Laminas\Stdlib\ArrayUtils;
 use Override;
-use Traversable;
 
 use function count;
 use function is_array;
@@ -51,7 +51,7 @@ class PaginationInjector implements PaginationInjectorInterface
         $pageSize = $halCollection->getPageSize();
 
         $collection->setItemCountPerPage(itemCountPerPage: $pageSize);
-        $collection->setCurrentPageNumber(pageNumber: \Jield\Stdlib\Value::positiveInt($page));
+        $collection->setCurrentPageNumber(pageNumber: Value::positiveInt($page));
     }
 
     private function injectLinks(Collection $halCollection): void
@@ -125,13 +125,12 @@ class PaginationInjector implements PaginationInjectorInterface
         ]);
     }
 
-    /** @param array<mixed>|Traversable|Paginator $collection */
+    /** @param iterable<mixed, mixed> $collection */
     private function countCollection(mixed $collection): int
     {
-        return match (true) {
-            $collection instanceof Countable => $collection->count(),
-            is_array(value: $collection) => count(value: $collection),
-            default => 1,
-        };
+        if ($collection instanceof Countable) {
+            return Value::int($collection->count());
+        }
+        return is_array($collection) ? count($collection) : 1;
     }
 }

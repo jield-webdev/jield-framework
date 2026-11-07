@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Jield\Form;
 
+use Jield\Stdlib\Value;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Psr\Container\ContainerInterface;
 
@@ -24,12 +25,9 @@ final class ElementFactory implements FactoryInterface
      */
     public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): object
     {
-        if ($options === null) {
-            $options = [];
-        }
+        $options ??= [];
 
         if (isset($options['name'])) {
-            /** @var mixed $name */
             $name = $options['name'];
         } else {
             // 'Jield\Form\Element' -> 'element'
@@ -42,6 +40,6 @@ final class ElementFactory implements FactoryInterface
             $options = $options['options'];
         }
 
-        return \Jield\Stdlib\Value::instantiate($requestedName, [$name, $options]);
+        return Value::instantiate($requestedName, [$name, $options]);
     }
 }

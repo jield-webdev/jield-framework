@@ -11,8 +11,14 @@ use Jield\Mvc\ApplicationInterface;
 use Jield\Mvc\Controller\ControllerManager;
 use Jield\Mvc\MvcEvent;
 use Jield\Mvc\Router\RouteMatch;
+use Jield\Mvc\SendResponseListener;
+use Jield\Stdlib\Service;
+use Jield\Stdlib\Value;
 use Jield\Test\PHPUnit\Constraint\IsCurrentModuleNameConstraint;
+use Jield\Test\PHPUnit\FailureMessage;
 use Laminas\EventManager\ResponseCollection;
+use Laminas\Http\AbstractMessage;
+use Laminas\Http\PhpEnvironment\Request;
 use Laminas\Http\Request as HttpRequest;
 use Laminas\Http\Response;
 use Laminas\ServiceManager\ServiceManager;
@@ -34,11 +40,9 @@ use function array_key_exists;
 use function array_keys;
 use function array_merge;
 use function assert;
-use function class_exists;
 use function count;
 use function http_build_query;
 use function implode;
-use function method_exists;
 use function parse_str;
 use function sprintf;
 use function strrpos;
@@ -94,7 +98,7 @@ abstract class AbstractControllerTestCase extends TestCase
      */
     protected function createFailureMessage($message)
     {
-        return \Jield\Test\PHPUnit\FailureMessage::format($this, $message);
+        return FailureMessage::format($this, $message);
     }
 
     /**
@@ -163,10 +167,14 @@ abstract class AbstractControllerTestCase extends TestCase
             return $this->application;
         }
         $appConfig = $this->applicationConfig;
-        $this->application = Application::init(\Jield\Stdlib\Value::array($appConfig));
+        $this->application = Application::init(Value::array($appConfig));
 
         $events = $this->application->getEventManager();
-        \Jield\Stdlib\Service::get($this->application->getServiceManager(), \Jield\Mvc\SendResponseListener::class, 'SendResponseListener')->detach($events);
+        Service::get(
+            $this->application->getServiceManager(),
+            SendResponseListener::class,
+            'SendResponseListener',
+        )->detach($events);
 
         return $this->application;
     }
@@ -178,7 +186,7 @@ abstract class AbstractControllerTestCase extends TestCase
      */
     public function getApplicationServiceLocator()
     {
-        return $this->getApplication()->getServiceManager();
+        return Value::instance($this->getApplication()->getServiceManager(), ServiceManager::class);
     }
 
     /**
@@ -216,10 +224,14 @@ abstract class AbstractControllerTestCase extends TestCase
     public function url($url, $method = HttpRequest::METHOD_GET, $params = [])
     {
         $request = $this->getRequest();
-        /** @var mixed $query */
-        $query = \Jield\Stdlib\Value::call(\Jield\Stdlib\Value::instance($request, \Laminas\Http\Request::class)->getQuery(), 'toArray');
-        /** @var mixed $post */
-        $post = \Jield\Stdlib\Value::call(\Jield\Stdlib\Value::instance($request, \Laminas\Http\Request::class)->getPost(), 'toArray');
+        $query = Value::call(
+            Value::instance($request, \Laminas\Http\Request::class)->getQuery(),
+            'toArray',
+        );
+        $post = Value::call(
+            Value::instance($request, \Laminas\Http\Request::class)->getPost(),
+            'toArray',
+        );
         $uri = new HttpUri($url);
         $queryString = $uri->getQuery();
 
@@ -234,7 +246,7 @@ abstract class AbstractControllerTestCase extends TestCase
                     break;
                 case HttpRequest::METHOD_GET:
                 case HttpRequest::METHOD_DELETE:
-                    $query = array_merge(\Jield\Stdlib\Value::array($query), $params);
+                    $query = array_merge(Value::array($query), $params);
                     break;
                 case HttpRequest::METHOD_PUT:
                 case HttpRequest::METHOD_PATCH:
@@ -249,11 +261,15 @@ abstract class AbstractControllerTestCase extends TestCase
             }
         }
 
-        \Jield\Stdlib\Value::instance($request, \Laminas\Http\Request::class)->setMethod(\Jield\Stdlib\Value::string($method));
-        \Jield\Stdlib\Value::instance($request, \Laminas\Http\Request::class)->setQuery(new Parameters($query));
-        \Jield\Stdlib\Value::instance($request, \Laminas\Http\Request::class)->setPost(new Parameters($post));
-        \Jield\Stdlib\Value::instance($request, \Laminas\Http\Request::class)->setUri($uri);
-        \Jield\Stdlib\Value::instance($request, \Laminas\Http\PhpEnvironment\Request::class)->setRequestUri(\Jield\Stdlib\Value::string($uri->getPath()));
+        Value::instance($request, \Laminas\Http\Request::class)->setMethod(Value::string(
+            $method,
+        ));
+        Value::instance($request, \Laminas\Http\Request::class)->setQuery(new Parameters(Value::nullableArray($query)));
+        Value::instance($request, \Laminas\Http\Request::class)->setPost(new Parameters(Value::nullableArray($post)));
+        Value::instance($request, \Laminas\Http\Request::class)->setUri($uri);
+        Value::instance($request, Request::class)->setRequestUri(
+            Value::string($uri->getPath()),
+        );
 
         return $this;
     }
@@ -274,18 +290,21 @@ abstract class AbstractControllerTestCase extends TestCase
     public function dispatch($url, $method = null, $params = [], $isXmlHttpRequest = false)
     {
         if (null === $method && $this->getRequest() instanceof HttpRequest) {
-            $method = \Jield\Stdlib\Value::instance($this->getRequest(), \Laminas\Http\Request::class)->getMethod();
+            $method = Value::instance($this->getRequest(), \Laminas\Http\Request::class)->getMethod();
         } elseif (null === $method) {
             $method = HttpRequest::METHOD_GET;
         }
 
         if ($isXmlHttpRequest) {
             /** @var mixed $headers */
-            $headers = \Jield\Stdlib\Value::instance($this->getRequest(), \Laminas\Http\AbstractMessage::class)->getHeaders();
-            \Jield\Stdlib\Value::call($headers, 'addHeaderLine', ['X_REQUESTED_WITH', 'XMLHttpRequest']);
+            $headers = Value::instance(
+                $this->getRequest(),
+                AbstractMessage::class,
+            )->getHeaders();
+            Value::call($headers, 'addHeaderLine', ['X_REQUESTED_WITH', 'XMLHttpRequest']);
         }
 
-        $this->url($url, \Jield\Stdlib\Value::nullableString($method), $params);
+        $this->url($url, Value::nullableString($method), $params);
         $this->getApplication()->run();
     }
 
@@ -359,9 +378,9 @@ abstract class AbstractControllerTestCase extends TestCase
         $moduleManager = $this->getApplicationServiceLocator()->get('ModuleManager');
         assert($moduleManager instanceof ModuleManager);
         $modulesLoaded = array_keys($moduleManager->getLoadedModules());
-        $list = array_diff(\Jield\Stdlib\Value::keys($modules), $modulesLoaded);
+        $list = array_diff(Value::keys($modules), $modulesLoaded);
         if ($list) {
-            throw new ExpectationFailedException(\Jield\Test\PHPUnit\FailureMessage::format($this, sprintf('Several modules are not loaded "%s"', implode(
+            throw new ExpectationFailedException(FailureMessage::format($this, sprintf('Several modules are not loaded "%s"', implode(
                 ', ',
                 $list,
             ))));
@@ -378,13 +397,12 @@ abstract class AbstractControllerTestCase extends TestCase
     {
         /** @var mixed $moduleManager */
         $moduleManager = $this->getApplicationServiceLocator()->get('ModuleManager');
-        /** @var mixed $modulesLoaded */
-        $modulesLoaded = \Jield\Stdlib\Value::call($moduleManager, 'getModules');
-        $list = array_intersect($modules, \Jield\Stdlib\Value::array($modulesLoaded));
+        $modulesLoaded = Value::call($moduleManager, 'getModules');
+        $list = array_intersect($modules, Value::array($modulesLoaded));
         if ($list) {
-            throw new ExpectationFailedException(\Jield\Test\PHPUnit\FailureMessage::format($this, sprintf('Several modules WAS not loaded "%s"', implode(
+            throw new ExpectationFailedException(FailureMessage::format($this, sprintf('Several modules WAS not loaded "%s"', implode(
                 ', ',
-                \Jield\Stdlib\Value::scalars($list),
+                Value::scalars($list),
             ))));
         }
         $this->assertEquals(count($list), 0);
@@ -410,7 +428,7 @@ abstract class AbstractControllerTestCase extends TestCase
     {
         $match = $this->getResponseStatusCode();
         if ($code !== $match) {
-            throw new ExpectationFailedException(\Jield\Test\PHPUnit\FailureMessage::format($this, sprintf(
+            throw new ExpectationFailedException(FailureMessage::format($this, sprintf(
                 'Failed asserting response code "%s", actual status code is "%s"',
                 $code,
                 $match,
@@ -429,7 +447,7 @@ abstract class AbstractControllerTestCase extends TestCase
     {
         $match = $this->getResponseStatusCode();
         if ($code === $match) {
-            throw new ExpectationFailedException(\Jield\Test\PHPUnit\FailureMessage::format($this, sprintf(
+            throw new ExpectationFailedException(FailureMessage::format($this, sprintf(
                 'Failed asserting response code was NOT "%s"',
                 $code,
             )));
@@ -449,7 +467,8 @@ abstract class AbstractControllerTestCase extends TestCase
         /** @var mixed $exception */
         $exception = $this->getApplication()->getMvcEvent()->getParam('exception');
         if (!$exception) {
-            throw new ExpectationFailedException(\Jield\Test\PHPUnit\FailureMessage::format($this, 
+            throw new ExpectationFailedException(FailureMessage::format(
+                $this,
                 'Failed asserting application exception, param "exception" does not exist',
             ));
         }
@@ -458,12 +477,12 @@ abstract class AbstractControllerTestCase extends TestCase
             $this->getApplication()->getMvcEvent()->setParam('exception', null);
         }
 
-        $this->expectException($type);
-            if (null !== $message) {
-            $this->expectExceptionMessage($message);
+        $this->expectException(Value::subclass($type, \Throwable::class));
+        if (null !== $message) {
+            $this->expectExceptionMessageIsOrContains($message);
         }
 
-        throw \Jield\Stdlib\Value::instance($exception, \Throwable::class);
+        throw Value::instance($exception, \Throwable::class);
     }
 
     /**
@@ -488,7 +507,6 @@ abstract class AbstractControllerTestCase extends TestCase
             Assert::fail('No route matched');
         }
 
-        /** @var mixed $controllerIdentifier */
         $controllerIdentifier = $routeMatch->getParam('controller');
         Assert::assertIsString($controllerIdentifier, 'No string controller identifier discovered in route match');
 
@@ -543,7 +561,7 @@ abstract class AbstractControllerTestCase extends TestCase
         $match = strtolower($match);
         $controller = strtolower($controller);
         if ($controller !== $match) {
-            throw new ExpectationFailedException(\Jield\Test\PHPUnit\FailureMessage::format($this, sprintf(
+            throw new ExpectationFailedException(FailureMessage::format($this, sprintf(
                 'Failed asserting controller class "%s", actual controller class is "%s"',
                 $controller,
                 $match,
@@ -565,7 +583,7 @@ abstract class AbstractControllerTestCase extends TestCase
         $match = strtolower($match);
         $controller = strtolower($controller);
         if ($controller === $match) {
-            throw new ExpectationFailedException(\Jield\Test\PHPUnit\FailureMessage::format($this, sprintf(
+            throw new ExpectationFailedException(FailureMessage::format($this, sprintf(
                 'Failed asserting controller class was NOT "%s"',
                 $controller,
             )));
@@ -583,14 +601,13 @@ abstract class AbstractControllerTestCase extends TestCase
     {
         $routeMatch = $this->getApplication()->getMvcEvent()->getRouteMatch();
         if (!$routeMatch) {
-            throw new ExpectationFailedException(\Jield\Test\PHPUnit\FailureMessage::format($this, 'No route matched'));
+            throw new ExpectationFailedException(FailureMessage::format($this, 'No route matched'));
         }
-        /** @var mixed $match */
         $match = $routeMatch->getParam('controller');
-        $match = strtolower(\Jield\Stdlib\Value::string($match));
+        $match = strtolower(Value::string($match));
         $controller = strtolower($controller);
         if ($controller !== $match) {
-            throw new ExpectationFailedException(\Jield\Test\PHPUnit\FailureMessage::format($this, sprintf(
+            throw new ExpectationFailedException(FailureMessage::format($this, sprintf(
                 'Failed asserting controller name "%s", actual controller name is "%s"',
                 $controller,
                 $match,
@@ -609,14 +626,13 @@ abstract class AbstractControllerTestCase extends TestCase
     {
         $routeMatch = $this->getApplication()->getMvcEvent()->getRouteMatch();
         if (!$routeMatch) {
-            throw new ExpectationFailedException(\Jield\Test\PHPUnit\FailureMessage::format($this, 'No route matched'));
+            throw new ExpectationFailedException(FailureMessage::format($this, 'No route matched'));
         }
-        /** @var mixed $match */
         $match = $routeMatch->getParam('controller');
-        $match = strtolower(\Jield\Stdlib\Value::string($match));
+        $match = strtolower(Value::string($match));
         $controller = strtolower($controller);
         if ($controller === $match) {
-            throw new ExpectationFailedException(\Jield\Test\PHPUnit\FailureMessage::format($this, sprintf(
+            throw new ExpectationFailedException(FailureMessage::format($this, sprintf(
                 'Failed asserting controller name was NOT "%s"',
                 $controller,
             )));
@@ -634,14 +650,13 @@ abstract class AbstractControllerTestCase extends TestCase
     {
         $routeMatch = $this->getApplication()->getMvcEvent()->getRouteMatch();
         if (!$routeMatch) {
-            throw new ExpectationFailedException(\Jield\Test\PHPUnit\FailureMessage::format($this, 'No route matched'));
+            throw new ExpectationFailedException(FailureMessage::format($this, 'No route matched'));
         }
-        /** @var mixed $match */
         $match = $routeMatch->getParam('action');
-        $match = strtolower(\Jield\Stdlib\Value::string($match));
+        $match = strtolower(Value::string($match));
         $action = strtolower($action);
         if ($action !== $match) {
-            throw new ExpectationFailedException(\Jield\Test\PHPUnit\FailureMessage::format($this, sprintf(
+            throw new ExpectationFailedException(FailureMessage::format($this, sprintf(
                 'Failed asserting action name "%s", actual action name is "%s"',
                 $action,
                 $match,
@@ -660,14 +675,13 @@ abstract class AbstractControllerTestCase extends TestCase
     {
         $routeMatch = $this->getApplication()->getMvcEvent()->getRouteMatch();
         if (!$routeMatch) {
-            throw new ExpectationFailedException(\Jield\Test\PHPUnit\FailureMessage::format($this, 'No route matched'));
+            throw new ExpectationFailedException(FailureMessage::format($this, 'No route matched'));
         }
-        /** @var mixed $match */
         $match = $routeMatch->getParam('action');
-        $match = strtolower(\Jield\Stdlib\Value::string($match));
+        $match = strtolower(Value::string($match));
         $action = strtolower($action);
         if ($action === $match) {
-            throw new ExpectationFailedException(\Jield\Test\PHPUnit\FailureMessage::format($this, sprintf(
+            throw new ExpectationFailedException(FailureMessage::format($this, sprintf(
                 'Failed asserting action name was NOT "%s"',
                 $action,
             )));
@@ -685,13 +699,13 @@ abstract class AbstractControllerTestCase extends TestCase
     {
         $routeMatch = $this->getApplication()->getMvcEvent()->getRouteMatch();
         if (!$routeMatch) {
-            throw new ExpectationFailedException(\Jield\Test\PHPUnit\FailureMessage::format($this, 'No route matched'));
+            throw new ExpectationFailedException(FailureMessage::format($this, 'No route matched'));
         }
         $match = $routeMatch->getMatchedRouteName();
         $match = strtolower($match);
         $route = strtolower($route);
         if ($route !== $match) {
-            throw new ExpectationFailedException(\Jield\Test\PHPUnit\FailureMessage::format($this, sprintf(
+            throw new ExpectationFailedException(FailureMessage::format($this, sprintf(
                 'Failed asserting matched route name was "%s", actual matched route name is "%s"',
                 $route,
                 $match,

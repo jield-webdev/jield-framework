@@ -26,7 +26,6 @@ use function gettype;
 use function is_array;
 use function is_bool;
 use function is_object;
-use function method_exists;
 use function sprintf;
 
 /**
@@ -170,10 +169,7 @@ class Resource implements ResourceInterface
             $data = (object) $data;
         }
 
-        
-
         $results = $this->triggerEvent(name: __FUNCTION__, args: ['data' => $data]);
-        /** @var mixed $last */
         $last = $results->last();
         if (!is_array(value: $last) && !is_object(value: $last)) {
             return $data;
@@ -206,13 +202,10 @@ class Resource implements ResourceInterface
             $data = (object) $data;
         }
 
-        
-
         $results = $this->triggerEvent(name: __FUNCTION__, args: [
             'id' => $id,
             'data' => $data,
         ]);
-        /** @var mixed $last */
         $last = $results->last();
         if (!is_array(value: $last) && !is_object(value: $last)) {
             return $data;
@@ -258,7 +251,6 @@ class Resource implements ResourceInterface
         });
 
         $results = $this->triggerEvent(name: __FUNCTION__, args: ['data' => $data]);
-        /** @var mixed $last */
         $last = $results->last();
         if (!is_array(value: $last) && !is_object(value: $last)) {
             return $data;
@@ -292,13 +284,10 @@ class Resource implements ResourceInterface
             $data = (object) $data;
         }
 
-        
-
         $results = $this->triggerEvent(name: __FUNCTION__, args: [
             'id' => $id,
             'data' => $data,
         ]);
-        /** @var mixed $last */
         $last = $results->last();
         if (!is_array(value: $last) && !is_object(value: $last)) {
             return $data;
@@ -330,7 +319,7 @@ class Resource implements ResourceInterface
         $original = $data;
         array_walk(array: $data, callback: static function ($value, $key) use (&$data): void {
             if (is_array(value: $value)) {
-                $data[$key] = new ArrayObject( $value);
+                $data[$key] = new ArrayObject($value);
                 return;
             }
 
@@ -345,9 +334,8 @@ class Resource implements ResourceInterface
             }
         });
 
-        $data = new ArrayObject( $data);
+        $data = new ArrayObject($data);
         $results = $this->triggerEvent(name: __FUNCTION__, args: ['data' => $data]);
-        /** @var mixed $last */
         $last = $results->last();
         if (!is_array(value: $last) && !is_object(value: $last)) {
             return $original;
@@ -367,7 +355,6 @@ class Resource implements ResourceInterface
     public function delete(int|string $id): Response|bool|ApiProblem|ApiProblemResponse
     {
         $results = $this->triggerEvent(name: __FUNCTION__, args: ['id' => $id]);
-        /** @var mixed $last */
         $last = $results->last();
         if (
             !is_bool(value: $last)
@@ -391,7 +378,6 @@ class Resource implements ResourceInterface
     public function deleteList(array $data): mixed
     {
         $results = $this->triggerEvent(name: __FUNCTION__, args: ['data' => $data]);
-        /** @var mixed $last */
         $last = $results->last();
         if (!is_bool(value: $last) && !$last instanceof Response) {
             return false;
@@ -415,7 +401,6 @@ class Resource implements ResourceInterface
     public function fetch(int|string $id): object|false|array
     {
         $results = $this->triggerEvent(name: __FUNCTION__, args: ['id' => $id]);
-        /** @var mixed $last */
         $last = $results->last();
         if (!is_array(value: $last) && !is_object(value: $last)) {
             return false;
@@ -435,11 +420,12 @@ class Resource implements ResourceInterface
      * which will allow performing paginated sets, and thus allow the view
      * layer to select the current page based on the query string or route.
      */
+    // Variadic parameters are optional in PHP; Mago currently counts this one as required.
+    // @mago-expect analysis:incompatible-parameter-count
     #[Override]
     public function fetchAll(...$params): object|false|array
     {
         $results = $this->triggerEvent(name: __FUNCTION__, args: $params);
-        /** @var mixed $last */
         $last = $results->last();
         if (
             !is_array(value: $last)

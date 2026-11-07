@@ -12,6 +12,7 @@ use Jield\Mvc\Controller\Plugin\Url;
 use Jield\Mvc\InjectApplicationEventInterface;
 use Jield\Mvc\MvcEvent;
 use Jield\Mvc\View\Model\ViewModel;
+use Jield\Stdlib\Value;
 use Laminas\EventManager\EventInterface as Event;
 use Laminas\EventManager\EventManager;
 use Laminas\EventManager\EventManagerAwareInterface;
@@ -187,16 +188,14 @@ abstract class AbstractController implements Dispatchable, EventManagerAwareInte
             $identifiers[] = substr($className, 0, $rightmostNsPos); // full namespace
         }
 
-        $eventManager->setIdentifiers(\Jield\Stdlib\Value::strings(array_merge(
+        $eventManager->setIdentifiers(Value::strings(array_merge(
             $identifiers,
             array_values(class_implements($className) ?: []),
-            \Jield\Stdlib\Value::toArray($this->eventIdentifier),
+            Value::toArray($this->eventIdentifier),
         )));
 
         $this->events = $eventManager;
         $this->attachDefaultListeners();
-
-        
     }
 
     /**
@@ -207,7 +206,7 @@ abstract class AbstractController implements Dispatchable, EventManagerAwareInte
     protected function attachDefaultListeners(): void
     {
         $events = $this->getEventManager();
-        $events->attach(MvcEvent::EVENT_DISPATCH, [$this, 'onDispatch']);
+        $events->attach(MvcEvent::EVENT_DISPATCH, $this->onDispatch(...));
     }
 
     /**
@@ -250,7 +249,6 @@ abstract class AbstractController implements Dispatchable, EventManagerAwareInte
      */
     public function __call($method, $params)
     {
-        /** @var mixed $plugin */
         $plugin = $this->plugin($method);
         if (is_callable($plugin)) {
             return call_user_func_array($plugin, $params);
@@ -283,7 +281,7 @@ abstract class AbstractController implements Dispatchable, EventManagerAwareInte
         }
 
         $this->plugins->setController($this);
-        return \Jield\Stdlib\Value::instance($this->plugins, \Jield\Mvc\Controller\PluginManager::class);
+        return Value::instance($this->plugins, \Jield\Mvc\Controller\PluginManager::class);
     }
 
     /**

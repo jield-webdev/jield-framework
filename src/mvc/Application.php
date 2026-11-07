@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Jield\Mvc;
 
+use Jield\ModuleManager\ModuleManager;
 use Jield\Mvc\Service\ServiceManagerConfig;
+use Jield\Stdlib\Service;
+use Jield\Stdlib\Value;
 use Laminas\EventManager\EventManagerAwareInterface;
 use Laminas\EventManager\EventManagerInterface;
+use Laminas\Router\RouteStackInterface;
 use Laminas\ServiceManager\ServiceManager;
 use Laminas\Stdlib\RequestInterface;
 use Laminas\Stdlib\ResponseInterface;
@@ -76,9 +80,23 @@ class Application implements ApplicationInterface, EventManagerAwareInterface
         protected ?RequestInterface $request = null,
         protected ?ResponseInterface $response = null,
     ) {
-        $this->setEventManager(eventManager: $events ?: \Jield\Stdlib\Service::get($serviceManager, \Laminas\EventManager\EventManagerInterface::class, 'EventManager'));
-        $this->request = $request ?: \Jield\Stdlib\Service::get($serviceManager, \Laminas\Stdlib\RequestInterface::class, 'Request');
-        $this->response = $response ?: \Jield\Stdlib\Service::get($serviceManager, \Laminas\Stdlib\ResponseInterface::class, 'Response');
+        $this->setEventManager(
+            eventManager: $events ?: Service::get(
+                $serviceManager,
+                \Laminas\EventManager\EventManagerInterface::class,
+                'EventManager',
+            ),
+        );
+        $this->request = $request ?: Service::get(
+            $serviceManager,
+            \Laminas\Stdlib\RequestInterface::class,
+            'Request',
+        );
+        $this->response = $response ?: Service::get(
+            $serviceManager,
+            \Laminas\Stdlib\ResponseInterface::class,
+            'Response',
+        );
     }
 
     /**
@@ -88,7 +106,7 @@ class Application implements ApplicationInterface, EventManagerAwareInterface
      */
     public function getConfig(): object|array
     {
-        return \Jield\Stdlib\Value::arrayOrObject($this->serviceManager->get('config'));
+        return Value::arrayOrObject($this->serviceManager->get('config'));
     }
 
     /**
@@ -109,9 +127,12 @@ class Application implements ApplicationInterface, EventManagerAwareInterface
         // Setup default listeners
         $listeners = array_unique(array: array_merge($this->defaultListeners, $listeners));
 
-        /** @var mixed $listener */
         foreach ($listeners as $listener) {
-            \Jield\Stdlib\Value::call($serviceManager->get(\Jield\Stdlib\Value::string($listener)), 'attach', [$events]);
+            Value::call(
+                $serviceManager->get(Value::string($listener)),
+                'attach',
+                [$events],
+            );
         }
 
         // Setup MVC Event
@@ -119,12 +140,22 @@ class Application implements ApplicationInterface, EventManagerAwareInterface
         $event->setName(name: MvcEvent::EVENT_BOOTSTRAP);
         $event->setTarget(target: $this);
         $event->setApplication(application: $this);
-        $event->setRequest(request: \Jield\Stdlib\Value::instance($this->request, \Laminas\Stdlib\RequestInterface::class));
-        $event->setResponse(response: \Jield\Stdlib\Value::instance($this->response, \Laminas\Stdlib\ResponseInterface::class));
-        $event->setRouter(router: \Jield\Stdlib\Service::get($serviceManager, \Laminas\Router\RouteStackInterface::class, 'Router'));
+        $event->setRequest(request: Value::instance(
+            $this->request,
+            \Laminas\Stdlib\RequestInterface::class,
+        ));
+        $event->setResponse(response: Value::instance(
+            $this->response,
+            \Laminas\Stdlib\ResponseInterface::class,
+        ));
+        $event->setRouter(router: Service::get(
+            $serviceManager,
+            RouteStackInterface::class,
+            'Router',
+        ));
 
         // Trigger bootstrap events
-        \Jield\Stdlib\Value::present($events)->triggerEvent(event: $event);
+        Value::present($events)->triggerEvent(event: $event);
 
         return $this;
     }
@@ -144,7 +175,7 @@ class Application implements ApplicationInterface, EventManagerAwareInterface
      */
     public function getRequest(): RequestInterface
     {
-        return \Jield\Stdlib\Value::instance($this->request, \Laminas\Stdlib\RequestInterface::class);
+        return Value::instance($this->request, \Laminas\Stdlib\RequestInterface::class);
     }
 
     /**
@@ -154,7 +185,7 @@ class Application implements ApplicationInterface, EventManagerAwareInterface
      */
     public function getResponse(): ResponseInterface
     {
-        return \Jield\Stdlib\Value::instance($this->response, \Laminas\Stdlib\ResponseInterface::class);
+        return Value::instance($this->response, \Laminas\Stdlib\ResponseInterface::class);
     }
 
     /**
@@ -179,7 +210,6 @@ class Application implements ApplicationInterface, EventManagerAwareInterface
             static::class,
         ]);
         $this->events = $eventManager;
-        
     }
 
     /**
@@ -191,7 +221,7 @@ class Application implements ApplicationInterface, EventManagerAwareInterface
      */
     public function getEventManager(): EventManagerInterface
     {
-        return \Jield\Stdlib\Value::instance($this->events, \Laminas\EventManager\EventManagerInterface::class);
+        return Value::instance($this->events, \Laminas\EventManager\EventManagerInterface::class);
     }
 
     /**
@@ -218,14 +248,18 @@ class Application implements ApplicationInterface, EventManagerAwareInterface
         // Prepare the service manager
         /** @var mixed $smConfig */
         $smConfig = $configuration['service_manager'] ?? [];
-        $smConfig = new ServiceManagerConfig(config: \Jield\Stdlib\Value::array($smConfig));
+        $smConfig = new ServiceManagerConfig(config: Value::array($smConfig));
 
         $serviceManager = new ServiceManager();
         $smConfig->configureServiceManager(services: $serviceManager);
         $serviceManager->setService(name: 'ApplicationConfig', service: $configuration);
 
         // Load modules
-        \Jield\Stdlib\Service::get($serviceManager, \Jield\ModuleManager\ModuleManager::class, 'ModuleManager')->loadModules();
+        Service::get(
+            $serviceManager,
+            ModuleManager::class,
+            'ModuleManager',
+        )->loadModules();
 
         // Prepare list of listeners to bootstrap
         /** @var mixed $listenersFromAppConfig */
@@ -235,9 +269,19 @@ class Application implements ApplicationInterface, EventManagerAwareInterface
         /** @var mixed $listenersFromConfigService */
         $listenersFromConfigService = $config['listeners'] ?? [];
 
-        $listeners = array_unique(array: array_merge(\Jield\Stdlib\Value::array($listenersFromConfigService), \Jield\Stdlib\Value::array($listenersFromAppConfig)));
+        $listeners = array_unique(array: array_merge(
+            Value::array($listenersFromConfigService),
+            Value::array($listenersFromAppConfig),
+        ));
 
-        return \Jield\Stdlib\Value::instance(\Jield\Stdlib\Service::get($serviceManager, \Jield\Mvc\ApplicationInterface::class, 'Application')->bootstrap(\Jield\Stdlib\Value::strings($listeners)), \Jield\Mvc\Application::class);
+        return Value::instance(
+            Service::get(
+                $serviceManager,
+                \Jield\Mvc\ApplicationInterface::class,
+                'Application',
+            )->bootstrap(Value::strings($listeners)),
+            \Jield\Mvc\Application::class,
+        );
     }
 
     /**
@@ -275,7 +319,7 @@ class Application implements ApplicationInterface, EventManagerAwareInterface
         // Trigger route event
         $event->setName(name: MvcEvent::EVENT_ROUTE);
         $event->stopPropagation(flag: false); // Clear before triggering
-        $result = \Jield\Stdlib\Value::present($events)->triggerEventUntil(callback: $shortCircuit, event: $event);
+        $result = Value::present($events)->triggerEventUntil(callback: $shortCircuit, event: $event);
         if ($result->stopped()) {
             /** @var mixed $response */
             $response = $result->last();
@@ -284,7 +328,7 @@ class Application implements ApplicationInterface, EventManagerAwareInterface
                 $event->setTarget(target: $this);
                 $event->setResponse(response: $response);
                 $event->stopPropagation(flag: false); // Clear before triggering
-                \Jield\Stdlib\Value::present($events)->triggerEvent(event: $event);
+                Value::present($events)->triggerEvent(event: $event);
                 $this->response = $response;
                 return $this;
             }
@@ -297,7 +341,7 @@ class Application implements ApplicationInterface, EventManagerAwareInterface
         // Trigger dispatch event
         $event->setName(name: MvcEvent::EVENT_DISPATCH);
         $event->stopPropagation(flag: false); // Clear before triggering
-        $result = \Jield\Stdlib\Value::present($events)->triggerEventUntil(callback: $shortCircuit, event: $event);
+        $result = Value::present($events)->triggerEventUntil(callback: $shortCircuit, event: $event);
 
         // Complete response
         /** @var mixed $response */
@@ -307,13 +351,16 @@ class Application implements ApplicationInterface, EventManagerAwareInterface
             $event->setTarget(target: $this);
             $event->setResponse(response: $response);
             $event->stopPropagation(flag: false); // Clear before triggering
-            \Jield\Stdlib\Value::present($events)->triggerEvent(event: $event);
+            Value::present($events)->triggerEvent(event: $event);
             $this->response = $response;
             return $this;
         }
 
         $response = $this->response;
-        $event->setResponse(response: \Jield\Stdlib\Value::instance($response, \Laminas\Stdlib\ResponseInterface::class));
+        $event->setResponse(response: Value::instance(
+            $response,
+            \Laminas\Stdlib\ResponseInterface::class,
+        ));
         return $this->completeRequest(event: $event);
     }
 
@@ -332,11 +379,11 @@ class Application implements ApplicationInterface, EventManagerAwareInterface
 
         $event->setName(name: MvcEvent::EVENT_RENDER);
         $event->stopPropagation(flag: false); // Clear before triggering
-        \Jield\Stdlib\Value::present($events)->triggerEvent(event: $event);
+        Value::present($events)->triggerEvent(event: $event);
 
         $event->setName(name: MvcEvent::EVENT_FINISH);
         $event->stopPropagation(flag: false); // Clear before triggering
-        \Jield\Stdlib\Value::present($events)->triggerEvent(event: $event);
+        Value::present($events)->triggerEvent(event: $event);
 
         return $this;
     }

@@ -6,6 +6,7 @@ namespace Jield\ApiTools\ApiProblem\Listener;
 
 use Jield\ApiTools\ApiProblem\ApiProblem;
 use Jield\Mvc\MvcEvent;
+use Jield\Stdlib\Value;
 use Laminas\EventManager\AbstractListenerAggregate;
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\Http\Response as HttpResponse;
@@ -96,7 +97,7 @@ class RenderErrorListener extends AbstractListenerAggregate
         }
 
         $response->getHeaders()->addHeaderLine('content-type', ApiProblem::CONTENT_TYPE);
-        $response->setStatusCode(code: \Jield\Stdlib\Value::int($status));
+        $response->setStatusCode(code: Value::int($status));
         $response->setContent(json_encode(value: $payload));
 
         $e->stopPropagation();

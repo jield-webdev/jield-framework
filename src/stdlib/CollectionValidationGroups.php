@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Jield\Stdlib;
 
+use Jield\Form\InputFilterFactory;
 use Laminas\InputFilter\BaseInputFilter;
 use Laminas\InputFilter\InputFilterInterface;
 use Laminas\InputFilter\InputFilterValidationResult;
@@ -18,9 +19,11 @@ final class CollectionValidationGroups extends BaseInputFilter
     private int $position = 0;
 
     /** @param list<mixed> $groups */
-    public function __construct(private readonly InputFilterInterface $filter, private readonly array $groups)
-    {
-        parent::__construct(\Jield\Form\InputFilterFactory::create());
+    public function __construct(
+        private readonly InputFilterInterface $filter,
+        private readonly array $groups,
+    ) {
+        parent::__construct(InputFilterFactory::create());
     }
 
     /**

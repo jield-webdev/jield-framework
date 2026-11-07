@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Jield\Mvc\View\Http;
 
 use Jield\Mvc\MvcEvent;
+use Jield\Stdlib\Value;
 use Laminas\EventManager\AbstractListenerAggregate;
 use Laminas\EventManager\EventManagerInterface as Events;
 use Laminas\Stdlib\StringUtils;
@@ -49,7 +50,7 @@ class InjectTemplateListener extends AbstractListenerAggregate
      */
     public function attach(Events $events, $priority = 1): void
     {
-        $this->listeners[] = $events->attach(MvcEvent::EVENT_DISPATCH, [$this, 'injectTemplate'], -90);
+        $this->listeners[] = $events->attach(MvcEvent::EVENT_DISPATCH, $this->injectTemplate(...), -90);
     }
 
     /**
@@ -62,7 +63,6 @@ class InjectTemplateListener extends AbstractListenerAggregate
      */
     public function injectTemplate(MvcEvent $e): void
     {
-        /** @var mixed $model */
         $model = $e->getResult();
         if (!$model instanceof ViewModel) {
             return;
@@ -75,8 +75,13 @@ class InjectTemplateListener extends AbstractListenerAggregate
 
         $routeMatch = $e->getRouteMatch();
         /** @var mixed $preferRouteMatchController */
-        if ($preferRouteMatchController = \Jield\Stdlib\Value::present($routeMatch)->getParam('prefer_route_match_controller', false)) {
-            $this->setPreferRouteMatchController(\Jield\Stdlib\Value::bool($preferRouteMatchController));
+        if (
+            $preferRouteMatchController = Value::present($routeMatch)->getParam(
+                'prefer_route_match_controller',
+                false,
+            )
+        ) {
+            $this->setPreferRouteMatchController(Value::bool($preferRouteMatchController));
         }
 
         $controller = $e->getTarget();
@@ -85,20 +90,19 @@ class InjectTemplateListener extends AbstractListenerAggregate
         }
 
         /** @var mixed $routeMatchController */
-        $routeMatchController = \Jield\Stdlib\Value::present($routeMatch)->getParam('controller', '');
-        if (!$controller || $this->preferRouteMatchController && \Jield\Stdlib\Value::truthy($routeMatchController)) {
-            /** @var mixed $controller */
+        $routeMatchController = Value::present($routeMatch)->getParam('controller', '');
+        if (!$controller || $this->preferRouteMatchController && Value::truthy($routeMatchController)) {
             $controller = $routeMatchController;
         }
 
-        $template = $this->mapController(\Jield\Stdlib\Value::string($controller));
+        $template = $this->mapController(Value::string($controller));
 
         /** @var mixed $action */
-        $action = \Jield\Stdlib\Value::present($routeMatch)->getParam('action');
+        $action = Value::present($routeMatch)->getParam('action');
         if (null !== $action) {
-            $template = (string) $template . '/' . $this->inflectName(\Jield\Stdlib\Value::string($action));
+            $template = (string) $template . '/' . $this->inflectName(Value::string($action));
         }
-        $model->setTemplate(\Jield\Stdlib\Value::nonEmptyString($template));
+        $model->setTemplate(Value::nonEmptyString($template));
     }
 
     /**
@@ -122,7 +126,6 @@ class InjectTemplateListener extends AbstractListenerAggregate
     public function mapController($controller): false|string
     {
         $mapped = '';
-        /** @var mixed $replacement */
         foreach ($this->controllerMap as $namespace => $replacement) {
             if (
                 // Allow disabling rule by setting value to false since config
@@ -137,7 +140,7 @@ class InjectTemplateListener extends AbstractListenerAggregate
             // Map namespace to $replacement if its value is string
             if (is_string($replacement)) {
                 $mapped = rtrim($replacement, '/') . '/';
-                $controller = substr($controller, strlen(\Jield\Stdlib\Value::string($namespace)) + 1) ?: '';
+                $controller = substr($controller, strlen(Value::string($namespace)) + 1) ?: '';
                 break;
             }
         }
@@ -175,7 +178,7 @@ class InjectTemplateListener extends AbstractListenerAggregate
         }
 
         $name = preg_replace($pattern, $replacement, $name);
-        return strtolower(\Jield\Stdlib\Value::string($name));
+        return strtolower(Value::string($name));
     }
 
     /**

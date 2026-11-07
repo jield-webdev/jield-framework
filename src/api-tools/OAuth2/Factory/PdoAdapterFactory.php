@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Jield\ApiTools\OAuth2\Factory;
 
 use Jield\ApiTools\OAuth2\Adapter\PdoAdapter;
+use Jield\Stdlib\Value;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Override;
 use Psr\Container\ContainerInterface;
@@ -17,11 +18,9 @@ final class PdoAdapterFactory implements FactoryInterface
     #[Override]
     public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): PdoAdapter
     {
-        /** @var mixed $config */
         $config = $container->get('config');
 
-        /** @var mixed $oauthConfig */
-        $oauthConfig = \Jield\Stdlib\Value::accessible($config)['api-tools-oauth2'];
+        $oauthConfig = Value::accessible($config)['api-tools-oauth2'];
 
         //Grab the params directly from the Doctrine Params
         /** @var mixed $username */
@@ -33,8 +32,20 @@ final class PdoAdapterFactory implements FactoryInterface
 
         $dsn = sprintf(
             'mysql:dbname=%s;host=%s',
-            \Jield\Stdlib\Value::scalar(\Jield\Stdlib\Value::path($config, ['doctrine', 'connection', 'orm_default', 'params', 'dbname'])),
-            \Jield\Stdlib\Value::scalar(\Jield\Stdlib\Value::path($config, ['doctrine', 'connection', 'orm_default', 'params', 'host'])),
+            Value::scalar(Value::path($config, [
+                'doctrine',
+                'connection',
+                'orm_default',
+                'params',
+                'dbname',
+            ])),
+            Value::scalar(Value::path($config, [
+                'doctrine',
+                'connection',
+                'orm_default',
+                'params',
+                'host',
+            ])),
         );
 
         $oauth2ServerConfig = [];

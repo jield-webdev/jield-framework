@@ -10,7 +10,7 @@ use Jield\Mvc\Exception\RuntimeException;
 use Jield\Mvc\InjectApplicationEventInterface;
 use Jield\Mvc\ModuleRouteListener;
 use Jield\Mvc\MvcEvent;
-use Laminas\EventManager\EventInterface;
+use Jield\Stdlib\Value;
 use Laminas\Router\RouteStackInterface;
 use Traversable;
 
@@ -26,7 +26,7 @@ class Url extends AbstractPlugin
      * Generates a URL based on a route
      *
      * @param  string             $route              RouteInterface name
-     * @param  array|Traversable  $params             Parameters to use in url generation, if any
+     * @param  mixed              $params             Parameters to use in url generation, if any
      * @param  array|bool         $options            RouteInterface-specific options to use in url generation, if any.
      *                                                If boolean, and no fourth argument, used as $reuseMatchedParams.
      * @param  bool               $reuseMatchedParams Whether to reuse matched parameters
@@ -77,17 +77,15 @@ class Url extends AbstractPlugin
                 throw new RuntimeException('No RouteMatch instance present');
             }
 
-            /** @var mixed $route */
-            $route = \Jield\Stdlib\Value::call($matches, 'getMatchedRouteName');
+            $route = Value::call($matches, 'getMatchedRouteName');
 
             if ($route === null) {
                 throw new RuntimeException('RouteMatch does not contain a matched route name');
             }
         }
 
-        if ($reuseMatchedParams && \Jield\Stdlib\Value::truthy($matches)) {
-            /** @var mixed $routeMatchParams */
-            $routeMatchParams = \Jield\Stdlib\Value::call($matches, 'getParams');
+        if ($reuseMatchedParams && Value::truthy($matches)) {
+            $routeMatchParams = Value::call($matches, 'getParams');
 
             if (isset($routeMatchParams[ModuleRouteListener::ORIGINAL_CONTROLLER])) {
                 $routeMatchParams['controller'] = $routeMatchParams[ModuleRouteListener::ORIGINAL_CONTROLLER];
@@ -98,10 +96,13 @@ class Url extends AbstractPlugin
                 unset($routeMatchParams[ModuleRouteListener::MODULE_NAMESPACE]);
             }
 
-            $params = array_merge(\Jield\Stdlib\Value::array($routeMatchParams), $params);
+            $params = array_merge(Value::array($routeMatchParams), $params);
         }
 
+        $options = Value::array($options);
         $options['name'] = $route;
-        return $router->assemble(\Jield\Stdlib\Value::routeParams($params), \Jield\Stdlib\Value::array($options))->toString();
+        return $router
+            ->assemble(Value::routeParams($params), Value::array($options))
+            ->toString();
     }
 }

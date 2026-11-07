@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace Jield\AssetManager\Resolver;
 
 use Jield\AssetManager\Asset\AggregateAsset;
+use Jield\AssetManager\Asset\AssetInterface;
 use Jield\AssetManager\Exception;
 use Jield\AssetManager\Service\AssetFilterManager;
 use Jield\AssetManager\Service\AssetFilterManagerAwareInterface;
 use Jield\AssetManager\Service\MimeResolver;
+use Jield\Stdlib\Value;
 use Laminas\Stdlib\ArrayUtils;
 use Override;
 
@@ -86,7 +88,7 @@ class ConcatResolver implements
      */
     public function setConcats(iterable $concats): void
     {
-        $this->concats = \Jield\Stdlib\Value::array(ArrayUtils::iteratorToArray(iterator: $concats));
+        $this->concats = Value::array(ArrayUtils::iteratorToArray(iterator: $concats));
     }
 
     /**
@@ -106,7 +108,10 @@ class ConcatResolver implements
     #[Override]
     public function getAggregateResolver(): ResolverInterface
     {
-        return \Jield\Stdlib\Value::instance($this->aggregateResolver, \Jield\AssetManager\Resolver\ResolverInterface::class);
+        return Value::instance(
+            $this->aggregateResolver,
+            \Jield\AssetManager\Resolver\ResolverInterface::class,
+        );
     }
 
     /**
@@ -129,24 +134,26 @@ class ConcatResolver implements
 
         $resolvedAssets = [];
 
-        /** @var mixed $assetName */
-        foreach (\Jield\Stdlib\Value::toArray($this->concats[$fileName]) as $assetName) {
+        foreach (Value::toArray($this->concats[$fileName]) as $assetName) {
             $resolvedAsset = $this->getAggregateResolver()->resolve(fileName: (string) $assetName);
 
-            if (!$resolvedAsset instanceof \Jield\AssetManager\Asset\AssetInterface) {
+            if (!$resolvedAsset instanceof AssetInterface) {
                 throw new Exception\RuntimeException(message: sprintf(
                     'Asset "%s" from collection "%s" can\'t be resolved '
                     . 'to an Asset implementing \Jield\AssetManager\Asset\AssetInterface.',
-                    \Jield\Stdlib\Value::scalar($assetName),
+                    Value::scalar($assetName),
                     $fileName,
                 ));
             }
 
             $resolvedAsset->setMimeType($this->getMimeResolver()->getMimeType(
-                filename: (string) ($resolvedAsset->getSourceRoot()) . (string) ($resolvedAsset->getSourcePath()),
+                filename: (string) $resolvedAsset->getSourceRoot() . (string) $resolvedAsset->getSourcePath(),
             ));
 
-            $this->getAssetFilterManager()->setFilters(path: \Jield\Stdlib\Value::string($assetName), asset: $resolvedAsset);
+            $this->getAssetFilterManager()->setFilters(
+                path: Value::string($assetName),
+                asset: $resolvedAsset,
+            );
 
             $resolvedAssets[] = $resolvedAsset;
         }
@@ -175,7 +182,10 @@ class ConcatResolver implements
     #[Override]
     public function getAssetFilterManager(): AssetFilterManager
     {
-        return \Jield\Stdlib\Value::instance($this->filterManager, \Jield\AssetManager\Service\AssetFilterManager::class);
+        return Value::instance(
+            $this->filterManager,
+            \Jield\AssetManager\Service\AssetFilterManager::class,
+        );
     }
 
     public function collect(): array

@@ -7,17 +7,14 @@ namespace Jield\ApiTools\Rest;
 use ArrayAccess;
 use Jield\ApiTools\MvcAuth\Identity\IdentityInterface;
 use Jield\Mvc\Router\RouteMatch;
+use Jield\Stdlib\Value;
 use Laminas\EventManager\Event;
-use Laminas\EventManager\Exception\InvalidArgumentException as EventManagerInvalidArgumentException;
 use Laminas\InputFilter\InputFilterInterface;
 use Laminas\Stdlib\Parameters;
 use Laminas\Stdlib\RequestInterface;
 use Override;
 
-use function gettype;
 use function is_array;
-use function is_object;
-use function sprintf;
 
 /**
  * @extends Event<object|string|null, array|ArrayAccess|object>
@@ -33,21 +30,17 @@ class ResourceEvent extends Event
     /**
      * Overload setParams to inject request object, if passed via params
      *
-     * @param mixed $params
-     
- * @phpstan-ignore-next-line  */
+     * @template NewTParams of array|ArrayAccess|object
+     * @param NewTParams $params
+     *
+     **/
     #[Override]
     public function setParams($params)
     {
-        if (!is_array(value: $params) && !is_object(value: $params)) {
-            throw new EventManagerInvalidArgumentException(message: sprintf(
-                'Event parameters must be an array or object; received "%s"',
-                gettype(value: $params),
-            ));
-        }
-
+        parent::setParams(params: $params);
+        $params = parent::getParams();
         if ((is_array(value: $params) || $params instanceof ArrayAccess) && isset($params['request'])) {
-            $this->setRequest(request: $params['request']);
+            $this->setRequest(request: Value::instance($params['request'], RequestInterface::class));
             unset($params['request']);
         }
 

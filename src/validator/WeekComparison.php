@@ -21,7 +21,7 @@ final class WeekComparison implements ValidatorInterface
     {
         $minimum = $min === null ? null : self::date($min);
         $maximum = $max === null ? null : self::date($max);
-        if (($min !== null && $minimum === null) || ($max !== null && $maximum === null)) {
+        if ($min !== null && $minimum === null || $max !== null && $maximum === null) {
             throw new InvalidArgumentException('Week bounds must use the ISO YYYY-Www format.');
         }
         $this->comparison = new DateComparison(['min' => $minimum, 'max' => $maximum]);

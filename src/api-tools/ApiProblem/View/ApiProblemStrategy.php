@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace Jield\ApiTools\ApiProblem\View;
 
 use Jield\Mvc\MvcEvent;
+use Jield\Stdlib\Value;
 use Laminas\EventManager\AbstractListenerAggregate;
 use Laminas\EventManager\EventManagerInterface;
+use Laminas\Http\AbstractMessage;
+use Laminas\Http\Response;
 
 class ApiProblemStrategy extends AbstractListenerAggregate
 {
@@ -22,7 +25,6 @@ class ApiProblemStrategy extends AbstractListenerAggregate
 
     public function render(MvcEvent $event): void
     {
-        /** @var mixed $model */
         $model = $event->getResult();
         if (!$model instanceof ApiProblemModel) {
             $model = $event->getViewModel();
@@ -34,9 +36,13 @@ class ApiProblemStrategy extends AbstractListenerAggregate
         $problem = $model;
         $response = $event->getResponse();
         $status = $problem->getApiProblem()->getStatus();
-\Jield\Stdlib\Value::instance($response, \Laminas\Http\Response::class)->setStatusCode($status >= 100 && $status <= 599 ? $status : 500);
+        Value::instance($response, Response::class)->setStatusCode(
+            $status >= 100 && $status <= 599 ? $status : 500,
+        );
         $response->setContent($body);
-        \Jield\Stdlib\Value::instance($response, \Laminas\Http\AbstractMessage::class)->getHeaders()->addHeaderLine('Content-Type', 'application/problem+json');
+        Value::instance($response, AbstractMessage::class)
+            ->getHeaders()
+            ->addHeaderLine('Content-Type', 'application/problem+json');
         $event->setResult($response);
         $event->stopPropagation();
     }

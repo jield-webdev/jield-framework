@@ -17,18 +17,16 @@ class ConstructedNavigationFactory extends AbstractNavigationFactory
     /**
      * @param array<array-key, array<string, mixed>>|Traversable<array-key, mixed> $config
      */
-    public function __construct(protected mixed $config)
-    {
-    }
+    public function __construct(
+        protected mixed $config,
+    ) {}
 
     /**
      * @return array<array-key, array<string, mixed>>
      */
     public function getPages(ContainerInterface $container): array
     {
-        if (null === $this->pages) {
-            $this->pages = $this->preparePages($container, $this->getPagesFromConfig($this->config));
-        }
+        $this->pages ??= $this->preparePages($container, $this->getPagesFromConfig($this->config));
         return $this->pages;
     }
 

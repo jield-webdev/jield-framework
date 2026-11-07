@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DoctrineModule\Service;
 
+use Jield\Stdlib\Service;
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Psr\Container\ContainerInterface;
@@ -24,7 +25,11 @@ final class CliFactory implements FactoryInterface
     public function getEventManager(ContainerInterface $container): EventManagerInterface
     {
         if (!$this->events instanceof \Laminas\EventManager\EventManagerInterface) {
-            $events = \Jield\Stdlib\Service::get($container, \Laminas\EventManager\EventManagerInterface::class, 'EventManager');
+            $events = Service::get(
+                $container,
+                \Laminas\EventManager\EventManagerInterface::class,
+                'EventManager',
+            );
 
             $events->addIdentifiers([self::class, 'doctrine']);
 

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Jield\AssetManager\Service;
 
 use Jield\AssetManager\Resolver\AggregateResolver;
+use Jield\Stdlib\Service;
+use Jield\Stdlib\Value;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Override;
 use Psr\Container\ContainerInterface;
@@ -23,23 +25,27 @@ class AssetManagerServiceFactory implements FactoryInterface
     #[Override]
     public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): AssetManager
     {
-        /** @var mixed $config */
         $config = $container->get('config');
         $assetManagerConfig = [];
 
         if (!empty($config['asset_manager'])) {
-            /** @var mixed $assetManagerConfig */
             $assetManagerConfig = $config['asset_manager'];
         }
 
         $assetManager = new AssetManager(
-            resolver: \Jield\Stdlib\Service::get($container, AggregateResolver::class),
-            config: \Jield\Stdlib\Value::array($assetManagerConfig),
+            resolver: Service::get($container, AggregateResolver::class),
+            config: Value::array($assetManagerConfig),
         );
 
-        $assetManager->setAssetFilterManager(filterManager: \Jield\Stdlib\Service::get($container, AssetFilterManager::class));
+        $assetManager->setAssetFilterManager(filterManager: Service::get(
+            $container,
+            AssetFilterManager::class,
+        ));
 
-        $assetManager->setAssetCacheManager(cacheManager: \Jield\Stdlib\Service::get($container, AssetCacheManager::class));
+        $assetManager->setAssetCacheManager(cacheManager: Service::get(
+            $container,
+            AssetCacheManager::class,
+        ));
 
         return $assetManager;
     }

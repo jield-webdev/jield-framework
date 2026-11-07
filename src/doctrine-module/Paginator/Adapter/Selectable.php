@@ -50,7 +50,7 @@ class Selectable implements AdapterInterface
     {
         $criteria = clone $this->criteria;
 
-        $criteria->setFirstResult(firstResult: null);
+        $criteria->setFirstResult(firstResult: 0);
         $criteria->setMaxResults(maxResults: null);
 
         return count(value: $this->selectable->matching(criteria: $criteria));

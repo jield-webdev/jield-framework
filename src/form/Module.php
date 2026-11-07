@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Jield\Form;
 
 use Jield\ModuleManager\Feature\FormElementProviderInterface;
+use Jield\ModuleManager\Feature\InitProviderInterface;
 use Jield\ModuleManager\Listener\ServiceListener;
 use Jield\ModuleManager\ModuleManagerInterface;
-use Jield\ModuleManager\Feature\InitProviderInterface;
+use Jield\Stdlib\Service;
+use Jield\Stdlib\Value;
+use Psr\Container\ContainerInterface;
 
 final class Module implements InitProviderInterface
 {
@@ -30,10 +33,13 @@ final class Module implements InitProviderInterface
     {
         /** @var mixed $event */
         $event = $manager->getEvent();
-        /** @var mixed $container */
-        $container = \Jield\Stdlib\Value::call($event, 'getParam', ['name' => 'ServiceManager']);
-        
-        $serviceListener = \Jield\Stdlib\Service::get(\Jield\Stdlib\Value::instance($container, \Psr\Container\ContainerInterface::class), \Jield\ModuleManager\Listener\ServiceListener::class, 'ServiceListener');
+        $container = Value::call($event, 'getParam', ['name' => 'ServiceManager']);
+
+        $serviceListener = Service::get(
+            Value::instance($container, ContainerInterface::class),
+            \Jield\ModuleManager\Listener\ServiceListener::class,
+            'ServiceListener',
+        );
 
         $serviceListener->addServiceManager(
             serviceManager: FormElementManager::class,

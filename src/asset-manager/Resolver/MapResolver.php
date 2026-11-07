@@ -9,6 +9,7 @@ use Jield\AssetManager\Asset\FileAsset;
 use Jield\AssetManager\Asset\HttpAsset;
 use Jield\AssetManager\Exception;
 use Jield\AssetManager\Service\MimeResolver;
+use Jield\Stdlib\Value;
 use Laminas\Stdlib\ArrayUtils;
 use Override;
 use Traversable;
@@ -60,13 +61,11 @@ class MapResolver implements ResolverInterface, MimeResolverAwareInterface
      */
     public function setMap(iterable $map): void
     {
-        
-
         if ($map instanceof Traversable) {
             $map = ArrayUtils::iteratorToArray(iterator: $map);
         }
 
-        $this->map = \Jield\Stdlib\Value::array($map);
+        $this->map = Value::array($map);
     }
 
     /**
@@ -79,14 +78,13 @@ class MapResolver implements ResolverInterface, MimeResolverAwareInterface
             return null;
         }
 
-        /** @var mixed $file */
         $file = $this->map[$fileName];
-        $mimeType = $this->getMimeResolver()->getMimeType(filename: \Jield\Stdlib\Value::string($file));
+        $mimeType = $this->getMimeResolver()->getMimeType(filename: Value::string($file));
 
         if (false === filter_var(value: $file, filter: FILTER_VALIDATE_URL)) {
-            $asset = new FileAsset(source: \Jield\Stdlib\Value::string($file));
+            $asset = new FileAsset(source: Value::string($file));
         } else {
-            $asset = new HttpAsset(sourceUrl: \Jield\Stdlib\Value::string($file));
+            $asset = new HttpAsset(sourceUrl: Value::string($file));
         }
 
         $asset->setMimetype(mimetype: $mimeType);

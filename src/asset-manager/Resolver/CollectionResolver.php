@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Jield\AssetManager\Resolver;
 
 use Jield\AssetManager\Asset\AssetCollection;
+use Jield\AssetManager\Asset\AssetInterface;
 use Jield\AssetManager\Exception;
 use Jield\AssetManager\Service\AssetFilterManager;
 use Jield\AssetManager\Service\AssetFilterManagerAwareInterface;
+use Jield\Stdlib\Value;
 use Laminas\Stdlib\ArrayUtils;
 use Override;
 use Traversable;
@@ -57,13 +59,11 @@ class CollectionResolver implements ResolverInterface, AggregateResolverAwareInt
      */
     public function setCollections(iterable $collections): void
     {
-        
-
         if ($collections instanceof Traversable) {
             $collections = ArrayUtils::iteratorToArray(iterator: $collections);
         }
 
-        $this->collections = \Jield\Stdlib\Value::array($collections);
+        $this->collections = Value::array($collections);
     }
 
     /**
@@ -87,7 +87,6 @@ class CollectionResolver implements ResolverInterface, AggregateResolverAwareInt
         $collection = new AssetCollection();
         $mimeType = null;
         $collection->setTargetPath(targetPath: $fileName);
-        /** @var mixed $asset */
         foreach ($this->collections[$fileName] as $asset) {
             if (!is_string(value: $asset)) {
                 throw new Exception\RuntimeException(
@@ -99,7 +98,7 @@ class CollectionResolver implements ResolverInterface, AggregateResolverAwareInt
                 throw new Exception\RuntimeException(message: sprintf("Asset '%s' could not be found.", $asset));
             }
 
-            if (!$res instanceof \Jield\AssetManager\Asset\AssetInterface) {
+            if (!$res instanceof AssetInterface) {
                 throw new Exception\RuntimeException(message: sprintf(
                     "Asset '%s' does not implement Jield\\Jield\AssetManager\\Asset\\AssetInterface.",
                     $asset,

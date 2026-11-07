@@ -6,9 +6,12 @@ namespace Jield\ApiTools\Versioning;
 
 use Jield\Mvc\MvcEvent;
 use Jield\Mvc\Router\RouteMatch;
+use Jield\Stdlib\Value;
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\EventManager\ListenerAggregateInterface;
 use Laminas\EventManager\ListenerAggregateTrait;
+use Laminas\Http\Header\HeaderInterface;
+use Laminas\Http\Headers;
 use Laminas\Http\Request;
 use Override;
 
@@ -83,13 +86,15 @@ class ContentTypeListener implements ListenerAggregateInterface
         }
 
         $headers = $request->getHeaders();
-        if (!\Jield\Stdlib\Value::instance($headers, \Laminas\Http\Headers::class)->has($this->headerName)) {
+        if (!Value::instance($headers, Headers::class)->has($this->headerName)) {
             return;
         }
 
-        $header = \Jield\Stdlib\Value::instance($headers, \Laminas\Http\Headers::class)->get($this->headerName);
+        $header = Value::instance($headers, Headers::class)->get($this->headerName);
 
-        $matches = $this->parseHeaderForMatches(value: \Jield\Stdlib\Value::instance($header, \Laminas\Http\Header\HeaderInterface::class)->getFieldValue());
+        $matches = $this->parseHeaderForMatches(
+            value: Value::instance($header, HeaderInterface::class)->getFieldValue(),
+        );
         if (is_array(value: $matches)) {
             $this->injectRouteMatches(routeMatches: $routeMatches, matches: $matches);
         }
@@ -110,7 +115,7 @@ class ContentTypeListener implements ListenerAggregateInterface
 
         /** @var mixed $regex */
         foreach (array_reverse(array: $this->regexes) as $regex) {
-            if (!preg_match(pattern: \Jield\Stdlib\Value::string($regex), subject: $contentType, matches: $matches)) {
+            if (!preg_match(pattern: Value::string($regex), subject: $contentType, matches: $matches)) {
                 continue;
             }
 
@@ -128,7 +133,6 @@ class ContentTypeListener implements ListenerAggregateInterface
      */
     protected function injectRouteMatches(RouteMatch $routeMatches, array $matches): void
     {
-        /** @var mixed $value */
         foreach ($matches as $key => $value) {
             if (is_numeric(value: $key) || $value === '') {
                 continue;

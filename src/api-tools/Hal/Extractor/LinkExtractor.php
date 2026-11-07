@@ -7,19 +7,16 @@ namespace Jield\ApiTools\Hal\Extractor;
 use Jield\ApiTools\ApiProblem\Exception\DomainException;
 use Jield\ApiTools\Hal\Link\Link;
 use Jield\ApiTools\Hal\Link\LinkUrlBuilder;
+use Jield\Stdlib\Value;
 use Override;
 
 use function sprintf;
 
 class LinkExtractor implements LinkExtractorInterface
 {
-    /** @var LinkUrlBuilder */
-    protected LinkUrlBuilder $linkUrlBuilder;
-
-    public function __construct(LinkUrlBuilder $linkUrlBuilder)
-    {
-        $this->linkUrlBuilder = $linkUrlBuilder;
-    }
+    public function __construct(
+        protected LinkUrlBuilder $linkUrlBuilder,
+    ) {}
 
     /**
      * @inheritDoc
@@ -45,12 +42,12 @@ class LinkExtractor implements LinkExtractorInterface
         $reuseMatchedParams = true;
         $options = $link->getRouteOptions();
         if (isset($options['reuse_matched_params'])) {
-            $reuseMatchedParams = \Jield\Stdlib\Value::truthy($options['reuse_matched_params']);
+            $reuseMatchedParams = Value::truthy($options['reuse_matched_params']);
             unset($options['reuse_matched_params']);
         }
 
         $representation['href'] = $this->linkUrlBuilder->buildLinkUrl(
-            route: \Jield\Stdlib\Value::string($link->getRoute()),
+            route: Value::string($link->getRoute()),
             params: $link->getRouteParams(),
             options: $options,
             reUseMatchedParams: $reuseMatchedParams,

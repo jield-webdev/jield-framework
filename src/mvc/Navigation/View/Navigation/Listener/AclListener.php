@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Jield\Mvc\Navigation\View\Navigation\Listener;
 
+use Jield\Stdlib\Value;
 use Laminas\EventManager\Event;
+use Laminas\Navigation\Page\AbstractPage;
 
 /**
  * Default Access Control Listener
@@ -27,24 +29,26 @@ class AclListener
     public static function accept(Event $event)
     {
         $accepted = true;
-        $params   = $event->getParams();
-        /** @var mixed $acl */
-        $acl      = $params['acl'];
-        /** @var mixed $page */
-        $page     = $params['page'];
-        /** @var mixed $role */
-        $role     = $params['role'];
+        $params = Value::accessible($event->getParams());
+        $acl = $params['acl'];
+        $page = $params['page'];
+        $role = $params['role'];
 
         if (!$acl) {
             return $accepted;
         }
 
-        $resource  = \Jield\Stdlib\Value::instance($page, \Laminas\Navigation\Page\AbstractPage::class)->getResource();
-        $privilege = \Jield\Stdlib\Value::instance($page, \Laminas\Navigation\Page\AbstractPage::class)->getPrivilege();
+        $resource = Value::instance($page, AbstractPage::class)->getResource();
+        $privilege = Value::instance($page, AbstractPage::class)->getPrivilege();
 
         if ($resource || $privilege) {
-            $accepted = \Jield\Stdlib\Value::truthy(\Jield\Stdlib\Value::call($acl, 'hasResource', [$resource]))
-                && \Jield\Stdlib\Value::truthy(\Jield\Stdlib\Value::call($acl, 'isAllowed', [$role, $resource, $privilege]));
+            $accepted =
+                Value::truthy(Value::call($acl, 'hasResource', [$resource]))
+                && Value::truthy(Value::call(
+                    $acl,
+                    'isAllowed',
+                    [$role, $resource, $privilege],
+                ));
         }
 
         return $accepted;

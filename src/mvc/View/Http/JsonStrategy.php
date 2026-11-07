@@ -6,8 +6,10 @@ namespace Jield\Mvc\View\Http;
 
 use Jield\Mvc\MvcEvent;
 use Jield\Mvc\View\Model\JsonModel;
+use Jield\Stdlib\Value;
 use Laminas\EventManager\AbstractListenerAggregate;
 use Laminas\EventManager\EventManagerInterface;
+use Laminas\Http\AbstractMessage;
 
 final class JsonStrategy extends AbstractListenerAggregate
 {
@@ -18,7 +20,6 @@ final class JsonStrategy extends AbstractListenerAggregate
 
     public function render(MvcEvent $event): void
     {
-        /** @var mixed $model */
         $model = $event->getResult();
         if (!$model instanceof JsonModel) {
             $model = $event->getViewModel();
@@ -28,7 +29,9 @@ final class JsonStrategy extends AbstractListenerAggregate
         }
         $response = $event->getResponse();
         $response->setContent($model->serialize());
-        \Jield\Stdlib\Value::instance($response, \Laminas\Http\AbstractMessage::class)->getHeaders()->addHeaderLine('Content-Type', 'application/json');
+        Value::instance($response, AbstractMessage::class)
+            ->getHeaders()
+            ->addHeaderLine('Content-Type', 'application/json');
         $event->setResult($response);
         $event->stopPropagation();
     }

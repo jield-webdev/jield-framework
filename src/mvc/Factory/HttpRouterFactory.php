@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Jield\Mvc\Factory;
 
+use Jield\Stdlib\Value;
 use Laminas\Router\Http\TreeRouteStack;
 use Laminas\Router\RoutePluginManager;
 use Laminas\Router\RouteStackInterface;
@@ -21,7 +22,11 @@ final class HttpRouterFactory implements FactoryInterface
         $config = $container->get('config')['router'] ?? [];
         /** @var mixed $class */
         $class = $config['router_class'] ?? TreeRouteStack::class;
-        \Jield\Stdlib\Value::setPath($config, ['route_plugins'], $container->get(\Jield\Stdlib\Value::string($config['route_plugins'] ?? RoutePluginManager::class)));
-        return \Jield\Stdlib\Value::instance($class::factory($config), \Laminas\Router\RouteStackInterface::class);
+        Value::setPath(
+            $config,
+            ['route_plugins'],
+            $container->get(Value::string($config['route_plugins'] ?? RoutePluginManager::class)),
+        );
+        return Value::instance($class::factory($config), \Laminas\Router\RouteStackInterface::class);
     }
 }

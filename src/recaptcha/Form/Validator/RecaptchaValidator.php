@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Jield\Recaptcha\Form\Validator;
 
 use ErrorException;
+use JsonException;
+use Laminas\Translator\TranslatorInterface;
 use Laminas\Validator\AbstractValidator;
 use Override;
-use JsonException;
+use SensitiveParameter;
 
 class RecaptchaValidator extends AbstractValidator
 {
@@ -42,9 +44,9 @@ class RecaptchaValidator extends AbstractValidator
 
     private bool $captchaBypassed = false;
 
-    /** @param array{messages?: array<string, string>, translator?: \Laminas\Translator\TranslatorInterface|null, translatorEnabled?: bool, translatorTextDomain?: string|null, valueObscured?: bool}|null $options */
+    /** @param array{messages?: array<string, string>, translator?: TranslatorInterface|null, translatorEnabled?: bool, translatorTextDomain?: string|null, valueObscured?: bool}|null $options */
     public function __construct(
-        #[\SensitiveParameter]
+        #[SensitiveParameter]
         private readonly string $secret,
         private readonly int $responseTimeout,
         ?array $options = null,
@@ -99,7 +101,6 @@ class RecaptchaValidator extends AbstractValidator
                 throw new ErrorException(message: 'Site could not be reached');
             }
 
-            /** @var mixed $json */
             $json = json_decode(json: $googleResponse, associative: true, flags: JSON_THROW_ON_ERROR);
             if (!is_array($json) || !isset($json['success']) || !is_bool($json['success'])) {
                 $this->errorCodes[] = self::ERROR_INVALID_INPUT_RESPONSE;
@@ -118,7 +119,6 @@ class RecaptchaValidator extends AbstractValidator
 
         if (!$json['success']) {
             if (!empty($json['error-codes']) && is_array($json['error-codes'])) {
-                /** @var mixed $r */
                 foreach ($json['error-codes'] as $r) {
                     if (!is_string($r)) {
                         continue;
@@ -137,7 +137,11 @@ class RecaptchaValidator extends AbstractValidator
         if (isset($json['challenge_ts']) && is_string($json['challenge_ts'])) {
             $challengeVerificationTimestamp = time();
             $challengeTime = strtotime(datetime: $json['challenge_ts']);
-            if ($challengeTime !== false && $challengeTime > 0 && ($challengeVerificationTimestamp - $challengeTime) > $this->responseTimeout) {
+            if (
+                $challengeTime !== false
+                && $challengeTime > 0
+                && ($challengeVerificationTimestamp - $challengeTime) > $this->responseTimeout
+            ) {
                 $this->errorCodes[] = 'no-error-codes';
                 $this->error(messageKey: self::EXPIRED);
 

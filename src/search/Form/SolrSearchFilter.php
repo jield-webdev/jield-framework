@@ -11,10 +11,12 @@ use Jield\Form\Fieldset;
 use Jield\Search\Enum\FacetFieldVisibilityEnum;
 use Jield\Search\Service\AbstractSearchService;
 use Jield\Search\ValueObject\FacetField;
+use Jield\Stdlib\Value;
 use Laminas\InputFilter\InputFilterProviderInterface;
 use RuntimeException;
 use Solarium\Component\Result\Facet\FacetResultInterface;
 
+use Solarium\Component\Result\Facet\Field;
 use function array_reverse;
 use function count;
 use function http_build_query;
@@ -50,7 +52,6 @@ class SolrSearchFilter extends SearchFilter implements InputFilterProviderInterf
 
         // Add the field selection
         if (!empty($fields)) {
-            /** @var mixed $values */
             foreach ($fields as $key => $values) {
                 $filter->add(elementOrFieldset: [
                     'type' => MultiCheckbox::class,
@@ -75,7 +76,6 @@ class SolrSearchFilter extends SearchFilter implements InputFilterProviderInterf
             $facetElementFieldset = new Fieldset(name: $facetField->getField());
             $facetElementFieldset->setOption(key: 'visibility', value: $facetField->getvisibility());
 
-            /** @var mixed $field */
             $field = $this->getFacetByFacetField(fieldName: $facetField->getField());
 
             if ($facetField->getHasYesNo()) {
@@ -83,7 +83,7 @@ class SolrSearchFilter extends SearchFilter implements InputFilterProviderInterf
             }
 
             $facetElementFieldset->add(elementOrFieldset: $this->createFacetFieldFormElement(
-                field: \Jield\Stdlib\Value::instance($field, \Solarium\Component\Result\Facet\Field::class),
+                field: Value::instance($field, Field::class),
                 facetField: $facetField,
             ));
 
@@ -110,7 +110,7 @@ class SolrSearchFilter extends SearchFilter implements InputFilterProviderInterf
 
         $facetField = $this->searchService->getFacet(fieldName: $fieldName);
 
-        return \Jield\Stdlib\Value::call($facetSet, 'getFacet', [$facetField->getField()]);
+        return Value::call($facetSet, 'getFacet', [$facetField->getField()]);
     }
 
     private function createYesNoFormElement(): Checkbox
@@ -124,12 +124,17 @@ class SolrSearchFilter extends SearchFilter implements InputFilterProviderInterf
         return $yesNoElement;
     }
 
-    private function createFacetFieldFormElement(\Solarium\Component\Result\Facet\Field $field, FacetField $facetField): MultiCheckbox
-    {
+    private function createFacetFieldFormElement(
+        Field $field,
+        FacetField $facetField,
+    ): MultiCheckbox {
         $multiOptions = [];
-        /** @var mixed $value */
         foreach ($field as $key => $value) {
-            $multiOptions[$key] = sprintf('%s <small class="text-muted">(%s)</small>', $key, \Jield\Stdlib\Value::scalar($value));
+            $multiOptions[$key] = sprintf(
+                '%s <small class="text-muted">(%s)</small>',
+                $key,
+                Value::scalar($value),
+            );
         }
 
         if ($facetField->getReverse()) {
@@ -183,7 +188,7 @@ class SolrSearchFilter extends SearchFilter implements InputFilterProviderInterf
                 'type' => 'search',
                 'query' => $submittedData['query'],
                 'facetArguments' => http_build_query(data: $data),
-                'resetEncodedFilter' => base64_encode(string: \Jield\Stdlib\Value::string(json_encode(value: $data))),
+                'resetEncodedFilter' => base64_encode(string: Value::string(json_encode(value: $data))),
             ];
         }
 
@@ -198,16 +203,18 @@ class SolrSearchFilter extends SearchFilter implements InputFilterProviderInterf
                 'type' => 'dateInterval',
                 'value' => $submittedData['dateInterval'],
                 'facetArguments' => http_build_query(data: $data),
-                'resetEncodedFilter' => base64_encode(string: \Jield\Stdlib\Value::string(json_encode(value: $data))),
+                'resetEncodedFilter' => base64_encode(string: Value::string(json_encode(value: $data))),
             ];
         }
 
         if (!empty($submittedData['filter']['general'])) {
             /** @var mixed $selectedValues */
-            $selectedValues = \Jield\Stdlib\Value::scalars($submittedData['filter']['general']);
-            /** @var mixed $value */
-            foreach (\Jield\Stdlib\Value::iterable($selectedValues) as $value) {
-                $remainingValues = array_diff(\Jield\Stdlib\Value::scalars(\Jield\Stdlib\Value::array($selectedValues)), \Jield\Stdlib\Value::scalars([$value]));
+            $selectedValues = Value::scalars($submittedData['filter']['general']);
+            foreach (Value::iterable($selectedValues) as $value) {
+                $remainingValues = array_diff(
+                    Value::scalars(Value::array($selectedValues)),
+                    Value::scalars([$value]),
+                );
 
                 $data = [
                     'facet' => $submittedData['facet'],
@@ -225,7 +232,9 @@ class SolrSearchFilter extends SearchFilter implements InputFilterProviderInterf
                     'type' => 'general',
                     'value' => $value,
                     'facetArguments' => http_build_query(data: $data),
-                    'resetEncodedFilter' => base64_encode(string: \Jield\Stdlib\Value::string(json_encode(value: $data))),
+                    'resetEncodedFilter' => base64_encode(string: Value::string(json_encode(
+                        value: $data,
+                    ))),
                 ];
             }
         }
@@ -233,31 +242,33 @@ class SolrSearchFilter extends SearchFilter implements InputFilterProviderInterf
         /** @var mixed $facetName
          * @var mixed $facetData
          */
-        foreach (\Jield\Stdlib\Value::iterable($submittedData['facet'] ?? []) as $facetName => $facetData) {
+        foreach (Value::iterable($submittedData['facet'] ?? []) as $facetName => $facetData) {
             //We need to check if the facet is actually a facet field
-            if (!$this->searchService->hasFacet(fieldName: \Jield\Stdlib\Value::string($facetName))) {
+            if (!$this->searchService->hasFacet(fieldName: Value::string($facetName))) {
                 continue;
             }
 
-            $facetField = $this->searchService->getFacet(fieldName: \Jield\Stdlib\Value::string($facetName));
+            $facetField = $this->searchService->getFacet(fieldName: Value::string($facetName));
 
             /** @var mixed $values */
             $values = $facetData['values'] ?? [];
 
             if (is_string(value: $values) && $facetField->isSlider()) {
-                $values = array_map(callback: 'intval', array: explode(separator: ',', string: $values));
+                $values = array_map(callback: intval(...), array: explode(separator: ',', string: $values));
                 $valueText = sprintf('BETWEEN %s and %s', $values[0], $values[1] ?? '');
             } elseif ($facetField->isCheckboxMin()) {
-                $valueText = sprintf('AT LEAST %d', \Jield\Stdlib\Value::scalar($values[0] ?? ''));
+                $valueText = sprintf('AT LEAST %d', Value::scalar($values[0] ?? ''));
             } else {
-                $valueText = implode(separator: $facetData['andOr'] ?? false ? ' and ' : ' or ', array: \Jield\Stdlib\Value::scalars($values));
+                $valueText = implode(
+                    separator: $facetData['andOr'] ?? false ? ' and ' : ' or ',
+                    array: Value::scalars($values),
+                );
             }
 
             //Remaining facets are all facets where the current facet value is filtered out
-            /** @var mixed $remainingFacets */
             $remainingFacets = $submittedData['facet'];
 
-            $remainingFacets = \Jield\Stdlib\Value::accessible($remainingFacets);
+            $remainingFacets = Value::accessible($remainingFacets);
 
             unset($remainingFacets[$facetName]);
 

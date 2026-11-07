@@ -7,6 +7,7 @@ namespace Jield\Test\Util;
 use Jield\ModuleManager\ModuleManager;
 use Jield\Mvc\Application;
 use Jield\Mvc\Service;
+use Jield\Stdlib\Value;
 use Laminas\ServiceManager\ServiceManager;
 
 use function is_numeric;
@@ -32,7 +33,6 @@ class ModuleLoader
                     'Laminas\Validator',
                 ],
             ];
-            /** @var mixed $module */
             foreach ($modules as $key => $module) {
                 if (is_numeric($key)) {
                     $configuration['modules'][] = $module;
@@ -46,9 +46,15 @@ class ModuleLoader
         /** @var mixed $smConfig */
         $smConfig = $configuration['service_manager'] ?? [];
         $this->serviceManager = new ServiceManager();
-        new Service\ServiceManagerConfig(\Jield\Stdlib\Value::array($smConfig))->configureServiceManager($this->serviceManager);
+        new Service\ServiceManagerConfig(Value::array(
+            $smConfig,
+        ))->configureServiceManager($this->serviceManager);
         $this->serviceManager->setService('ApplicationConfig', $configuration);
-        \Jield\Stdlib\Service::get($this->serviceManager, \Jield\ModuleManager\ModuleManager::class, 'ModuleManager')->loadModules();
+        \Jield\Stdlib\Service::get(
+            $this->serviceManager,
+            \Jield\ModuleManager\ModuleManager::class,
+            'ModuleManager',
+        )->loadModules();
     }
 
     /**
@@ -58,7 +64,11 @@ class ModuleLoader
      */
     public function getApplication()
     {
-        return \Jield\Stdlib\Service::get($this->getServiceManager(), \Jield\Mvc\ApplicationInterface::class, 'Application');
+        return \Jield\Stdlib\Service::get(
+            $this->getServiceManager(),
+            \Jield\Mvc\Application::class,
+            'Application',
+        );
     }
 
     /**
@@ -68,7 +78,11 @@ class ModuleLoader
      */
     public function getModuleManager()
     {
-        return \Jield\Stdlib\Service::get($this->getServiceManager(), \Jield\ModuleManager\ModuleManager::class, 'ModuleManager');
+        return \Jield\Stdlib\Service::get(
+            $this->getServiceManager(),
+            \Jield\ModuleManager\ModuleManager::class,
+            'ModuleManager',
+        );
     }
 
     /**

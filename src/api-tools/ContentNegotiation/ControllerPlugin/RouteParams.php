@@ -10,6 +10,7 @@ use Jield\Mvc\Controller\Plugin\AbstractPlugin;
 use Jield\Mvc\Exception\RuntimeException;
 use Jield\Mvc\InjectApplicationEventInterface;
 use Jield\Mvc\MvcEvent;
+use Jield\Stdlib\Value;
 
 class RouteParams extends AbstractPlugin
 {
@@ -36,6 +37,6 @@ class RouteParams extends AbstractPlugin
             return [];
         }
 
-        return \Jield\Stdlib\Value::present($event->getRouteMatch())->getParams();
+        return Value::present($event->getRouteMatch())->getParams();
     }
 }

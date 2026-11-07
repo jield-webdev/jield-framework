@@ -7,6 +7,7 @@ namespace DoctrineModule\Options;
 use Doctrine\Persistence\Mapping\ClassMetadata;
 use Doctrine\Persistence\ObjectManager;
 use Doctrine\Persistence\ObjectRepository;
+use Jield\Stdlib\Value;
 use Laminas\Authentication\Adapter\Exception;
 use Laminas\Authentication\Storage\StorageInterface;
 use Laminas\Stdlib\AbstractOptions;
@@ -130,12 +131,15 @@ final class Authentication extends AbstractOptions
             return $this->objectRepository;
         }
 
-        return \Jield\Stdlib\Value::instance($this->objectManager, ObjectManager::class)->getRepository(className: $this->identityClass);
+        return Value::instance(
+            $this->objectManager,
+            ObjectManager::class,
+        )->getRepository(className: $this->identityClass);
     }
 
     public function setIdentityClass(string $identityClass): Authentication
     {
-        $this->identityClass = \Jield\Stdlib\Value::classString($identityClass);
+        $this->identityClass = Value::classString($identityClass);
 
         return $this;
     }
@@ -211,7 +215,10 @@ final class Authentication extends AbstractOptions
             return $this->classMetadata;
         }
 
-        return \Jield\Stdlib\Value::instance($this->objectManager, ObjectManager::class)->getClassMetadata(className: $this->identityClass);
+        return Value::instance(
+            $this->objectManager,
+            ObjectManager::class,
+        )->getClassMetadata(className: $this->identityClass);
     }
 
     public function setClassMetadata(ClassMetadata $classMetadata): void

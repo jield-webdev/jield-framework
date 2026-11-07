@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Jield\ErrorHandler\Command;
 
+use ErrorException;
 use Jield\ErrorHandler\Handler\Logging;
 use Jield\ErrorHandler\HeroTrait;
+use Jield\Stdlib\Value;
 use Override;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\Table;
@@ -27,6 +29,11 @@ abstract class BaseLoggingCommand extends Command
     protected function capturesErrorOutput(): bool
     {
         return true;
+    }
+
+    protected function handleShutdownException(ErrorException $exception): void
+    {
+        $this->exceptionError($exception);
     }
 
     private const string DISPLAY_SETTINGS = 'display-settings';
@@ -72,7 +79,7 @@ abstract class BaseLoggingCommand extends Command
         if (
             isset($this->errorHeroModuleConfig[self::DISPLAY_SETTINGS]['exclude-exceptions'])
             && isExcludedException(
-                excludeExceptionsConfig: $this->errorHeroModuleConfig[self::DISPLAY_SETTINGS]['exclude-exceptions'],
+                excludeExceptionsConfig: Value::array($this->errorHeroModuleConfig[self::DISPLAY_SETTINGS]['exclude-exceptions']),
                 throwable: $throwable,
             )
         ) {
@@ -81,7 +88,7 @@ abstract class BaseLoggingCommand extends Command
 
         $this->logging->handleErrorException(throwable: $throwable);
 
-        if (\Jield\Stdlib\Value::accessible($this->errorHeroModuleConfig[self::DISPLAY_SETTINGS])['display_errors']) {
+        if (Value::accessible($this->errorHeroModuleConfig[self::DISPLAY_SETTINGS])['display_errors']) {
             throw $throwable;
         }
     }
@@ -91,7 +98,7 @@ abstract class BaseLoggingCommand extends Command
         $table = new Table(output: $output);
         $table->setColumnMaxWidth(columnIndex: 0, width: 147);
         $table->setRows(rows: [
-            [\Jield\Stdlib\Value::path($this->errorHeroModuleConfig, [self::DISPLAY_SETTINGS, 'console', 'message'])],
+            [Value::path($this->errorHeroModuleConfig, [self::DISPLAY_SETTINGS, 'console', 'message'])],
         ]);
         $table->render();
 

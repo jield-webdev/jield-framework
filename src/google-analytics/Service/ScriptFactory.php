@@ -7,6 +7,7 @@ namespace Jield\GoogleAnalytics\Service;
 use Jield\GoogleAnalytics\Analytics\Tracker;
 use Jield\GoogleAnalytics\View\Helper\Script\Gajs;
 use Jield\GoogleAnalytics\View\Helper\Script\ScriptInterface;
+use Jield\Stdlib\Service;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Override;
 use Psr\Container\ContainerInterface;
@@ -19,10 +20,10 @@ final class ScriptFactory implements FactoryInterface
         //We need to use the headscript, this is a required of the Google Tag
         //Copy the global site tag into the <head> section of your HTML
 
-        $script = \Jield\Stdlib\Service::get($container, Gajs::class);
+        $script = Service::get($container, Gajs::class);
 
         /* @var $ga Tracker */
-        $ga = \Jield\Stdlib\Service::get($container, Tracker::class);
+        $ga = Service::get($container, Tracker::class);
 
         $script->setTracker(tracker: $ga);
 

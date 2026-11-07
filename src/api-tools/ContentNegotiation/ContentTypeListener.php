@@ -7,6 +7,7 @@ namespace Jield\ApiTools\ContentNegotiation;
 use Jield\ApiTools\ApiProblem\ApiProblem;
 use Jield\ApiTools\ApiProblem\ApiProblemResponse;
 use Jield\Mvc\MvcEvent;
+use Jield\Stdlib\Value;
 use Laminas\Http\Header\ContentType;
 use Laminas\Http\PhpEnvironment\Request;
 
@@ -75,11 +76,14 @@ class ContentTypeListener
         $parameterData = new ParameterDataContainer();
 
         // route parameters:
-        $routeParams = \Jield\Stdlib\Value::present($routeMatch)->getParams();
+        $routeParams = Value::present($routeMatch)->getParams();
         $parameterData->setRouteParams(routeParams: $routeParams);
 
         // query parameters:
-        $parameterData->setQueryParams(queryParams: \Jield\Stdlib\Value::array(\Jield\Stdlib\Value::call($request->getQuery(), 'toArray')));
+        $parameterData->setQueryParams(queryParams: Value::array(Value::call(
+            $request->getQuery(),
+            'toArray',
+        )));
 
         // body parameters:
         $bodyParams = [];
@@ -93,8 +97,7 @@ class ContentTypeListener
                     break;
                 }
 
-                /** @var mixed $bodyParams */
-                $bodyParams = \Jield\Stdlib\Value::call($request->getPost(), 'toArray');
+                $bodyParams = Value::call($request->getPost(), 'toArray');
                 break;
             case $request::METHOD_PATCH:
             case $request::METHOD_PUT:
@@ -106,11 +109,14 @@ class ContentTypeListener
                         $parser = new MultipartContentParser(contentType: $contentType, request: $request);
                         $bodyParams = $parser->parse();
                     } catch (Exception\ExceptionInterface $exception) {
-                        $bodyParams = new ApiProblemResponse(apiProblem: new ApiProblem(status: 400, detail: $exception));
+                        $bodyParams = new ApiProblemResponse(apiProblem: new ApiProblem(
+                            status: 400,
+                            detail: $exception,
+                        ));
                         break;
                     }
 
-                    if (\Jield\Stdlib\Value::call($request->getFiles(), 'count')) {
+                    if (Value::call($request->getFiles(), 'count')) {
                         $this->attachFileCleanupListener(event: $e, uploadTmpDir: $parser->getUploadTempDir());
                     }
 
@@ -142,7 +148,7 @@ class ContentTypeListener
             return $bodyParams;
         }
 
-        $parameterData->setBodyParams(bodyParams: \Jield\Stdlib\Value::array($bodyParams));
+        $parameterData->setBodyParams(bodyParams: Value::array($bodyParams));
         $e->setParam(name: 'LaminasContentNegotiationParameterData', value: $parameterData);
         return null;
     }
@@ -158,23 +164,29 @@ class ContentTypeListener
             return;
         }
 
-        /** @var mixed $fileInfo */
         foreach ($request->getFiles() as $fileInfo) {
-            if (dirname(path: (string) \Jield\Stdlib\Value::accessible($fileInfo)['tmp_name']) !== $this->uploadTmpDir) {
+            if (
+                dirname(path: (string) Value::accessible($fileInfo)['tmp_name']) !== $this->uploadTmpDir
+            ) {
                 // File was moved
                 continue;
             }
 
-            if (!preg_match(pattern: '/^laminasc/', subject: basename(path: (string) \Jield\Stdlib\Value::accessible($fileInfo)['tmp_name']))) {
+            if (!preg_match(
+                pattern: '/^laminasc/',
+                subject: basename(path: (string) Value::accessible($fileInfo)['tmp_name']),
+            )) {
                 // File was moved
                 continue;
             }
 
-            if (!file_exists(filename: \Jield\Stdlib\Value::string(\Jield\Stdlib\Value::accessible($fileInfo)['tmp_name']))) {
+            if (!file_exists(filename: Value::string(
+                Value::accessible($fileInfo)['tmp_name'],
+            ))) {
                 continue;
             }
 
-            unlink(filename: \Jield\Stdlib\Value::string(\Jield\Stdlib\Value::accessible($fileInfo)['tmp_name']));
+            unlink(filename: Value::string(Value::accessible($fileInfo)['tmp_name']));
         }
     }
 
@@ -197,7 +209,6 @@ class ContentTypeListener
             return [];
         }
 
-        /** @var mixed $data */
         $data = json_decode(json: $json, associative: true);
         $isArray = is_array(value: $data);
 
@@ -206,8 +217,8 @@ class ContentTypeListener
             /** @var mixed $key
              * @var mixed $value
              */
-            foreach (\Jield\Stdlib\Value::iterable($data['_embedded']) as $key => $value) {
-                $data[\Jield\Stdlib\Value::key($key)] = $value;
+            foreach (Value::iterable($data['_embedded']) as $key => $value) {
+                $data[Value::key($key)] = $value;
             }
 
             unset($data['_embedded']);
@@ -229,7 +240,7 @@ class ContentTypeListener
 
         return new ApiProblemResponse(apiProblem: new ApiProblem(status: 400, detail: sprintf(
             'JSON decoding error: %s',
-            \Jield\Stdlib\Value::scalar($message),
+            Value::scalar($message),
         )));
     }
 
@@ -252,6 +263,6 @@ class ContentTypeListener
         $this->uploadTmpDir = $uploadTmpDir;
         /** @var mixed $events */
         $events = $target->getEventManager();
-        \Jield\Stdlib\Value::call($events, 'attach', ['finish', $this->onFinish(...), 1000]);
+        Value::call($events, 'attach', ['finish', $this->onFinish(...), 1000]);
     }
 }

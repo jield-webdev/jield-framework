@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Jield\ModuleManager\Loader;
 
+use Jield\Stdlib\Value;
 use Traversable;
 
 use function class_exists;
@@ -82,28 +83,37 @@ abstract class AutoloaderFactory
         foreach ($options as $class => $autoloaderOptions) {
             if (!isset(static::$loaders[$class])) {
                 $autoloader = static::getStandardAutoloader();
-                if (!class_exists(\Jield\Stdlib\Value::string($class)) && !$autoloader->autoload(\Jield\Stdlib\Value::string($class))) {
+                if (
+                    !class_exists(Value::string($class))
+                    && !$autoloader->autoload(Value::string($class))
+                ) {
                     require_once 'Exception/InvalidArgumentException.php';
-                    throw new Exception\InvalidArgumentException(sprintf('Autoloader class "%s" not loaded', \Jield\Stdlib\Value::scalar($class)));
+                    throw new Exception\InvalidArgumentException(sprintf(
+                        'Autoloader class "%s" not loaded',
+                        Value::scalar($class),
+                    ));
                 }
 
                 if (!is_subclass_of($class, SplAutoloader::class)) {
                     require_once 'Exception/InvalidArgumentException.php';
                     throw new Exception\InvalidArgumentException(sprintf(
                         'Autoloader class %s must implement Laminas\\Loader\\SplAutoloader',
-                        \Jield\Stdlib\Value::scalar($class),
+                        Value::scalar($class),
                     ));
                 }
 
                 if ($class === static::STANDARD_AUTOLOADER) {
-                    $autoloader->setOptions($autoloaderOptions);
+                    $autoloader->setOptions(Value::iterable($autoloaderOptions));
                 } else {
-                    $autoloader = \Jield\Stdlib\Value::instance(\Jield\Stdlib\Value::instantiate($class, [$autoloaderOptions]), SplAutoloader::class);
+                    $autoloader = Value::instance(
+                        Value::instantiate($class, [$autoloaderOptions]),
+                        SplAutoloader::class,
+                    );
                 }
                 $autoloader->register();
                 static::$loaders[$class] = $autoloader;
             } else {
-                \Jield\Stdlib\Value::call(static::$loaders[$class], 'setOptions', [$autoloaderOptions]);
+                Value::call(static::$loaders[$class], 'setOptions', [$autoloaderOptions]);
             }
         }
     }
@@ -133,7 +143,7 @@ abstract class AutoloaderFactory
             require_once 'Exception/InvalidArgumentException.php';
             throw new Exception\InvalidArgumentException(sprintf('Autoloader class "%s" not loaded', $class));
         }
-        return \Jield\Stdlib\Value::instance(static::$loaders[$class], SplAutoloader::class);
+        return Value::instance(static::$loaders[$class], SplAutoloader::class);
     }
 
     /**
@@ -146,7 +156,7 @@ abstract class AutoloaderFactory
     {
         /** @var mixed $autoloader */
         foreach (static::getRegisteredAutoloaders() as $class => $autoloader) {
-            spl_autoload_unregister(\Jield\Stdlib\Value::callback([$autoloader, 'autoload']));
+            spl_autoload_unregister(Value::callback([$autoloader, 'autoload']));
             unset(static::$loaders[$class]);
         }
     }
@@ -165,7 +175,7 @@ abstract class AutoloaderFactory
 
         /** @var mixed $autoloader */
         $autoloader = static::$loaders[$autoloaderClass];
-        spl_autoload_unregister(\Jield\Stdlib\Value::callback([$autoloader, 'autoload']));
+        spl_autoload_unregister(Value::callback([$autoloader, 'autoload']));
         unset(static::$loaders[$autoloaderClass]);
         return true;
     }
@@ -187,7 +197,7 @@ abstract class AutoloaderFactory
 
         if (!class_exists(static::STANDARD_AUTOLOADER)) {
             // Extract the filename from the classname
-            $stdAutoloader = substr(\Jield\Stdlib\Value::string(strrchr(static::STANDARD_AUTOLOADER, '\\')), 1);
+            $stdAutoloader = substr(Value::string(strrchr(static::STANDARD_AUTOLOADER, '\\')), 1);
             require_once __DIR__ . "/{$stdAutoloader}.php";
         }
         $loader = new StandardAutoloader();
@@ -209,6 +219,6 @@ abstract class AutoloaderFactory
      */
     protected static function isSubclassOf($className, $type)
     {
-        return is_subclass_of($className, \Jield\Stdlib\Value::classString($type));
+        return is_subclass_of($className, Value::classString($type));
     }
 }

@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace DoctrineModule\Form\Element;
 
 use Jield\Form\Element\MultiCheckbox;
+use Jield\Stdlib\Value;
 use Laminas\Stdlib\ArrayUtils;
+use Override;
 use Traversable;
 
 use function array_map;
@@ -21,16 +23,16 @@ class ObjectMultiCheckbox extends MultiCheckbox
      *
      * @return static
      */
-    #[\Override]
+    #[Override]
     public function setOptions(iterable $options): static
     {
-        $this->getProxy()->setOptions(options: \Jield\Stdlib\Value::array($options));
+        $this->getProxy()->setOptions(options: Value::array($options));
 
         return parent::setOptions(options: $options);
     }
 
     /** @return $this */
-    #[\Override]
+    #[Override]
     public function setOption(string $key, mixed $value): static
     {
         $this->getProxy()->setOptions(options: [$key => $value]);
@@ -42,7 +44,7 @@ class ObjectMultiCheckbox extends MultiCheckbox
     /**
      * {@inheritDoc}
      */
-    #[\Override]
+    #[Override]
     public function setValue($value): static
     {
         if ($value instanceof Traversable) {
@@ -50,10 +52,13 @@ class ObjectMultiCheckbox extends MultiCheckbox
         } elseif ($value === null) {
             return parent::setValue(value: []);
         } elseif (!is_array(value: $value)) {
-            $value = \Jield\Stdlib\Value::toArray($value);
+            $value = Value::toArray($value);
         }
 
-        return parent::setValue(value: array_map(callback: [$this->getProxy(), 'getValue'], array: \Jield\Stdlib\Value::array($value)));
+        return parent::setValue(value: array_map(
+            callback: [$this->getProxy(), 'getValue'],
+            array: Value::array($value),
+        ));
     }
 
     /**
@@ -61,7 +66,7 @@ class ObjectMultiCheckbox extends MultiCheckbox
      *
      * @return ValueOptionSpec
      */
-    #[\Override]
+    #[Override]
     public function getValueOptions(): array
     {
         if ($this->valueOptions !== []) {

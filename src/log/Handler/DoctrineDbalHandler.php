@@ -5,25 +5,33 @@ declare(strict_types=1);
 namespace Jield\Log\Handler;
 
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\ParameterType;
 use Monolog\Handler\AbstractProcessingHandler;
+use Monolog\Level;
 use Monolog\LogRecord;
+use UnhandledMatchError;
 
 final class DoctrineDbalHandler extends AbstractProcessingHandler
 {
-    private Connection $connection;
-    private string $table;
-
     public function __construct(
-        Connection $connection,
-        string $table = 'application_log',
-        int|string|\Monolog\Level $level = \Monolog\Level::Error,
-        bool $bubble = true,
+        private readonly Connection $connection,
+        private readonly string     $table = 'application_log',
+        int|string|Level            $level = Level::Error,
+        bool                        $bubble = true,
     ) {
-        $this->connection = $connection;
-        $this->table = $table;
-
-        $level = $level instanceof \Monolog\Level ? $level
-            : (is_int($level) ? \Monolog\Level::from($level) : \Monolog\Level::fromName($level));
+        $level = $level instanceof Level ? $level : (is_int($level)
+            ? Level::from($level)
+            : match (strtolower($level)) {
+                'debug' => Level::Debug,
+                'info' => Level::Info,
+                'notice' => Level::Notice,
+                'warning' => Level::Warning,
+                'error' => Level::Error,
+                'critical' => Level::Critical,
+                'alert' => Level::Alert,
+                'emergency' => Level::Emergency,
+                default => throw new UnhandledMatchError(sprintf('Unknown log level: %s', $level)),
+            });
         parent::__construct($level, $bubble);
     }
 
@@ -41,13 +49,13 @@ final class DoctrineDbalHandler extends AbstractProcessingHandler
                 'created_at' => $record->datetime->format('Y-m-d H:i:s'),
             ],
             [
-                'channel' => \Doctrine\DBAL\ParameterType::STRING,
-                'level' => \Doctrine\DBAL\ParameterType::INTEGER,
-                'level_name' => \Doctrine\DBAL\ParameterType::STRING,
-                'message' => \Doctrine\DBAL\ParameterType::STRING,
-                'context' => \Doctrine\DBAL\ParameterType::STRING,
-                'extra' => \Doctrine\DBAL\ParameterType::STRING,
-                'created_at' => \Doctrine\DBAL\ParameterType::STRING,
+                'channel' => ParameterType::STRING,
+                'level' => ParameterType::INTEGER,
+                'level_name' => ParameterType::STRING,
+                'message' => ParameterType::STRING,
+                'context' => ParameterType::STRING,
+                'extra' => ParameterType::STRING,
+                'created_at' => ParameterType::STRING,
             ],
         );
     }

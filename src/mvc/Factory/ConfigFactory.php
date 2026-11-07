@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Jield\Mvc\Factory;
 
 // phpcs:ignore
+use Jield\ModuleManager\ModuleManager;
+use Jield\Stdlib\Service;
+use Jield\Stdlib\Value;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Psr\Container\ContainerInterface;
 
@@ -19,9 +22,17 @@ class ConfigFactory implements FactoryInterface
      */
     public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): array
     {
-        $moduleManager = \Jield\Stdlib\Service::get($container, \Jield\ModuleManager\ModuleManager::class, 'ModuleManager');
+        $moduleManager = Service::get(
+            $container,
+            ModuleManager::class,
+            'ModuleManager',
+        );
         $moduleManager->loadModules();
         $moduleParams = $moduleManager->getEvent()->getParams();
-        return \Jield\Stdlib\Value::array(\Jield\Stdlib\Value::call($moduleParams['configListener'], 'getMergedConfig', [false]));
+        return Value::array(Value::call(
+            $moduleParams['configListener'],
+            'getMergedConfig',
+            [false],
+        ));
     }
 }

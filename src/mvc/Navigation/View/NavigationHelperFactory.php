@@ -21,8 +21,11 @@ class NavigationHelperFactory implements FactoryInterface
      * container. That is exactly what the navigation helpers need as their
      * service locator, so it can be injected directly.
      */
-    public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): NavigationHelper
-    {
+    public function __invoke(
+        ContainerInterface $container,
+        string $requestedName,
+        ?array $options = null,
+    ): NavigationHelper {
         $helper = new NavigationHelper();
         $helper->setServiceLocator($container);
 

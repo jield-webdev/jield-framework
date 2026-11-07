@@ -7,6 +7,7 @@ namespace Jield\ApiTools\Hal\Link;
 use Jield\Mvc\View\Helper\ServerUrl;
 use Jield\Mvc\View\Helper\Url;
 
+use Jield\Stdlib\Value;
 use function call_user_func;
 
 class LinkUrlBuilder
@@ -36,10 +37,15 @@ class LinkUrlBuilder
         array $options = [],
         bool $reUseMatchedParams = false,
     ): string {
-        $path = call_user_func(\Jield\Stdlib\Value::callback($this->urlHelper), $route, $params, $options, $reUseMatchedParams);
+        $path = ($this->urlHelper)(
+            $route,
+            $params,
+            $options,
+            $reUseMatchedParams,
+        );
 
-        if (str_starts_with(haystack: \Jield\Stdlib\Value::string($path), needle: 'http')) {
-            return \Jield\Stdlib\Value::string($path);
+        if (str_starts_with(haystack: Value::string($path), needle: 'http')) {
+            return Value::string($path);
         }
 
         return call_user_func($this->serverUrlHelper, $path);

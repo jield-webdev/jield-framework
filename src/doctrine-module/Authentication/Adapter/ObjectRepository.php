@@ -7,6 +7,7 @@ namespace DoctrineModule\Authentication\Adapter;
 use Doctrine\Inflector\Inflector;
 use Doctrine\Inflector\InflectorFactory;
 use DoctrineModule\Options\Authentication as AuthenticationOptions;
+use Jield\Stdlib\Value;
 use Laminas\Authentication\Adapter\AbstractAdapter;
 use Laminas\Authentication\Adapter\Exception;
 use Laminas\Authentication\Result as AuthenticationResult;
@@ -47,7 +48,7 @@ class ObjectRepository extends AbstractAdapter
     public function setOptions(array|AuthenticationOptions $options): self
     {
         if (!$options instanceof AuthenticationOptions) {
-            $options = new AuthenticationOptions(options: \Jield\Stdlib\Value::stringKeyedArray($options));
+            $options = new AuthenticationOptions(options: Value::stringKeyedArray($options));
         }
 
         $this->options = $options;
@@ -70,7 +71,11 @@ class ObjectRepository extends AbstractAdapter
 
         if (!$identity) {
             $this->authenticationResultInfo['code'] = AuthenticationResult::FAILURE_IDENTITY_NOT_FOUND;
-            \Jield\Stdlib\Value::setPath($this->authenticationResultInfo, ['messages', null], 'A record with the supplied identity could not be found.');
+            Value::setPath(
+                $this->authenticationResultInfo,
+                ['messages', null],
+                'A record with the supplied identity could not be found.',
+            );
 
             return $this->createAuthenticationResult();
         }
@@ -90,11 +95,9 @@ class ObjectRepository extends AbstractAdapter
         $getter = 'get' . $this->inflector->classify(word: $credentialProperty);
 
         if (method_exists(object_or_class: $identity, method: $getter)) {
-            /** @var mixed $documentCredential */
-            $documentCredential = \Jield\Stdlib\Value::call($identity, $getter);
+            $documentCredential = Value::call($identity, $getter);
         } elseif (property_exists(object_or_class: $identity, property: $credentialProperty)) {
-            /** @var mixed $documentCredential */
-            $documentCredential = $identity->{$credentialProperty};
+            $documentCredential = Value::property($identity, $credentialProperty);
         } else {
             throw new Exception\UnexpectedValueException(message: sprintf(
                 'Property (%s) in (%s) is not accessible. You should implement %s::%s()',
@@ -105,26 +108,28 @@ class ObjectRepository extends AbstractAdapter
             ));
         }
 
-        /** @var mixed $credentialValue */
         $credentialValue = $this->credential;
-        /** @var mixed $callable */
         $callable = $this->options->getCredentialCallable();
 
         if ($callable) {
             /** @var mixed $credentialValue */
-            $credentialValue = call_user_func(\Jield\Stdlib\Value::callback($callable), $identity, $credentialValue);
+            $credentialValue = call_user_func(Value::callback($callable), $identity, $credentialValue);
         }
 
         if ($credentialValue !== true && $credentialValue !== $documentCredential) {
             $this->authenticationResultInfo['code'] = AuthenticationResult::FAILURE_CREDENTIAL_INVALID;
-            \Jield\Stdlib\Value::setPath($this->authenticationResultInfo, ['messages', null], 'Supplied credential is invalid.');
+            Value::setPath(
+                $this->authenticationResultInfo,
+                ['messages', null],
+                'Supplied credential is invalid.',
+            );
 
             return $this->createAuthenticationResult();
         }
 
         $this->authenticationResultInfo['code'] = AuthenticationResult::SUCCESS;
         $this->authenticationResultInfo['identity'] = $identity;
-        \Jield\Stdlib\Value::setPath($this->authenticationResultInfo, ['messages', null], 'Authentication successful.');
+        Value::setPath($this->authenticationResultInfo, ['messages', null], 'Authentication successful.');
 
         return $this->createAuthenticationResult();
     }
@@ -161,10 +166,11 @@ class ObjectRepository extends AbstractAdapter
      */
     protected function createAuthenticationResult(): AuthenticationResult
     {
+        $info = Value::array($this->authenticationResultInfo);
         return new AuthenticationResult(
-            code: \Jield\Stdlib\Value::int($this->authenticationResultInfo['code']),
-            identity: $this->authenticationResultInfo['identity'],
-            messages: \Jield\Stdlib\Value::array($this->authenticationResultInfo['messages']),
+            code: Value::int($info['code']),
+            identity: $info['identity'],
+            messages: Value::array($info['messages']),
         );
     }
 }

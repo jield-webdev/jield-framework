@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Jield\Form\Element;
 
+use Jield\Stdlib\Value;
 use Jield\Validator\Each;
 use Laminas\Validator\InArray as InArrayValidator;
 use Laminas\Validator\ValidatorInterface;
 
+use Stringable;
 use function assert;
 use function is_array;
 use function is_iterable;
@@ -16,8 +18,8 @@ use function trigger_error;
 use const E_USER_DEPRECATED;
 
 /**
- * @psalm-type ValueOptionSpec = array<array-key, scalar|\Stringable|array{
- *     label: string, value: scalar|\Stringable, selected?: bool, disabled?: bool,
+ * @psalm-type ValueOptionSpec = array<array-key, scalar|Stringable|array{
+ *     label: string, value: scalar|Stringable, selected?: bool, disabled?: bool,
  *     attributes?: array<string, scalar|null>, label_attributes?: array<string, scalar|null>
  * }>
  */
@@ -104,7 +106,9 @@ class MultiCheckbox extends Checkbox
             $this->setValueOptions(options: $valueOptions);
         }
         if (isset($this->options['disable_inarray_validator'])) {
-            $this->setDisableInArrayValidator(disableOption: \Jield\Stdlib\Value::bool($this->options['disable_inarray_validator']));
+            $this->setDisableInArrayValidator(disableOption: Value::bool(
+                $this->options['disable_inarray_validator'],
+            ));
         }
 
         return $this;
@@ -124,7 +128,7 @@ class MultiCheckbox extends Checkbox
             $this->setValueOptions(options: $value);
             return $this;
         }
-        return parent::setAttribute(key: $key, value: \Jield\Stdlib\Value::plainScalar($value));
+        return parent::setAttribute(key: $key, value: Value::plainScalar($value));
     }
 
     /**

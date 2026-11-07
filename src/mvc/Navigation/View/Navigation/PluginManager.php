@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Jield\Mvc\Navigation\View\Navigation;
 
+use Jield\Stdlib\Value;
 use Laminas\ServiceManager\AbstractPluginManager;
 use Laminas\ServiceManager\Exception\InvalidServiceException;
 use Laminas\ServiceManager\Factory\InvokableFactory;
+use Laminas\ServiceManager\ServiceManager;
+use Laminas\View\Renderer\RendererInterface;
 use Psr\Container\ContainerInterface;
 
 use function get_debug_type;
@@ -23,8 +26,8 @@ use function sprintf;
  * this manager extends {@see AbstractPluginManager} directly instead.
  *
  * @template-extends AbstractPluginManager<AbstractHelper>
- * @psalm-import-type FactoriesConfiguration from \Laminas\ServiceManager\ServiceManager
-  * @psalm-import-type ServiceManagerConfiguration from \Laminas\ServiceManager\ServiceManager
+ * @psalm-import-type FactoriesConfiguration from ServiceManager
+ * @psalm-import-type ServiceManagerConfiguration from ServiceManager
  */
 final class PluginManager extends AbstractPluginManager
 {
@@ -33,17 +36,17 @@ final class PluginManager extends AbstractPluginManager
      *
      * @var array<string, class-string<AbstractHelper>>
      */
-    private ?\Laminas\View\Renderer\RendererInterface $renderer = null;
+    private ?RendererInterface $renderer = null;
 
-    public function setRenderer(\Laminas\View\Renderer\RendererInterface $renderer): void
+    public function setRenderer(RendererInterface $renderer): void
     {
         $this->renderer = $renderer;
     }
 
     protected array $aliases = [
         'breadcrumbs' => Breadcrumbs::class,
-        'links'       => Links::class,
-        'menu'        => Menu::class,
+        'links' => Links::class,
+        'menu' => Menu::class,
     ];
 
     /**
@@ -53,8 +56,8 @@ final class PluginManager extends AbstractPluginManager
      */
     protected array $factories = [
         Breadcrumbs::class => InvokableFactory::class,
-        Links::class       => InvokableFactory::class,
-        Menu::class        => InvokableFactory::class,
+        Links::class => InvokableFactory::class,
+        Menu::class => InvokableFactory::class,
     ];
 
     /**
@@ -65,7 +68,8 @@ final class PluginManager extends AbstractPluginManager
         // Inject the application container into every navigation helper. Under
         // Service Manager 4 the initializer's container argument *is* the
         // creation context passed to the parent constructor below.
-        $this->initializers[] = function (ContainerInterface $container, mixed $instance): void {
+        $initializers = Value::array($config['initializers'] ?? []);
+        $initializers[] = function (ContainerInterface $container, mixed $instance): void {
             if ($instance instanceof AbstractHelper) {
                 $instance->setServiceLocator($container);
                 if ($this->renderer !== null) {
@@ -74,6 +78,7 @@ final class PluginManager extends AbstractPluginManager
             }
         };
 
+        $config['initializers'] = $initializers;
         /** @var ServiceManagerConfiguration $managerConfiguration */
         $managerConfiguration = $config;
         parent::__construct($creationContext, $managerConfiguration);
@@ -95,7 +100,7 @@ final class PluginManager extends AbstractPluginManager
             '%s can only create instances of %s; %s is invalid',
             self::class,
             AbstractHelper::class,
-            get_debug_type($instance)
+            get_debug_type($instance),
         ));
     }
 }

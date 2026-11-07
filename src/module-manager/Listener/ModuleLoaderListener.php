@@ -6,6 +6,7 @@ namespace Jield\ModuleManager\Listener;
 
 use Jield\ModuleManager\Loader\ModuleAutoloader;
 use Jield\ModuleManager\ModuleEvent;
+use Jield\Stdlib\Value;
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\EventManager\ListenerAggregateInterface;
 use Override;
@@ -43,15 +44,15 @@ class ModuleLoaderListener extends AbstractListener implements ListenerAggregate
     {
         $this->callbacks[] = $events->attach(
             eventName: ModuleEvent::EVENT_LOAD_MODULES,
-            listener: [$this->moduleLoader, 'register'],
+            listener: $this->moduleLoader->register(...),
             priority: 9000,
         );
 
         if ($this->generateCache) {
-            $this->callbacks[] = $events->attach(eventName: ModuleEvent::EVENT_LOAD_MODULES_POST, listener: [
-                $this,
-                'onLoadModulesPost',
-            ]);
+            $this->callbacks[] = $events->attach(
+                eventName: ModuleEvent::EVENT_LOAD_MODULES_POST,
+                listener: $this->onLoadModulesPost(...),
+            );
         }
     }
 
@@ -59,9 +60,8 @@ class ModuleLoaderListener extends AbstractListener implements ListenerAggregate
     #[Override]
     public function detach(EventManagerInterface $events): void
     {
-        /** @var mixed $callback */
         foreach ($this->callbacks as $index => $callback) {
-            $events->detach(listener: \Jield\Stdlib\Value::callback($callback));
+            $events->detach(listener: Value::callback($callback));
 
             unset($this->callbacks[$index]);
         }
@@ -78,7 +78,7 @@ class ModuleLoaderListener extends AbstractListener implements ListenerAggregate
     /** @return array */
     protected function getCachedConfig(): array
     {
-        return \Jield\Stdlib\Value::array(include $this->options->getModuleMapCacheFile());
+        return Value::array(include $this->options->getModuleMapCacheFile());
     }
 
     /**

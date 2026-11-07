@@ -7,6 +7,7 @@ namespace Jield\AssetManager\Service;
 use Assetic\Contracts\Asset\AssetInterface;
 use Jield\AssetManager\Exception;
 use Jield\AssetManager\Resolver\ResolverInterface;
+use Jield\Stdlib\Value;
 use Laminas\Http\PhpEnvironment\Request;
 use Laminas\Http\Response;
 use Laminas\Stdlib\RequestInterface;
@@ -65,9 +66,7 @@ class AssetManager implements AssetFilterManagerAwareInterface, AssetCacheManage
      */
     public function resolvesToAsset(RequestInterface $request): bool
     {
-        if (null === $this->asset) {
-            $this->asset = $this->resolve(request: $request);
-        }
+        $this->asset ??= $this->resolve(request: $request);
 
         return (bool) $this->asset;
     }
@@ -121,9 +120,15 @@ class AssetManager implements AssetFilterManagerAwareInterface, AssetCacheManage
             throw new Exception\RuntimeException(message: 'Expected property "mimetype" on asset.');
         }
 
-        $this->getAssetFilterManager()->setFilters(path: $this->path, asset: \Jield\Stdlib\Value::instance($this->asset, \Jield\AssetManager\Asset\AssetInterface::class));
+        $this->getAssetFilterManager()->setFilters(
+            path: $this->path,
+            asset: Value::instance($this->asset, \Jield\AssetManager\Asset\AssetInterface::class),
+        );
 
-        $this->asset = $this->getAssetCacheManager()->setCache(path: $this->path, asset: \Jield\Stdlib\Value::instance($this->asset, \Jield\AssetManager\Asset\AssetInterface::class));
+        $this->asset = $this->getAssetCacheManager()->setCache(
+            path: $this->path,
+            asset: Value::instance($this->asset, \Jield\AssetManager\Asset\AssetInterface::class),
+        );
         $mimeType = $this->asset->getMimetype();
         $assetContents = $this->asset->dump();
         // @codeCoverageIgnoreStart

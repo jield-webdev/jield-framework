@@ -6,6 +6,7 @@ namespace Jield\ApiTools\ContentNegotiation\Factory;
 
 use Jield\ApiTools\ContentNegotiation\ContentNegotiationOptions;
 use Jield\ApiTools\ContentNegotiation\ContentTypeFilterListener;
+use Jield\Stdlib\Service;
 use Psr\Container\ContainerInterface;
 
 class ContentTypeFilterListenerFactory
@@ -14,7 +15,7 @@ class ContentTypeFilterListenerFactory
     {
         $listener = new ContentTypeFilterListener();
 
-        $options = \Jield\Stdlib\Service::get($container, ContentNegotiationOptions::class);
+        $options = Service::get($container, ContentNegotiationOptions::class);
         $listener->setConfig(config: $options->getContentTypeWhitelist());
 
         return $listener;

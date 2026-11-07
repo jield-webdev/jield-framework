@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Jield\Mvc\Navigation\View;
 
 use Jield\Mvc\Navigation\View\Navigation as NavigationHelper;
+use Jield\Stdlib\Value;
 use Laminas\ServiceManager\Factory\InvokableFactory;
+use Laminas\ServiceManager\ServiceManager;
 use Laminas\Stdlib\ArrayUtils;
 use Laminas\View\HelperPluginManager;
 use Psr\Container\ContainerInterface;
@@ -23,7 +25,7 @@ use function iterator_to_array;
  * {@see HelperPluginManager::configure()} directly.
  *
  * @final
-  * @psalm-import-type ServiceManagerConfiguration from \Laminas\ServiceManager\ServiceManager
+ * @psalm-import-type ServiceManagerConfiguration from ServiceManager
  */
 class HelperConfig
 {
@@ -33,13 +35,13 @@ class HelperConfig
      * @var array<string, mixed>
      */
     protected array $config = [
-        'aliases'    => [
+        'aliases' => [
             'navigation' => NavigationHelper::class,
             'Navigation' => NavigationHelper::class,
         ],
         'delegators' => [],
-        'factories'  => [
-            NavigationHelper::class       => NavigationHelperFactory::class,
+        'factories' => [
+            NavigationHelper::class => NavigationHelperFactory::class,
             'laminasviewhelpernavigation' => NavigationHelperFactory::class,
         ],
     ];
@@ -72,7 +74,8 @@ class HelperConfig
     public function configureServiceManager(HelperPluginManager $viewHelpers, ContainerInterface $appContainer): void
     {
         if ($appContainer->has('config')) {
-            $this->mergeHelpersFromConfiguration($appContainer->get('config'));
+            $config = $appContainer->get('config');
+            $this->mergeHelpersFromConfiguration($config instanceof Traversable ? $config : Value::stringKeyedArray($config));
         }
 
         $this->injectNavigationDelegatorFactory();
@@ -92,12 +95,11 @@ class HelperConfig
     private function mergeConfig(array $config): void
     {
         if (isset($config['invokables'])) {
-            $config = $this->processInvokables(\Jield\Stdlib\Value::stringMap($config['invokables']), $config);
+            $config = $this->processInvokables(Value::stringMap($config['invokables']), $config);
         }
 
-        /** @var mixed $services */
         foreach ($config as $type => $services) {
-            if (! is_array($services)) {
+            if (!is_array($services)) {
                 continue;
             }
 
@@ -119,8 +121,8 @@ class HelperConfig
         }
 
         if (
-            ! isset($config['navigation_helpers'])
-            || (! is_array($config['navigation_helpers']) && ! $config['navigation_helpers'] instanceof Traversable)
+            !isset($config['navigation_helpers'])
+            || !is_array($config['navigation_helpers']) && !$config['navigation_helpers'] instanceof Traversable
         ) {
             return;
         }
@@ -130,7 +132,7 @@ class HelperConfig
             $navigationHelpers = iterator_to_array($navigationHelpers);
         }
 
-        $this->mergeConfig(\Jield\Stdlib\Value::stringKeyedArray($navigationHelpers));
+        $this->mergeConfig(Value::stringKeyedArray($navigationHelpers));
     }
 
     /**
@@ -142,20 +144,20 @@ class HelperConfig
      */
     private function processInvokables(array $invokables, array $config): array
     {
-        $config['aliases']   ??= [];
+        $config['aliases'] ??= [];
         $config['factories'] ??= [];
 
         foreach ($invokables as $name => $class) {
-            \Jield\Stdlib\Value::setPath($config, ['factories', $class], InvokableFactory::class);
+            Value::setPath($config, ['factories', $class], InvokableFactory::class);
 
             if ($name !== $class) {
-                \Jield\Stdlib\Value::setPath($config, ['aliases', $name], $class);
+                Value::setPath($config, ['aliases', $name], $class);
             }
         }
 
         unset($config['invokables']);
 
-        return \Jield\Stdlib\Value::array($config);
+        return Value::stringKeyedArray($config);
     }
 
     /**
@@ -167,14 +169,20 @@ class HelperConfig
 
         if (
             isset($this->config['delegators'][NavigationHelper::class])
-            && in_array($factory, \Jield\Stdlib\Value::array($this->config['delegators'][NavigationHelper::class]), true)
+            && in_array(
+                $factory,
+                Value::array($this->config['delegators'][NavigationHelper::class]),
+                true,
+            )
         ) {
             // Already present.
             return;
         }
 
-        \Jield\Stdlib\Value::setPath($this->config, ['delegators', NavigationHelper::class, null], $factory);
-        \Jield\Stdlib\Value::setPath($this->config, ['delegators', 'laminasviewhelpernavigation', null], $factory);
+        $delegators = Value::array($this->config['delegators'] ?? []);
+        Value::setPath($delegators, [NavigationHelper::class, null], $factory);
+        Value::setPath($delegators, ['laminasviewhelpernavigation', null], $factory);
+        $this->config['delegators'] = $delegators;
     }
 
     /**
@@ -186,7 +194,7 @@ class HelperConfig
     private function prepareNavigationDelegatorFactory(): callable
     {
         if ($this->navigationDelegatorFactory !== null) {
-            return \Jield\Stdlib\Value::callback($this->navigationDelegatorFactory);
+            return $this->navigationDelegatorFactory;
         }
 
         $config = $this->config;
@@ -195,18 +203,18 @@ class HelperConfig
             ContainerInterface $container,
             string $name,
             callable $callback,
-            ?array $options = null
+            ?array $options = null,
         ) use ($config): object {
             /** @var mixed $helper */
             $helper = $callback();
 
             // Seed the proxy helper's sub-helper plugin manager with the same
             // configuration, so custom navigation helpers propagate to it.
-            \Jield\Stdlib\Value::call(\Jield\Stdlib\Value::call($helper, 'getPluginManager'), 'configure', [$config]);
+            Value::call(Value::call($helper, 'getPluginManager'), 'configure', [$config]);
 
-            return \Jield\Stdlib\Value::object($helper);
+            return Value::object($helper);
         };
 
-        return \Jield\Stdlib\Value::callback($this->navigationDelegatorFactory);
+        return $this->navigationDelegatorFactory;
     }
 }

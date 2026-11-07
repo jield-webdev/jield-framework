@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Jield\ApiTools\OAuth2;
 
 use GuzzleHttp\ClientInterface;
+use Jield\Stdlib\Value;
+use Psr\Http\Message\UriInterface;
 use Throwable;
 
 final readonly class EntraOnBehalfOfClient
@@ -34,21 +36,27 @@ final readonly class EntraOnBehalfOfClient
         }
 
         try {
-            $response = $this->http->request(method: 'POST', uri: \Jield\Stdlib\Value::instanceOrString($middleTier->getAccessTokenUrl(), \Psr\Http\Message\UriInterface::class), options: [
-                'form_params' => [
-                    'client_id' => $middleTier->getClientId(),
-                    'client_secret' => $middleTier->getClientSecret(),
-                    'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-                    'assertion' => $assertion,
-                    'requested_token_use' => 'on_behalf_of',
-                    'scope' => $scope,
+            $response = $this->http->request(
+                method: 'POST',
+                uri: Value::instanceOrString(
+                    $middleTier->getAccessTokenUrl(),
+                    UriInterface::class,
+                ),
+                options: [
+                    'form_params' => [
+                        'client_id' => $middleTier->getClientId(),
+                        'client_secret' => $middleTier->getClientSecret(),
+                        'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+                        'assertion' => $assertion,
+                        'requested_token_use' => 'on_behalf_of',
+                        'scope' => $scope,
+                    ],
+                    'timeout' => 10,
+                    'connect_timeout' => 3,
+                    'allow_redirects' => false,
+                    'http_errors' => false,
                 ],
-                'timeout' => 10,
-                'connect_timeout' => 3,
-                'allow_redirects' => false,
-                'http_errors' => false,
-            ]);
-            /** @var mixed $result */
+            );
             $result = json_decode(
                 json: (string) $response->getBody(),
                 associative: true,

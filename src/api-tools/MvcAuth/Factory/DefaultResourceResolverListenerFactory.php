@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Jield\ApiTools\MvcAuth\Factory;
 
 use Jield\ApiTools\MvcAuth\Authorization\DefaultResourceResolverListener;
+use Jield\Stdlib\Value;
 use Laminas\Http\Request;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Override;
@@ -38,7 +39,9 @@ class DefaultResourceResolverListenerFactory implements FactoryInterface
         /** @var mixed $config */
         $config = $container->has('config') ? $container->get('config') : [];
 
-        return new DefaultResourceResolverListener(restControllers: $this->getRestServicesFromConfig(config: \Jield\Stdlib\Value::array($config)));
+        return new DefaultResourceResolverListener(restControllers: $this->getRestServicesFromConfig(config: Value::array(
+            $config,
+        )));
     }
 
     /**
@@ -60,12 +63,12 @@ class DefaultResourceResolverListenerFactory implements FactoryInterface
         /** @var mixed $controllerService
          * @var mixed $restConfig
          */
-        foreach (\Jield\Stdlib\Value::iterable($config['api-tools-rest']) as $controllerService => $restConfig) {
+        foreach (Value::iterable($config['api-tools-rest']) as $controllerService => $restConfig) {
             if (!isset($restConfig['route_identifier_name'])) {
                 continue;
             }
 
-            $restServices[\Jield\Stdlib\Value::key($controllerService)] = $restConfig['route_identifier_name'];
+            $restServices[Value::key($controllerService)] = $restConfig['route_identifier_name'];
         }
 
         return $restServices;

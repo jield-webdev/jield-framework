@@ -9,6 +9,8 @@ use Jield\AssetManager\Resolver\AggregateResolver;
 use Jield\AssetManager\Resolver\AggregateResolverAwareInterface;
 use Jield\AssetManager\Resolver\MimeResolverAwareInterface;
 use Jield\AssetManager\Resolver\ResolverInterface;
+use Jield\Stdlib\Service;
+use Jield\Stdlib\Value;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Override;
 use Psr\Container\ContainerInterface;
@@ -27,7 +29,6 @@ class AggregateResolverServiceFactory implements FactoryInterface
     #[Override]
     public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): AggregateResolver
     {
-        /** @var mixed $config */
         $config = $container->get('config');
         /** @var mixed $config */
         $config = $config['asset_manager'] ?? [];
@@ -41,9 +42,9 @@ class AggregateResolverServiceFactory implements FactoryInterface
         /** @var mixed $resolverService
          * @var mixed $priority
          */
-        foreach (\Jield\Stdlib\Value::iterable($config['resolvers']) as $resolverService => $priority) {
+        foreach (Value::iterable($config['resolvers']) as $resolverService => $priority) {
             /** @var mixed $resolverService */
-            $resolverService = $container->get(\Jield\Stdlib\Value::string($resolverService));
+            $resolverService = $container->get(Value::string($resolverService));
 
             if (!$resolverService instanceof ResolverInterface) {
                 throw new Exception\RuntimeException(
@@ -56,14 +57,20 @@ class AggregateResolverServiceFactory implements FactoryInterface
             }
 
             if ($resolverService instanceof MimeResolverAwareInterface) {
-                $resolverService->setMimeResolver(mimeResolver: \Jield\Stdlib\Service::get($container, MimeResolver::class));
+                $resolverService->setMimeResolver(mimeResolver: Service::get(
+                    $container,
+                    MimeResolver::class,
+                ));
             }
 
             if ($resolverService instanceof AssetFilterManagerAwareInterface) {
-                $resolverService->setAssetFilterManager(filterManager: \Jield\Stdlib\Service::get($container, AssetFilterManager::class));
+                $resolverService->setAssetFilterManager(filterManager: Service::get(
+                    $container,
+                    AssetFilterManager::class,
+                ));
             }
 
-            $resolver->attach(resolver: $resolverService, priority: \Jield\Stdlib\Value::int($priority));
+            $resolver->attach(resolver: $resolverService, priority: Value::int($priority));
         }
 
         return $resolver;

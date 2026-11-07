@@ -8,9 +8,12 @@ use Jield\ApiTools\ApiProblem\ApiProblem;
 use Jield\ApiTools\ApiProblem\ApiProblemResponse;
 use Jield\ApiTools\ApiProblem\View\ApiProblemModel;
 use Jield\Mvc\MvcEvent;
+use Jield\Stdlib\Value;
 use Laminas\EventManager\AbstractListenerAggregate;
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\Http\Header\Accept as AcceptHeader;
+use Laminas\Http\Header\Accept\FieldValuePart\AcceptFieldValuePart;
+use Laminas\Http\Headers;
 use Laminas\Http\Request as HttpRequest;
 use Laminas\Http\Response as HttpResponse;
 use Laminas\Stdlib\DispatchableInterface;
@@ -71,7 +74,7 @@ class ApiProblemListener extends AbstractListenerAggregate
         );
 
         $sharedEvents = $events->getSharedManager();
-        \Jield\Stdlib\Value::present($sharedEvents)->attach(
+        Value::present($sharedEvents)->attach(
             DispatchableInterface::class,
             MvcEvent::EVENT_DISPATCH,
             listener: $this->onDispatch(...),
@@ -91,7 +94,6 @@ class ApiProblemListener extends AbstractListenerAggregate
 
         // Next, do we have a view model in the result?
         // If not, nothing more to do.
-        /** @var mixed $model */
         $model = $e->getResult();
         if (!$model instanceof ModelInterface || $model instanceof ApiProblemModel) {
             return;
@@ -106,7 +108,7 @@ class ApiProblemListener extends AbstractListenerAggregate
         if ($exception instanceof Throwable) {
             $apiProblem = new ApiProblem(status: $status, detail: $exception);
         } else {
-            $apiProblem = new ApiProblem(status: $status, detail: $model->getVariable(name: 'message'));
+            $apiProblem = new ApiProblem(status: $status, detail: Value::stringify($model->getVariable(name: 'message')));
         }
 
         // Create a new model with the API-Problem payload, and reset
@@ -125,7 +127,7 @@ class ApiProblemListener extends AbstractListenerAggregate
     public function onDispatch(MvcEvent $e): void
     {
         $app = $e->getApplication();
-        $services = \Jield\Stdlib\Value::present($app)->getServiceManager();
+        $services = Value::present($app)->getServiceManager();
         /** @var mixed $config */
         $config = $services->get('config');
 
@@ -134,17 +136,16 @@ class ApiProblemListener extends AbstractListenerAggregate
         }
 
         /** @var mixed $controller */
-        $controller = \Jield\Stdlib\Value::present($e->getRouteMatch())->getParam(name: 'controller');
-        /** @var mixed $controllers */
+        $controller = Value::present($e->getRouteMatch())->getParam(name: 'controller');
         $controllers = $config['api-tools-api-problem']['render_error_controllers'];
-        if (!in_array(needle: $controller, haystack: \Jield\Stdlib\Value::array($controllers), strict: true)) {
+        if (!in_array(needle: $controller, haystack: Value::array($controllers), strict: true)) {
             // The current controller is not in our list of controllers to handle
             return;
         }
 
         // Attach the ApiProblem render.error listener
-        $events = \Jield\Stdlib\Value::present($app)->getEventManager();
-        \Jield\Stdlib\Value::call($services->get('Jield\ApiTools\ApiProblem\RenderErrorListener'), 'attach', [$events]);
+        $events = Value::present($app)->getEventManager();
+        Value::call($services->get('Jield\ApiTools\ApiProblem\RenderErrorListener'), 'attach', [$events]);
     }
 
     /**
@@ -196,13 +197,16 @@ class ApiProblemListener extends AbstractListenerAggregate
         }
 
         $headers = $request->getHeaders();
-        if (!\Jield\Stdlib\Value::instance($headers, \Laminas\Http\Headers::class)->has('Accept')) {
+        if (!Value::instance($headers, Headers::class)->has('Accept')) {
             return false;
         }
 
         // ... that matches certain criteria
-        $accept = \Jield\Stdlib\Value::instance($headers, \Laminas\Http\Headers::class)->get('Accept');
-        return $this->matchAcceptCriteria(accept: \Jield\Stdlib\Value::instance($accept, \Laminas\Http\Header\Accept::class));
+        $accept = Value::instance($headers, Headers::class)->get('Accept');
+        return $this->matchAcceptCriteria(accept: Value::instance(
+            $accept,
+            \Laminas\Http\Header\Accept::class,
+        ));
     }
 
     /**
@@ -217,8 +221,8 @@ class ApiProblemListener extends AbstractListenerAggregate
     {
         /** @var mixed $type */
         foreach ($this->acceptFilters as $type) {
-            $match = $accept->match(matchAgainst: \Jield\Stdlib\Value::arrayOrString($type));
-            if ($match && $match->getTypeString() !== '*/*') {
+            $match = $accept->match(matchAgainst: Value::arrayOrString($type));
+            if ($match instanceof AcceptFieldValuePart && $match->getTypeString() !== '*/*') {
                 return true;
             }
         }

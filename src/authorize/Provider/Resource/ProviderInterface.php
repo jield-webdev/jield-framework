@@ -12,7 +12,7 @@ use Laminas\Permissions\Acl\Resource\ResourceInterface;
 interface ProviderInterface
 {
     /**
-     * @return array<array-key, ResourceInterface|string>
+     * @return array<array-key, mixed> Resource names, instances, or nested resource configuration.
      */
     public function getResources(): array;
 }

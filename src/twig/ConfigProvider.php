@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Jield\Twig;
 
+use Jield\Mvc\Navigation\View\HelperConfig;
 use Jield\Mvc\Plugin\FlashMessenger\Factory\FlashMessengerFactory;
 use Jield\Mvc\Plugin\FlashMessenger\View\Helper\FlashMessenger as FlashMessengerHelper;
-use Jield\Mvc\Navigation\View\HelperConfig;
 use Jield\Twig\Factory\ChainLoaderFactory;
 use Jield\Twig\Factory\EnvironmentFactory;
 use Jield\Twig\Factory\ExtensionFactory;

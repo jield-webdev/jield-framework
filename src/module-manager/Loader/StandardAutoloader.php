@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Jield\ModuleManager\Loader;
 
+use Jield\Stdlib\Value;
 use Traversable;
 
 use function dirname;
@@ -102,17 +103,17 @@ class StandardAutoloader implements SplAutoloader
                     }
                     break;
                 case self::LOAD_NS:
-                    if (is_array($pairs) || $pairs instanceof Traversable) {
-                        $this->registerNamespaces(\Jield\Stdlib\Value::array($pairs));
+                    if (is_iterable($pairs)) {
+                        $this->registerNamespaces(Value::array($pairs));
                     }
                     break;
                 case self::LOAD_PREFIX:
-                    if (is_array($pairs) || $pairs instanceof Traversable) {
-                        $this->registerPrefixes(\Jield\Stdlib\Value::array($pairs));
+                    if (is_iterable($pairs)) {
+                        $this->registerPrefixes(Value::array($pairs));
                     }
                     break;
                 case self::ACT_AS_FALLBACK:
-                    $this->setFallbackAutoloader(\Jield\Stdlib\Value::bool($pairs));
+                    $this->setFallbackAutoloader(Value::bool($pairs));
                     break;
                 default:
                     // ignore
@@ -175,7 +176,7 @@ class StandardAutoloader implements SplAutoloader
          * @var mixed $namespace
          */
         foreach ($namespaces as $namespace => $directory) {
-            $this->registerNamespace(\Jield\Stdlib\Value::string($namespace), \Jield\Stdlib\Value::string($directory));
+            $this->registerNamespace(Value::string($namespace), Value::string($directory));
         }
         return $this;
     }
@@ -212,7 +213,7 @@ class StandardAutoloader implements SplAutoloader
          * @var mixed $prefix
          */
         foreach ($prefixes as $prefix => $directory) {
-            $this->registerPrefix(\Jield\Stdlib\Value::string($prefix), \Jield\Stdlib\Value::string($directory));
+            $this->registerPrefix(Value::string($prefix), Value::string($directory));
         }
         return $this;
     }
@@ -255,7 +256,7 @@ class StandardAutoloader implements SplAutoloader
      */
     public function register()
     {
-        spl_autoload_register([$this, 'autoload']);
+        spl_autoload_register($this->autoload(...));
     }
 
     /**
@@ -311,17 +312,16 @@ class StandardAutoloader implements SplAutoloader
         }
 
         // Namespace and/or prefix autoloading
-        /** @var mixed $path */
         foreach ($this->$type as $leader => $path) {
-            if (!str_starts_with($class, \Jield\Stdlib\Value::string($leader))) {
+            if (!str_starts_with($class, Value::string($leader))) {
                 continue;
             }
 
             // Trim off leader (namespace or prefix)
-            $trimmedClass = substr($class, strlen(\Jield\Stdlib\Value::string($leader)));
+            $trimmedClass = substr($class, strlen(Value::string($leader)));
 
             // create filename
-            $filename = $this->transformClassNameToFilename($trimmedClass, \Jield\Stdlib\Value::string($path));
+            $filename = $this->transformClassNameToFilename($trimmedClass, Value::string($path));
             if (file_exists($filename)) {
                 include $filename;
                 return $class;

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Jield\Mvc\Factory;
 
+use Jield\Stdlib\Value;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Laminas\View\Factory\Configuration;
 use Laminas\View\Resolver as ViewResolver;
@@ -33,9 +34,11 @@ class ViewTemplatePathStackFactory implements FactoryInterface
         /** @var mixed $paths */
         $paths = $config['view_manager']['template_path_stack'] ?? [];
 
+        $paths = is_array($paths) ? array_values(array_map(Value::nonEmptyString(...), $paths)) : [];
+
         return new ViewResolver\TemplatePathStack([
             'default_suffix' => Configuration::defaultTemplateSuffix($container),
-            'script_paths' => is_array($paths) ? $paths : [],
+            'script_paths' => $paths,
         ]);
     }
 }

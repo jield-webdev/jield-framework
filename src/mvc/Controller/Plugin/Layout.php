@@ -8,6 +8,7 @@ use Jield\Mvc\Exception;
 use Jield\Mvc\Exception\DomainException;
 use Jield\Mvc\InjectApplicationEventInterface;
 use Jield\Mvc\MvcEvent;
+use Jield\Stdlib\Value;
 use Laminas\View\Model\ModelInterface as Model;
 
 class Layout extends AbstractPlugin
@@ -24,7 +25,7 @@ class Layout extends AbstractPlugin
     public function setTemplate($template): static
     {
         $viewModel = $this->getViewModel();
-        $viewModel->setTemplate(\Jield\Stdlib\Value::nonEmptyString($template));
+        $viewModel->setTemplate(Value::nonEmptyString($template));
         return $this;
     }
 
@@ -85,7 +86,7 @@ class Layout extends AbstractPlugin
     {
         $event = $this->getEvent();
         $viewModel = $event->getViewModel();
-        
+
         return $viewModel;
     }
 }

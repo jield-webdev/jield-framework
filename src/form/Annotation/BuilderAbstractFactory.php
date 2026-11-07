@@ -6,6 +6,9 @@ namespace Jield\Form\Annotation;
 
 use Jield\Form\Factory;
 use Jield\Form\FormElementManager;
+use Jield\Form\InputFilterFactory;
+use Jield\Stdlib\Service;
+use Jield\Stdlib\Value;
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\EventManager\ListenerAggregateInterface;
 use Laminas\InputFilter\InputFilterPluginManager;
@@ -38,20 +41,34 @@ final class BuilderAbstractFactory implements AbstractFactoryInterface
         }
 
         // setup a form factory which can use custom form elements
-        $annotationBuilder = \Jield\Stdlib\Value::instantiate($requestedName);
-        $eventManager = \Jield\Stdlib\Service::get($container, \Laminas\EventManager\EventManagerInterface::class, 'EventManager');
-        \Jield\Stdlib\Value::call($annotationBuilder, 'setEventManager', [$eventManager]);
+        $annotationBuilder = Value::instantiate($requestedName);
+        $eventManager = Service::get(
+            $container,
+            \Laminas\EventManager\EventManagerInterface::class,
+            'EventManager',
+        );
+        Value::call($annotationBuilder, 'setEventManager', [$eventManager]);
 
-        $this->injectFactory(\Jield\Stdlib\Value::instance(\Jield\Stdlib\Value::call($annotationBuilder, 'getFormFactory'), \Jield\Form\Factory::class), $container);
+        $this->injectFactory(
+            Value::instance(
+                Value::call($annotationBuilder, 'getFormFactory'),
+                \Jield\Form\Factory::class,
+            ),
+            $container,
+        );
 
         $config = $this->marshalConfig($container);
         if (isset($config['preserve_defined_order'])) {
-            \Jield\Stdlib\Value::call($annotationBuilder, 'setPreserveDefinedOrder', [$config['preserve_defined_order']]);
+            Value::call(
+                $annotationBuilder,
+                'setPreserveDefinedOrder',
+                [$config['preserve_defined_order']],
+            );
         }
 
         $this->injectListeners($config, $eventManager, $container);
 
-        return \Jield\Stdlib\Value::instance($annotationBuilder, \Jield\Form\Annotation\AbstractBuilder::class);
+        return Value::instance($annotationBuilder, \Jield\Form\Annotation\AbstractBuilder::class);
     }
 
     /**
@@ -79,7 +96,6 @@ final class BuilderAbstractFactory implements AbstractFactoryInterface
             return [];
         }
 
-        /** @var mixed $config */
         $config = $container->get('config');
         /** @var mixed $config */
         $config = $config['form_annotation_builder'] ?? [];
@@ -104,13 +120,14 @@ final class BuilderAbstractFactory implements AbstractFactoryInterface
             return;
         }
 
-        /** @var mixed $listenerName */
-        foreach (\Jield\Stdlib\Value::iterable($config['listeners']) as $listenerName) {
-            /** @var mixed $listener */
-            $listener = $container->get(\Jield\Stdlib\Value::string($listenerName));
+        foreach (Value::iterable($config['listeners']) as $listenerName) {
+            $listener = $container->get(Value::string($listenerName));
 
             if (!$listener instanceof ListenerAggregateInterface) {
-                throw new ServiceNotCreatedException(sprintf('Invalid event listener (%s) provided', \Jield\Stdlib\Value::scalar($listenerName)));
+                throw new ServiceNotCreatedException(sprintf(
+                    'Invalid event listener (%s) provided',
+                    Value::scalar($listenerName),
+                ));
             }
 
             $listener->attach($events);
@@ -124,11 +141,11 @@ final class BuilderAbstractFactory implements AbstractFactoryInterface
      */
     private function injectFactory(Factory $factory, ContainerInterface $container): void
     {
-        $factory->setFormElementManager(\Jield\Stdlib\Service::get($container, FormElementManager::class));
+        $factory->setFormElementManager(Service::get($container, FormElementManager::class));
 
         if ($container->has(InputFilterPluginManager::class)) {
-            $inputFilters = \Jield\Stdlib\Service::get($container, InputFilterPluginManager::class);
-            $factory->setInputFilterFactory(\Jield\Form\InputFilterFactory::create($container));
+            $inputFilters = Service::get($container, InputFilterPluginManager::class);
+            $factory->setInputFilterFactory(InputFilterFactory::create($container));
         }
     }
 }

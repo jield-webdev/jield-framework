@@ -28,13 +28,13 @@ class ViewHelperManagerDelegatorFactory implements DelegatorFactoryInterface
         ContainerInterface $container,
         string $name,
         callable $callback,
-        ?array $options = null
+        ?array $options = null,
     ): HelperPluginManager {
         /** @var mixed $viewHelpers */
         $viewHelpers = $callback();
         assert($viewHelpers instanceof HelperPluginManager);
 
-        (new HelperConfig())->configureServiceManager($viewHelpers, $container);
+        new HelperConfig()->configureServiceManager($viewHelpers, $container);
 
         return $viewHelpers;
     }

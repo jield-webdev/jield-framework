@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace Jield\AssetManager\Command;
 
+use Jield\AssetManager\Asset\AssetInterface;
 use Jield\AssetManager\Service\AssetManager;
+use Jield\Stdlib\Value;
 use Override;
+use RuntimeException;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -36,9 +39,7 @@ final class WarmupCommand extends Command
     #[Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        /** @var mixed $purge */
         $purge = $input->getOption(name: 'purge');
-        /** @var mixed $verbose */
         $verbose = $input->getOption(name: 'verbose');
 
         if ($verbose) {
@@ -50,7 +51,7 @@ final class WarmupCommand extends Command
                 $output->writeln(messages: '<comment>Purge requested, starting purge</comment>');
             }
 
-            $this->purgeCache(output: $output, verbose: \Jield\Stdlib\Value::bool($verbose));
+            $this->purgeCache(output: $output, verbose: Value::bool($verbose));
         }
 
         if ($verbose) {
@@ -71,12 +72,20 @@ final class WarmupCommand extends Command
                 ));
             }
 
-            /** @var mixed $path */
             foreach ($collection as $path) {
-                $asset = $this->assetManager->getResolver()->resolve(fileName: \Jield\Stdlib\Value::string($path));
+                $asset = $this->assetManager->getResolver()->resolve(fileName: Value::string($path));
 
-                $this->assetManager->getAssetFilterManager()->setFilters(path: \Jield\Stdlib\Value::string($path), asset: \Jield\Stdlib\Value::instance($asset, \Jield\AssetManager\Asset\AssetInterface::class));
-                $this->assetManager->getAssetCacheManager()->setCache(path: \Jield\Stdlib\Value::string($path), asset: \Jield\Stdlib\Value::instance($asset, \Jield\AssetManager\Asset\AssetInterface::class))->dump();
+                $this->assetManager->getAssetFilterManager()->setFilters(
+                    path: Value::string($path),
+                    asset: Value::instance($asset, AssetInterface::class),
+                );
+                $this->assetManager
+                    ->getAssetCacheManager()
+                    ->setCache(
+                        path: Value::string($path),
+                        asset: Value::instance($asset, AssetInterface::class),
+                    )
+                    ->dump();
             }
         }
 
@@ -99,23 +108,28 @@ final class WarmupCommand extends Command
         /** @var mixed $configName
          * @var mixed $config
          */
-        foreach (\Jield\Stdlib\Value::iterable($this->appConfig['asset_manager']['caching']) as $configName => $config) {
+        foreach (Value::iterable(
+            $this->appConfig['asset_manager']['caching'],
+        ) as $configName => $config) {
             if (empty($config['options']['dir'])) {
                 continue;
             }
 
             if ($verbose) {
-                $output->writeln(messages: sprintf('Purging %s on "%s"', \Jield\Stdlib\Value::scalar($configName), \Jield\Stdlib\Value::scalar($config['options']['dir'])));
+                $output->writeln(messages: sprintf(
+                    'Purging %s on "%s"',
+                    Value::scalar($configName),
+                    Value::scalar($config['options']['dir']),
+                ));
             }
 
-            /** @var mixed $node */
             $node = $config['options']['dir'];
 
             if ($configName !== 'default') {
-                $node = \Jield\Stdlib\Value::stringify($node) . ('/' . \Jield\Stdlib\Value::stringify($configName));
+                $node = Value::stringify($node) . ('/' . Value::stringify($configName));
             }
 
-            $this->recursiveRemove(node: \Jield\Stdlib\Value::string($node), output: $output, verbose: $verbose);
+            $this->recursiveRemove(node: Value::string($node), output: $output, verbose: $verbose);
         }
     }
 
@@ -126,6 +140,9 @@ final class WarmupCommand extends Command
     {
         if (is_dir(filename: $node)) {
             $objects = scandir(directory: $node);
+            if ($objects === false) {
+                throw new RuntimeException(sprintf('Cannot read directory "%s".', $node));
+            }
 
             if ($verbose) {
                 $output->writeln(messages: sprintf('Found folder %s', $node));

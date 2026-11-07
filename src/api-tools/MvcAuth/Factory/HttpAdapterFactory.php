@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Jield\ApiTools\MvcAuth\Factory;
 
+use Jield\Stdlib\Value;
 use Laminas\Authentication\Adapter\Http as HttpAuth;
 use Laminas\Authentication\Adapter\Http\ApacheResolver;
 use Laminas\Authentication\Adapter\Http\FileResolver;
+use Laminas\Authentication\Adapter\Http\ResolverInterface;
 use Laminas\ServiceManager\Exception\ServiceNotCreatedException;
 use Psr\Container\ContainerInterface;
 
@@ -54,7 +56,7 @@ final class HttpAdapterFactory
         }
 
         $httpAdapter = new HttpAuth(config: array_merge($config, [
-            'accept_schemes' => implode(separator: ' ', array: \Jield\Stdlib\Value::scalars($config['accept_schemes'])),
+            'accept_schemes' => implode(separator: ' ', array: Value::scalars($config['accept_schemes'])),
         ]));
 
         if (in_array(needle: 'basic', haystack: $config['accept_schemes'], strict: true)) {
@@ -62,9 +64,16 @@ final class HttpAdapterFactory
                 isset($config['basic_resolver_factory'])
                 && self::containerHasKey(container: $container, key: $config['basic_resolver_factory'])
             ) {
-                $httpAdapter->setBasicResolver(resolver: \Jield\Stdlib\Value::instance(\Jield\Stdlib\Value::present($container)->get(\Jield\Stdlib\Value::string($config['basic_resolver_factory'])), \Laminas\Authentication\Adapter\Http\ResolverInterface::class));
+                $httpAdapter->setBasicResolver(resolver: Value::instance(
+                    Value::present($container)->get(Value::string(
+                        $config['basic_resolver_factory'],
+                    )),
+                    ResolverInterface::class,
+                ));
             } elseif (isset($config['htpasswd'])) {
-                $httpAdapter->setBasicResolver(resolver: new ApacheResolver(path: \Jield\Stdlib\Value::string($config['htpasswd'])));
+                $httpAdapter->setBasicResolver(
+                    resolver: new ApacheResolver(path: Value::string($config['htpasswd'])),
+                );
             }
         }
 
@@ -73,9 +82,16 @@ final class HttpAdapterFactory
                 isset($config['digest_resolver_factory'])
                 && self::containerHasKey(container: $container, key: $config['digest_resolver_factory'])
             ) {
-                $httpAdapter->setDigestResolver(resolver: \Jield\Stdlib\Value::instance(\Jield\Stdlib\Value::present($container)->get(\Jield\Stdlib\Value::string($config['digest_resolver_factory'])), \Laminas\Authentication\Adapter\Http\ResolverInterface::class));
+                $httpAdapter->setDigestResolver(resolver: Value::instance(
+                    Value::present($container)->get(Value::string(
+                        $config['digest_resolver_factory'],
+                    )),
+                    ResolverInterface::class,
+                ));
             } elseif (isset($config['htdigest'])) {
-                $httpAdapter->setDigestResolver(resolver: new FileResolver(path: \Jield\Stdlib\Value::string($config['htdigest'])));
+                $httpAdapter->setDigestResolver(
+                    resolver: new FileResolver(path: Value::string($config['htdigest'])),
+                );
             }
         }
 

@@ -6,6 +6,7 @@ namespace Jield\Export\Columns;
 
 use Doctrine\ORM\EntityManager;
 use Jield\Export\ValueObject\Column;
+use Jield\Stdlib\Value;
 
 abstract class AbstractEntityColumns implements ColumnsHelperInterface
 {
@@ -23,13 +24,15 @@ abstract class AbstractEntityColumns implements ColumnsHelperInterface
 
     protected function findCount(array $criteria): int
     {
-        return $this->entityManager->getRepository(\Jield\Stdlib\Value::classString($this->entity))->count(criteria: \Jield\Stdlib\Value::stringKeyedArray($criteria));
+        return $this->entityManager
+            ->getRepository(Value::classString($this->entity))
+            ->count(criteria: Value::stringKeyedArray($criteria));
     }
 
     protected function findSliced(int $offset, array $criteria = []): array
     {
-        return $this->entityManager->getRepository(\Jield\Stdlib\Value::classString($this->entity))->findBy(
-            criteria: \Jield\Stdlib\Value::stringKeyedArray($criteria),
+        return $this->entityManager->getRepository(Value::classString($this->entity))->findBy(
+            criteria: Value::stringKeyedArray($criteria),
             orderBy: [],
             limit: $this->chunkSize,
             offset: $offset,

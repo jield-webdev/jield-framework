@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace Jield\Stdlib;
 
-use Countable;
 use ArrayAccess;
+use ArrayIterator;
+use ArrayObject;
+use Countable;
+use ReflectionClass;
+use ReflectionMethod;
 use Stringable;
 use TypeError;
 
@@ -52,7 +56,6 @@ final class Value
     public static function namedValues(mixed $value): array
     {
         $result = [];
-        /** @var mixed $item */
         foreach (self::stringKeyedArray($value) as $key => $item) {
             $result[self::nonEmptyString($key)] = $item;
         }
@@ -79,7 +82,6 @@ final class Value
     public static function maps(mixed $value): array
     {
         $result = [];
-        /** @var mixed $item */
         foreach (self::array($value) as $key => $item) {
             $result[$key] = self::stringKeyedArray($item);
         }
@@ -96,7 +98,6 @@ final class Value
     public static function keys(mixed $value): array
     {
         $result = [];
-        /** @var mixed $item */
         foreach (self::array($value) as $key => $item) {
             $result[$key] = self::key($item);
         }
@@ -112,7 +113,7 @@ final class Value
     /** @return int|numeric-string */
     public static function numericPort(mixed $value): int|string
     {
-        if (is_int($value) || (is_string($value) && is_numeric($value))) {
+        if (is_int($value) || is_string($value) && is_numeric($value)) {
             return $value;
         }
         throw self::invalid('integer or numeric string', $value);
@@ -126,7 +127,6 @@ final class Value
     public static function instances(mixed $value, string $type): array
     {
         $result = [];
-        /** @var mixed $item */
         foreach (self::array($value) as $key => $item) {
             $result[$key] = self::instance($item, $type);
         }
@@ -194,7 +194,7 @@ final class Value
         if (is_array($value)) {
             return $value;
         }
-        if ($value instanceof \ArrayObject || $value instanceof \ArrayIterator) {
+        if ($value instanceof ArrayObject || $value instanceof ArrayIterator) {
             return $value->getArrayCopy();
         }
         return is_object($value) ? get_mangled_object_vars($value) : [$value];
@@ -204,7 +204,6 @@ final class Value
     public static function routeParams(mixed $value): array
     {
         $values = self::stringKeyedArray($value);
-        /** @var mixed $item */
         foreach ($values as $item) {
             if (!is_int($item) && !is_float($item) && !is_string($item) && $item !== null) {
                 throw self::invalid('route parameter', $item);
@@ -279,7 +278,8 @@ final class Value
     public static function scalar(mixed $value): Stringable|bool|int|float|string|null
     {
         return is_scalar($value) || $value === null || $value instanceof Stringable
-            ? $value : throw self::invalid('scalar or stringable value', $value);
+            ? $value
+            : throw self::invalid('scalar or stringable value', $value);
     }
 
     /** @psalm-assert callable $value */
@@ -293,8 +293,7 @@ final class Value
      */
     public static function countable(mixed $value): array|Countable
     {
-        return is_array($value) || $value instanceof Countable
-            ? $value : throw self::invalid('countable value', $value);
+        return is_countable($value) ? $value : throw self::invalid('countable value', $value);
     }
 
     /**
@@ -407,7 +406,6 @@ final class Value
     public static function scalars(mixed $value): array
     {
         $result = [];
-        /** @var mixed $item */
         foreach (self::array($value) as $key => $item) {
             $result[$key] = self::scalar($item);
         }
@@ -418,7 +416,6 @@ final class Value
     public static function scalarMap(mixed $value): array
     {
         $result = [];
-        /** @var mixed $item */
         foreach (self::stringKeyedArray($value) as $key => $item) {
             $result[$key] = self::plainScalar($item);
         }
@@ -429,7 +426,6 @@ final class Value
     public static function strings(mixed $value): array
     {
         $result = [];
-        /** @var mixed $item */
         foreach (self::array($value) as $key => $item) {
             $result[$key] = self::string($item);
         }
@@ -440,7 +436,6 @@ final class Value
     public static function stringMap(mixed $value): array
     {
         $result = [];
-        /** @var mixed $item */
         foreach (self::stringKeyedArray($value) as $key => $item) {
             $result[$key] = self::string($item);
         }
@@ -451,7 +446,8 @@ final class Value
     public static function accessible(mixed $value): array|ArrayAccess
     {
         return is_array($value) || $value instanceof ArrayAccess
-            ? $value : throw self::invalid('array or ArrayAccess', $value);
+            ? $value
+            : throw self::invalid('array or ArrayAccess', $value);
     }
 
     public static function truthy(mixed $value): bool
@@ -484,11 +480,13 @@ final class Value
             throw self::invalid('object', $object);
         }
         if ($scope !== null && method_exists($object, $method)) {
-            $reflection = new \ReflectionMethod($object, $method);
+            $reflection = new ReflectionMethod($object, $method);
             $declaringClass = $reflection->getDeclaringClass()->getName();
-            $inScope = $reflection->isPrivate()
-                ? $scope === $declaringClass
-                : is_a($scope, $declaringClass, true) || is_a($declaringClass, $scope, true);
+            $inScope = $scope === $declaringClass
+                || !$reflection->isPrivate() && (
+                    new ReflectionClass($scope)->isSubclassOf($declaringClass)
+                    || $reflection->getDeclaringClass()->isSubclassOf($scope)
+                );
             if (!$reflection->isPublic() && $inScope) {
                 return $reflection->invokeArgs($object, $arguments);
             }
@@ -510,7 +508,7 @@ final class Value
         if (!class_exists($class)) {
             throw new TypeError(sprintf('Configured class "%s" does not exist.', $class));
         }
-        return self::object(new \ReflectionClass($class)->newInstanceArgs($arguments));
+        return self::object(new ReflectionClass($class)->newInstanceArgs($arguments));
     }
 
     /**
@@ -531,7 +529,7 @@ final class Value
         $key = array_shift($path);
         if ($path !== []) {
             /** @var mixed $child */
-            $child = $key === null ? null : ($target[$key] ?? null);
+            $child = $key === null ? null : $target[$key] ?? null;
             self::setPath($child, $path, $value);
             $value = $child;
         }

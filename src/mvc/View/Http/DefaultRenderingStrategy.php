@@ -7,6 +7,7 @@ namespace Jield\Mvc\View\Http;
 use Exception;
 use Jield\Mvc\Application;
 use Jield\Mvc\MvcEvent;
+use Jield\Stdlib\Value;
 use Laminas\EventManager\AbstractListenerAggregate;
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\Stdlib\ResponseInterface as Response;
@@ -35,8 +36,8 @@ class DefaultRenderingStrategy extends AbstractListenerAggregate
      */
     public function attach(EventManagerInterface $events, $priority = 1): void
     {
-        $this->listeners[] = $events->attach(MvcEvent::EVENT_RENDER, [$this, 'render'], -10_000);
-        $this->listeners[] = $events->attach(MvcEvent::EVENT_RENDER_ERROR, [$this, 'render'], -10_000);
+        $this->listeners[] = $events->attach(MvcEvent::EVENT_RENDER, $this->render(...), -10_000);
+        $this->listeners[] = $events->attach(MvcEvent::EVENT_RENDER_ERROR, $this->render(...), -10_000);
     }
 
     /**
@@ -69,7 +70,6 @@ class DefaultRenderingStrategy extends AbstractListenerAggregate
      */
     public function render(MvcEvent $e): ?Response
     {
-        /** @var mixed $result */
         $result = $e->getResult();
         if ($result instanceof Response) {
             return $result;
@@ -79,7 +79,6 @@ class DefaultRenderingStrategy extends AbstractListenerAggregate
         $request = $e->getRequest();
         $response = $e->getResponse();
         $viewModel = $e->getViewModel();
-        
 
         $view = $this->view;
 
@@ -97,7 +96,7 @@ class DefaultRenderingStrategy extends AbstractListenerAggregate
             }
 
             $application = $e->getApplication();
-            $events = \Jield\Stdlib\Value::present($application)->getEventManager();
+            $events = Value::present($application)->getEventManager();
 
             $e->setError(Application::ERROR_EXCEPTION);
             $e->setParam('exception', $caughtException);

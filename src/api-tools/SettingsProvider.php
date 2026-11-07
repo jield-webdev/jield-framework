@@ -8,6 +8,7 @@ use Jield\ApiTools\ContentNegotiation\JsonModel;
 use Jield\ApiTools\Hal\View\HalJsonModel;
 use Jield\ApiTools\MvcAuth\Authentication\OAuth2Adapter;
 use Jield\ApiTools\OAuth2\Adapter\PdoAdapter;
+use Jield\ApiTools\OAuth2\Controller\AuthController;
 use Jield\Mvc\View\Model\ViewModel;
 use Laminas\Router\Http\Literal;
 
@@ -23,7 +24,7 @@ final class SettingsProvider
                         'options' => [
                             'route' => '/oauth',
                             'defaults' => [
-                                'controller' => \Jield\ApiTools\OAuth2\Controller\AuthController::class,
+                                'controller' => AuthController::class,
                                 'action' => 'token',
                             ],
                         ],
@@ -138,7 +139,7 @@ final class SettingsProvider
                 // - an array of specific selectors, in the same format as for the
                 //   selectors key
                 'controllers' => [
-                    \Jield\ApiTools\OAuth2\Controller\AuthController::class => [
+                    AuthController::class => [
                         JsonModel::class => [
                             'application/json',
                             'application/*+json',

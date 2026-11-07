@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Jield\ApiTools\ContentNegotiation\Filter;
 
+use Jield\Stdlib\Value;
 use Laminas\Filter\Exception\RuntimeException;
 use Laminas\Filter\File\MoveUploadedFileInterface;
 use Laminas\Filter\File\RenameUpload as BaseFilter;
@@ -48,6 +49,13 @@ class RenameUpload implements FilterInterface
                 }
             };
         }
-        return new BaseFilter($this->targetOrOptions ?? [], $mover)->filter($value);
+        $options = $this->targetOrOptions ?? [];
+        return new BaseFilter([
+            'target' => Value::nonEmptyString($options['target'] ?? '*'),
+            'use_upload_name' => Value::bool($options['use_upload_name'] ?? false),
+            'use_upload_extension' => Value::bool($options['use_upload_extension'] ?? false),
+            'overwrite' => Value::bool($options['overwrite'] ?? false),
+            'randomize' => Value::bool($options['randomize'] ?? false),
+        ], $mover)->filter($value);
     }
 }

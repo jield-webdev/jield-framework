@@ -27,8 +27,8 @@ class TwigStrategy implements ListenerAggregateInterface
      */
     public function attach(EventManagerInterface $events, $priority = 100): void
     {
-        $this->listeners[] = $events->attach(MvcEvent::EVENT_RENDER, [$this, 'render'], -9000);
-        $this->listeners[] = $events->attach(MvcEvent::EVENT_RENDER_ERROR, [$this, 'render'], -9000);
+        $this->listeners[] = $events->attach(MvcEvent::EVENT_RENDER, $this->render(...), -9000);
+        $this->listeners[] = $events->attach(MvcEvent::EVENT_RENDER_ERROR, $this->render(...), -9000);
     }
 
     /**

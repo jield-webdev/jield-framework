@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Jield\ApiTools\MvcAuth\Authorization;
 
+use Jield\Stdlib\Value;
+use Laminas\Permissions\Acl\Resource\ResourceInterface;
 use function array_key_exists;
 use function is_array;
 
@@ -21,7 +23,7 @@ abstract class AclAuthorizationFactory
         // Determine whether we are whitelisting or blacklisting
         $denyByDefault = false;
         if (array_key_exists(key: 'deny_by_default', array: $config)) {
-            $denyByDefault = \Jield\Stdlib\Value::truthy($config['deny_by_default']);
+            $denyByDefault = Value::truthy($config['deny_by_default']);
             unset($config['deny_by_default']);
         }
 
@@ -50,7 +52,6 @@ abstract class AclAuthorizationFactory
      */
     private static function injectGrants(AclAuthorization $acl, string $grantType, array $rules): AclAuthorization
     {
-        /** @var mixed $set */
         foreach ($rules as $set) {
             if (!is_array(value: $set) || !isset($set['resource'])) {
                 continue;
@@ -70,9 +71,11 @@ abstract class AclAuthorizationFactory
     private static function injectGrant(AclAuthorization $acl, string $grantType, array $ruleSet): void
     {
         // Add new resource to ACL
-        /** @var mixed $resource */
         $resource = $ruleSet['resource'];
-        $acl->addResource(\Jield\Stdlib\Value::instanceOrString($ruleSet['resource'], \Laminas\Permissions\Acl\Resource\ResourceInterface::class));
+        $acl->addResource(Value::instanceOrString(
+            $ruleSet['resource'],
+            ResourceInterface::class,
+        ));
 
         // Deny guest specified privileges to resource
         /** @var mixed $privileges */
@@ -83,6 +86,6 @@ abstract class AclAuthorizationFactory
             return;
         }
 
-        \Jield\Stdlib\Value::call($acl, $grantType, ['guest', $resource, $privileges]);
+        Value::call($acl, $grantType, ['guest', $resource, $privileges]);
     }
 }

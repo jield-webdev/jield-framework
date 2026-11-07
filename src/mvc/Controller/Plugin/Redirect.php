@@ -8,6 +8,7 @@ use Jield\Mvc\Exception;
 use Jield\Mvc\Exception\DomainException;
 use Jield\Mvc\InjectApplicationEventInterface;
 use Jield\Mvc\MvcEvent;
+use Jield\Stdlib\Value;
 use Laminas\Http\Response;
 
 use function is_scalar;
@@ -42,14 +43,12 @@ class Redirect extends AbstractPlugin
         $urlPlugin = $controller->plugin('url');
 
         if (is_scalar($options)) {
-            /** @var mixed $url */
-            $url = \Jield\Stdlib\Value::call($urlPlugin, 'fromRoute', [$route, $params, $options]);
+            $url = Value::call($urlPlugin, 'fromRoute', [$route, $params, $options]);
         } else {
-            /** @var mixed $url */
-            $url = \Jield\Stdlib\Value::call($urlPlugin, 'fromRoute', [$route, $params, $options, $reuseMatchedParams]);
+            $url = Value::call($urlPlugin, 'fromRoute', [$route, $params, $options, $reuseMatchedParams]);
         }
 
-        return $this->toUrl(\Jield\Stdlib\Value::string($url));
+        return $this->toUrl(Value::string($url));
     }
 
     /**
@@ -61,8 +60,8 @@ class Redirect extends AbstractPlugin
     public function toUrl($url): Response
     {
         $response = $this->getResponse();
-        \Jield\Stdlib\Value::present($response)->getHeaders()->addHeaderLine('Location', $url);
-        \Jield\Stdlib\Value::present($response)->setStatusCode(302);
+        Value::present($response)->getHeaders()->addHeaderLine('Location', $url);
+        Value::present($response)->setStatusCode(302);
         return $response;
     }
 
@@ -89,7 +88,7 @@ class Redirect extends AbstractPlugin
         }
 
         $event = $this->getEvent();
-        $response = \Jield\Stdlib\Value::present($event)->getResponse();
+        $response = Value::present($event)->getResponse();
         if (!$response instanceof Response) {
             throw new DomainException('Redirect plugin requires event compose a response');
         }

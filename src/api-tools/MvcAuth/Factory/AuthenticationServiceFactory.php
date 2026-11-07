@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Jield\ApiTools\MvcAuth\Factory;
 
+use Jield\Stdlib\Service;
 use Laminas\Authentication\AuthenticationService;
 use Laminas\Authentication\Storage\NonPersistent;
 use Laminas\ServiceManager\Factory\FactoryInterface;
@@ -23,6 +24,6 @@ class AuthenticationServiceFactory implements FactoryInterface
         $requestedName,
         ?array $options = null,
     ): AuthenticationService {
-        return new AuthenticationService(storage: \Jield\Stdlib\Service::get($container, NonPersistent::class));
+        return new AuthenticationService(storage: Service::get($container, NonPersistent::class));
     }
 }

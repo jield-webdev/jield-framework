@@ -4,14 +4,21 @@ declare(strict_types=1);
 
 namespace Jield\Form;
 
+use Jield\Stdlib\Value;
+use Laminas\InputFilter\InputFilterInterface;
 use Laminas\InputFilter\InputFilterProviderInterface;
 use Laminas\Stdlib\ArrayUtils;
 use Traversable;
 
+/**
+ * @psalm-import-type InputFilterSpecification from InputFilterInterface
+ * @psalm-import-type CollectionSpecification from InputFilterInterface
+ */
 final class InputFilterProviderFieldset extends Fieldset implements InputFilterProviderInterface
 {
     /**
      * Holds the specification which will be returned by getInputFilterSpecification
+     * @var InputFilterSpecification|CollectionSpecification
      */
     private array $filterSpec = [];
 
@@ -26,7 +33,8 @@ final class InputFilterProviderFieldset extends Fieldset implements InputFilterP
             $filterSpec = ArrayUtils::iteratorToArray(iterator: $filterSpec);
         }
 
-        $this->filterSpec = \Jield\Stdlib\Value::array($filterSpec);
+        /** @var InputFilterSpecification|CollectionSpecification $filterSpec */
+        $this->filterSpec = $filterSpec;
     }
 
     /**
@@ -41,7 +49,9 @@ final class InputFilterProviderFieldset extends Fieldset implements InputFilterP
         parent::setOptions(options: $options);
 
         if (isset($this->options['input_filter_spec'])) {
-            $this->setInputFilterSpecification(filterSpec: \Jield\Stdlib\Value::iterable($this->options['input_filter_spec']));
+            $this->setInputFilterSpecification(filterSpec: Value::iterable(
+                $this->options['input_filter_spec'],
+            ));
         }
 
         return $this;

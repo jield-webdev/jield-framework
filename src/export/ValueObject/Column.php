@@ -10,8 +10,10 @@ use codename\parquet\data\DateTimeDataField;
 use DateTime;
 use DateTimeImmutable;
 use DateTimeInterface;
+use DateTimeZone;
 use InvalidArgumentException;
 use Jield\Export\Helper\TextHelpers;
+use Jield\Stdlib\Value;
 use Webmozart\Assert\Assert;
 
 final class Column
@@ -90,11 +92,11 @@ final class Column
                     $data = $data->format(format: 'H:i:s');
                 }
 
-                $data = TextHelpers::beautifyTextValue(value: \Jield\Stdlib\Value::nullableString($data));
+                $data = TextHelpers::beautifyTextValue(value: Value::nullableString($data));
                 break;
             case self::TYPE_DATE:
-                !$this->isNullable && Assert::isInstanceOf(value: $data, class: DateTimeInterface::class);
                 if (null !== $data) {
+                    Assert::isInstanceOf(value: $data, class: DateTimeInterface::class);
                     //The parquet converter uses an internal system to derive the amount of unix days, therefore
                     //We have a mismatch when calculating the days from a DateTimeImmutable object because of timezone differences
                     //Therefore we need to convert the DateTimeImmutable object to a DateTimeImmutable object but then in the UTC timezone
@@ -105,7 +107,7 @@ final class Column
                         ? $data
                         : DateTimeImmutable::createFromMutable(object: $data);
 
-                    $data = new DateTimeImmutable()->setTimezone(timezone: new \DateTimeZone('UTC'));
+                    $data = new DateTimeImmutable()->setTimezone(timezone: new DateTimeZone('UTC'));
                     $data = $data->setDate(
                         year: (int) $dateInLocalTimezone->format(format: 'Y'),
                         month: (int) $dateInLocalTimezone->format(format: 'm'),

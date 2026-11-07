@@ -23,10 +23,7 @@ final class AttributeBuilder extends AbstractBuilder
     /**
      * Initialize the attribute builder
      */
-    public function __construct()
-    {
-        
-    }
+    public function __construct() {}
 
     /**
      * Derive a form specification from PHP attributes for a given entity

@@ -43,7 +43,6 @@ class LinkCollectionExtractor implements LinkCollectionExtractorInterface
     public function extract(LinkCollection $collection): array
     {
         $links = [];
-        /** @var mixed $linkDefinition */
         foreach ($collection as $rel => $linkDefinition) {
             if ($linkDefinition instanceof Link) {
                 $links[$rel] = $this->linkExtractor->extract(link: $linkDefinition);
@@ -58,7 +57,6 @@ class LinkCollectionExtractor implements LinkCollectionExtractorInterface
             }
 
             $aggregate = [];
-            /** @var mixed $subLink */
             foreach ($linkDefinition as $subLink) {
                 if (!$subLink instanceof Link) {
                     throw new DomainException(message: sprintf(

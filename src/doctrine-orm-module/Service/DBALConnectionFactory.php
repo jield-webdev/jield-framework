@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace DoctrineORMModule\Service;
 
+use Doctrine\DBAL\Configuration;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Types\Type;
 use DoctrineModule\Service\AbstractFactory;
 use DoctrineORMModule\Options\DBALConnection;
+use Jield\Stdlib\Value;
 use PDO;
 use Psr\Container\ContainerInterface;
 
@@ -19,7 +21,7 @@ use function is_string;
 
 /**
  * DBAL Connection ServiceManager factory
-  * @psalm-import-type Params from \Doctrine\DBAL\DriverManager
+ * @psalm-import-type Params from \Doctrine\DBAL\DriverManager
  */
 final class DBALConnectionFactory extends AbstractFactory
 {
@@ -57,16 +59,17 @@ final class DBALConnectionFactory extends AbstractFactory
             $params['platform'] = $container->get($params['platform']);
         }
 
-        /** @var mixed $configuration */
         $configuration = $container->get($options->getConfiguration());
         /** @var Params $managerConfiguration */
         $managerConfiguration = $params;
-        $connection = DriverManager::getConnection($managerConfiguration, \Jield\Stdlib\Value::instance($configuration, \Doctrine\DBAL\Configuration::class));
-        /** @var mixed $doctrineType */
+        $connection = DriverManager::getConnection($managerConfiguration, Value::instance(
+            $configuration,
+            Configuration::class,
+        ));
         foreach ($options->getDoctrineTypeMappings() as $dbType => $doctrineType) {
             $connection->getDatabasePlatform()->registerDoctrineTypeMapping(
-                dbType: \Jield\Stdlib\Value::string($dbType),
-                doctrineType: \Jield\Stdlib\Value::string($doctrineType),
+                dbType: Value::string($dbType),
+                doctrineType: Value::string($doctrineType),
             );
         }
 

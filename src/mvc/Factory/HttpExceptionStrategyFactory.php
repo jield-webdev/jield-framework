@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Jield\Mvc\Factory;
 
 // phpcs:ignore
+use ArrayAccess;
 use Jield\Mvc\Service\HttpViewManagerConfigTrait;
 use Jield\Mvc\View\Http\ExceptionStrategy;
+use Jield\Stdlib\Value;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Psr\Container\ContainerInterface;
 
@@ -36,20 +38,20 @@ class HttpExceptionStrategyFactory implements FactoryInterface
     /**
      * Inject strategy with configured display_exceptions flag.
      */
-    private function injectDisplayExceptions(ExceptionStrategy $strategy, array $config): void
+    private function injectDisplayExceptions(ExceptionStrategy $strategy, array|ArrayAccess $config): void
     {
         /** @var mixed $flag */
         $flag = $config['display_exceptions'] ?? false;
-        $strategy->setDisplayExceptions(\Jield\Stdlib\Value::bool($flag));
+        $strategy->setDisplayExceptions(Value::bool($flag));
     }
 
     /**
      * Inject strategy with configured exception_template
      */
-    private function injectExceptionTemplate(ExceptionStrategy $strategy, array $config): void
+    private function injectExceptionTemplate(ExceptionStrategy $strategy, array|ArrayAccess $config): void
     {
         /** @var mixed $template */
         $template = $config['exception_template'] ?? 'error';
-        $strategy->setExceptionTemplate(\Jield\Stdlib\Value::string($template));
+        $strategy->setExceptionTemplate(Value::string($template));
     }
 }

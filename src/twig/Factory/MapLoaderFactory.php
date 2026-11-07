@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Jield\Twig\Factory;
 
+use Jield\Stdlib\Service;
+use Jield\Stdlib\Value;
 use Jield\Twig\MapLoader;
 use Jield\Twig\ModuleOptions;
 use Laminas\ServiceManager\Factory\FactoryInterface;
@@ -19,11 +21,14 @@ class MapLoaderFactory implements FactoryInterface
     public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): MapLoader
     {
         $moduleOptions = $options === null
-            ? \Jield\Stdlib\Service::get($container, ModuleOptions::class)
-            : new ModuleOptions(\Jield\Stdlib\Value::stringKeyedArray($options));
+            ? Service::get($container, ModuleOptions::class)
+            : new ModuleOptions(Value::stringKeyedArray($options));
 
-        
-        $laminasTemplateMap = \Jield\Stdlib\Service::get($container, \Laminas\View\Resolver\TemplateMapResolver::class, 'ViewTemplateMapResolver');
+        $laminasTemplateMap = Service::get(
+            $container,
+            \Laminas\View\Resolver\TemplateMapResolver::class,
+            'ViewTemplateMapResolver',
+        );
 
         $templateMap = new MapLoader();
         foreach ($laminasTemplateMap as $name => $path) {

@@ -8,6 +8,7 @@ use Jield\Form\Element;
 use Jield\Recaptcha\Form\Validator\RecaptchaValidator;
 use Laminas\InputFilter\InputProviderInterface;
 use Override;
+use SensitiveParameter;
 
 class Recaptcha extends Element implements InputProviderInterface
 {
@@ -18,7 +19,7 @@ class Recaptcha extends Element implements InputProviderInterface
     ];
 
     public function __construct(
-        #[\SensitiveParameter]
+        #[SensitiveParameter]
         private readonly string $secret,
     ) {
         parent::__construct();

@@ -7,8 +7,11 @@ namespace Jield\ApiTools\ContentNegotiation;
 use Jield\ApiTools\ApiProblem\ApiProblem;
 use Jield\ApiTools\ApiProblem\ApiProblemResponse;
 use Jield\Mvc\MvcEvent;
+use Jield\Stdlib\Value;
 use Laminas\EventManager\AbstractListenerAggregate;
 use Laminas\EventManager\EventManagerInterface;
+use Laminas\Http\Header\HeaderInterface;
+use Laminas\Http\Headers;
 use Laminas\Http\Request as HttpRequest;
 use Override;
 
@@ -18,16 +21,12 @@ use function sprintf;
 
 class HttpMethodOverrideListener extends AbstractListenerAggregate
 {
-    /** @var array */
-    protected array $httpMethodOverride = [];
-
     /**
      * @param array $httpMethodOverride
      */
-    public function __construct(array $httpMethodOverride)
-    {
-        $this->httpMethodOverride = $httpMethodOverride;
-    }
+    public function __construct(
+        protected array $httpMethodOverride,
+    ) {}
 
     /**
      * Priority is set very high (should be executed before all other listeners that rely on the request method value).
@@ -57,7 +56,9 @@ class HttpMethodOverrideListener extends AbstractListenerAggregate
             return null;
         }
 
-        if (!\Jield\Stdlib\Value::instance($request->getHeaders(), \Laminas\Http\Headers::class)->has('X-HTTP-Method-Override')) {
+        if (!Value::instance($request->getHeaders(), Headers::class)->has(
+            'X-HTTP-Method-Override',
+        )) {
             return null;
         }
 
@@ -71,11 +72,13 @@ class HttpMethodOverrideListener extends AbstractListenerAggregate
         }
 
         $header = $request->getHeader(name: 'X-HTTP-Method-Override');
-        $overrideMethod = \Jield\Stdlib\Value::instance($header, \Laminas\Http\Header\HeaderInterface::class)->getFieldValue();
-        /** @var mixed $allowedMethods */
+        $overrideMethod = Value::instance(
+            $header,
+            HeaderInterface::class,
+        )->getFieldValue();
         $allowedMethods = $this->httpMethodOverride[$method];
 
-        if (!in_array(needle: $overrideMethod, haystack: \Jield\Stdlib\Value::array($allowedMethods), strict: true)) {
+        if (!in_array(needle: $overrideMethod, haystack: Value::array($allowedMethods), strict: true)) {
             return new ApiProblemResponse(apiProblem: new ApiProblem(status: 400, detail: sprintf(
                 'Illegal override method %s in X-HTTP-Method-Override header',
                 $overrideMethod,

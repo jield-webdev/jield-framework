@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Jield\ApiTools\Hal\View;
 
-use ArrayAccess;
 use Jield\ApiTools\ApiProblem\ApiProblem;
 use Jield\ApiTools\ApiProblem\View\ApiProblemModel;
 use Jield\ApiTools\ApiProblem\View\ApiProblemRenderer;
@@ -13,8 +12,10 @@ use Jield\ApiTools\Hal\Entity;
 use Jield\ApiTools\Hal\Plugin\Hal;
 use Jield\Mvc\MvcEvent as ViewEvent;
 use Jield\Mvc\View\Renderer\JsonRenderer;
+use Jield\Stdlib\Value;
 use Laminas\View\HelperPluginManager;
 use Laminas\View\Model\ModelInterface;
+use LogicException;
 use Override;
 
 /**
@@ -57,7 +58,7 @@ class HalJsonRenderer extends JsonRenderer
     public function getHelperPluginManager(): ?HelperPluginManager
     {
         if ($this->helpers === null) {
-            throw new \LogicException('The HAL helper plugin manager must be injected before rendering.');
+            throw new LogicException('The HAL helper plugin manager must be injected before rendering.');
         }
 
         return $this->helpers;
@@ -80,33 +81,33 @@ class HalJsonRenderer extends JsonRenderer
      *
      * If not, it passes control to the parent to render.
      *
-     * @param mixed $nameOrModel
-     * @param iterable<non-empty-string, mixed>|null $values
+     * @param mixed $templateNameOrModel
+     * @param iterable<non-empty-string, mixed>|null $variables
      * @return string
      */
     #[Override]
-    public function render($nameOrModel, $values = null): string
+    public function render($templateNameOrModel, $variables = null): string
     {
-        if (!$nameOrModel instanceof HalJsonModel) {
-            /** @psalm-var ModelInterface|string $nameOrModel */
-            return parent::render(templateNameOrModel: $nameOrModel, variables: $values);
+        if (!$templateNameOrModel instanceof HalJsonModel) {
+            /** @psalm-var ModelInterface|string $templateNameOrModel */
+            return parent::render(templateNameOrModel: $templateNameOrModel, variables: $variables);
         }
 
-        if ($nameOrModel->isEntity()) {
+        if ($templateNameOrModel->isEntity()) {
             /** @psalm-var Hal $helper */
-            $helper = \Jield\Stdlib\Value::present($this->getHelperPluginManager())->get('Hal');
+            $helper = Value::present($this->getHelperPluginManager())->get('Hal');
             /** @psalm-var Entity $entity */
-            $entity = $nameOrModel->getPayload();
+            $entity = $templateNameOrModel->getPayload();
             $payload = $helper->renderEntity(halEntity: $entity);
             /** @psalm-suppress InvalidArgument */
             return parent::render(templateNameOrModel: $payload);
         }
 
-        if ($nameOrModel->isCollection()) {
+        if ($templateNameOrModel->isCollection()) {
             /** @var Hal $helper */
-            $helper = \Jield\Stdlib\Value::present($this->getHelperPluginManager())->get('Hal');
+            $helper = Value::present($this->getHelperPluginManager())->get('Hal');
             /** @var Collection $collection */
-            $collection = $nameOrModel->getPayload();
+            $collection = $templateNameOrModel->getPayload();
             $payload = $helper->renderCollection(halCollection: $collection);
 
             if ($payload instanceof ApiProblem) {
@@ -117,7 +118,7 @@ class HalJsonRenderer extends JsonRenderer
             return parent::render(templateNameOrModel: $payload);
         }
 
-        return parent::render(templateNameOrModel: $nameOrModel, variables: $values);
+        return parent::render(templateNameOrModel: $templateNameOrModel, variables: $variables);
     }
 
     /**

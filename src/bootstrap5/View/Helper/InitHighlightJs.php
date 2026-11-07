@@ -8,12 +8,12 @@ use Laminas\View\Helper\HeadLink;
 use Laminas\View\Helper\HeadScript;
 use Laminas\View\Helper\InlineScript;
 
-final class InitHighlightJs
+final readonly class InitHighlightJs
 {
     public function __construct(
-        private readonly HeadScript $headScript,
-        private readonly HeadLink $headLink,
-        private readonly InlineScript $inlineScript,
+        private HeadScript $headScript,
+        private HeadLink $headLink,
+        private InlineScript $inlineScript,
     ) {}
 
     public function __invoke(): static

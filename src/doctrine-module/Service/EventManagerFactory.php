@@ -8,6 +8,7 @@ use Doctrine\Common\EventManager;
 use Doctrine\Common\EventSubscriber;
 use DoctrineModule\Options\EventManager as EventManagerOptions;
 use InvalidArgumentException;
+use Jield\Stdlib\Value;
 use Psr\Container\ContainerInterface;
 use RuntimeException;
 
@@ -39,9 +40,7 @@ final class EventManagerFactory extends AbstractFactory
 
         $eventManager = new EventManager();
 
-        /** @var mixed $subscriberName */
         foreach ($options->getSubscribers() as $subscriberName) {
-            /** @var mixed $subscriber */
             $subscriber = $subscriberName;
 
             if (is_string(value: $subscriber)) {
@@ -49,7 +48,7 @@ final class EventManagerFactory extends AbstractFactory
                     /** @var mixed $subscriber */
                     $subscriber = $container->get($subscriber);
                 } elseif (class_exists(class: $subscriber)) {
-                    $subscriber = \Jield\Stdlib\Value::instantiate($subscriber);
+                    $subscriber = Value::instantiate($subscriber);
                 }
             }
 

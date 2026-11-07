@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace DoctrineModule\Validator;
 
 use Doctrine\Persistence\ObjectManager;
+use Jield\Stdlib\Value;
 use Laminas\Validator\Exception;
 
+use Override;
 use function array_diff_assoc;
 use function array_key_exists;
 use function gettype;
@@ -58,27 +60,31 @@ class UniqueObject extends ObjectExists
         }
 
         $this->objectManager = $options['object_manager'];
-        $this->useContext = isset($options['use_context']) ? \Jield\Stdlib\Value::truthy($options['use_context']) : false;
+        $this->useContext = isset($options['use_context'])
+            ? Value::truthy($options['use_context'])
+            : false;
     }
 
     /**
      * Returns false if there is another object with the same field values but other identifiers.
      */
-    #[\Override]
+    #[Override]
     public function isValid(mixed $value, mixed $context = null): bool
     {
         if (!$this->useContext) {
-            $context = \Jield\Stdlib\Value::toArray($value);
+            $context = Value::toArray($value);
         }
 
         $cleanedValue = $this->cleanSearchValue(value: $value);
-        $match = $this->objectRepository->findOneBy(criteria: \Jield\Stdlib\Value::stringKeyedArray($cleanedValue));
+        $match = $this->objectRepository->findOneBy(criteria: Value::stringKeyedArray($cleanedValue));
 
         if (!is_object(value: $match)) {
             return true;
         }
 
-        $expectedIdentifiers = $this->getExpectedIdentifiers(context: \Jield\Stdlib\Value::nullableArrayOrObject($context));
+        $expectedIdentifiers = $this->getExpectedIdentifiers(context: Value::nullableArrayOrObject(
+            $context,
+        ));
         $foundIdentifiers = $this->getFoundIdentifiers(match: $match);
 
         if (array_diff_assoc($expectedIdentifiers, $foundIdentifiers) === []) {
@@ -126,16 +132,18 @@ class UniqueObject extends ObjectExists
         }
 
         $result = [];
-        /** @var mixed $identifierField */
         foreach ($this->getIdentifiers() as $identifierField) {
-            if (!array_key_exists(key: \Jield\Stdlib\Value::plainScalar($identifierField), array: \Jield\Stdlib\Value::array($context))) {
+            if (!array_key_exists(
+                key: Value::key($identifierField),
+                array: Value::array($context),
+            )) {
                 throw new Exception\RuntimeException(message: sprintf(
                     'Expected context to contain %s',
-                    \Jield\Stdlib\Value::scalar($identifierField),
+                    Value::scalar($identifierField),
                 ));
             }
 
-            $result[\Jield\Stdlib\Value::key($identifierField)] = $context[$identifierField];
+            $result[Value::key($identifierField)] = $context[$identifierField];
         }
 
         return $result;

@@ -7,8 +7,10 @@ namespace Jield\ApiTools\OAuth2\Controller;
 use Jield\ApiTools\OAuth2\EntraException;
 use Jield\ApiTools\OAuth2\TokenExchangeInterface;
 use Jield\Mvc\Controller\AbstractActionController;
+use Jield\Stdlib\Value;
 use JsonException;
 use Laminas\Http\Header\ContentType;
+use Laminas\Http\Headers;
 use Laminas\Http\Request;
 use Laminas\Http\Response;
 
@@ -32,15 +34,16 @@ final class TokenExchangeController extends AbstractActionController
         }
 
         try {
-            if (strlen(\Jield\Stdlib\Value::string($request->getContent())) > 65_536) {
+            if (strlen(Value::string($request->getContent())) > 65_536) {
                 throw new EntraException(error: 'invalid_request', description: 'Request is too large');
             }
-            $type = \Jield\Stdlib\Value::instance($request->getHeaders(), \Laminas\Http\Headers::class)->get('Content-Type');
+            $type = Value::instance($request->getHeaders(), Headers::class)->get(
+                'Content-Type',
+            );
 
             if ($type instanceof ContentType && $type->match('application/json')) {
-                /** @var mixed $data */
                 $data = json_decode(
-                    json: \Jield\Stdlib\Value::string($request->getContent()),
+                    json: Value::string($request->getContent()),
                     associative: true,
                     depth: 16,
                     flags: JSON_THROW_ON_ERROR,
@@ -49,8 +52,7 @@ final class TokenExchangeController extends AbstractActionController
                     throw new EntraException(error: 'invalid_request', description: 'Expected a JSON object');
                 }
             } elseif ($type instanceof ContentType && $type->match('application/x-www-form-urlencoded')) {
-                /** @var mixed $data */
-                $data = \Jield\Stdlib\Value::call($request->getPost(), 'toArray');
+                $data = Value::call($request->getPost(), 'toArray');
             } else {
                 throw new EntraException(
                     error: 'invalid_request',
@@ -59,7 +61,7 @@ final class TokenExchangeController extends AbstractActionController
                 );
             }
 
-            return $this->json(status: 200, data: $this->exchange->exchange(\Jield\Stdlib\Value::array($data)));
+            return $this->json(status: 200, data: $this->exchange->exchange(Value::array($data)));
         } catch (JsonException) {
             return $this->json(status: 400, data: [
                 'error' => 'invalid_request',
@@ -83,6 +85,9 @@ final class TokenExchangeController extends AbstractActionController
         $response->getHeaders()->addHeaderLine(headerFieldNameOrLine: 'Cache-Control', fieldValue: 'no-store');
         $response->getHeaders()->addHeaderLine(headerFieldNameOrLine: 'Pragma', fieldValue: 'no-cache');
 
-        return \Jield\Stdlib\Value::instance($response->setContent(json_encode(value: $data, flags: JSON_THROW_ON_ERROR)), \Laminas\Http\Response::class);
+        return Value::instance(
+            $response->setContent(json_encode(value: $data, flags: JSON_THROW_ON_ERROR)),
+            \Laminas\Http\Response::class,
+        );
     }
 }

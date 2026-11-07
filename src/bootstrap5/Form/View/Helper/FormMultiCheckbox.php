@@ -9,6 +9,7 @@ use Jield\Form\ElementInterface;
 use Jield\Form\LabelAwareInterface;
 use Jield\Form\View\Helper;
 
+use Jield\Stdlib\Value;
 use function array_key_exists;
 use function array_merge;
 use function count;
@@ -30,12 +31,12 @@ class FormMultiCheckbox extends Helper\FormMultiCheckbox
     {
         $name = static::getName(element: $element);
 
-        $options = \Jield\Stdlib\Value::instance($element, \Jield\Form\Element\MultiCheckbox::class)->getValueOptions();
+        $options = Value::instance($element, \Jield\Form\Element\MultiCheckbox::class)->getValueOptions();
 
         $attributes = $element->getAttributes();
         $attributes['name'] = $name;
         $attributes['type'] = $this->getInputType();
-        $selectedOptions = \Jield\Stdlib\Value::toArray($element->getValue());
+        $selectedOptions = Value::toArray($element->getValue());
 
         $rendered = $this->renderOptions(
             element: $element,
@@ -51,7 +52,11 @@ class FormMultiCheckbox extends Helper\FormMultiCheckbox
             : $this->useHiddenElement;
 
         if ($useHiddenElement) {
-            $rendered = $this->renderHiddenElement(element: \Jield\Stdlib\Value::instance($element, \Jield\Form\Element\MultiCheckbox::class)) . $rendered;
+            $rendered =
+                $this->renderHiddenElement(element: Value::instance(
+                    $element,
+                    \Jield\Form\Element\MultiCheckbox::class,
+                )) . $rendered;
         }
 
         return $rendered;
@@ -81,7 +86,6 @@ class FormMultiCheckbox extends Helper\FormMultiCheckbox
         $combinedMarkup = [];
         $count = 0;
 
-        /** @var mixed $optionSpec */
         foreach ($options as $key => $optionSpec) {
             $count++;
             if ($count > 1 && array_key_exists(key: 'id', array: $attributes)) {
@@ -95,8 +99,9 @@ class FormMultiCheckbox extends Helper\FormMultiCheckbox
             $selected =
                 isset($inputAttributes['selected'])
                 && $inputAttributes['type'] !== 'radio'
-                && \Jield\Stdlib\Value::truthy($inputAttributes['selected']);
-            $disabled = isset($inputAttributes['disabled']) && \Jield\Stdlib\Value::truthy($inputAttributes['disabled']);
+                && Value::truthy($inputAttributes['selected']);
+            $disabled =
+                isset($inputAttributes['disabled']) && Value::truthy($inputAttributes['disabled']);
 
             if (is_scalar(value: $optionSpec)) {
                 $optionSpec = [
@@ -106,33 +111,35 @@ class FormMultiCheckbox extends Helper\FormMultiCheckbox
             }
 
             if (isset($optionSpec['value'])) {
-                /** @var mixed $value */
                 $value = $optionSpec['value'];
             }
             if (isset($optionSpec['label'])) {
-                /** @var mixed $label */
                 $label = $optionSpec['label'];
             }
             if (isset($optionSpec['selected'])) {
-                /** @var mixed $selected */
                 $selected = $optionSpec['selected'];
             }
             if (isset($optionSpec['disabled'])) {
-                /** @var mixed $disabled */
                 $disabled = $optionSpec['disabled'];
             }
             if (isset($optionSpec['label_attributes'])) {
-                $labelAttributes = array_merge(\Jield\Stdlib\Value::array($labelAttributes), \Jield\Stdlib\Value::array($optionSpec['label_attributes']));
+                $labelAttributes = array_merge(
+                    Value::array($labelAttributes),
+                    Value::array($optionSpec['label_attributes']),
+                );
             }
             if (isset($optionSpec['attributes'])) {
-                $inputAttributes = array_merge($inputAttributes, \Jield\Stdlib\Value::array($optionSpec['attributes']));
+                $inputAttributes = array_merge($inputAttributes, Value::array($optionSpec['attributes']));
             }
 
             if (in_array(needle: $value, haystack: $selectedOptions, strict: true)) {
                 $selected = true;
             }
 
-            $elementId = md5(string: (string) ($element->getName()) . \Jield\Stdlib\Value::stringify($label) . \Jield\Stdlib\Value::stringify($value));
+            $elementId = md5(
+                string: (string) $element->getName() . Value::stringify($label)
+                    . Value::stringify($value),
+            );
             $inputAttributes['class'] = 'form-check-input';
 
             if (count(value: $element->getMessages()) > 0) {
@@ -152,7 +159,7 @@ class FormMultiCheckbox extends Helper\FormMultiCheckbox
             );
 
             if (null !== ($translator = $this->getTranslator())) {
-                $label = $translator->translate(\Jield\Stdlib\Value::string($label), $this->getTranslatorTextDomain());
+                $label = $translator->translate(Value::string($label), $this->getTranslatorTextDomain());
             }
 
             if (!$element instanceof LabelAwareInterface || !$element->getLabelOption(key: 'disable_html_escape')) {
@@ -167,15 +174,24 @@ class FormMultiCheckbox extends Helper\FormMultiCheckbox
 
             $inlineClass = '';
 
-            switch ($labelPosition) {
-                case self::LABEL_PREPEND:
-                    $markup = sprintf($this->template, $inlineClass, \Jield\Stdlib\Value::scalar($label), $labelOpen, $input, $labelClose);
-                    break;
-                case self::LABEL_APPEND:
-                default:
-                    $markup = sprintf($this->template, $inlineClass, $input, $labelOpen, \Jield\Stdlib\Value::scalar($label), $labelClose);
-                    break;
-            }
+            $markup = match ($labelPosition) {
+                self::LABEL_PREPEND => sprintf(
+                    $this->template,
+                    $inlineClass,
+                    Value::scalar($label),
+                    $labelOpen,
+                    $input,
+                    $labelClose,
+                ),
+                default => sprintf(
+                    $this->template,
+                    $inlineClass,
+                    $input,
+                    $labelOpen,
+                    Value::scalar($label),
+                    $labelClose,
+                ),
+            };
 
             $combinedMarkup[] = $markup;
         }

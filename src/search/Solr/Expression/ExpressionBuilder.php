@@ -11,6 +11,7 @@ use Jield\Search\Solr\Expression\Exception\InvalidArgumentException;
 use Jield\Search\Solr\ExpressionInterface;
 use Jield\Search\Solr\Util;
 
+use Stringable;
 use function array_filter;
 use function array_pop;
 use function array_shift;
@@ -94,7 +95,7 @@ class ExpressionBuilder
         }
 
         $words = array_map(static function (mixed $word): string {
-            if (!is_scalar($word) && !$word instanceof \Stringable && $word !== null) {
+            if (!is_scalar($word) && !$word instanceof Stringable && $word !== null) {
                 throw new InvalidArgumentException('Proximity words must be scalar or stringable.');
             }
             return (string) $word;
@@ -116,7 +117,6 @@ class ExpressionBuilder
             $item = array_shift(array: $stack);
 
             if (is_iterable(value: $item)) {
-                /** @var mixed $element */
                 foreach ($item as $element) {
                     array_unshift($stack, $element);
                 }
@@ -450,8 +450,10 @@ class ExpressionBuilder
      * Expression for the start of the given date
      */
     #[Pure]
-    public function startOfDay(?DateTime $date = null, DateTimeZone|string|false $timezone = false): ?ExpressionInterface
-    {
+    public function startOfDay(
+        ?DateTime $date = null,
+        DateTimeZone|string|false $timezone = false,
+    ): ?ExpressionInterface {
         if ($date === null) {
             return null;
         }
@@ -523,8 +525,10 @@ class ExpressionBuilder
      * @param array|ExpressionInterface|string|null $parameters
      */
     #[Pure]
-    public function func(string $function, array|ExpressionInterface|string|null $parameters = null): ExpressionInterface
-    {
+    public function func(
+        string $function,
+        array|ExpressionInterface|string|null $parameters = null,
+    ): ExpressionInterface {
         return new FunctionExpression(function: $function, parameters: $parameters);
     }
 
@@ -547,11 +551,9 @@ class ExpressionBuilder
         $additional = null;
 
         if (!is_bool(value: $shortForm)) {
-            /** @var mixed $additional */
             $additional = $shortForm;
             $shortForm = true;
         } elseif (!is_array(value: $params)) {
-            /** @var mixed $additional */
             $additional = $params;
             $params = [];
         }
@@ -563,10 +565,10 @@ class ExpressionBuilder
         $useShortForm = is_bool($shortForm) ? $shortForm : true;
 
         if ($additional !== null) {
-            return $this->comp(
-                expr: [new LocalParamsExpression(type: $type, params: $params, shortForm: $useShortForm), $additional],
-                type: null,
-            );
+            return $this->comp(expr: [
+                new LocalParamsExpression(type: $type, params: $params, shortForm: $useShortForm),
+                $additional,
+            ], type: null);
         }
 
         return new LocalParamsExpression(type: $type, params: $params, shortForm: $useShortForm);

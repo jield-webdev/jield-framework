@@ -52,7 +52,6 @@ final class IsRedirectedRouteNameConstraint extends Constraint
         }
 
         $controllerClass = $this->getControllerFullClass();
-        /** @var mixed $urlPlugin */
         $urlPlugin = $controllerClass->plugin('url');
 
         if (!$urlPlugin instanceof Url) {

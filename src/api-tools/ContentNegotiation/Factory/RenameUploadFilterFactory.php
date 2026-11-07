@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Jield\ApiTools\ContentNegotiation\Factory;
 
 use Jield\ApiTools\ContentNegotiation\Filter\RenameUpload;
+use Jield\Stdlib\Service;
 use Laminas\ServiceManager\Factory\FactoryInterface;
+use Laminas\Stdlib\RequestInterface;
 use Override;
 use Psr\Container\ContainerInterface;
 
@@ -20,7 +22,11 @@ class RenameUploadFilterFactory implements FactoryInterface
         $filter = new RenameUpload(targetOrOptions: $options);
 
         if ($container->has('Request')) {
-            $filter->setRequest(request: \Jield\Stdlib\Service::get($container, \Laminas\Stdlib\RequestInterface::class, 'Request'));
+            $filter->setRequest(request: Service::get(
+                $container,
+                RequestInterface::class,
+                'Request',
+            ));
         }
 
         return $filter;

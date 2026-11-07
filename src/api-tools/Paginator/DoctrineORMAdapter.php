@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Jield\ApiTools\Paginator;
 
 use Jield\ApiTools\Provider\ProviderInterface;
+use Jield\Stdlib\Value;
 use Laminas\Paginator\Adapter\AdapterInterface;
 use Override;
 
@@ -33,8 +34,11 @@ class DoctrineORMAdapter extends AbstractDoctrinePaginator implements AdapterInt
     #[Override]
     public function getItems($offset, $itemCountPerPage): array
     {
-        if (array_key_exists($offset, $this->cache) && array_key_exists($itemCountPerPage, \Jield\Stdlib\Value::array($this->cache[$offset]))) {
-            return \Jield\Stdlib\Value::array($this->cache[$offset][$itemCountPerPage]);
+        if (
+            array_key_exists($offset, $this->cache)
+            && array_key_exists($itemCountPerPage, Value::array($this->cache[$offset]))
+        ) {
+            return Value::array($this->cache[$offset][$itemCountPerPage]);
         }
 
         $this->getQuery()->setFirstResult($offset);
@@ -50,8 +54,8 @@ class DoctrineORMAdapter extends AbstractDoctrinePaginator implements AdapterInt
             $results[] = $this->provider->generateArray($result);
         }
 
-        \Jield\Stdlib\Value::setPath($this->cache, [$offset, $itemCountPerPage], $results);
+        Value::setPath($this->cache, [$offset, $itemCountPerPage], $results);
 
-        return \Jield\Stdlib\Value::array(\Jield\Stdlib\Value::accessible($this->cache[$offset])[$itemCountPerPage]);
+        return Value::array(Value::accessible($this->cache[$offset])[$itemCountPerPage]);
     }
 }

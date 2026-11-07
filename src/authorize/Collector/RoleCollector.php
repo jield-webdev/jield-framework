@@ -6,11 +6,10 @@ namespace Jield\Authorize\Collector;
 
 use Jield\Authorize\Provider\Identity\ProviderInterface;
 use Jield\Mvc\MvcEvent;
+use Jield\Stdlib\Value;
 use Laminas\Permissions\Acl\Role\RoleInterface;
 use Serializable;
-use Traversable;
 
-use function is_array;
 use function serialize;
 use function unserialize;
 
@@ -26,13 +25,9 @@ class RoleCollector implements Serializable
     /** @var array|string[] collected role ids */
     protected array $collectedRoles = [];
 
-    /** @var ProviderInterface|null */
-    protected ?ProviderInterface $identityProvider = null;
-
-    public function __construct(ProviderInterface $identityProvider)
-    {
-        $this->identityProvider = $identityProvider;
-    }
+    public function __construct(
+        protected ProviderInterface $identityProvider,
+    ) {}
 
     /**
      * {@inheritDoc}
@@ -55,10 +50,6 @@ class RoleCollector implements Serializable
      */
     public function collect(MvcEvent $mvcEvent): void
     {
-        if (!$this->identityProvider) {
-            return;
-        }
-
         $roles = $this->identityProvider->getIdentityRoles();
 
         foreach ($roles as $role) {
@@ -95,7 +86,7 @@ class RoleCollector implements Serializable
      */
     public function unserialize($data): void
     {
-        $this->collectedRoles = unserialize(data: $data);
+        $this->collectedRoles = Value::array(unserialize(data: $data));
     }
 
     /**
@@ -113,6 +104,6 @@ class RoleCollector implements Serializable
      */
     public function __unserialize(array $serialized)
     {
-        $this->collectedRoles = $serialized['collectedRoles'];
+        $this->collectedRoles = Value::array($serialized['collectedRoles']);
     }
 }

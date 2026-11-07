@@ -23,6 +23,7 @@ namespace Jield\Cors\Factory;
 
 use Jield\Cors\Options\CorsOptions;
 use Jield\Cors\Service\CorsService;
+use Jield\Stdlib\Service;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
@@ -40,8 +41,7 @@ class CorsServiceFactory implements FactoryInterface
      */
     public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): CorsService
     {
-        
-        $corsOptions = \Jield\Stdlib\Service::get($container, CorsOptions::class);
+        $corsOptions = Service::get($container, CorsOptions::class);
 
         return new CorsService($corsOptions);
     }

@@ -4,18 +4,17 @@ declare(strict_types=1);
 
 namespace DoctrineORMModule\Paginator\Adapter;
 
-use ArrayIterator;
 use Doctrine\ORM\Tools\Pagination\Paginator;
+use Jield\Stdlib\Value;
 use JsonSerializable;
 use Laminas\Paginator\Adapter\AdapterInterface;
+use Traversable;
 
 /**
  * Paginator adapter for the Laminas\Paginator component
  *
  * @phpstan-template T of object
- * @phpstan-template TKey of int
- * @phpstan-template TValue
- * @template-implements AdapterInterface<TKey, TValue>
+ * @template-implements AdapterInterface<array-key, T>
  */
 class DoctrinePaginator implements AdapterInterface, JsonSerializable
 {
@@ -48,13 +47,13 @@ class DoctrinePaginator implements AdapterInterface, JsonSerializable
      * @param int|null $offset
      * @param int|null $itemCountPerPage
      *
-     * @return ArrayIterator<TKey, TValue>
+     * @return Traversable<array-key, T>
      */
-    public function getItems($offset, $itemCountPerPage): ArrayIterator
+    public function getItems($offset, $itemCountPerPage): Traversable
     {
         $this->paginator
             ->getQuery()
-            ->setFirstResult(firstResult: \Jield\Stdlib\Value::int($offset))
+            ->setFirstResult(firstResult: Value::int($offset))
             ->setMaxResults(maxResults: $itemCountPerPage);
 
         return $this->paginator->getIterator();

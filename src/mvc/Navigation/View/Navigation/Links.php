@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Jield\Mvc\Navigation\View\Navigation;
 
+use ArrayIterator;
+use Jield\Stdlib\Value;
 use Laminas\Navigation\AbstractContainer;
 use Laminas\Navigation\Page\AbstractPage;
 use Laminas\Stdlib\ArrayUtils;
@@ -11,6 +13,7 @@ use Laminas\Stdlib\ErrorHandler;
 use Laminas\View\Exception;
 use RecursiveIteratorIterator;
 use Traversable;
+
 use function array_diff;
 use function array_keys;
 use function array_merge;
@@ -30,6 +33,7 @@ use function sprintf;
 use function strlen;
 use function strtolower;
 use function ucfirst;
+
 use const E_WARNING;
 use const PHP_EOL;
 
@@ -66,24 +70,23 @@ class Links extends AbstractHelper
      *
      * @var array<int, string>
      */
-    protected static $RELATIONS
-        = [ // phpcs:ignore
-            self::RENDER_ALTERNATE  => 'alternate',
-            self::RENDER_STYLESHEET => 'stylesheet',
-            self::RENDER_START      => 'start',
-            self::RENDER_NEXT       => 'next',
-            self::RENDER_PREV       => 'prev',
-            self::RENDER_CONTENTS   => 'contents',
-            self::RENDER_INDEX      => 'index',
-            self::RENDER_GLOSSARY   => 'glossary',
-            self::RENDER_COPYRIGHT  => 'copyright',
-            self::RENDER_CHAPTER    => 'chapter',
-            self::RENDER_SECTION    => 'section',
-            self::RENDER_SUBSECTION => 'subsection',
-            self::RENDER_APPENDIX   => 'appendix',
-            self::RENDER_HELP       => 'help',
-            self::RENDER_BOOKMARK   => 'bookmark',
-        ];
+    protected static $RELATIONS = [ // phpcs:ignore
+        self::RENDER_ALTERNATE => 'alternate',
+        self::RENDER_STYLESHEET => 'stylesheet',
+        self::RENDER_START => 'start',
+        self::RENDER_NEXT => 'next',
+        self::RENDER_PREV => 'prev',
+        self::RENDER_CONTENTS => 'contents',
+        self::RENDER_INDEX => 'index',
+        self::RENDER_GLOSSARY => 'glossary',
+        self::RENDER_COPYRIGHT => 'copyright',
+        self::RENDER_CHAPTER => 'chapter',
+        self::RENDER_SECTION => 'section',
+        self::RENDER_SUBSECTION => 'subsection',
+        self::RENDER_APPENDIX => 'appendix',
+        self::RENDER_HELP => 'help',
+        self::RENDER_BOOKMARK => 'bookmark',
+    ];
 
     /**
      * The helper's render flag
@@ -144,7 +147,11 @@ class Links extends AbstractHelper
         $result = preg_match('/find(Rel|Rev)(.+)/', $method, $match);
         ErrorHandler::stop();
         if ($result) {
-            return $this->findRelation(\Jield\Stdlib\Value::instance($arguments[0], \Laminas\Navigation\Page\AbstractPage::class), strtolower($match[1]), strtolower($match[2]));
+            return $this->findRelation(
+                Value::instance($arguments[0], \Laminas\Navigation\Page\AbstractPage::class),
+                strtolower($match[1]),
+                strtolower($match[2]),
+            );
         }
 
         return parent::__call($method, $arguments);
@@ -164,9 +171,7 @@ class Links extends AbstractHelper
     public function render($container = null)
     {
         $this->parseContainer($container);
-        if (null === $container) {
-            $container = $this->getContainer();
-        }
+        $container ??= $this->getContainer();
 
         $active = $this->findActive($container);
         if (isset($active['page'], $active['depth'])) {
@@ -176,16 +181,22 @@ class Links extends AbstractHelper
             return '';
         }
 
-        $output     = '';
-        $indent     = $this->getIndent();
+        $output = '';
+        $indent = $this->getIndent();
         $this->root = $container;
 
-        $result = $this->findAllRelations(\Jield\Stdlib\Value::instance($active, \Laminas\Navigation\Page\AbstractPage::class), $this->getRenderFlag());
+        $result = $this->findAllRelations(
+            Value::instance($active, \Laminas\Navigation\Page\AbstractPage::class),
+            $this->getRenderFlag(),
+        );
         foreach ($result as $attrib => $types) {
             foreach ($types as $relation => $pages) {
-                /** @var mixed $page */
                 foreach ($pages as $page) {
-                    $r = $this->renderLink(\Jield\Stdlib\Value::instance($page, \Laminas\Navigation\Page\AbstractPage::class), $attrib, \Jield\Stdlib\Value::string($relation));
+                    $r = $this->renderLink(
+                        Value::instance($page, \Laminas\Navigation\Page\AbstractPage::class),
+                        $attrib,
+                        Value::string($relation),
+                    );
                     if ($r) {
                         $output .= $indent . $r . PHP_EOL;
                     }
@@ -219,11 +230,11 @@ class Links extends AbstractHelper
         if (!in_array($attrib, ['rel', 'rev'])) {
             throw new Exception\DomainException(sprintf(
                 'Invalid relation attribute "%s", must be "rel" or "rev"',
-                $attrib
+                $attrib,
             ));
         }
 
-        if (!$href = $page->getHref()) {
+        if (!($href = $page->getHref())) {
             return '';
         }
 
@@ -231,13 +242,20 @@ class Links extends AbstractHelper
         // http://www.w3.org/TR/html401/struct/links.html#h-12.2
         $attribs = [
             $attrib => $relation,
-            'href'  => $href,
+            'href' => $href,
             'title' => $page->getLabel(),
         ];
 
-        return '<link'
+        return (
+            '<link'
             . $this->htmlAttribs($attribs)
-            . \Jield\Stdlib\Value::stringify(\Jield\Stdlib\Value::call($this, 'getClosingBracket', [], scope: self::class));
+            . Value::stringify(Value::call(
+                $this,
+                'getClosingBracket',
+                [],
+                scope: self::class,
+            ))
+        );
     }
 
     // Finder methods:
@@ -278,20 +296,23 @@ class Links extends AbstractHelper
         $native = array_values(static::$RELATIONS);
 
         foreach (array_keys($result) as $rel) {
-            $meth  = 'getDefined' . ucfirst($rel);
-            $types = array_merge($native, array_diff(\Jield\Stdlib\Value::scalars(\Jield\Stdlib\Value::array(\Jield\Stdlib\Value::call($page, $meth))), \Jield\Stdlib\Value::scalars($native)));
+            $meth = 'getDefined' . ucfirst($rel);
+            $types = array_merge($native, array_diff(
+                Value::scalars(Value::array(Value::call($page, $meth))),
+                Value::scalars($native),
+            ));
 
             /** @var mixed $type */
             foreach ($types as $type) {
-                if (!$relFlag = array_search($type, static::$RELATIONS)) {
+                if (!($relFlag = array_search($type, static::$RELATIONS))) {
                     $relFlag = self::RENDER_CUSTOM;
                 }
                 if (!($flag & $relFlag)) {
                     continue;
                 }
 
-                $found = $this->findRelation($page, $rel, \Jield\Stdlib\Value::string($type));
-                if (isset($found['page'], $found['depth'])) {
+                $found = $this->findRelation($page, $rel, Value::string($type));
+                if ($found !== null && $found !== []) {
                     if (!is_array($found)) {
                         $found = [$found];
                     }
@@ -320,11 +341,11 @@ class Links extends AbstractHelper
         if (!in_array($rel, ['rel', 'rev'])) {
             throw new Exception\DomainException(sprintf(
                 'Invalid argument: $rel must be "rel" or "rev"; "%s" given',
-                $rel
+                $rel,
             ));
         }
 
-        if (!$result = $this->findFromProperty($page, $rel, $type)) {
+        if (!($result = $this->findFromProperty($page, $rel, $type))) {
             $result = $this->findFromSearch($page, $rel, $type);
         }
 
@@ -343,8 +364,7 @@ class Links extends AbstractHelper
     protected function findFromProperty(AbstractPage $page, string $rel, string $type)
     {
         $method = 'get' . ucfirst($rel);
-        /** @var mixed $result */
-        $result = \Jield\Stdlib\Value::call($page, $method, [$type]);
+        $result = Value::call($page, $method, [$type]);
         if ($result) {
             $result = $this->convertToPages($result);
             if ($result) {
@@ -354,7 +374,10 @@ class Links extends AbstractHelper
 
                 /** @var mixed $page */
                 foreach ($result as $key => $page) {
-                    if (!$this->accept(\Jield\Stdlib\Value::instance($page, \Laminas\Navigation\Page\AbstractPage::class))) {
+                    if (!$this->accept(Value::instance(
+                        $page,
+                        \Laminas\Navigation\Page\AbstractPage::class,
+                    ))) {
                         unset($result[$key]);
                     }
                 }
@@ -372,7 +395,7 @@ class Links extends AbstractHelper
      * @param AbstractPage $page page to find relations for
      * @param string $rel relation, 'rel' or 'rev'
      * @param string $type link type, e.g. 'start', 'next', etc
-     * @return array|null
+     * @return AbstractPage|array|null
      */
     protected function findFromSearch(AbstractPage $page, string $rel, string $type)
     {
@@ -380,11 +403,10 @@ class Links extends AbstractHelper
 
         $method = 'search' . ucfirst($rel) . ucfirst($type);
         if (method_exists($this, $method)) {
-            /** @var mixed $found */
-            $found = \Jield\Stdlib\Value::call($this, $method, [$page], scope: self::class);
+            $found = Value::call($this, $method, [$page], scope: self::class);
         }
 
-        return $found;
+        return $found instanceof AbstractPage ? $found : Value::nullableArray($found);
     }
 
     // Search methods:
@@ -428,8 +450,8 @@ class Links extends AbstractHelper
      */
     public function searchRelNext(AbstractPage $page)
     {
-        $found    = null;
-        $break    = false;
+        $found = null;
+        $break = false;
         $iterator = new RecursiveIteratorIterator($this->findRoot($page), RecursiveIteratorIterator::SELF_FIRST);
         foreach ($iterator as $intermediate) {
             if ($intermediate === $page) {
@@ -459,12 +481,9 @@ class Links extends AbstractHelper
      */
     public function searchRelPrev(AbstractPage $page)
     {
-        $found    = null;
-        $prev     = null;
-        $iterator = new RecursiveIteratorIterator(
-            $this->findRoot($page),
-            RecursiveIteratorIterator::SELF_FIRST
-        );
+        $found = null;
+        $prev = null;
+        $iterator = new RecursiveIteratorIterator($this->findRoot($page), RecursiveIteratorIterator::SELF_FIRST);
         foreach ($iterator as $intermediate) {
             if (!$this->accept($intermediate)) {
                 continue;
@@ -504,11 +523,7 @@ class Links extends AbstractHelper
 
         foreach ($root as $chapter) {
             // exclude self and start page from chapters
-            if (
-                $chapter !== $page &&
-                !in_array($chapter, $start) &&
-                $this->accept($chapter)
-            ) {
+            if ($chapter !== $page && !in_array($chapter, $start) && $this->accept($chapter)) {
                 $found[] = $chapter;
             }
         }
@@ -604,13 +619,10 @@ class Links extends AbstractHelper
      */
     public function searchRevSection(AbstractPage $page)
     {
-        $found  = null;
+        $found = null;
         $parent = $page->getParent();
         if ($parent) {
-            if (
-                $parent instanceof AbstractPage &&
-                $this->findRoot($page)->hasPage($parent)
-            ) {
+            if ($parent instanceof AbstractPage && $this->findRoot($page)->hasPage($parent)) {
                 $found = $parent;
             }
         }
@@ -630,7 +642,7 @@ class Links extends AbstractHelper
      */
     public function searchRevSubsection(AbstractPage $page)
     {
-        $found  = null;
+        $found = null;
         $parent = $page->getParent();
         if ($parent) {
             if ($parent instanceof AbstractPage) {
@@ -705,7 +717,7 @@ class Links extends AbstractHelper
             // value is a string; make a URI page
             return AbstractPage::factory([
                 'type' => 'uri',
-                'uri'  => $mixed,
+                'uri' => $mixed,
             ]);
         }
 
@@ -713,7 +725,6 @@ class Links extends AbstractHelper
             if ($recursive && is_numeric(key($mixed))) {
                 // first key is numeric; assume several pages
                 $pages = [];
-                /** @var mixed $value */
                 foreach ($mixed as $value) {
                     $value = $this->convertToPages($value, false);
                     if ($value) {
@@ -724,8 +735,8 @@ class Links extends AbstractHelper
             } else {
                 // pass array to factory directly
                 try {
-                    return AbstractPage::factory($mixed);
-                } catch (\Exception $e) {
+                    return AbstractPage::factory(new ArrayIterator(Value::stringKeyedArray($mixed)));
+                } catch (\Exception) {
                 }
             }
         }
@@ -764,7 +775,7 @@ class Links extends AbstractHelper
      */
     public function setRenderFlag(int $renderFlag)
     {
-        $this->renderFlag = (int)$renderFlag;
+        $this->renderFlag = (int) $renderFlag;
 
         return $this;
     }

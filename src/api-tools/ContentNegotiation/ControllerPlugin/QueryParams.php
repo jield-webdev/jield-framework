@@ -7,6 +7,7 @@ namespace Jield\ApiTools\ContentNegotiation\ControllerPlugin;
 use Jield\ApiTools\ContentNegotiation\ParameterDataContainer;
 use Jield\Mvc\Controller\AbstractController;
 use Jield\Mvc\Controller\Plugin\AbstractPlugin;
+use Jield\Stdlib\Value;
 
 class QueryParams extends AbstractPlugin
 {
@@ -21,16 +22,18 @@ class QueryParams extends AbstractPlugin
             }
         }
 
-        if (!method_exists(object_or_class: \Jield\Stdlib\Value::objectOrString($controller), method: 'getRequest')) {
+        if (!method_exists(object_or_class: Value::objectOrString($controller), method: 'getRequest')) {
             return [];
         }
 
-        /** @var mixed $request */
-        $request = \Jield\Stdlib\Value::call($controller, 'getRequest');
-        if (!method_exists(object_or_class: \Jield\Stdlib\Value::objectOrString($request), method: 'getQuery')) {
+        $request = Value::call($controller, 'getRequest');
+        if (!method_exists(object_or_class: Value::objectOrString($request), method: 'getQuery')) {
             return [];
         }
 
-        return \Jield\Stdlib\Value::array(\Jield\Stdlib\Value::call(\Jield\Stdlib\Value::call($request, 'getQuery'), 'toArray'));
+        return Value::array(Value::call(
+            Value::call($request, 'getQuery'),
+            'toArray',
+        ));
     }
 }

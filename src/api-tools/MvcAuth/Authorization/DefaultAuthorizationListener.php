@@ -7,18 +7,15 @@ namespace Jield\ApiTools\MvcAuth\Authorization;
 use Jield\ApiTools\MvcAuth\Identity\IdentityInterface;
 use Jield\ApiTools\MvcAuth\MvcAuthEvent;
 use Jield\Mvc\Router\RouteMatch;
+use Jield\Stdlib\Value;
 use Laminas\Http\Request;
 use Laminas\Http\Response;
 
 class DefaultAuthorizationListener
 {
-    /** @var AuthorizationInterface */
-    protected AuthorizationInterface $authorization;
-
-    public function __construct(AuthorizationInterface $authorization)
-    {
-        $this->authorization = $authorization;
-    }
+    public function __construct(
+        protected AuthorizationInterface $authorization,
+    ) {}
 
     public function __invoke(MvcAuthEvent $mvcAuthEvent): ?bool
     {
@@ -43,17 +40,18 @@ class DefaultAuthorizationListener
             return null;
         }
 
-        /** @var mixed $identity */
         $identity = $mvcAuthEvent->getIdentity();
         if (!$identity instanceof IdentityInterface) {
             return null;
         }
 
         $resource = $mvcAuthEvent->getResource();
-        /** @var mixed $identity */
         $identity = $mvcAuthEvent->getIdentity();
         return $this->authorization->isAuthorized(
-            identity: \Jield\Stdlib\Value::instance($identity, \Jield\ApiTools\MvcAuth\Identity\IdentityInterface::class),
+            identity: Value::instance(
+                $identity,
+                \Jield\ApiTools\MvcAuth\Identity\IdentityInterface::class,
+            ),
             resource: $resource,
             privilege: $request->getMethod(),
         );

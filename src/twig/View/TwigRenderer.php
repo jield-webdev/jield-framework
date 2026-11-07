@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Jield\Twig\View;
 
+use Jield\Stdlib\Value;
 use Laminas\View\Exception;
 use Laminas\View\HelperPluginManagerInterface;
 use Laminas\View\Model\ModelInterface;
@@ -49,9 +50,7 @@ class TwigRenderer implements RendererInterface
      */
     public function __call(string $method, array $argv)
     {
-        if (!isset($this->pluginCache[$method])) {
-            $this->pluginCache[$method] = $this->plugin($method);
-        }
+        $this->pluginCache[$method] ??= $this->plugin($method);
 
         if (is_callable($this->pluginCache[$method])) {
             return call_user_func_array($this->pluginCache[$method], $argv);
@@ -141,8 +140,9 @@ class TwigRenderer implements RendererInterface
      */
     public function render(string|ModelInterface $templateNameOrModel, $variables = null): string
     {
-        /** @var mixed $variables */
-        $variables = $variables instanceof ModelInterface ? $variables->getVariables() : \Jield\Stdlib\Value::iterable($variables ?? []);
+        $variables = Value::iterable($variables instanceof ModelInterface
+            ? $variables->getVariables()
+            : ($variables ?? []));
         $values = is_array($variables) ? $variables : iterator_to_array($variables);
         if ($templateNameOrModel instanceof ModelInterface) {
             $model = $templateNameOrModel;
@@ -153,14 +153,16 @@ class TwigRenderer implements RendererInterface
                 $content = $this->canRender($child->getTemplate())
                     ? $this->render($child)
                     : $this->view->render($child, enableLayout: false);
-                $values[$capture] = $child->isAppend() ? \Jield\Stdlib\Value::stringify($values[$capture] ?? '') . $content : $content;
+                $values[$capture] = $child->isAppend()
+                    ? Value::stringify($values[$capture] ?? '') . $content
+                    : $content;
             }
             $templateNameOrModel = $model->getTemplate();
         }
-        $templateName = $this->resolver->resolve(\Jield\Stdlib\Value::nonEmptyString($templateNameOrModel));
+        $templateName = $this->resolver->resolve(Value::nonEmptyString($templateNameOrModel));
         if ($templateName === false) {
             throw new Exception\DomainException(sprintf('Cannot resolve template "%s"', $templateNameOrModel));
         }
-        return $this->environment->render($templateName, \Jield\Stdlib\Value::array($values));
+        return $this->environment->render($templateName, Value::array($values));
     }
 }

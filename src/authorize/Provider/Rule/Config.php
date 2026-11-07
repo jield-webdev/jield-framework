@@ -9,16 +9,12 @@ namespace Jield\Authorize\Provider\Rule;
  */
 class Config implements ProviderInterface
 {
-    /** @var array */
-    protected array $rules = [];
-
     /**
-     * @param array $config
+     * @param array $rules
      */
-    public function __construct(array $config = [])
-    {
-        $this->rules = $config;
-    }
+    public function __construct(
+        protected array $rules = [],
+    ) {}
 
     /**
      * {@inheritDoc}

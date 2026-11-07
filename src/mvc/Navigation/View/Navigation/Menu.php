@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Jield\Mvc\Navigation\View\Navigation;
 
+use Jield\Stdlib\Value;
 use Laminas\Navigation\AbstractContainer;
 use Laminas\Navigation\Page\AbstractPage;
 use Laminas\View\Exception;
@@ -11,6 +12,7 @@ use Laminas\View\Helper\EscapeHtml;
 use Laminas\View\Helper\EscapeHtmlAttr;
 use Laminas\View\Helper\Partial;
 use RecursiveIteratorIterator;
+
 use function array_key_exists;
 use function array_merge;
 use function assert;
@@ -21,6 +23,7 @@ use function is_int;
 use function is_string;
 use function rtrim;
 use function str_repeat;
+
 use const PHP_EOL;
 
 /**
@@ -136,15 +139,14 @@ class Menu extends AbstractHelper
      */
     protected function renderDeepestMenu(
         AbstractContainer $container,
-        string            $ulClass,
-        string            $indent,
-        ?int              $minDepth,
-        ?int              $maxDepth,
-        bool              $escapeLabels,
-        bool              $addClassToListItem,
-        string            $liActiveClass
-    )
-    {
+        string $ulClass,
+        string $indent,
+        ?int $minDepth,
+        ?int $maxDepth,
+        bool $escapeLabels,
+        bool $addClassToListItem,
+        string $liActiveClass,
+    ) {
         $active = $this->findActive($container, ($minDepth ?? 0) - 1, $maxDepth);
         if (!isset($active['page'], $active['depth'])) {
             return '';
@@ -152,24 +154,24 @@ class Menu extends AbstractHelper
 
         // special case if active page is one below minDepth
         if ($active['depth'] < ($minDepth ?? 0)) {
-            if (!\Jield\Stdlib\Value::present($active['page'])->hasPages(!$this->renderInvisible)) {
+            if (!Value::present($active['page'])->hasPages(!$this->renderInvisible)) {
                 return '';
             }
-        } elseif (!\Jield\Stdlib\Value::present($active['page'])->hasPages(!$this->renderInvisible)) {
+        } elseif (!Value::present($active['page'])->hasPages(!$this->renderInvisible)) {
             // found pages has no children; render siblings
-            $active['page'] = \Jield\Stdlib\Value::present($active['page'])->getParent();
-        } elseif (is_int($maxDepth) && $active['depth'] + 1 > $maxDepth) {
+            $active['page'] = Value::present($active['page'])->getParent();
+        } elseif (is_int($maxDepth) && ($active['depth'] + 1) > $maxDepth) {
             // children are below max depth; render siblings
-            $active['page'] = \Jield\Stdlib\Value::present($active['page'])->getParent();
+            $active['page'] = Value::present($active['page'])->getParent();
         }
 
         $escaper = $this->getView()->plugin('escapeHtmlAttr', \Laminas\View\Helper\EscapeHtmlAttr::class);
         assert($escaper instanceof EscapeHtmlAttr);
-        $ulClass = $ulClass ? ' class="' . \Jield\Stdlib\Value::stringify($escaper($ulClass)) . '"' : '';
-        $html    = $indent . '<ul' . $ulClass . '>' . PHP_EOL;
+        $ulClass = $ulClass ? ' class="' . Value::stringify($escaper($ulClass)) . '"' : '';
+        $html = $indent . '<ul' . $ulClass . '>' . PHP_EOL;
 
-        foreach (($active['page'] ?? []) as $subPage) {
-            if (!$this->accept(\Jield\Stdlib\Value::instance($subPage, \Laminas\Navigation\Page\AbstractPage::class))) {
+        foreach ($active['page'] ?? [] as $subPage) {
+            if (!$this->accept(Value::instance($subPage, \Laminas\Navigation\Page\AbstractPage::class))) {
                 continue;
             }
 
@@ -186,10 +188,20 @@ class Menu extends AbstractHelper
                 $liClasses[] = $subPage->getClass();
             }
 
-            $liClass = empty($liClasses) ? '' : ' class="' . \Jield\Stdlib\Value::stringify($escaper(implode(' ', $liClasses))) . '"';
-            $html    .= $indent . '    <li' . $liClass . '>' . PHP_EOL;
-            $html    .= $indent . '        ' . $this->htmlify(\Jield\Stdlib\Value::instance($subPage, \Laminas\Navigation\Page\AbstractPage::class), $escapeLabels, $addClassToListItem) . PHP_EOL;
-            $html    .= $indent . '    </li>' . PHP_EOL;
+            $liClass = empty($liClasses)
+                ? ''
+                : ' class="' . Value::stringify($escaper(implode(' ', $liClasses))) . '"';
+            $html .= $indent . '    <li' . $liClass . '>' . PHP_EOL;
+            $html .=
+                $indent
+                . '        '
+                . $this->htmlify(
+                    Value::instance($subPage, \Laminas\Navigation\Page\AbstractPage::class),
+                    $escapeLabels,
+                    $addClassToListItem,
+                )
+                . PHP_EOL;
+            $html .= $indent . '    </li>' . PHP_EOL;
         }
 
         $html .= $indent . '</ul>';
@@ -213,34 +225,32 @@ class Menu extends AbstractHelper
     public function renderMenu(?AbstractContainer $container = null, array $options = [])
     {
         $this->parseContainer($container);
-        if (null === $container) {
-            $container = $this->getContainer();
-        }
+        $container ??= $this->getContainer();
 
         $options = $this->normalizeOptions($options);
-        if (\Jield\Stdlib\Value::truthy($options['onlyActiveBranch']) && !$options['renderParents']) {
+        if (Value::truthy($options['onlyActiveBranch']) && !$options['renderParents']) {
             return $this->renderDeepestMenu(
                 $container,
-                \Jield\Stdlib\Value::string($options['ulClass']),
-                \Jield\Stdlib\Value::string($options['indent']),
-                \Jield\Stdlib\Value::nullableInt($options['minDepth']),
-                \Jield\Stdlib\Value::nullableInt($options['maxDepth']),
-                \Jield\Stdlib\Value::bool($options['escapeLabels']),
-                \Jield\Stdlib\Value::bool($options['addClassToListItem']),
-                \Jield\Stdlib\Value::string($options['liActiveClass'])
+                Value::string($options['ulClass']),
+                Value::string($options['indent']),
+                Value::nullableInt($options['minDepth']),
+                Value::nullableInt($options['maxDepth']),
+                Value::bool($options['escapeLabels']),
+                Value::bool($options['addClassToListItem']),
+                Value::string($options['liActiveClass']),
             );
         }
 
         return $this->renderNormalMenu(
             $container,
-            \Jield\Stdlib\Value::string($options['ulClass']),
-            \Jield\Stdlib\Value::string($options['indent']),
-            \Jield\Stdlib\Value::nullableInt($options['minDepth']),
-            \Jield\Stdlib\Value::nullableInt($options['maxDepth']),
-            \Jield\Stdlib\Value::bool($options['onlyActiveBranch']),
-            \Jield\Stdlib\Value::bool($options['escapeLabels']),
-            \Jield\Stdlib\Value::bool($options['addClassToListItem']),
-            \Jield\Stdlib\Value::string($options['liActiveClass'])
+            Value::string($options['ulClass']),
+            Value::string($options['indent']),
+            Value::nullableInt($options['minDepth']),
+            Value::nullableInt($options['maxDepth']),
+            Value::bool($options['onlyActiveBranch']),
+            Value::bool($options['escapeLabels']),
+            Value::bool($options['addClassToListItem']),
+            Value::string($options['liActiveClass']),
         );
     }
 
@@ -260,16 +270,15 @@ class Menu extends AbstractHelper
      */
     protected function renderNormalMenu(
         AbstractContainer $container,
-        string            $ulClass,
-        string            $indent,
-        ?int              $minDepth,
-        ?int              $maxDepth,
-        bool              $onlyActive,
-        bool              $escapeLabels,
-        bool              $addClassToListItem,
-        string            $liActiveClass
-    ): string
-    {
+        string $ulClass,
+        string $indent,
+        ?int $minDepth,
+        ?int $maxDepth,
+        bool $onlyActive,
+        bool $escapeLabels,
+        bool $addClassToListItem,
+        string $liActiveClass,
+    ): string {
         $html = '';
 
         // find deepest active
@@ -278,19 +287,16 @@ class Menu extends AbstractHelper
         $escaper = $this->getView()->plugin('escapeHtmlAttr', \Laminas\View\Helper\EscapeHtmlAttr::class);
         assert($escaper instanceof EscapeHtmlAttr);
 
-        $foundPage  = null;
+        $foundPage = null;
         $foundDepth = 0;
 
         if (isset($found['page'], $found['depth'])) {
-            $foundPage  = $found['page'];
+            $foundPage = $found['page'];
             $foundDepth = $found['depth'];
         }
 
         // create iterator
-        $iterator = new RecursiveIteratorIterator(
-            $container,
-            RecursiveIteratorIterator::SELF_FIRST
-        );
+        $iterator = new RecursiveIteratorIterator($container, RecursiveIteratorIterator::SELF_FIRST);
 
         if (is_int($maxDepth)) {
             $iterator->setMaxDepth($maxDepth);
@@ -299,7 +305,7 @@ class Menu extends AbstractHelper
         // iterate container
         $prevDepth = -1;
         foreach ($iterator as $page) {
-            $depth    = $iterator->getDepth();
+            $depth = $iterator->getDepth();
             $isActive = $page->isActive(true);
             if ($depth < ($minDepth ?? 0) || !$this->accept($page)) {
                 // page is below minDepth or not accepted by acl/visibility
@@ -311,11 +317,11 @@ class Menu extends AbstractHelper
                     if ($foundPage->hasPage($page)) {
                         // accept if page is a direct child of the active page
                         $accept = true;
-                    } elseif (\Jield\Stdlib\Value::present($foundPage->getParent())->hasPage($page)) {
+                    } elseif (Value::present($foundPage->getParent())->hasPage($page)) {
                         // page is a sibling of the active page...
                         if (
                             !$foundPage->hasPages(!$this->renderInvisible)
-                            || is_int($maxDepth) && $foundDepth + 1 > $maxDepth
+                            || is_int($maxDepth) && ($foundDepth + 1) > $maxDepth
                         ) {
                             // accept if active page has no children, or the
                             // children are too deep to be rendered
@@ -330,11 +336,11 @@ class Menu extends AbstractHelper
 
             // make sure indentation is correct
             $depth -= $minDepth ?? 0;
-            $myIndent = $indent . str_repeat('        ', \Jield\Stdlib\Value::nonNegativeInt($depth));
+            $myIndent = $indent . str_repeat('        ', Value::nonNegativeInt($depth));
             if ($depth > $prevDepth) {
                 // start new ul tag
                 if ($ulClass && $depth === 0) {
-                    $ulClass = ' class="' . \Jield\Stdlib\Value::stringify($escaper($ulClass)) . '"';
+                    $ulClass = ' class="' . Value::stringify($escaper($ulClass)) . '"';
                 } else {
                     $ulClass = '';
                 }
@@ -342,7 +348,7 @@ class Menu extends AbstractHelper
             } elseif ($prevDepth > $depth) {
                 // close li/ul tags until we're at current depth
                 for ($i = $prevDepth; $i > $depth; $i--) {
-                    $ind  = $indent . str_repeat('        ', \Jield\Stdlib\Value::nonNegativeInt($i));
+                    $ind = $indent . str_repeat('        ', Value::nonNegativeInt($i));
                     $html .= $ind . '    </li>' . PHP_EOL;
                     $html .= $ind . '</ul>' . PHP_EOL;
                 }
@@ -365,9 +371,19 @@ class Menu extends AbstractHelper
             if ($addClassToListItem && $page->getClass()) {
                 $liClasses[] = $page->getClass();
             }
-            $liClass = empty($liClasses) ? '' : ' class="' . \Jield\Stdlib\Value::stringify($escaper(implode(' ', $liClasses))) . '"';
-            $html    .= $myIndent . '    <li' . $liClass . '>' . PHP_EOL
-                . $myIndent . '        ' . $this->htmlify($page, $escapeLabels, $addClassToListItem) . PHP_EOL;
+            $liClass = empty($liClasses)
+                ? ''
+                : ' class="' . Value::stringify($escaper(implode(' ', $liClasses))) . '"';
+            $html .=
+                $myIndent
+                . '    <li'
+                . $liClass
+                . '>'
+                . PHP_EOL
+                . $myIndent
+                . '        '
+                . $this->htmlify($page, $escapeLabels, $addClassToListItem)
+                . PHP_EOL;
 
             // store as previous depth for next iteration
             $prevDepth = $depth;
@@ -377,8 +393,7 @@ class Menu extends AbstractHelper
             // done iterating container; close open ul/li tags
             for ($i = $prevDepth + 1; $i > 0; $i--) {
                 $myIndent = $indent . str_repeat('        ', $i - 1);
-                $html     .= $myIndent . '    </li>' . PHP_EOL
-                    . $myIndent . '</ul>' . PHP_EOL;
+                $html .= $myIndent . '    </li>' . PHP_EOL . $myIndent . '</ul>' . PHP_EOL;
             }
             $html = rtrim($html, PHP_EOL);
         }
@@ -425,8 +440,11 @@ class Menu extends AbstractHelper
      * @throws Exception\RuntimeException         If no partial provided.
      * @throws Exception\InvalidArgumentException If partial is invalid array.
      */
-    public function renderPartialWithParams(array $params = [], ?AbstractContainer $container = null, array|string|null $partial = null)
-    {
+    public function renderPartialWithParams(
+        array $params = [],
+        ?AbstractContainer $container = null,
+        array|string|null $partial = null,
+    ) {
         return $this->renderPartialModel($params, $container, $partial);
     }
 
@@ -459,21 +477,20 @@ class Menu extends AbstractHelper
      */
     public function renderSubMenu(
         ?AbstractContainer $container = null,
-        ?string            $ulClass = null,
-        int|string|null    $indent = null,
-        ?string            $liActiveClass = null
-    )
-    {
+        ?string $ulClass = null,
+        int|string|null $indent = null,
+        ?string $liActiveClass = null,
+    ) {
         return $this->renderMenu($container, [
-            'indent'             => $indent,
-            'ulClass'            => $ulClass,
-            'minDepth'           => null,
-            'maxDepth'           => null,
-            'onlyActiveBranch'   => true,
-            'renderParents'      => false,
-            'escapeLabels'       => true,
+            'indent' => $indent,
+            'ulClass' => $ulClass,
+            'minDepth' => null,
+            'maxDepth' => null,
+            'onlyActiveBranch' => true,
+            'renderParents' => false,
+            'escapeLabels' => true,
             'addClassToListItem' => false,
-            'liActiveClass'      => $liActiveClass,
+            'liActiveClass' => $liActiveClass,
         ]);
     }
 
@@ -492,7 +509,7 @@ class Menu extends AbstractHelper
     {
         // get attribs for element
         $attribs = [
-            'id'    => $page->getId(),
+            'id' => $page->getId(),
             'title' => $this->translate($page->getTitle(), $page->getTextDomain()),
         ];
 
@@ -503,8 +520,8 @@ class Menu extends AbstractHelper
         // does page have a href?
         $href = $page->getHref();
         if ($href) {
-            $element           = 'a';
-            $attribs['href']   = $href;
+            $element = 'a';
+            $attribs['href'] = $href;
             $attribs['target'] = $page->getTarget();
         } else {
             $element = 'span';
@@ -514,13 +531,12 @@ class Menu extends AbstractHelper
             $attribs['aria-current'] = 'page';
         }
 
-        $html  = '<' . $element . $this->htmlAttribs($attribs) . '>';
+        $html = '<' . $element . $this->htmlAttribs($attribs) . '>';
         $label = $this->translate($page->getLabel(), $page->getTextDomain());
 
         if ($escapeLabel === true) {
-            
             $escaper = $this->getView()->plugin('escapeHtml', \Laminas\View\Helper\EscapeHtml::class);
-            $html    .= \Jield\Stdlib\Value::stringify($escaper($label));
+            $html .= Value::stringify($escaper($label));
         } else {
             $html .= $label;
         }
@@ -538,20 +554,20 @@ class Menu extends AbstractHelper
     protected function normalizeOptions(array $options = [])
     {
         if (isset($options['indent'])) {
-            $options['indent'] = $this->getWhitespace(\Jield\Stdlib\Value::key($options['indent']));
+            $options['indent'] = $this->getWhitespace(Value::key($options['indent']));
         } else {
             $options['indent'] = $this->getIndent();
         }
 
         if (isset($options['ulClass']) && $options['ulClass'] !== null) {
-            $options['ulClass'] = (string)$options['ulClass'];
+            $options['ulClass'] = (string) $options['ulClass'];
         } else {
             $options['ulClass'] = $this->getUlClass();
         }
 
         if (array_key_exists('minDepth', $options)) {
             if (null !== $options['minDepth']) {
-                $options['minDepth'] = (int)$options['minDepth'];
+                $options['minDepth'] = (int) $options['minDepth'];
             }
         } else {
             $options['minDepth'] = $this->getMinDepth();
@@ -563,30 +579,22 @@ class Menu extends AbstractHelper
 
         if (array_key_exists('maxDepth', $options)) {
             if (null !== $options['maxDepth']) {
-                $options['maxDepth'] = (int)$options['maxDepth'];
+                $options['maxDepth'] = (int) $options['maxDepth'];
             }
         } else {
             $options['maxDepth'] = $this->getMaxDepth();
         }
 
-        if (!isset($options['onlyActiveBranch'])) {
-            $options['onlyActiveBranch'] = $this->getOnlyActiveBranch();
-        }
+        $options['onlyActiveBranch'] ??= $this->getOnlyActiveBranch();
 
-        if (!isset($options['escapeLabels'])) {
-            $options['escapeLabels'] = $this->escapeLabels;
-        }
+        $options['escapeLabels'] ??= $this->escapeLabels;
 
-        if (!isset($options['renderParents'])) {
-            $options['renderParents'] = $this->getRenderParents();
-        }
+        $options['renderParents'] ??= $this->getRenderParents();
 
-        if (!isset($options['addClassToListItem'])) {
-            $options['addClassToListItem'] = $this->getAddClassToListItem();
-        }
+        $options['addClassToListItem'] ??= $this->getAddClassToListItem();
 
         if (isset($options['liActiveClass']) && $options['liActiveClass'] !== null) {
-            $options['liActiveClass'] = (string)$options['liActiveClass'];
+            $options['liActiveClass'] = (string) $options['liActiveClass'];
         } else {
             $options['liActiveClass'] = $this->getLiActiveClass();
         }
@@ -762,35 +770,29 @@ class Menu extends AbstractHelper
     protected function renderPartialModel(array $params, ?AbstractContainer $container, array|string|null $partial)
     {
         $this->parseContainer($container);
-        if (null === $container) {
-            $container = $this->getContainer();
-        }
+        $container ??= $this->getContainer();
 
-        if (null === $partial) {
-            $partial = $this->getPartial();
-        }
+        $partial ??= $this->getPartial();
 
         if (empty($partial)) {
-            throw new Exception\RuntimeException(
-                'Unable to render menu: No partial view script provided'
-            );
+            throw new Exception\RuntimeException('Unable to render menu: No partial view script provided');
         }
 
         $model = array_merge($params, ['container' => $container]);
 
-        
         $partialHelper = $this->getView()->plugin('partial', \Laminas\View\Helper\Partial::class);
         if (is_array($partial)) {
             if (count($partial) !== 2) {
-                throw new Exception\InvalidArgumentException(
-                    'Unable to render menu: A view partial supplied as '
-                    . 'an array must contain one value: the partial view script'
-                );
+                throw new Exception\InvalidArgumentException('Unable to render menu: A view partial supplied as '
+                . 'an array must contain one value: the partial view script');
             }
 
-            return $partialHelper(\Jield\Stdlib\Value::nonEmptyString($partial[0]), \Jield\Stdlib\Value::namedValues($model));
+            return $partialHelper(
+                Value::nonEmptyString($partial[0]),
+                Value::namedValues($model),
+            );
         }
 
-        return $partialHelper($partial, \Jield\Stdlib\Value::namedValues($model));
+        return $partialHelper($partial, Value::namedValues($model));
     }
 }

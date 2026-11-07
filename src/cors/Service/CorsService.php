@@ -25,11 +25,14 @@ namespace Jield\Cors\Service;
 use Jield\Cors\Exception\DisallowedOriginException;
 use Jield\Cors\Exception\InvalidOriginException;
 use Jield\Cors\Options\CorsOptions;
+use Jield\Mvc\Router\RouteMatch;
+use Jield\Stdlib\Value;
+use Laminas\Http\Header\HeaderInterface;
+use Laminas\Router\RouteMatchInterface;
 use Laminas\Http\Header;
 use Laminas\Http\Headers;
 use Laminas\Http\Request as HttpRequest;
 use Laminas\Http\Response as HttpResponse;
-use Jield\Mvc\Router\RouteMatch;
 use Laminas\Uri\UriFactory;
 
 use function fnmatch;
@@ -45,12 +48,9 @@ use function strtoupper;
  */
 class CorsService
 {
-    protected CorsOptions $options;
-
-    public function __construct(CorsOptions $options)
-    {
-        $this->options = $options;
-    }
+    public function __construct(
+        protected CorsOptions $options,
+    ) {}
 
     /**
      * Check if the HTTP request is a CORS request by checking if the Origin header is present and that the
@@ -60,11 +60,11 @@ class CorsService
     {
         $headers = $request->getHeaders();
 
-        if (!\Jield\Stdlib\Value::instance($headers, \Laminas\Http\Headers::class)->has('Origin')) {
+        if (!Value::instance($headers, \Laminas\Http\Headers::class)->has('Origin')) {
             return false;
         }
 
-        $origin = \Jield\Stdlib\Value::instance($headers, \Laminas\Http\Headers::class)->get('Origin');
+        $origin = Value::instance($headers, \Laminas\Http\Headers::class)->get('Origin');
 
         if (!$origin instanceof Header\Origin) {
             throw InvalidOriginException::fromInvalidHeaderValue();
@@ -90,7 +90,9 @@ class CorsService
         return (
             $this->isCorsRequest($request)
             && strtoupper($request->getMethod()) === 'OPTIONS'
-            && \Jield\Stdlib\Value::instance($request->getHeaders(), \Laminas\Http\Headers::class)->has('Access-Control-Request-Method')
+            && Value::instance($request->getHeaders(), \Laminas\Http\Headers::class)->has(
+                'Access-Control-Request-Method',
+            )
         );
     }
 
@@ -105,10 +107,16 @@ class CorsService
         $headers = $response->getHeaders();
 
         $headers->addHeaderLine('Access-Control-Allow-Origin', $this->getAllowedOriginValue($request));
-        $headers->addHeaderLine('Access-Control-Allow-Methods', implode(', ', \Jield\Stdlib\Value::scalars($this->options->getAllowedMethods())));
-        $headers->addHeaderLine('Access-Control-Allow-Headers', implode(', ', \Jield\Stdlib\Value::scalars($this->options->getAllowedHeaders())));
-        $headers->addHeaderLine('Access-Control-Max-Age', $this->options->getMaxAge());
-        $headers->addHeaderLine('Content-Length', 0);
+        $headers->addHeaderLine('Access-Control-Allow-Methods', implode(
+            ', ',
+            Value::scalars($this->options->getAllowedMethods()),
+        ));
+        $headers->addHeaderLine('Access-Control-Allow-Headers', implode(
+            ', ',
+            Value::scalars($this->options->getAllowedHeaders()),
+        ));
+        $headers->addHeaderLine('Access-Control-Max-Age', (string) $this->options->getMaxAge());
+        $headers->addHeaderLine('Content-Length', '0');
 
         if ($this->options->getAllowedCredentials()) {
             $headers->addHeaderLine('Access-Control-Allow-Credentials', 'true');
@@ -121,12 +129,14 @@ class CorsService
      * Create a preflight response by adding the corresponding headers which are merged with per-route configuration
      */
     public function createPreflightCorsResponseWithRouteOptions(
-        HttpRequest $request,
-        ?RouteMatch $routeMatch = null,
+        HttpRequest                         $request,
+        RouteMatchInterface|RouteMatch|null $routeMatch = null,
     ): HttpResponse {
         $options = $this->options;
-        if ($routeMatch instanceof RouteMatch) {
-            $options->setFromArray(\Jield\Stdlib\Value::stringKeyedArray($routeMatch->getParam(CorsOptions::ROUTE_PARAM) ?: []));
+        if ($routeMatch !== null) {
+            $options->setFromArray(Value::stringKeyedArray(
+                $routeMatch->getParam(CorsOptions::ROUTE_PARAM) ?: [],
+            ));
         }
         return $this->createPreflightCorsResponse($request);
     }
@@ -137,12 +147,14 @@ class CorsService
      * @throws DisallowedOriginException
      */
     public function populateCorsResponse(
-        HttpRequest $request,
-        HttpResponse $response,
-        ?RouteMatch $routeMatch = null,
+        HttpRequest                         $request,
+        HttpResponse                        $response,
+        RouteMatchInterface|RouteMatch|null $routeMatch = null,
     ): HttpResponse {
-        if ($routeMatch instanceof RouteMatch) {
-            $this->options->setFromArray(\Jield\Stdlib\Value::stringKeyedArray($routeMatch->getParam(CorsOptions::ROUTE_PARAM) ?: []));
+        if ($routeMatch !== null) {
+            $this->options->setFromArray(Value::stringKeyedArray(
+                $routeMatch->getParam(CorsOptions::ROUTE_PARAM) ?: [],
+            ));
         }
 
         $origin = $this->getAllowedOriginValue($request);
@@ -152,13 +164,18 @@ class CorsService
         // by the browser anyway, so we throw an exception
         if ($origin === 'null') {
             $origin = $request->getHeader('Origin');
-            $originHeader = $origin ? \Jield\Stdlib\Value::instance($origin, \Laminas\Http\Header\HeaderInterface::class)->getFieldValue() : '';
+            $originHeader = $origin
+                ? Value::instance($origin, HeaderInterface::class)->getFieldValue()
+                : '';
             throw new DisallowedOriginException(sprintf('The origin "%s" is not authorized', $originHeader));
         }
 
         $headers = $response->getHeaders();
         $headers->addHeaderLine('Access-Control-Allow-Origin', $origin);
-        $headers->addHeaderLine('Access-Control-Expose-Headers', implode(', ', \Jield\Stdlib\Value::scalars($this->options->getExposedHeaders())));
+        $headers->addHeaderLine('Access-Control-Expose-Headers', implode(
+            ', ',
+            Value::scalars($this->options->getExposedHeaders()),
+        ));
 
         $headers = $this->ensureVaryHeader($response);
 
@@ -186,13 +203,15 @@ class CorsService
         $origin = $request->getHeader('Origin');
 
         if ($origin) {
-            $origin = \Jield\Stdlib\Value::instance($origin, \Laminas\Http\Header\HeaderInterface::class)->getFieldValue();
+            $origin = Value::instance(
+                $origin,
+                HeaderInterface::class,
+            )->getFieldValue();
             if (in_array('*', $allowedOrigins, strict: true)) {
                 return $origin;
             }
-            /** @var mixed $allowedOrigin */
             foreach ($allowedOrigins as $allowedOrigin) {
-                if (fnmatch(\Jield\Stdlib\Value::string($allowedOrigin), $origin)) {
+                if (fnmatch(Value::string($allowedOrigin), $origin)) {
                     return $origin;
                 }
             }
@@ -218,7 +237,9 @@ class CorsService
         }
         if ($headers->has('Vary')) {
             $varyHeader = $headers->get('Vary');
-            $varyValue = \Jield\Stdlib\Value::instance($varyHeader, \Laminas\Http\Header\HeaderInterface::class)->getFieldValue() . ', Origin';
+            $varyValue =
+                Value::instance($varyHeader, HeaderInterface::class)->getFieldValue()
+                . ', Origin';
 
             $headers->removeHeader($varyHeader);
             $headers->addHeaderLine('Vary', $varyValue);

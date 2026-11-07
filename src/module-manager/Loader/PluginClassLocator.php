@@ -11,7 +11,7 @@ use Traversable;
 
 /**
  * Plugin class locator interface
- 
+ *
  *
  * @extends \IteratorAggregate<array-key, mixed>
  */

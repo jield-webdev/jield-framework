@@ -6,6 +6,8 @@ namespace DoctrineModule\Form\Element;
 
 use Jield\Form\Element\MultiCheckbox;
 use Jield\Form\Element\Radio as RadioElement;
+use Jield\Stdlib\Value;
+use Override;
 
 /** @phpstan-import-type ValueOptionSpec from MultiCheckbox */
 class ObjectRadio extends RadioElement
@@ -17,16 +19,16 @@ class ObjectRadio extends RadioElement
      *
      * @return static
      */
-    #[\Override]
+    #[Override]
     public function setOptions(iterable $options): static
     {
-        $this->getProxy()->setOptions(options: \Jield\Stdlib\Value::array($options));
+        $this->getProxy()->setOptions(options: Value::array($options));
 
         return parent::setOptions(options: $options);
     }
 
     /** @return $this */
-    #[\Override]
+    #[Override]
     public function setOption(string $key, mixed $value): static
     {
         $this->getProxy()->setOptions(options: [$key => $value]);
@@ -38,7 +40,7 @@ class ObjectRadio extends RadioElement
     /**
      * {@inheritDoc}
      */
-    #[\Override]
+    #[Override]
     public function setValue($value): static
     {
         return parent::setValue(value: $this->getProxy()->getValue(value: $value));
@@ -49,7 +51,7 @@ class ObjectRadio extends RadioElement
      *
      * @return ValueOptionSpec
      */
-    #[\Override]
+    #[Override]
     public function getValueOptions(): array
     {
         if ($this->valueOptions !== []) {

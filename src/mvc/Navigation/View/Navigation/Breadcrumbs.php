@@ -4,17 +4,19 @@ declare(strict_types=1);
 
 namespace Jield\Mvc\Navigation\View\Navigation;
 
+use Jield\Stdlib\Value;
 use Laminas\Navigation;
-
 use Laminas\Navigation\AbstractContainer;
 use Laminas\Navigation\Page\AbstractPage;
 use Laminas\View;
 use Laminas\View\Exception;
+
+use Laminas\View\Helper\EscapeHtml;
+use Laminas\View\Helper\Partial;
 use function array_merge;
 use function array_reverse;
 use function count;
 use function is_array;
-use function is_string;
 use function strlen;
 
 /**
@@ -78,10 +80,16 @@ class Breadcrumbs extends AbstractHelper
     {
         $partial = $this->getPartial();
         if ($partial) {
-            return $this->renderPartial(\Jield\Stdlib\Value::nullableInstance($container, \Laminas\Navigation\AbstractContainer::class), $partial);
+            return $this->renderPartial(
+                Value::nullableInstance($container, \Laminas\Navigation\AbstractContainer::class),
+                $partial,
+            );
         }
 
-        return $this->renderStraight(\Jield\Stdlib\Value::nullableInstance($container, \Laminas\Navigation\AbstractContainer::class));
+        return $this->renderStraight(Value::nullableInstance(
+            $container,
+            \Laminas\Navigation\AbstractContainer::class,
+        ));
     }
 
     /**
@@ -95,9 +103,7 @@ class Breadcrumbs extends AbstractHelper
     public function renderStraight(?AbstractContainer $container = null)
     {
         $this->parseContainer($container);
-        if (null === $container) {
-            $container = $this->getContainer();
-        }
+        $container ??= $this->getContainer();
 
         // find deepest active
         $active = $this->findActive($container);
@@ -109,28 +115,33 @@ class Breadcrumbs extends AbstractHelper
 
         // put the deepest active page last in breadcrumbs
         if ($this->getLinkLast()) {
-            $html = $this->htmlify(\Jield\Stdlib\Value::instance($active, \Laminas\Navigation\Page\AbstractPage::class));
+            $html = $this->htmlify(Value::instance(
+                $active,
+                \Laminas\Navigation\Page\AbstractPage::class,
+            ));
         } else {
-            
-            $escaper = $this->getView()->plugin('escapeHtml', \Laminas\View\Helper\EscapeHtml::class);
+            $escaper = $this->getView()->plugin('escapeHtml', EscapeHtml::class);
             /** @var mixed $label */
-            $label   = $escaper(
-                $this->translate(\Jield\Stdlib\Value::nullableString(\Jield\Stdlib\Value::present($active)->getLabel()), \Jield\Stdlib\Value::nullableString(\Jield\Stdlib\Value::present($active)->getTextDomain()))
-            );
+            $label = $escaper($this->translate(
+                Value::nullableString(Value::present($active)->getLabel()),
+                Value::nullableString(Value::present($active)->getTextDomain()),
+            ));
             $attribs = [
                 'aria-current' => 'page',
             ];
-            $html    = '<span' . $this->htmlAttribs($attribs) . '>' . \Jield\Stdlib\Value::stringify($label) . '</span>';
+            $html = '<span' . $this->htmlAttribs($attribs) . '>' . Value::stringify($label) . '</span>';
         }
 
         // walk back to root
-        /** @var mixed $parent */
-        while ($parent = \Jield\Stdlib\Value::call(\Jield\Stdlib\Value::present(\Jield\Stdlib\Value::object($active)), 'getParent')) {
+        while (
+            $parent = Value::call(
+                Value::present(Value::object($active)),
+                'getParent',
+            )
+        ) {
             if ($parent instanceof AbstractPage) {
                 // prepend crumb to html
-                $html = $this->htmlify($parent)
-                    . $this->getSeparator()
-                    . $html;
+                $html = $this->htmlify($parent) . $this->getSeparator() . $html;
             }
 
             if ($parent === $container) {
@@ -138,7 +149,6 @@ class Breadcrumbs extends AbstractHelper
                 break;
             }
 
-            /** @var mixed $active */
             $active = $parent;
         }
 
@@ -184,8 +194,11 @@ class Breadcrumbs extends AbstractHelper
      * @throws Exception\RuntimeException         If no partial provided.
      * @throws Exception\InvalidArgumentException If partial is invalid array.
      */
-    public function renderPartialWithParams(array $params = [], ?AbstractContainer $container = null, array|string|null $partial = null)
-    {
+    public function renderPartialWithParams(
+        array $params = [],
+        ?AbstractContainer $container = null,
+        array|string|null $partial = null,
+    ) {
         return $this->renderPartialModel($params, $container, $partial);
     }
 
@@ -262,30 +275,24 @@ class Breadcrumbs extends AbstractHelper
      *
      * @param AbstractContainer|null $container
      * @param array|string|null $partial
-     * @return View\Helper\Partial|string
+     * @return string
      * @throws Exception\RuntimeException         If no partial provided.
      * @throws Exception\InvalidArgumentException If partial is invalid array.
      */
     protected function renderPartialModel(array $params, ?AbstractContainer $container, array|string|null $partial)
     {
         $this->parseContainer($container);
-        if (null === $container) {
-            $container = $this->getContainer();
-        }
-        if (null === $partial) {
-            $partial = $this->getPartial();
-        }
+        $container ??= $this->getContainer();
+        $partial ??= $this->getPartial();
         if (empty($partial)) {
-            throw new Exception\RuntimeException(
-                'Unable to render breadcrumbs: No partial view script provided'
-            );
+            throw new Exception\RuntimeException('Unable to render breadcrumbs: No partial view script provided');
         }
-        $model  = array_merge($params, ['pages' => []], ['separator' => $this->getSeparator()]);
+        $model = array_merge($params, ['pages' => []], ['separator' => $this->getSeparator()]);
         $active = $this->findActive($container);
         if (isset($active['page'], $active['depth'])) {
-            $active           = $active['page'];
+            $active = $active['page'];
             $model['pages'][] = $active;
-            while ($parent = \Jield\Stdlib\Value::present($active)->getParent()) {
+            while ($parent = Value::present($active)->getParent()) {
                 if (!$parent instanceof AbstractPage) {
                     break;
                 }
@@ -300,19 +307,19 @@ class Breadcrumbs extends AbstractHelper
             $model['pages'] = array_reverse($model['pages']);
         }
 
-        
-        $partialHelper = $this->getView()->plugin('partial', \Laminas\View\Helper\Partial::class);
+        $partialHelper = $this->getView()->plugin('partial', Partial::class);
         if (is_array($partial)) {
             if (count($partial) !== 2) {
-                throw new Exception\InvalidArgumentException(
-                    'Unable to render breadcrumbs: A view partial supplied as '
-                    . 'an array must contain one value: the partial view script'
-                );
+                throw new Exception\InvalidArgumentException('Unable to render breadcrumbs: A view partial supplied as '
+                . 'an array must contain one value: the partial view script');
             }
 
-            return $partialHelper(\Jield\Stdlib\Value::nonEmptyString($partial[0]), \Jield\Stdlib\Value::namedValues($model));
+            return $partialHelper(
+                Value::nonEmptyString($partial[0]),
+                Value::namedValues($model),
+            );
         }
 
-        return $partialHelper($partial, \Jield\Stdlib\Value::namedValues($model));
+        return $partialHelper(Value::nonEmptyString($partial), Value::namedValues($model));
     }
 }

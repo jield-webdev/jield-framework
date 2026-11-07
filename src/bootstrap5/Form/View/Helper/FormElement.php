@@ -7,6 +7,8 @@ namespace Jield\Bootstrap5\Form\View\Helper;
 use Jield\Form\ElementInterface;
 use Jield\Form\LabelAwareInterface;
 use Jield\Form\View\Helper;
+use Jield\Stdlib\Service;
+use Jield\Stdlib\Value;
 use Laminas\Translator\TranslatorInterface;
 use Laminas\View\Helper\EscapeHtml;
 use Laminas\View\HelperPluginManager;
@@ -65,10 +67,18 @@ class FormElement extends Helper\FormElement
     public function __construct(HelperPluginManager $viewHelperManager, TranslatorInterface $translator)
     {
         parent::__construct($viewHelperManager);
-        $this->formLabel = \Jield\Stdlib\Service::get($viewHelperManager, Helper\FormLabel::class, 'formlabel');
-        $this->escapeHtml = \Jield\Stdlib\Service::get($viewHelperManager, EscapeHtml::class, 'escapehtml');
-        $this->formDescription = \Jield\Stdlib\Service::get($viewHelperManager, FormDescription::class, 'lbs5formdescription');
-        $this->formElementErrors = \Jield\Stdlib\Service::get($viewHelperManager, Helper\FormElementErrors::class, 'formelementerrors');
+        $this->formLabel = Service::get($viewHelperManager, Helper\FormLabel::class, 'formlabel');
+        $this->escapeHtml = Service::get($viewHelperManager, EscapeHtml::class, 'escapehtml');
+        $this->formDescription = Service::get(
+            $viewHelperManager,
+            FormDescription::class,
+            'lbs5formdescription',
+        );
+        $this->formElementErrors = Service::get(
+            $viewHelperManager,
+            Helper\FormElementErrors::class,
+            'formelementerrors',
+        );
 
         $this->translator = $translator;
     }
@@ -111,9 +121,12 @@ class FormElement extends Helper\FormElement
 
             if ($this->isSelectPicker && !$this->isRendered) {
                 $this->getView()->headLink()->appendStylesheet('assets/css/jield-bootstrap5/bootstrap-select.css');
-                $this->getView()->headScript()->appendFile('assets/js/jield-bootstrap5/bootstrap-select.js', [
-                    'type' => 'text/javascript',
-                ] + []);
+                $this
+                    ->getView()
+                    ->headScript()
+                    ->appendFile('assets/js/jield-bootstrap5/bootstrap-select.js', [
+                        'type' => 'text/javascript',
+                    ] + []);
 
                 $this->isRendered = true;
             }
@@ -126,24 +139,45 @@ class FormElement extends Helper\FormElement
 
         if ($element->getOption(option: 'is-date-range')) {
             $this->getView()->headLink()->appendStylesheet('assets/css/jield-bootstrap5/daterangepicker.css');
-            $this->getView()->headScript()->appendFile('assets/js/jield-bootstrap5/daterangepicker.js', [
-                'type' => 'text/javascript',
-            ] + []);
+            $this
+                ->getView()
+                ->headScript()
+                ->appendFile('assets/js/jield-bootstrap5/daterangepicker.js', [
+                    'type' => 'text/javascript',
+                ] + []);
 
             $element->setAttribute(key: 'class', value: 'daterangepicker-element form-control');
             $element->setAttribute(key: 'placeholder', value: 'Click to set a date interval');
         }
 
         if ($element->getOption(option: 'has-codemirror')) {
-            $this->getView()->headScript()->appendFile('assets/js/jield-bootstrap5/codemirror.js', [
-                'type' => 'text/javascript',
-            ] + []);
+            $this
+                ->getView()
+                ->headScript()
+                ->appendFile('assets/js/jield-bootstrap5/codemirror.js', [
+                    'type' => 'text/javascript',
+                ] + []);
             $this->getView()->headLink()->appendStylesheet('assets/css/jield-bootstrap5/codemirror.css');
 
             $element->setAttribute(key: 'class', value: 'codemirror-element form-control');
-            $element->setAttribute(key: 'data-mode', value: \Jield\Stdlib\Value::plainScalar(\Jield\Stdlib\Value::scalar($element->getOption(option: 'mode'))));
-            $element->setAttribute(key: 'data-line-numbers', value: \Jield\Stdlib\Value::plainScalar(\Jield\Stdlib\Value::scalar($element->getOption(option: 'line-numbers'))));
-            $element->setAttribute(key: 'data-height', value: \Jield\Stdlib\Value::plainScalar(\Jield\Stdlib\Value::scalar($element->getOption(option: 'height'))));
+            $element->setAttribute(
+                key: 'data-mode',
+                value: Value::plainScalar(Value::scalar($element->getOption(
+                    option: 'mode',
+                ))),
+            );
+            $element->setAttribute(
+                key: 'data-line-numbers',
+                value: Value::plainScalar(Value::scalar($element->getOption(
+                    option: 'line-numbers',
+                ))),
+            );
+            $element->setAttribute(
+                key: 'data-height',
+                value: Value::plainScalar(Value::scalar($element->getOption(
+                    option: 'height',
+                ))),
+            );
         }
 
         $renderedType = $this->renderType(element: $element);
@@ -152,7 +186,9 @@ class FormElement extends Helper\FormElement
             return $renderedType;
         }
 
-        $element->setValue(value: \Jield\Stdlib\Value::present($this->translator)->translate(message: \Jield\Stdlib\Value::string($element->getValue())));
+        $element->setValue(value: Value::present($this->translator)->translate(
+            message: Value::string($element->getValue()),
+        ));
 
         return parent::render(element: $element);
     }
@@ -161,7 +197,7 @@ class FormElement extends Helper\FormElement
     {
         $type = $element->getAttribute(key: 'type');
 
-        if (isset($this->typeMap[$type])) {
+        if ($type !== null && isset($this->typeMap[$type])) {
             //Produce the label
             $label = $this->findLabel(element: $element);
             $renderedElement = $this->renderHelper(name: $this->typeMap[$type], element: $element);
@@ -182,14 +218,14 @@ class FormElement extends Helper\FormElement
             switch ($type) {
                 case 'radio':
                     return $this->getRadioElement(
-                        label: \Jield\Stdlib\Value::string($label),
+                        label: Value::string($label),
                         element: $renderedElement,
                         error: $error,
                         description: $description,
                     );
                 case 'multi_checkbox':
                     return $this->getMultiCheckboxElement(
-                        label: \Jield\Stdlib\Value::string($label),
+                        label: Value::string($label),
                         element: $renderedElement,
                         error: $error,
                         description: $description,
@@ -221,8 +257,8 @@ class FormElement extends Helper\FormElement
     {
         $label = $element->getAttribute(key: 'label') ?? $element->getLabel();
 
-        if (null !== ($translator = \Jield\Stdlib\Value::present($this->formLabel)->getTranslator())) {
-            $label = $translator->translate(message: \Jield\Stdlib\Value::string($label));
+        if (null !== ($translator = Value::present($this->formLabel)->getTranslator())) {
+            $label = $translator->translate(message: Value::string($label));
         }
 
         return $label === null ? null : (string) $label;
@@ -230,7 +266,7 @@ class FormElement extends Helper\FormElement
 
     protected function parseDescription(ElementInterface $element): string
     {
-        return \Jield\Stdlib\Value::present($this->formDescription)->__invoke(element: $element);
+        return Value::present($this->formDescription)->__invoke(element: $element);
     }
 
     protected function hasFormElementError(ElementInterface $element): bool
@@ -240,20 +276,25 @@ class FormElement extends Helper\FormElement
 
     protected function parseFormElementError(ElementInterface $element): string
     {
-        \Jield\Stdlib\Value::present($this->formElementErrors)->setMessageOpenFormat(messageOpenFormat: '<div class="invalid-feedback"><span%s>');
-        \Jield\Stdlib\Value::present($this->formElementErrors)->setMessageSeparatorString(messageSeparatorString: '<br>');
-        \Jield\Stdlib\Value::present($this->formElementErrors)->setMessageCloseString(messageCloseString: '</span></div>');
+        Value::present($this->formElementErrors)->setMessageOpenFormat(
+            messageOpenFormat: '<div class="invalid-feedback"><span%s>',
+        );
+        Value::present($this->formElementErrors)->setMessageSeparatorString(
+            messageSeparatorString: '<br>',
+        );
+        Value::present($this->formElementErrors)->setMessageCloseString(
+            messageCloseString: '</span></div>',
+        );
 
-        return \Jield\Stdlib\Value::present($this->formElementErrors)->__invoke(element: $element);
+        return Value::present($this->formElementErrors)->__invoke(element: $element);
     }
 
     private function getRadioElement(string $label, string $element, ?string $error, string $description): string
     {
-        switch ($this->type) {
-            case self::TYPE_HORIZONTAL:
-            default:
-                return sprintf(
-                    '<fieldset class="row mb-3">
+        return match ($this->type) {
+            self::TYPE_DEFAULT => sprintf('%s%s%s%s', $label, $element, $error, $description),
+            default => sprintf(
+                '<fieldset class="row mb-3">
                                     <legend class="col-form-label col-sm-3 pt-0">%s</legend>
                                     <div class="col-sm-%d">
                                         %s
@@ -261,15 +302,13 @@ class FormElement extends Helper\FormElement
                                         %s
                                     </div>
                              </fieldset>',
-                    $label,
-                    $this->elementCols,
-                    $element,
-                    $error,
-                    $description,
-                );
-            case self::TYPE_DEFAULT:
-                return sprintf('%s%s%s%s', $label, $element, $error, $description);
-        }
+                $label,
+                $this->elementCols,
+                $element,
+                $error,
+                $description,
+            ),
+        };
     }
 
     private function getMultiCheckboxElement(
@@ -278,11 +317,16 @@ class FormElement extends Helper\FormElement
         ?string $error,
         string $description,
     ): string {
-        switch ($this->type) {
-            case self::TYPE_HORIZONTAL:
-            default:
-                return sprintf(
-                    '<fieldset class="row mb-3">
+        return match ($this->type) {
+            self::TYPE_DEFAULT => sprintf(
+                '<div class="mb-3"><label class="form-label"><strong>%s</strong></label>%s%s%s</div>',
+                $label,
+                $element,
+                $error,
+                $description,
+            ),
+            default => sprintf(
+                '<fieldset class="row mb-3">
                                     <legend class="col-form-label col-sm-3 pt-0">%s</legend>
                                     <div class="col-sm-%d">
                                         %s
@@ -290,44 +334,33 @@ class FormElement extends Helper\FormElement
                                         %s
                                     </div>
                              </fieldset>',
-                    $label,
-                    $this->elementCols,
-                    $element,
-                    $error,
-                    $description,
-                );
-            case self::TYPE_DEFAULT:
-                return sprintf(
-                    '<div class="mb-3"><label class="form-label"><strong>%s</strong></label>%s%s%s</div>',
-                    $label,
-                    $element,
-                    $error,
-                    $description,
-                );
-        }
+                $label,
+                $this->elementCols,
+                $element,
+                $error,
+                $description,
+            ),
+        };
     }
 
     private function getCheckboxElement(string $element, ?string $error, string $description): string
     {
-        switch ($this->type) {
-            case self::TYPE_HORIZONTAL:
-            default:
-                return sprintf(
-                    '<div class="row mb-3">
+        return match ($this->type) {
+            self::TYPE_DEFAULT => sprintf('<div class="mb-3">%s%s%s</div>', $element, $error, $description),
+            default => sprintf(
+                '<div class="row mb-3">
                                     <div class="col-sm-%d offset-sm-3">
                                         %s
                                         %s
                                         %s
                                     </div>
                              </div>',
-                    $this->elementCols,
-                    $element,
-                    $error,
-                    $description,
-                );
-            case self::TYPE_DEFAULT:
-                return sprintf('<div class="mb-3">%s%s%s</div>', $element, $error, $description);
-        }
+                $this->elementCols,
+                $element,
+                $error,
+                $description,
+            ),
+        };
     }
 
     protected function parseLabel(ElementInterface $element): string
@@ -348,43 +381,52 @@ class FormElement extends Helper\FormElement
             $openTagAttributes['class'] = ($openTagAttributes['class'] ?? '') . ' required';
         }
 
-        $openTag = \Jield\Stdlib\Value::present($this->formLabel)->openTag(attributesOrElement: $openTagAttributes);
+        $openTag = Value::present($this->formLabel)->openTag(attributesOrElement: $openTagAttributes);
 
         if (!$element instanceof LabelAwareInterface || !$element->getLabelOption(key: 'disable_html_escape')) {
             /** @var mixed $label */
-            $label = \Jield\Stdlib\Value::present($this->escapeHtml)->__invoke(value: $label);
+            $label = Value::present($this->escapeHtml)->__invoke(value: $label);
         }
 
-        return $openTag . \Jield\Stdlib\Value::stringify($label) . \Jield\Stdlib\Value::present($this->formLabel)->closeTag();
+        return (
+            $openTag
+            . Value::stringify($label)
+            . Value::present($this->formLabel)->closeTag()
+        );
     }
 
     private function getDefaultElement($label, $element, $error, $description): string
     {
-        switch ($this->type) {
-            case self::TYPE_HORIZONTAL:
-            default:
-                return sprintf(
-                    '<div class="row mb-3">%s<div class="col-sm-%d">%s%s%s</div></div>',
-                    \Jield\Stdlib\Value::scalar($label),
-                    $this->elementCols,
-                    \Jield\Stdlib\Value::scalar($element),
-                    \Jield\Stdlib\Value::scalar($error),
-                    \Jield\Stdlib\Value::scalar($description),
-                );
-            case self::TYPE_INLINE:
-            case self::TYPE_DEFAULT:
-                return sprintf('%s%s%s%s', \Jield\Stdlib\Value::scalar($label), \Jield\Stdlib\Value::scalar($element), \Jield\Stdlib\Value::scalar($error), \Jield\Stdlib\Value::scalar($description));
-            case self::TYPE_ELEMENT_ONLY:
-                return sprintf('%s%s%s', \Jield\Stdlib\Value::scalar($element), \Jield\Stdlib\Value::scalar($error), \Jield\Stdlib\Value::scalar($description));
-            case self::TYPE_FLOATING_LABEL:
-                return sprintf(
-                    '<div class="form-floating mb-3">%s%s%s%s</div>',
-                    \Jield\Stdlib\Value::scalar($element),
-                    \Jield\Stdlib\Value::scalar($label),
-                    \Jield\Stdlib\Value::scalar($error),
-                    \Jield\Stdlib\Value::scalar($description),
-                );
-        }
+        return match ($this->type) {
+            self::TYPE_INLINE, self::TYPE_DEFAULT => sprintf(
+                '%s%s%s%s',
+                Value::scalar($label),
+                Value::scalar($element),
+                Value::scalar($error),
+                Value::scalar($description),
+            ),
+            self::TYPE_ELEMENT_ONLY => sprintf(
+                '%s%s%s',
+                Value::scalar($element),
+                Value::scalar($error),
+                Value::scalar($description),
+            ),
+            self::TYPE_FLOATING_LABEL => sprintf(
+                '<div class="form-floating mb-3">%s%s%s%s</div>',
+                Value::scalar($element),
+                Value::scalar($label),
+                Value::scalar($error),
+                Value::scalar($description),
+            ),
+            default => sprintf(
+                '<div class="row mb-3">%s<div class="col-sm-%d">%s%s%s</div></div>',
+                Value::scalar($label),
+                $this->elementCols,
+                Value::scalar($element),
+                Value::scalar($error),
+                Value::scalar($description),
+            ),
+        };
     }
 
     public function setIsSelectPicker(bool $isSelectPicker): FormElement

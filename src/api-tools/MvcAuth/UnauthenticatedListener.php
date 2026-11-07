@@ -6,6 +6,7 @@ namespace Jield\ApiTools\MvcAuth;
 
 use Jield\ApiTools\ApiProblem\ApiProblem;
 use Jield\ApiTools\ApiProblem\ApiProblemResponse;
+use Jield\Stdlib\Value;
 
 class UnauthenticatedListener
 {
@@ -20,7 +21,7 @@ class UnauthenticatedListener
         }
 
         $authResult = $mvcAuthEvent->getAuthenticationResult();
-        if (\Jield\Stdlib\Value::present($authResult)->isValid()) {
+        if (Value::present($authResult)->isValid()) {
             return null;
         }
 

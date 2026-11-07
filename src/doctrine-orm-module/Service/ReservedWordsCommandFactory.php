@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace DoctrineORMModule\Service;
 
-use DoctrineORMModule\Command\ReservedWordsCommand;
+use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Tools\Console\ConnectionProvider\SingleConnectionProvider;
+use DoctrineORMModule\Command\ReservedWordsCommand;
+use Jield\Stdlib\Service;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Psr\Container\ContainerInterface;
 
@@ -20,7 +22,11 @@ final class ReservedWordsCommandFactory implements FactoryInterface
         ?array $options = null,
     ): ReservedWordsCommand {
         return new ReservedWordsCommand(
-            new SingleConnectionProvider(connection: \Jield\Stdlib\Service::get($container, \Doctrine\DBAL\Connection::class, 'doctrine.connection.orm_default')),
+            new SingleConnectionProvider(connection: Service::get(
+                $container,
+                Connection::class,
+                'doctrine.connection.orm_default',
+            )),
         );
     }
 }

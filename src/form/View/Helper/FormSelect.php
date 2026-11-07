@@ -8,7 +8,7 @@ use Jield\Form\Element\Hidden;
 use Jield\Form\Element\Select as SelectElement;
 use Jield\Form\ElementInterface;
 use Jield\Form\Exception;
-use Laminas\Stdlib\ArrayUtils;
+use Jield\Stdlib\Value;
 use Stringable;
 
 use function array_key_exists;
@@ -201,7 +201,7 @@ class FormSelect extends AbstractHelper
                 $disabled = $optionSpec['disabled'];
             }
 
-            if (ArrayUtils::inArray(needle: (string) $value, haystack: $stringSelectedOptions, strict: true)) {
+            if (in_array(needle: (string) $value, haystack: $stringSelectedOptions, strict: true)) {
                 $selected = true;
             }
 
@@ -222,7 +222,7 @@ class FormSelect extends AbstractHelper
             $optionStrings[] = sprintf(
                 $template,
                 $this->createAttributesString(attributes: $attributes),
-                \Jield\Stdlib\Value::scalar($escapeHtml(value: $label)),
+                Value::scalar($escapeHtml(value: $label)),
             );
         }
 
@@ -242,9 +242,8 @@ class FormSelect extends AbstractHelper
     {
         $template = '<optgroup%s>%s</optgroup>';
 
-        $options = [];
         $options = $optgroup['options'];
-unset($optgroup['options']);
+        unset($optgroup['options']);
 
         $this->validTagAttributes = $this->validOptgroupAttributes;
         $attributes = $this->createAttributesString(attributes: $optgroup);
@@ -308,9 +307,7 @@ unset($optgroup['options']);
             $this->formHiddenHelper = $this->getView()->plugin('formhidden', \Jield\Form\View\Helper\FormHidden::class);
         }
 
-        if (null === $this->formHiddenHelper) {
-            $this->formHiddenHelper = new FormHidden();
-        }
+        $this->formHiddenHelper ??= new FormHidden();
 
         return $this->formHiddenHelper;
     }

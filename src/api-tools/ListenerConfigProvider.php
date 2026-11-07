@@ -8,6 +8,7 @@ use Jield\ApiTools\Enum\RouteMethodEnum;
 use Jield\ApiTools\Enum\RouteTypeEnum;
 use Jield\ApiTools\Listener\AbstractRoutedListener;
 use Jield\ApiTools\ValueObject\ListenerValueObject;
+use Jield\Stdlib\Value;
 use Laminas\ConfigAggregator\GlobTrait;
 use ReflectionClass;
 use ReflectionIntersectionType;
@@ -118,7 +119,7 @@ final class ListenerConfigProvider
 
     private function getReflectionClassFromClassName(string $className): ReflectionClass
     {
-        return new ReflectionClass(objectOrClass: $className);
+        return new ReflectionClass(objectOrClass: Value::classString($className));
     }
 
     public function registerListener(ListenerValueObject $listenerValueObject): void
@@ -128,7 +129,7 @@ final class ListenerConfigProvider
 
     private function getConstructorArguments(string $className): array
     {
-        $constructor = new ReflectionClass($className)->getConstructor();
+        $constructor = new ReflectionClass(Value::classString($className))->getConstructor();
         if ($constructor === null) {
             return [];
         }
@@ -157,9 +158,11 @@ final class ListenerConfigProvider
         //Return a merged array of all the listeners (with the toArray method called an all objects)
         $configuration = [];
 
-        /** @var mixed $listener */
         foreach ($this->listeners as $listener) {
-            $configuration = array_merge_recursive($configuration, \Jield\Stdlib\Value::array(\Jield\Stdlib\Value::call($listener, 'toArray')));
+            $configuration = array_merge_recursive(
+                $configuration,
+                Value::array(Value::call($listener, 'toArray')),
+            );
         }
 
         return $configuration;

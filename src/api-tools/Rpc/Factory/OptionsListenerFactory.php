@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Jield\ApiTools\Rpc\Factory;
 
 use Jield\ApiTools\Rpc\OptionsListener;
+use Jield\Stdlib\Value;
 use Psr\Container\ContainerInterface;
 
 class OptionsListenerFactory
@@ -24,12 +25,11 @@ class OptionsListenerFactory
             return [];
         }
 
-        /** @var mixed $config */
         $config = $container->get('config');
         if (!isset($config['api-tools-rpc'])) {
             return [];
         }
 
-        return \Jield\Stdlib\Value::array($config['api-tools-rpc']);
+        return Value::array($config['api-tools-rpc']);
     }
 }

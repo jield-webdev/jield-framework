@@ -9,6 +9,8 @@ use Jield\ApiTools\ApiProblem\ApiProblemResponse;
 use Jield\Mvc\Controller\Plugin\AcceptableViewModelSelector;
 use Jield\Mvc\InjectApplicationEventInterface;
 use Jield\Mvc\MvcEvent;
+use Jield\Stdlib\Value;
+use Laminas\Stdlib\DispatchableInterface;
 use Laminas\View\Model\ModelInterface as ViewModelInterface;
 
 use function is_array;
@@ -45,7 +47,6 @@ class AcceptListener
             return null;
         }
 
-        /** @var mixed $result */
         $result = $e->getResult();
         if (!is_array(value: $result) && !$result instanceof ViewModel) {
             // We will only attempt to re-cast ContentNegotiation\ViewModel
@@ -63,7 +64,10 @@ class AcceptListener
         }
 
         $selector = $this->selector;
-        $selector->setController(controller: \Jield\Stdlib\Value::instance($controller, \Laminas\Stdlib\DispatchableInterface::class));
+        $selector->setController(controller: Value::instance(
+            $controller,
+            DispatchableInterface::class,
+        ));
 
         /** @var mixed $criteria */
         $criteria = $e->getParam(name: 'LaminasContentNegotiation');
@@ -79,9 +83,12 @@ class AcceptListener
             /** @var mixed $fallbackConfig */
             $fallbackConfig = $e->getParam(name: 'LaminasContentNegotiationFallback');
             /** @var mixed $controllerName */
-            $controllerName = \Jield\Stdlib\Value::present($e->getRouteMatch())->getParam(name: 'controller');
+            $controllerName = Value::present($e->getRouteMatch())->getParam(name: 'controller');
 
-            $criteria = $this->getSelectorCriteria(fallbackConfig: \Jield\Stdlib\Value::nullableString($fallbackConfig), controllerName: \Jield\Stdlib\Value::nullableString($controllerName));
+            $criteria = $this->getSelectorCriteria(
+                fallbackConfig: Value::nullableString($fallbackConfig),
+                controllerName: Value::nullableString($controllerName),
+            );
         }
 
         // Retrieve a view model based on the criteria
@@ -90,7 +97,7 @@ class AcceptListener
             $useDefault = true;
         }
 
-        $viewModel = $selector(matchAgainst: \Jield\Stdlib\Value::nullableArray($criteria), returnDefault: $useDefault);
+        $viewModel = $selector(matchAgainst: Value::nullableArray($criteria), returnDefault: $useDefault);
 
         if (!$viewModel instanceof ViewModelInterface) {
             return new ApiProblemResponse(apiProblem: new ApiProblem(
@@ -125,10 +132,13 @@ class AcceptListener
         }
 
         // Retrieve the criteria; if none found, or invalid, use the fallback.
-        /** @var mixed $criteria */
         $criteria = $controllers[$controllerName];
 
-        return $this->getCriteria(criteria: \Jield\Stdlib\Value::nullableArrayOrString($criteria)) ?: $this->getCriteria(criteria: $fallbackConfig);
+        return (
+            $this->getCriteria(criteria: Value::nullableArrayOrString($criteria)) ?: $this->getCriteria(
+                criteria: $fallbackConfig,
+            )
+        );
     }
 
     /**
@@ -148,7 +158,7 @@ class AcceptListener
             // selected by the AcceptableViewModelSelector
 
             $viewModel->setVariables(variables: $result->getVariables());
-            $viewModel->setTemplate(template: \Jield\Stdlib\Value::nonEmptyString($result->getTemplate()));
+            $viewModel->setTemplate(template: Value::nonEmptyString($result->getTemplate()));
             $viewModel->setCaptureTo(capture: $result->captureTo());
             $viewModel->setTerminal($result->terminate());
             $viewModel->setAppend(append: $result->isAppend());
@@ -164,7 +174,7 @@ class AcceptListener
 
         // At this point, the result is an array; use it to populate the view
         // model variables
-        $viewModel->setVariables(variables: \Jield\Stdlib\Value::namedValues($result));
+        $viewModel->setVariables(variables: Value::namedValues($result));
         $e->setResult(result: $viewModel);
     }
 
@@ -193,7 +203,7 @@ class AcceptListener
             /** @var mixed $criteria */
             $criteria = $this->selectorsConfig[$criteria];
             if (!empty($criteria)) {
-                return \Jield\Stdlib\Value::array($criteria);
+                return Value::array($criteria);
             }
         }
 

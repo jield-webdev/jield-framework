@@ -8,10 +8,21 @@ use Doctrine\ORM\Cache\CacheConfiguration;
 use Doctrine\ORM\Cache\DefaultCacheFactory;
 use Doctrine\ORM\Cache\RegionsConfiguration;
 use Doctrine\ORM\Configuration;
+use Doctrine\ORM\EntityRepository;
+use Doctrine\ORM\Internal\Hydration\AbstractHydrator;
 use Doctrine\ORM\Mapping\EntityListenerResolver;
+use Doctrine\ORM\Mapping\NamingStrategy;
+use Doctrine\ORM\Mapping\QuoteStrategy;
+use Doctrine\ORM\Query\AST\Functions\FunctionNode;
+use Doctrine\ORM\Query\Filter\SQLFilter;
+use Doctrine\ORM\Repository\RepositoryFactory;
+use Doctrine\Persistence\Mapping\Driver\MappingDriver;
 use DoctrineORMModule\Options\Configuration as DoctrineORMModuleConfiguration;
 use DoctrineORMModule\Service\DBALConfigurationFactory as DoctrineConfigurationFactory;
+use Jield\Stdlib\Value;
 use Laminas\ServiceManager\Exception\InvalidArgumentException;
+use Laminas\ServiceManager\Exception\ServiceNotCreatedException;
+use Psr\Cache\CacheItemPoolInterface;
 use Psr\Container\ContainerInterface;
 
 use function is_string;
@@ -20,6 +31,21 @@ use function sprintf;
 
 final class ConfigurationFactory extends DoctrineConfigurationFactory
 {
+    /** @return array<string, class-string<FunctionNode>|callable(string): FunctionNode> */
+    private function dqlFunctions(array $functions): array
+    {
+        $result = [];
+        foreach (Value::stringKeyedArray($functions) as $name => $function) {
+            if (is_string($function) && !is_callable($function)) {
+                $result[$name] = Value::subclass($function, FunctionNode::class);
+            } else {
+                $callback = Value::callback($function);
+                $result[$name] = static fn(string $name): FunctionNode => Value::instance($callback($name), FunctionNode::class);
+            }
+        }
+        return $result;
+    }
+
     /**
      * {@inheritDoc}
      *
@@ -37,21 +63,25 @@ final class ConfigurationFactory extends DoctrineConfigurationFactory
         $config->enableNativeLazyObjects(true);
 
         $config->setAutoGenerateProxyClasses(autoGenerate: $options->getGenerateProxies());
-        $config->setProxyDir(dir: \Jield\Stdlib\Value::string($options->getProxyDir()));
-        $config->setProxyNamespace(ns: \Jield\Stdlib\Value::string($options->getProxyNamespace()));
+        $config->setProxyDir(dir: Value::string($options->getProxyDir()));
+        $config->setProxyNamespace(ns: Value::string($options->getProxyNamespace()));
 
-        $config->setEntityNamespaces(entityNamespaces: \Jield\Stdlib\Value::stringMap($options->getEntityNamespaces()));
+        $config->setEntityNamespaces(entityNamespaces: Value::stringMap($options->getEntityNamespaces()));
 
-        $config->setCustomDatetimeFunctions(functions: $options->getDatetimeFunctions());
-        $config->setCustomStringFunctions(functions: $options->getStringFunctions());
-        $config->setCustomNumericFunctions(functions: $options->getNumericFunctions());
+        $config->setCustomDatetimeFunctions(functions: $this->dqlFunctions($options->getDatetimeFunctions()));
+        $config->setCustomStringFunctions(functions: $this->dqlFunctions($options->getStringFunctions()));
+        foreach ($this->dqlFunctions($options->getNumericFunctions()) as $name => $function) {
+            $config->addCustomNumericFunction($name, $function);
+        }
 
         if ($options->getClassMetadataFactoryName() !== null) {
-            $config->setClassMetadataFactoryName(\Jield\Stdlib\Value::classString($options->getClassMetadataFactoryName()));
+            $config->setClassMetadataFactoryName(
+                Value::classString($options->getClassMetadataFactoryName()),
+            );
         }
 
         if ($options->getNamedQueries() !== [] || $options->getNamedNativeQueries() !== []) {
-            throw new \Laminas\ServiceManager\Exception\ServiceNotCreatedException(
+            throw new ServiceNotCreatedException(
                 'Doctrine ORM no longer supports named queries; configure queries in repositories instead.',
             );
         }
@@ -60,21 +90,45 @@ final class ConfigurationFactory extends DoctrineConfigurationFactory
          * @var mixed $hydrator
          */
         foreach ($options->getCustomHydrationModes() as $modeName => $hydrator) {
-            $config->addCustomHydrationMode(modeName: \Jield\Stdlib\Value::string($modeName), hydrator: \Jield\Stdlib\Value::subclass($hydrator, \Doctrine\ORM\Internal\Hydration\AbstractHydrator::class));
+            $config->addCustomHydrationMode(
+                modeName: Value::string($modeName),
+                hydrator: Value::subclass(
+                    $hydrator,
+                    AbstractHydrator::class,
+                ),
+            );
         }
 
         /** @var mixed $name
          * @var mixed $class
          */
         foreach ($options->getFilters() as $name => $class) {
-            $config->addFilter(name: \Jield\Stdlib\Value::string($name), className: \Jield\Stdlib\Value::subclass($class, \Doctrine\ORM\Query\Filter\SQLFilter::class));
+            $config->addFilter(
+                name: Value::string($name),
+                className: Value::subclass($class, SQLFilter::class),
+            );
         }
 
-        $config->setMetadataCache(\Jield\Stdlib\Value::instance($container->get(\Jield\Stdlib\Value::string($options->getMetadataCache())), \Psr\Cache\CacheItemPoolInterface::class));
-        $config->setQueryCache(\Jield\Stdlib\Value::instance($container->get(\Jield\Stdlib\Value::string($options->getQueryCache())), \Psr\Cache\CacheItemPoolInterface::class));
-        $config->setResultCache(\Jield\Stdlib\Value::instance($container->get(\Jield\Stdlib\Value::string($options->getResultCache())), \Psr\Cache\CacheItemPoolInterface::class));
-        $config->setHydrationCache(\Jield\Stdlib\Value::instance($container->get(\Jield\Stdlib\Value::string($options->getHydrationCache())), \Psr\Cache\CacheItemPoolInterface::class));
-        $config->setMetadataDriverImpl(driverImpl: \Jield\Stdlib\Value::instance($container->get(\Jield\Stdlib\Value::string($options->getDriver())), \Doctrine\Persistence\Mapping\Driver\MappingDriver::class));
+        $config->setMetadataCache(Value::instance(
+            $container->get(Value::string($options->getMetadataCache())),
+            CacheItemPoolInterface::class,
+        ));
+        $config->setQueryCache(Value::instance(
+            $container->get(Value::string($options->getQueryCache())),
+            CacheItemPoolInterface::class,
+        ));
+        $config->setResultCache(Value::instance(
+            $container->get(Value::string($options->getResultCache())),
+            CacheItemPoolInterface::class,
+        ));
+        $config->setHydrationCache(Value::instance(
+            $container->get(Value::string($options->getHydrationCache())),
+            CacheItemPoolInterface::class,
+        ));
+        $config->setMetadataDriverImpl(driverImpl: Value::instance(
+            $container->get(Value::string($options->getDriver())),
+            MappingDriver::class,
+        ));
 
         /** @var mixed $namingStrategy */
         $namingStrategy = $options->getNamingStrategy();
@@ -87,9 +141,15 @@ final class ConfigurationFactory extends DoctrineConfigurationFactory
                     ));
                 }
 
-                $config->setNamingStrategy(namingStrategy: \Jield\Stdlib\Value::instance($container->get($namingStrategy), \Doctrine\ORM\Mapping\NamingStrategy::class));
+                $config->setNamingStrategy(namingStrategy: Value::instance(
+                    $container->get($namingStrategy),
+                    NamingStrategy::class,
+                ));
             } else {
-                $config->setNamingStrategy(namingStrategy: \Jield\Stdlib\Value::instance($namingStrategy, \Doctrine\ORM\Mapping\NamingStrategy::class));
+                $config->setNamingStrategy(namingStrategy: Value::instance(
+                    $namingStrategy,
+                    NamingStrategy::class,
+                ));
             }
         }
 
@@ -104,9 +164,15 @@ final class ConfigurationFactory extends DoctrineConfigurationFactory
                     ));
                 }
 
-                $config->setQuoteStrategy(quoteStrategy: \Jield\Stdlib\Value::instance($container->get($quoteStrategy), \Doctrine\ORM\Mapping\QuoteStrategy::class));
+                $config->setQuoteStrategy(quoteStrategy: Value::instance(
+                    $container->get($quoteStrategy),
+                    QuoteStrategy::class,
+                ));
             } else {
-                $config->setQuoteStrategy(quoteStrategy: \Jield\Stdlib\Value::instance($quoteStrategy, \Doctrine\ORM\Mapping\QuoteStrategy::class));
+                $config->setQuoteStrategy(quoteStrategy: Value::instance(
+                    $quoteStrategy,
+                    QuoteStrategy::class,
+                ));
             }
         }
 
@@ -121,9 +187,15 @@ final class ConfigurationFactory extends DoctrineConfigurationFactory
                     ));
                 }
 
-                $config->setRepositoryFactory(repositoryFactory: \Jield\Stdlib\Value::instance($container->get($repositoryFactory), \Doctrine\ORM\Repository\RepositoryFactory::class));
+                $config->setRepositoryFactory(repositoryFactory: Value::instance(
+                    $container->get($repositoryFactory),
+                    RepositoryFactory::class,
+                ));
             } else {
-                $config->setRepositoryFactory(repositoryFactory: \Jield\Stdlib\Value::instance($repositoryFactory, \Doctrine\ORM\Repository\RepositoryFactory::class));
+                $config->setRepositoryFactory(repositoryFactory: Value::instance(
+                    $repositoryFactory,
+                    RepositoryFactory::class,
+                ));
             }
         }
 
@@ -133,42 +205,62 @@ final class ConfigurationFactory extends DoctrineConfigurationFactory
             if ($entityListenerResolver instanceof EntityListenerResolver) {
                 $config->setEntityListenerResolver(resolver: $entityListenerResolver);
             } else {
-                $config->setEntityListenerResolver(resolver: \Jield\Stdlib\Value::instance($container->get(\Jield\Stdlib\Value::string($entityListenerResolver)), \Doctrine\ORM\Mapping\EntityListenerResolver::class));
+                $config->setEntityListenerResolver(resolver: Value::instance(
+                    $container->get(Value::string($entityListenerResolver)),
+                    \Doctrine\ORM\Mapping\EntityListenerResolver::class,
+                ));
             }
         }
 
         /** @var mixed $secondLevelCache */
         $secondLevelCache = $options->getSecondLevelCache();
 
-        if (\Jield\Stdlib\Value::call($secondLevelCache, 'isEnabled')) {
+        if (Value::call($secondLevelCache, 'isEnabled')) {
             $regionsConfig = new RegionsConfiguration(
-                defaultLifetime: \Jield\Stdlib\Value::int(\Jield\Stdlib\Value::call($secondLevelCache, 'getDefaultLifetime')),
-                defaultLockLifetime: \Jield\Stdlib\Value::int(\Jield\Stdlib\Value::call($secondLevelCache, 'getDefaultLockLifetime')),
+                defaultLifetime: Value::int(Value::call(
+                    $secondLevelCache,
+                    'getDefaultLifetime',
+                )),
+                defaultLockLifetime: Value::int(Value::call(
+                    $secondLevelCache,
+                    'getDefaultLockLifetime',
+                )),
             );
 
             /** @var mixed $regionName
              * @var mixed $regionConfig
              */
-            foreach (\Jield\Stdlib\Value::iterable(\Jield\Stdlib\Value::call($secondLevelCache, 'getRegions')) as $regionName => $regionConfig) {
+            foreach (Value::iterable(Value::call(
+                $secondLevelCache,
+                'getRegions',
+            )) as $regionName => $regionConfig) {
                 if (isset($regionConfig['lifetime'])) {
-                    $regionsConfig->setLifetime(name: \Jield\Stdlib\Value::string($regionName), lifetime: \Jield\Stdlib\Value::int($regionConfig['lifetime']));
+                    $regionsConfig->setLifetime(
+                        name: Value::string($regionName),
+                        lifetime: Value::int($regionConfig['lifetime']),
+                    );
                 }
 
                 if (!isset($regionConfig['lock_lifetime'])) {
                     continue;
                 }
 
-                $regionsConfig->setLockLifetime(name: \Jield\Stdlib\Value::string($regionName), lifetime: \Jield\Stdlib\Value::int($regionConfig['lock_lifetime']));
+                $regionsConfig->setLockLifetime(
+                    name: Value::string($regionName),
+                    lifetime: Value::int($regionConfig['lock_lifetime']),
+                );
             }
 
             // As Second Level Cache caches queries results, we reuse the result cache impl
-            $cacheFactory = new DefaultCacheFactory(
-                regionsConfig: $regionsConfig,
-                cacheItemPool: \Jield\Stdlib\Value::instance($config->getResultCache(), \Psr\Cache\CacheItemPoolInterface::class),
-            );
-            $cacheFactory->setFileLockRegionDirectory(
-                fileLockRegionDirectory: \Jield\Stdlib\Value::string(\Jield\Stdlib\Value::call($secondLevelCache, 'getFileLockRegionDirectory')),
-            );
+            $cacheFactory =
+                new DefaultCacheFactory(regionsConfig: $regionsConfig, cacheItemPool: Value::instance(
+                    $config->getResultCache(),
+                    CacheItemPoolInterface::class,
+                ));
+            $cacheFactory->setFileLockRegionDirectory(fileLockRegionDirectory: Value::string(Value::call(
+                $secondLevelCache,
+                'getFileLockRegionDirectory',
+            )));
 
             $cacheConfiguration = new CacheConfiguration();
             $cacheConfiguration->setCacheFactory(factory: $cacheFactory);
@@ -192,14 +284,17 @@ final class ConfigurationFactory extends DoctrineConfigurationFactory
             /** @var mixed $schemaAssetsFilter */
             $schemaAssetsFilter = $options->getSchemaAssetsFilter();
             if ($schemaAssetsFilter) {
-                $config->setSchemaAssetsFilter(schemaAssetsFilter: \Jield\Stdlib\Value::callback($schemaAssetsFilter));
+                $config->setSchemaAssetsFilter(schemaAssetsFilter: Value::callback($schemaAssetsFilter));
             }
         }
 
         /** @var mixed $className */
         $className = $options->getDefaultRepositoryClassName();
         if ($className) {
-            $config->setDefaultRepositoryClassName(className: \Jield\Stdlib\Value::subclass($className, \Doctrine\ORM\EntityRepository::class));
+            $config->setDefaultRepositoryClassName(className: Value::subclass(
+                $className,
+                EntityRepository::class,
+            ));
         }
 
         $this->setupDBALConfiguration(container: $container, config: $config);

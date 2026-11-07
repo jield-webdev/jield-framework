@@ -6,11 +6,13 @@ namespace Jield\ApiTools\Hal\Link;
 
 use Jield\ApiTools\ApiProblem\Exception\DomainException;
 use Jield\ApiTools\Hal\Exception;
+use Jield\Stdlib\Value;
 use Laminas\Stdlib\ArrayUtils;
 use Laminas\Uri\Exception as UriException;
 use Laminas\Uri\UriFactory;
 use Override;
 use Psr\Link\LinkInterface;
+use Throwable;
 use Traversable;
 
 use function get_debug_type;
@@ -86,8 +88,9 @@ class Link implements LinkInterface
 
         // deprecated since 1.5.0; use 'href' instead
         if (isset($spec['url'])) {
+            /** @var mixed $url */
             $url = $spec['url'];
-            $link->setUrl(href: $url);
+            $link->setUrl(href: Value::string($url));
             return $link;
         }
 
@@ -120,11 +123,11 @@ class Link implements LinkInterface
                 ));
             }
 
-            $name = $routeInfo['name'];
+            $name = Value::string($routeInfo['name']);
             $params = is_array(value: $routeInfo['params']) ? $routeInfo['params'] : [];
             $options = is_array(value: $routeInfo['options']) ? $routeInfo['options'] : [];
             /** @psalm-suppress RedundantCastGivenDocblockType */
-            $link->setRoute(route: \Jield\Stdlib\Value::string($name), params: $params, options: $options);
+            $link->setRoute(route: Value::string($name), params: $params, options: $options);
             return $link;
         }
 
@@ -186,7 +189,7 @@ class Link implements LinkInterface
             $options = ArrayUtils::iteratorToArray(iterator: $options);
         }
 
-        $this->routeOptions = \Jield\Stdlib\Value::array($options);
+        $this->routeOptions = Value::array($options);
         return $this;
     }
 
@@ -224,9 +227,12 @@ class Link implements LinkInterface
 
         try {
             $uri = UriFactory::factory(uriString: $href);
-        } catch (UriException\ExceptionInterface $exception) {
+        } catch (Throwable $exception) {
+            if (!$exception instanceof UriException\ExceptionInterface) {
+                throw $exception;
+            }
             throw new Exception\InvalidArgumentException(
-                message: sprintf('Received invalid URL: %s', \Jield\Stdlib\Value::scalar($exception->getMessage())),
+                message: sprintf('Received invalid URL: %s', Value::scalar($exception->getMessage())),
                 code: (int) $exception->getCode(),
                 previous: $exception,
             );
@@ -315,7 +321,7 @@ class Link implements LinkInterface
      */
     public function isComplete(): bool
     {
-        return !empty($this->href) || !empty($this->route);
+        return !empty($this->href) || $this->route !== '' && $this->route !== '0';
     }
 
     /**

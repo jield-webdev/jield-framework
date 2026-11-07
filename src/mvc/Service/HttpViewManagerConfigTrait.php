@@ -16,7 +16,7 @@ trait HttpViewManagerConfigTrait
     /**
      * Retrieve view_manager configuration, if present.
      */
-    private function getConfig(ContainerInterface $container): array
+    private function getConfig(ContainerInterface $container): array|ArrayAccess
     {
         /** @var mixed $config */
         $config = $container->has('config') ? $container->get('config') : [];

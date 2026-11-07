@@ -6,6 +6,8 @@ namespace Jield\ModuleManager\Listener;
 
 use Jield\ModuleManager\Feature\InitProviderInterface;
 use Jield\ModuleManager\ModuleEvent;
+use Jield\ModuleManager\ModuleManagerInterface;
+use Jield\Stdlib\Value;
 
 class InitTrigger extends AbstractListener
 {
@@ -14,7 +16,10 @@ class InitTrigger extends AbstractListener
     {
         $module = $e->getModule();
         if ($module instanceof InitProviderInterface) {
-            $module->init(\Jield\Stdlib\Value::instance($e->getTarget(), \Jield\ModuleManager\ModuleManagerInterface::class));
+            $module->init(Value::instance(
+                $e->getTarget(),
+                ModuleManagerInterface::class,
+            ));
         }
     }
 }

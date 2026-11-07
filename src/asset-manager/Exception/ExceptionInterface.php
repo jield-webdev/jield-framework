@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Jield\AssetManager\Exception;
 
+use Throwable;
+
 /**
  * The interface to be implemented by exceptions in the AssetManager namespace
  *
@@ -11,4 +13,4 @@ namespace Jield\AssetManager\Exception;
  * @package    AssetManager
  * @subpackage Exception
  */
-interface ExceptionInterface extends \Throwable {}
+interface ExceptionInterface extends Throwable {}

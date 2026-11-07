@@ -7,11 +7,12 @@ namespace Jield\ApiTools\OAuth2\Controller;
 use Jield\ApiTools\ApiProblem\ApiProblem;
 use Jield\ApiTools\ApiProblem\ApiProblemResponse;
 use Jield\ApiTools\ApiProblem\Exception\ProblemExceptionInterface;
-use Jield\ApiTools\ContentNegotiation\ControllerPlugin\BodyParams;
 use Jield\ApiTools\ContentNegotiation\ViewModel;
 use Jield\ApiTools\OAuth2\Provider\UserId\UserIdProviderInterface;
 use Jield\Mvc\Controller\AbstractActionController;
+use Jield\Stdlib\Value;
 use Laminas\Http\Header\HeaderInterface;
+use Laminas\Http\Headers;
 use Laminas\Http\PhpEnvironment\Request as PhpEnvironmentRequest;
 use Laminas\Http\Request as HttpRequest;
 use Laminas\Http\Response;
@@ -26,7 +27,7 @@ use function json_encode;
 use function sprintf;
 
 /**
- * @method BodyParams bodyParams()
+ * @method array bodyParams()
  */
 final class AuthController extends AbstractActionController
 {
@@ -86,20 +87,26 @@ final class AuthController extends AbstractActionController
         if ($request->isOptions()) {
             // OPTIONS request.
             // This is most likely a CORS attempt; as such, pass the response on.
-            return \Jield\Stdlib\Value::nullableInstance($this->getResponse(), \Laminas\Http\Response::class);
+            return Value::nullableInstance($this->getResponse(), \Laminas\Http\Response::class);
         }
 
         $oauth2request = $this->getOAuth2Request();
-        $oauth2server = $this->getOAuth2Server(type: \Jield\Stdlib\Value::nullableString($this->params('oauth')));
+        $oauth2server = $this->getOAuth2Server(type: Value::nullableString($this->params('oauth')));
         try {
             $response = $oauth2server->handleTokenRequest(request: $oauth2request);
         } catch (ProblemExceptionInterface $problemException) {
             /** @var mixed $status */
             $status = $problemException->getCode() ?: 401;
             /** @var mixed $status */
-            $status = \Jield\Stdlib\Value::numeric($status) >= 400 && \Jield\Stdlib\Value::numeric($status) < 600 ? $status : 401;
+            $status =
+                Value::numeric($status) >= 400 && Value::numeric($status) < 600
+                    ? $status
+                    : 401;
 
-            return new ApiProblemResponse(apiProblem: new ApiProblem(status: \Jield\Stdlib\Value::key($status), detail: $problemException));
+            return new ApiProblemResponse(apiProblem: new ApiProblem(
+                status: Value::key($status),
+                detail: $problemException,
+            ));
         }
 
         Assert::isInstanceOf(
@@ -109,7 +116,10 @@ final class AuthController extends AbstractActionController
         );
 
         if ($response->isClientError()) {
-            return \Jield\Stdlib\Value::nullableInstance($this->getErrorResponse(response: $response), \Laminas\Http\Response::class);
+            return Value::nullableInstance(
+                $this->getErrorResponse(response: $response),
+                \Laminas\Http\Response::class,
+            );
         }
 
         return $this->setHttpResponse(response: $response);
@@ -129,11 +139,13 @@ final class AuthController extends AbstractActionController
         if ($request->isOptions()) {
             // OPTIONS request.
             // This is most likely a CORS attempt; as such, pass the response on.
-            return \Jield\Stdlib\Value::nullableInstance($this->getResponse(), \Laminas\Http\Response::class);
+            return Value::nullableInstance($this->getResponse(), \Laminas\Http\Response::class);
         }
 
         $oauth2request = $this->getOAuth2Request();
-        $response = $this->getOAuth2Server(type: \Jield\Stdlib\Value::nullableString($this->params('oauth')))->handleRevokeRequest(request: $oauth2request);
+        $response = $this->getOAuth2Server(type: Value::nullableString($this->params(
+            'oauth',
+        )))->handleRevokeRequest(request: $oauth2request);
         Assert::isInstanceOf(
             value: $response,
             class: OAuth2Response::class,
@@ -141,7 +153,10 @@ final class AuthController extends AbstractActionController
         );
 
         if ($response->isClientError()) {
-            return \Jield\Stdlib\Value::nullableInstance($this->getErrorResponse(response: $response), \Laminas\Http\Response::class);
+            return Value::nullableInstance(
+                $this->getErrorResponse(response: $response),
+                \Laminas\Http\Response::class,
+            );
         }
 
         return $this->setHttpResponse(response: $response);
@@ -152,7 +167,7 @@ final class AuthController extends AbstractActionController
      */
     public function resourceAction(): Response
     {
-        $server = $this->getOAuth2Server(type: \Jield\Stdlib\Value::nullableString($this->params('oauth')));
+        $server = $this->getOAuth2Server(type: Value::nullableString($this->params('oauth')));
 
         // Handle a request for an OAuth2.0 Access Token and send the response to the client
         if (!$server->verifyResourceRequest(request: $this->getOAuth2Request())) {
@@ -192,16 +207,17 @@ final class AuthController extends AbstractActionController
         $response = new OAuth2Response();
 
         // validate the authorize request
-        $isValid = \Jield\Stdlib\Value::present($this->server)->validateAuthorizeRequest(request: $request, response: $response);
+        $isValid = Value::present($this->server)->validateAuthorizeRequest(
+            request: $request,
+            response: $response,
+        );
 
         if (!$isValid) {
             return $this->getErrorResponse(response: $response);
         }
 
-        /** @var mixed $authorized */
         $authorized = $request->request(name: 'authorized', default: false);
         if (empty($authorized)) {
-            /** @var mixed $clientId */
             $clientId = $request->query(name: 'client_id', default: false);
             $view = new ViewModel(variables: ['clientId' => $clientId]);
             $view->setTemplate(template: 'oauth/authorize');
@@ -211,17 +227,16 @@ final class AuthController extends AbstractActionController
         $isAuthorized = $authorized === 'yes';
         $userIdProvider = $this->userIdProvider;
 
-        \Jield\Stdlib\Value::present($this->server)->handleAuthorizeRequest(
+        Value::present($this->server)->handleAuthorizeRequest(
             request: $request,
             response: $response,
             is_authorized: $isAuthorized,
             user_id: $userIdProvider(request: $this->getRequest()),
         );
 
-        /** @var mixed $redirect */
         $redirect = $response->getHttpHeader(name: 'Location');
         if (!empty($redirect)) {
-            return $this->redirect()->toUrl(url: \Jield\Stdlib\Value::string($redirect));
+            return $this->redirect()->toUrl(url: Value::string($redirect));
         }
 
         return $this->getErrorResponse(response: $response);
@@ -232,8 +247,7 @@ final class AuthController extends AbstractActionController
      */
     public function receiveCodeAction(): ViewModel
     {
-        /** @var mixed $code */
-        $code = \Jield\Stdlib\Value::call($this->params(), 'fromQuery', ['param' => 'code', 'default' => false]);
+        $code = Value::call($this->params(), 'fromQuery', ['param' => 'code', 'default' => false]);
         $view = new ViewModel(variables: [
             'code' => $code,
         ]);
@@ -266,9 +280,9 @@ final class AuthController extends AbstractActionController
 
         return new ApiProblemResponse(apiProblem: new ApiProblem(
             status: $response->getStatusCode(),
-            detail: $errorDescription,
-            type: \Jield\Stdlib\Value::nullableString($errorUri),
-            title: \Jield\Stdlib\Value::nullableString($error),
+            detail: Value::stringify($errorDescription),
+            type: Value::nullableString($errorUri),
+            title: Value::nullableString($error),
         ));
     }
 
@@ -299,8 +313,10 @@ final class AuthController extends AbstractActionController
         $headers = $laminasRequest->getHeaders();
 
         // Marshal content type, so we can seed it into the $_SERVER array
-        if (\Jield\Stdlib\Value::instance($headers, \Laminas\Http\Headers::class)->has('Content-Type')) {
-            $contentTypeHeader = \Jield\Stdlib\Value::instance($headers, \Laminas\Http\Headers::class)->get('Content-Type');
+        if (Value::instance($headers, Headers::class)->has('Content-Type')) {
+            $contentTypeHeader = Value::instance($headers, Headers::class)->get(
+                'Content-Type',
+            );
             if ($contentTypeHeader instanceof HeaderInterface) {
                 $contentTypeHeader->getFieldValue();
             }
@@ -309,16 +325,15 @@ final class AuthController extends AbstractActionController
         // Get $_SERVER superglobal
         $server = [];
         if ($laminasRequest instanceof PhpEnvironmentRequest) {
-            /** @var mixed $server */
-            $server = \Jield\Stdlib\Value::call($laminasRequest->getServer(), 'toArray');
+            $server = Value::call($laminasRequest->getServer(), 'toArray');
         } elseif ($_SERVER !== []) {
             $server = $_SERVER;
         }
 
-        \Jield\Stdlib\Value::setPath($server, ['REQUEST_METHOD'], $laminasRequest->getMethod());
+        Value::setPath($server, ['REQUEST_METHOD'], $laminasRequest->getMethod());
 
         // Seed headers with HTTP auth information
-        $headers = \Jield\Stdlib\Value::instance($headers, \Laminas\Http\Headers::class)->toArray();
+        $headers = Value::instance($headers, Headers::class)->toArray();
         if (isset($server['PHP_AUTH_USER'])) {
             $headers['PHP_AUTH_USER'] = $server['PHP_AUTH_USER'];
         }
@@ -331,13 +346,13 @@ final class AuthController extends AbstractActionController
         $bodyParams = $this->bodyParams();
 
         return new OAuth2Request(
-            query: \Jield\Stdlib\Value::array(\Jield\Stdlib\Value::call($laminasRequest->getQuery(), 'toArray')),
+            query: Value::array(Value::call($laminasRequest->getQuery(), 'toArray')),
             request: $bodyParams,
             attributes: [], // attributes
             cookies: [], // cookies
             files: [], // files
-            server: \Jield\Stdlib\Value::array($server),
-            content: \Jield\Stdlib\Value::nullableString($laminasRequest->getContent()),
+            server: Value::array($server),
+            content: Value::nullableString($laminasRequest->getContent()),
             headers: $headers,
         );
     }

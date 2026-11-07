@@ -8,6 +8,7 @@ namespace Jield\ModuleManager\Loader;
 
 use ArrayIterator;
 use IteratorAggregate;
+use Jield\Stdlib\Value;
 use ReturnTypeWillChange;
 use Traversable;
 
@@ -80,7 +81,7 @@ class PluginClassLoader implements PluginClassLocator
          * @var mixed $value
          */
         foreach ($map as $key => $value) {
-            static::$staticMap[\Jield\Stdlib\Value::key($key)] = $value;
+            static::$staticMap[Value::key($key)] = $value;
         }
     }
 
@@ -120,7 +121,7 @@ class PluginClassLoader implements PluginClassLocator
             if (!class_exists($map)) {
                 throw new Exception\InvalidArgumentException('Map class provided is invalid');
             }
-            $map = \Jield\Stdlib\Value::instantiate($map);
+            $map = Value::instantiate($map);
         }
         if (is_array($map)) {
             $map = new ArrayIterator($map);
@@ -139,8 +140,8 @@ class PluginClassLoader implements PluginClassLocator
          */
         foreach ($map as $name => $class) {
             if (is_int($name) || is_numeric($name)) {
-                if (!is_object($class) && class_exists(\Jield\Stdlib\Value::string($class))) {
-                    $class = \Jield\Stdlib\Value::instantiate($class);
+                if (!is_object($class) && class_exists(Value::string($class))) {
+                    $class = Value::instantiate($class);
                 }
 
                 if ($class instanceof Traversable) {
@@ -149,7 +150,7 @@ class PluginClassLoader implements PluginClassLocator
                 }
             }
 
-            $this->registerPlugin(\Jield\Stdlib\Value::string($name), \Jield\Stdlib\Value::string($class));
+            $this->registerPlugin(Value::string($name), Value::string($class));
         }
 
         return $this;
@@ -163,7 +164,7 @@ class PluginClassLoader implements PluginClassLocator
      */
     public function unregisterPlugin($shortName)
     {
-        $lookup = strtolower(\Jield\Stdlib\Value::string($shortName));
+        $lookup = strtolower(Value::string($shortName));
         if (array_key_exists($lookup, $this->plugins)) {
             unset($this->plugins[$lookup]);
         }
@@ -214,7 +215,7 @@ class PluginClassLoader implements PluginClassLocator
         if (!$this->isLoaded($name)) {
             return false;
         }
-        return \Jield\Stdlib\Value::string($this->plugins[strtolower($name)]);
+        return Value::string($this->plugins[strtolower($name)]);
     }
 
     /**

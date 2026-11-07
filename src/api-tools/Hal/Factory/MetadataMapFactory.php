@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Jield\ApiTools\Hal\Factory;
 
 use Jield\ApiTools\Hal\Metadata;
+use Jield\Stdlib\Value;
 use Laminas\Hydrator\HydratorPluginManager;
+use Laminas\Hydrator\HydratorPluginManagerInterface;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Container\NotFoundExceptionInterface;
@@ -20,7 +22,6 @@ class MetadataMapFactory
      */
     public function __invoke(ContainerInterface $container): Metadata\MetadataMap
     {
-        /** @var mixed $config */
         $config = $container->get('Jield\ApiTools\Hal\HalConfig');
 
         /** @var mixed $hydrators */
@@ -32,6 +33,6 @@ class MetadataMapFactory
             ? $config['metadata_map']
             : [];
 
-        return new Metadata\MetadataMap(map: $map, hydrators: $hydrators);
+        return new Metadata\MetadataMap(map: $map, hydrators: Value::instance($hydrators, HydratorPluginManagerInterface::class));
     }
 }

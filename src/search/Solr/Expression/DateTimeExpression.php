@@ -24,7 +24,7 @@ class DateTimeExpression extends Expression implements Stringable
     public function __construct(
         DateTime $date,
         ?string $format = null,
-        private DateTimeZone|string $timezone = 'UTC',
+        private readonly DateTimeZone|string $timezone = 'UTC',
     ) {
         $this->date = clone $date;
         $this->format = $format ?: static::FORMAT_DEFAULT;

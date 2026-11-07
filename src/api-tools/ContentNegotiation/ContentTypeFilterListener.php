@@ -7,6 +7,7 @@ namespace Jield\ApiTools\ContentNegotiation;
 use Jield\ApiTools\ApiProblem\ApiProblem;
 use Jield\ApiTools\ApiProblem\ApiProblemResponse;
 use Jield\Mvc\MvcEvent;
+use Jield\Stdlib\Value;
 use Laminas\EventManager\AbstractListenerAggregate;
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\Http\Header\ContentType;
@@ -60,7 +61,7 @@ class ContentTypeFilterListener extends AbstractListenerAggregate
         }
 
         /** @var mixed $controllerName */
-        $controllerName = \Jield\Stdlib\Value::present($e->getRouteMatch())->getParam(name: 'controller');
+        $controllerName = Value::present($e->getRouteMatch())->getParam(name: 'controller');
         if (!isset($this->config[$controllerName])) {
             return null;
         }
@@ -81,15 +82,14 @@ class ContentTypeFilterListener extends AbstractListenerAggregate
 
         /** @var mixed $headers */
         $headers = $request->getHeaders();
-        if (!\Jield\Stdlib\Value::call($headers, 'has', ['content-type'])) {
+        if (!Value::call($headers, 'has', ['content-type'])) {
             return new ApiProblemResponse(apiProblem: new ApiProblem(
                 status: 415,
                 detail: 'Invalid content-type specified',
             ));
         }
 
-        /** @var mixed $contentTypeHeader */
-        $contentTypeHeader = \Jield\Stdlib\Value::call($headers, 'get', ['content-type']);
+        $contentTypeHeader = Value::call($headers, 'get', ['content-type']);
         if (!$contentTypeHeader instanceof ContentType) {
             return new ApiProblemResponse(apiProblem: new ApiProblem(
                 status: 415,
@@ -97,7 +97,7 @@ class ContentTypeFilterListener extends AbstractListenerAggregate
             ));
         }
 
-        $matched = $contentTypeHeader->match(\Jield\Stdlib\Value::arrayOrString($this->config[$controllerName]));
+        $matched = $contentTypeHeader->match(Value::arrayOrString($this->config[$controllerName]));
 
         if (false === $matched) {
             return new ApiProblemResponse(apiProblem: new ApiProblem(

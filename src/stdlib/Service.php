@@ -17,7 +17,6 @@ final class Service
      */
     public static function get(ContainerInterface $container, string $type, ?string $id = null): object
     {
-        /** @var mixed $service */
         $service = $container->get($id ?? $type);
         if (!$service instanceof $type) {
             throw new ServiceNotCreatedException(sprintf(

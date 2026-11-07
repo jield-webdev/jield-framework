@@ -110,8 +110,6 @@ class FormButton extends FormInput
             return sprintf('<button %s>', $attributes);
         }
 
-        
-
         $element = $attributesOrElement;
         $name = $element->getName();
         if ($name === null || $name === '') {

@@ -14,20 +14,24 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 /** Schema identifier checks for DBAL 4, which removed its legacy command. */
 final class ReservedWordsCommand extends Command
 {
-    public function __construct(private readonly ConnectionProvider $connections)
-    {
+    public function __construct(
+        private readonly ConnectionProvider $connections,
+    ) {
         parent::__construct('dbal:reserved-words');
     }
 
     protected function configure(): void
     {
-        $this->setDescription('Check table and column names for reserved SQL words.')
-            ->addOption('connection', null, InputOption::VALUE_REQUIRED, 'The named database connection');
+        $this->setDescription('Check table and column names for reserved SQL words.')->addOption(
+            'connection',
+            null,
+            InputOption::VALUE_REQUIRED,
+            'The named database connection',
+        );
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        /** @var mixed $name */
         $name = $input->getOption('connection');
         $connection = is_string($name)
             ? $this->connections->getConnection($name)
@@ -40,7 +44,10 @@ final class ReservedWordsCommand extends Command
             }
             foreach ($table->getColumns() as $column) {
                 if (SqlKeywords::contains($platform, $column->getObjectName()->getIdentifier()->getValue())) {
-                    $rows[] = ['Column', $table->getObjectName()->toString() . '.' . $column->getObjectName()->toString()];
+                    $rows[] = [
+                        'Column',
+                        $table->getObjectName()->toString() . '.' . $column->getObjectName()->toString(),
+                    ];
                 }
             }
         }

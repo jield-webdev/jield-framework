@@ -6,10 +6,12 @@ namespace Jield\Search\Service;
 
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Util\ClassUtils;
+use InvalidArgumentException;
 use Jield\Search\Entity\HasSearchInterface;
 use Jield\Search\Message\UpdateSearchEntitiesMessage;
 use Jield\Search\Message\UpdateSearchEntityMessage;
 use Jield\Search\Message\UpdateSearchIndexMessage;
+use Jield\Stdlib\Value;
 use Psr\Container\ContainerInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Webmozart\Assert\Assert;
@@ -27,7 +29,7 @@ class SearchUpdateService
         if ($queued) {
             $this->bus->dispatch(new UpdateSearchEntityMessage(
                 entityClassName: $entity::class,
-                entityId: \Jield\Stdlib\Value::int($entity->getId()),
+                entityId: Value::int($entity->getId()),
                 searchServices: $this->findSearchServicesFromEntity(entity: $entity),
             ));
 
@@ -36,10 +38,9 @@ class SearchUpdateService
 
         $searchServiceNames = $this->findSearchServicesFromEntity(entity: $entity);
 
-        /** @var mixed $searchServiceName */
         foreach ($searchServiceNames as $searchServiceName) {
             /** @var AbstractSearchService $searchServiceInstance */
-            $searchServiceInstance = $this->container->get(\Jield\Stdlib\Value::string($searchServiceName));
+            $searchServiceInstance = $this->container->get(Value::string($searchServiceName));
             $searchServiceInstance->updateEntity(entity: $entity);
         }
     }
@@ -48,10 +49,9 @@ class SearchUpdateService
     {
         $searchServiceNames = $this->findSearchServicesFromEntity(entity: $entity);
 
-        /** @var mixed $searchServiceName */
         foreach ($searchServiceNames as $searchServiceName) {
             /** @var AbstractSearchService $searchServiceInstance */
-            $searchServiceInstance = $this->container->get(\Jield\Stdlib\Value::string($searchServiceName));
+            $searchServiceInstance = $this->container->get(Value::string($searchServiceName));
             $searchServiceInstance->deleteDocument(entity: $entity);
         }
     }
@@ -73,7 +73,6 @@ class SearchUpdateService
         /** @var object $firstEntity */
         $firstEntity = reset(array: $entities);
 
-
         $entityClassName = $firstEntity::class;
 
         //We only push the ID's and the classname and the service into the job
@@ -82,19 +81,19 @@ class SearchUpdateService
         foreach ($entities as $updateAbleEntity) {
             //We only allow entities of the same class
             if (
-                ClassUtils::getRealClass(className: \Jield\Stdlib\Value::classString($updateAbleEntity::class)) !== ClassUtils::getRealClass(
-                    className: $entityClassName,
-                )
+                ClassUtils::getRealClass(className: Value::classString(
+                    $updateAbleEntity::class,
+                )) !== ClassUtils::getRealClass(className: $entityClassName)
             ) {
-                throw new \InvalidArgumentException(
+                throw new InvalidArgumentException(
                     message: 'All entities must be of the same class, got '
-                    . ClassUtils::getRealClass(className: \Jield\Stdlib\Value::classString($updateAbleEntity::class))
+                    . ClassUtils::getRealClass(className: Value::classString($updateAbleEntity::class))
                     . ' and expected '
                     . $entityClassName,
                 );
             }
 
-            $entityIds[] = \Jield\Stdlib\Value::call($updateAbleEntity, 'getId');
+            $entityIds[] = Value::call($updateAbleEntity, 'getId');
         }
 
         $this->bus->dispatch(new UpdateSearchEntitiesMessage(
@@ -107,10 +106,13 @@ class SearchUpdateService
     public function updateIndex(string $entityClassName): void
     {
         //Sometimes we get proxies, then we need to get the real class
-        $entityClassName = ClassUtils::getRealClass(className: \Jield\Stdlib\Value::classString($entityClassName));
+        $entityClassName = ClassUtils::getRealClass(className: Value::classString($entityClassName));
 
         //Only entity classnames which implement interface can be used
-        Assert::isInstanceOf(value: \Jield\Stdlib\Value::instantiate($entityClassName), class: HasSearchInterface::class);
+        Assert::isInstanceOf(
+            value: Value::instantiate($entityClassName),
+            class: HasSearchInterface::class,
+        );
 
         $this->bus->dispatch(new UpdateSearchIndexMessage(
             entityClassName: $entityClassName,
@@ -129,13 +131,12 @@ class SearchUpdateService
 
         $services = [];
 
-        /** @var mixed $core */
         foreach ($this->cores as $core) {
-            if (\Jield\Stdlib\Value::accessible($core)['entity'] !== $entity) {
+            if (Value::accessible($core)['entity'] !== $entity) {
                 continue;
             }
 
-            $services[] = \Jield\Stdlib\Value::accessible($core)['service'];
+            $services[] = Value::accessible($core)['service'];
         }
 
         return array_unique(array: $services);

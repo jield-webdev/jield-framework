@@ -9,6 +9,7 @@ use Assetic\Contracts\Cache\CacheInterface;
 use Jield\AssetManager\Asset\AssetCache;
 use Jield\AssetManager\Asset\AssetInterface;
 use Jield\AssetManager\Cache\FilePathCache;
+use Jield\Stdlib\Value;
 use Laminas\ServiceManager\ServiceLocatorInterface;
 use Psr\Container\ContainerInterface;
 
@@ -78,12 +79,11 @@ class AssetCacheManager
         $class = $cacheProvider['cache'];
 
         if (!empty($cacheProvider['options']['dir'])) {
-            /** @var mixed $dir */
             $dir = $cacheProvider['options']['dir'];
         }
 
-        $class = $this->classMapper(class: \Jield\Stdlib\Value::string($class));
-        return \Jield\Stdlib\Value::instantiate($class, [$dir, $path]);
+        $class = $this->classMapper(class: Value::string($class));
+        return Value::instantiate($class, [$dir, $path]);
     }
 
     /**

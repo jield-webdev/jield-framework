@@ -12,13 +12,14 @@ final class Each implements ValidatorInterface
     /** @var array<string, string> */
     private array $messages = [];
 
-    public function __construct(private readonly ValidatorInterface $validator) {}
+    public function __construct(
+        private readonly ValidatorInterface $validator,
+    ) {}
 
     public function isValid(mixed $value): bool
     {
         $this->messages = [];
         $valid = true;
-        /** @var mixed $item */
         foreach (is_array($value) ? $value : [$value] as $item) {
             if ($this->validator->isValid($item)) {
                 continue;

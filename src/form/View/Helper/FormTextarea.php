@@ -7,6 +7,7 @@ namespace Jield\Form\View\Helper;
 use Jield\Form\ElementInterface;
 use Jield\Form\Exception;
 
+use Jield\Stdlib\Value;
 use function sprintf;
 
 class FormTextarea extends AbstractHelper
@@ -76,7 +77,7 @@ class FormTextarea extends AbstractHelper
         return sprintf(
             '<textarea %s>%s</textarea>',
             $this->createAttributesString(attributes: $attributes),
-            \Jield\Stdlib\Value::scalar($escapeHtml(value: $content)),
+            Value::scalar($escapeHtml(value: $content)),
         );
     }
 }

@@ -35,7 +35,6 @@ class SendResponseListener extends AbstractListenerAggregate implements EventMan
         ]);
         $this->eventManager = $eventManager;
         $this->attachDefaultListeners();
-        
     }
 
     /**
@@ -61,7 +60,7 @@ class SendResponseListener extends AbstractListenerAggregate implements EventMan
      */
     public function attach(EventManagerInterface $events, $priority = 1): void
     {
-        $this->listeners[] = $events->attach(MvcEvent::EVENT_FINISH, [$this, 'sendResponse'], -10_000);
+        $this->listeners[] = $events->attach(MvcEvent::EVENT_FINISH, $this->sendResponse(...), -10_000);
     }
 
     /**
@@ -72,7 +71,7 @@ class SendResponseListener extends AbstractListenerAggregate implements EventMan
     public function sendResponse(MvcEvent $e): void
     {
         $response = $e->getResponse();
-        
+
         $event = $this->getEvent();
         $event->setResponse($response);
         $event->setTarget($this);

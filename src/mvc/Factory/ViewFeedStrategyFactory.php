@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Jield\Mvc\Factory;
 
+use Jield\Stdlib\Value;
 use Laminas\ServiceManager\Exception\ServiceNotCreatedException;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Psr\Container\ContainerInterface;
@@ -31,8 +32,7 @@ class ViewFeedStrategyFactory implements FactoryInterface
             );
         }
 
-        /** @var mixed $renderer */
         $renderer = $container->get('ViewFeedRenderer');
-        return \Jield\Stdlib\Value::instantiate($strategyClass, [$renderer]);
+        return Value::instantiate($strategyClass, [$renderer]);
     }
 }

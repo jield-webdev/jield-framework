@@ -23,7 +23,7 @@ function detectMessageContentType(string $message): string
 }
 
 /**
- * @param array<int, string|array<int, string>> $excludeExceptionsConfig
+ * @param array<array-key, mixed> $excludeExceptionsConfig
  */
 function isExcludedException(array $excludeExceptionsConfig, Throwable $throwable): bool
 {
@@ -31,7 +31,7 @@ function isExcludedException(array $excludeExceptionsConfig, Throwable $throwabl
     $message = $throwable->getMessage();
 
     /**
-     * @param string|array<int, string> $excludeExceptionConfig
+     * @param mixed $excludeExceptionConfig
      */
     $filter = static function (mixed $excludeExceptionConfig) use ($exceptionOrErrorClass, $message): bool {
         if ($excludeExceptionConfig === $exceptionOrErrorClass) {

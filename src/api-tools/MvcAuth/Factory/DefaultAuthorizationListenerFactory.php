@@ -6,6 +6,7 @@ namespace Jield\ApiTools\MvcAuth\Factory;
 
 use Jield\ApiTools\MvcAuth\Authorization\AuthorizationInterface;
 use Jield\ApiTools\MvcAuth\Authorization\DefaultAuthorizationListener;
+use Jield\Stdlib\Service;
 use Laminas\ServiceManager\Exception\ServiceNotCreatedException;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Override;
@@ -38,7 +39,7 @@ class DefaultAuthorizationListenerFactory implements FactoryInterface
             ));
         }
 
-        $authorization = \Jield\Stdlib\Service::get($container, AuthorizationInterface::class);
+        $authorization = Service::get($container, AuthorizationInterface::class);
 
         return new DefaultAuthorizationListener(authorization: $authorization);
     }

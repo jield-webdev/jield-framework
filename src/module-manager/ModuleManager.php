@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Jield\ModuleManager;
 
+use Jield\Stdlib\Value;
 use Laminas\EventManager\EventManager;
 use Laminas\EventManager\EventManagerInterface;
 use Override;
@@ -53,9 +54,8 @@ class ModuleManager implements ModuleManagerInterface
             return;
         }
 
-        /** @var mixed $moduleName */
         foreach ($this->getModules() as $moduleName) {
-            $this->loadModule(moduleName: \Jield\Stdlib\Value::string($moduleName));
+            $this->loadModule(moduleName: Value::string($moduleName));
         }
 
         $this->modulesAreLoaded = true;
@@ -128,9 +128,8 @@ class ModuleManager implements ModuleManagerInterface
 
         $this->loadFinished++;
 
-        /** @var mixed $module */
         $module = $this->loadModuleByName(event: $event);
-        $event->setModule(module: \Jield\Stdlib\Value::object($module));
+        $event->setModule(module: Value::object($module));
         $event->setName(name: ModuleEvent::EVENT_LOAD_MODULE);
 
         $this->loadedModules[$moduleName] = $module;
@@ -154,7 +153,6 @@ class ModuleManager implements ModuleManagerInterface
             value: $r,
         ), event: $event);
 
-        /** @var mixed $module */
         $module = $result->last();
 
         if (!is_object(value: $module)) {
@@ -215,7 +213,7 @@ class ModuleManager implements ModuleManagerInterface
     #[Override]
     public function setModules(mixed $modules): static
     {
-        if (is_array(value: $modules) || $modules instanceof Traversable) {
+        if (is_iterable($modules)) {
             $this->modules = $modules;
         } else {
             throw new Exception\InvalidArgumentException(message: sprintf(
@@ -292,6 +290,6 @@ class ModuleManager implements ModuleManagerInterface
      */
     protected function attachDefaultListeners(EventManagerInterface $events): void
     {
-        $events->attach(eventName: ModuleEvent::EVENT_LOAD_MODULES, listener: [$this, 'onLoadModules']);
+        $events->attach(eventName: ModuleEvent::EVENT_LOAD_MODULES, listener: $this->onLoadModules(...));
     }
 }

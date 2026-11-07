@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace Jield\Search\Solr\Expression;
 
-use Jield\Search\Solr\ExpressionInterface;
-
 use JetBrains\PhpStorm\Pure;
+use Jield\Search\Solr\ExpressionInterface;
 use Jield\Search\Solr\Util;
 use Stringable;
 
@@ -25,7 +24,7 @@ class FieldExpression extends Expression implements Stringable
      */
     #[Pure]
     public function __construct(
-        private ExpressionInterface|string $field,
+        private readonly ExpressionInterface|string $field,
         ExpressionInterface|string $expr,
     ) {
         parent::__construct(expr: $expr);

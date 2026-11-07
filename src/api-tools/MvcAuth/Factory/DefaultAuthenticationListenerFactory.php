@@ -8,15 +8,18 @@ use Jield\ApiTools\MvcAuth\Authentication\DefaultAuthenticationListener;
 use Jield\ApiTools\MvcAuth\Authentication\HttpAdapter;
 use Jield\ApiTools\MvcAuth\Authentication\OAuth2Adapter;
 use Jield\ApiTools\OAuth2\Factory\OAuth2ServerFactory as LaminasOAuth2ServerFactory;
+use Jield\Stdlib\Service;
+use Jield\Stdlib\Value;
 use Laminas\Authentication\Adapter\Http;
+use Laminas\Authentication\AuthenticationServiceInterface;
 use Laminas\ServiceManager\Factory\FactoryInterface;
+use OAuth2\Server;
 use Override;
 use Psr\Container\ContainerInterface;
 use RuntimeException;
 
 use function is_array;
 use function is_string;
-use function strpos;
 
 /**
  * Factory for creating the DefaultAuthenticationListener from configuration.
@@ -65,21 +68,29 @@ class DefaultAuthenticationListenerFactory implements FactoryInterface
         // Allow applications to provide their own AuthHttpAdapter service; if none provided,
         // or no HTTP adapter configuration provided to api-tools-mvc-auth, we can stop early.
 
-        /** @var mixed $httpAdapter */
         $httpAdapter = $container->get(Http::class);
 
         if ($httpAdapter === false) {
             return false;
         }
 
+        $httpAdapter = Value::instance($httpAdapter, Http::class);
+
         // We must abort if no resolver was provided
         if (!$httpAdapter->getBasicResolver() && !$httpAdapter->getDigestResolver()) {
             return false;
         }
 
-        $authService = \Jield\Stdlib\Service::get($container, \Laminas\Authentication\AuthenticationServiceInterface::class, 'authentication');
+        $authService = Service::get(
+            $container,
+            AuthenticationServiceInterface::class,
+            'authentication',
+        );
 
-        return new HttpAdapter(httpAuth: \Jield\Stdlib\Value::instance($httpAdapter, \Laminas\Authentication\Adapter\Http::class), authenticationService: $authService);
+        return new HttpAdapter(
+            httpAuth: Value::instance($httpAdapter, \Laminas\Authentication\Adapter\Http::class),
+            authenticationService: $authService,
+        );
     }
 
     /**
@@ -93,7 +104,6 @@ class DefaultAuthenticationListenerFactory implements FactoryInterface
             return false;
         }
 
-        /** @var mixed $config */
         $config = $container->get('config');
         if (
             !isset($config['api-tools-oauth2']['storage'])
@@ -105,15 +115,17 @@ class DefaultAuthenticationListenerFactory implements FactoryInterface
 
         if ($container->has('Jield\ApiTools\OAuth2\Service\OAuth2Server')) {
             // If the service locator already has a pre-configured OAuth2 server, use it.
-            /** @var mixed $factory */
             $factory = $container->get('Jield\ApiTools\OAuth2\Service\OAuth2Server');
 
             $types = array_values(array_unique(array_merge(
                 ['oauth2'],
-                $config['api-tools-mvc-auth']['authentication']['map'] ?? [],
+                Value::strings($config['api-tools-mvc-auth']['authentication']['map'] ?? []),
             )));
 
-            return new OAuth2Adapter(oauth2Server: \Jield\Stdlib\Value::instance($factory(), \OAuth2\Server::class), types: $types);
+            return new OAuth2Adapter(
+                oauth2Server: Value::instance(Value::callback($factory)(), Server::class),
+                types: $types,
+            );
         }
 
         $factory = new LaminasOAuth2ServerFactory();
@@ -125,13 +137,13 @@ class DefaultAuthenticationListenerFactory implements FactoryInterface
             // Jield\ApiTools\OAuth2\Factory\OAuth2ServerFactory when essential
             // configuration is missing.
             return match (true) {
-                strpos(haystack: $runtimeException->getMessage(), needle: 'missing') => false,
-                strpos(haystack: $runtimeException->getMessage(), needle: 'string or array') => false,
+                str_contains($runtimeException->getMessage(), 'missing') => false,
+                str_contains($runtimeException->getMessage(), 'string or array') => false,
                 default => throw $runtimeException,
             };
         }
 
-        return new OAuth2Adapter(oauth2Server: \Jield\Stdlib\Value::instance($serverFactory(), \OAuth2\Server::class));
+        return new OAuth2Adapter(oauth2Server: Value::instance($serverFactory(), Server::class));
     }
 
     /**
@@ -144,7 +156,6 @@ class DefaultAuthenticationListenerFactory implements FactoryInterface
             return false;
         }
 
-        /** @var mixed $config */
         $config = $container->get('config');
         if (
             !isset($config['api-tools-mvc-auth']['authentication']['types'])
@@ -162,7 +173,6 @@ class DefaultAuthenticationListenerFactory implements FactoryInterface
             return [];
         }
 
-        /** @var mixed $config */
         $config = $container->get('config');
         if (
             !isset($config['api-tools-mvc-auth']['authentication']['map'])

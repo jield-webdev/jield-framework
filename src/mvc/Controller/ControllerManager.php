@@ -5,10 +5,14 @@ declare(strict_types=1);
 namespace Jield\Mvc\Controller;
 
 // phpcs:ignore
+use Jield\Stdlib\Service;
+use Jield\Stdlib\Value;
 use Laminas\EventManager\EventManagerAwareInterface;
+use Laminas\EventManager\EventManagerInterface;
 use Laminas\EventManager\SharedEventManagerInterface;
 use Laminas\ServiceManager\AbstractPluginManager;
 use Laminas\ServiceManager\Exception\InvalidServiceException;
+use Laminas\ServiceManager\ServiceManager;
 use Laminas\Stdlib\DispatchableInterface;
 use Psr\Container\ContainerInterface;
 
@@ -20,10 +24,10 @@ use function sprintf;
  * Manager for loading controllers
  *
  * Does not define any controllers by default, but does add a validator.
- 
+ *
  *
  * @extends \Laminas\ServiceManager\AbstractPluginManager<\Laminas\Stdlib\DispatchableInterface>
-  * @psalm-import-type ServiceManagerConfiguration from \Laminas\ServiceManager\ServiceManager
+ * @psalm-import-type ServiceManagerConfiguration from ServiceManager
  */
 class ControllerManager extends AbstractPluginManager
 {
@@ -34,12 +38,12 @@ class ControllerManager extends AbstractPluginManager
     public function __construct(ContainerInterface $configOrContainerInstance, array $config = [])
     {
         $initializers = [
-            [$this, 'injectEventManager'],
-            [$this, 'injectPluginManager'],
+            $this->injectEventManager(...),
+            $this->injectPluginManager(...),
         ];
 
         if (isset($config['initializers'])) {
-            $config['initializers'] = array_merge($config['initializers'], $initializers);
+            $config['initializers'] = array_merge(Value::array($config['initializers']), $initializers);
         } else {
             $config['initializers'] = $initializers;
         }
@@ -85,7 +89,11 @@ class ControllerManager extends AbstractPluginManager
 
         $events = $controller->getEventManager();
         if (!$events->getSharedManager() instanceof SharedEventManagerInterface) {
-            $controller->setEventManager(\Jield\Stdlib\Service::get($container, \Laminas\EventManager\EventManagerInterface::class, 'EventManager'));
+            $controller->setEventManager(Service::get(
+                $container,
+                EventManagerInterface::class,
+                'EventManager',
+            ));
         }
     }
 
@@ -100,6 +108,10 @@ class ControllerManager extends AbstractPluginManager
             return;
         }
 
-        $controller->setPluginManager(\Jield\Stdlib\Service::get($container, \Jield\Mvc\Controller\PluginManager::class, 'ControllerPluginManager'));
+        $controller->setPluginManager(Service::get(
+            $container,
+            \Jield\Mvc\Controller\PluginManager::class,
+            'ControllerPluginManager',
+        ));
     }
 }

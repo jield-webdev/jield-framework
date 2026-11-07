@@ -10,6 +10,7 @@ use Jield\GoogleAnalytics\Analytics\Ecommerce\Transaction;
 use Jield\GoogleAnalytics\Analytics\Event;
 use Jield\GoogleAnalytics\Analytics\Tracker;
 use Override;
+use function json_encode;
 
 class Gajs implements ScriptInterface
 {
@@ -59,7 +60,7 @@ class Gajs implements ScriptInterface
 
     protected function push(string $methodName, array|string $values = ''): string
     {
-        $values = is_array(value: $values) ? \json_encode(value: $values) : sprintf('"%s"', $values);
+        $values = is_array(value: $values) ? json_encode(value: $values) : sprintf('"%s"', $values);
 
         return sprintf("gtag('%s',%s);" . PHP_EOL, $methodName, $values);
     }

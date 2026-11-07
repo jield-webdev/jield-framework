@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace Jield\Mvc\ResponseSender;
 
+use Jield\Stdlib\Value;
+use Laminas\Http\AbstractMessage;
 use Laminas\Http\Header\MultipleHeaderInterface;
 
+use Laminas\Http\Response;
 use function header;
 use function headers_sent;
 use function is_iterable;
@@ -23,19 +26,22 @@ abstract class AbstractResponseSender implements ResponseSenderInterface
             return $this;
         }
 
-        $response = \Jield\Stdlib\Value::instance($event->getResponse(), \Laminas\Http\Response::class);
+        $response = Value::instance($event->getResponse(), Response::class);
 
         /** @var mixed $headers */
-        $headers = \Jield\Stdlib\Value::instance($response, \Laminas\Http\AbstractMessage::class)->getHeaders();
+        $headers = Value::instance($response, AbstractMessage::class)->getHeaders();
 
         if (is_iterable($headers)) {
             /** @var mixed $header */
-            foreach (\Jield\Stdlib\Value::instance($response, \Laminas\Http\AbstractMessage::class)->getHeaders() as $header) {
+            foreach (Value::instance(
+                $response,
+                AbstractMessage::class,
+            )->getHeaders() as $header) {
                 if ($header instanceof MultipleHeaderInterface) {
                     header($header->toString(), false);
                     continue;
                 }
-                header(\Jield\Stdlib\Value::string(\Jield\Stdlib\Value::call($header, 'toString')));
+                header(Value::string(Value::call($header, 'toString')));
             }
         }
 

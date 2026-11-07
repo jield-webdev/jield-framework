@@ -6,11 +6,13 @@ namespace Jield\ErrorHandler\Entity;
 
 use DateTime;
 use Doctrine\ORM\Mapping as ORM;
+use Jield\Stdlib\Value;
 use Psr\Log\LogLevel;
+use Stringable;
 
 #[ORM\Table]
 #[ORM\Entity]
-class Log implements LogEntityInterface
+class Log implements LogEntityInterface, Stringable
 {
     #[ORM\Column(type: 'integer', nullable: false)]
     #[ORM\Id]
@@ -69,9 +71,9 @@ class Log implements LogEntityInterface
     {
         //The error message is of format: {class} was handled successfully (acknowledging to transport).
         //We need to extract the wildcards wrapped between {} with the data from the request data array
-        return \Jield\Stdlib\Value::string(preg_replace_callback(
+        return Value::string(preg_replace_callback(
             pattern: '/\{([^}]+)}/',
-            callback: \Jield\Stdlib\Value::callback(fn($matches) => $this->requestData[$matches[1]] ?? ''),
+            callback: fn(array $matches): string => Value::stringify($this->requestData[$matches[1]] ?? ''),
             subject: $this->errorMessage,
         ));
     }

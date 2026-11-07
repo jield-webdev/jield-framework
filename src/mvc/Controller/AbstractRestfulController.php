@@ -10,6 +10,8 @@ use Jield\Mvc\Exception\InvalidArgumentException;
 use Jield\Mvc\Exception\RuntimeException;
 use Jield\Mvc\MvcEvent;
 use Jield\Mvc\Router\RouteMatch;
+use Jield\Stdlib\Value;
+use Laminas\Http\AbstractMessage;
 use Laminas\Http\Header\ContentType;
 use Laminas\Http\Request as HttpRequest;
 use Laminas\Stdlib\RequestInterface as Request;
@@ -17,15 +19,12 @@ use Laminas\Stdlib\ResponseInterface as Response;
 
 use function array_key_exists;
 use function array_shift;
-use function call_user_func;
-use function count;
 use function explode;
 use function get_debug_type;
 use function is_callable;
 use function json_decode;
 use function method_exists;
 use function parse_str;
-use function reset;
 use function sprintf;
 use function str_contains;
 use function stripos;
@@ -108,7 +107,7 @@ abstract class AbstractRestfulController extends AbstractController
      */
     public function create(mixed $data): mixed
     {
-        \Jield\Stdlib\Value::instance($this->response, \Laminas\Http\Response::class)->setStatusCode(405);
+        Value::instance($this->response, \Laminas\Http\Response::class)->setStatusCode(405);
 
         return [
             'content' => 'Method Not Allowed',
@@ -122,7 +121,7 @@ abstract class AbstractRestfulController extends AbstractController
      */
     public function delete(mixed $id): mixed
     {
-        \Jield\Stdlib\Value::instance($this->response, \Laminas\Http\Response::class)->setStatusCode(405);
+        Value::instance($this->response, \Laminas\Http\Response::class)->setStatusCode(405);
 
         return [
             'content' => 'Method Not Allowed',
@@ -140,7 +139,7 @@ abstract class AbstractRestfulController extends AbstractController
      */
     public function deleteList($data): mixed
     {
-        \Jield\Stdlib\Value::instance($this->response, \Laminas\Http\Response::class)->setStatusCode(405);
+        Value::instance($this->response, \Laminas\Http\Response::class)->setStatusCode(405);
 
         return [
             'content' => 'Method Not Allowed',
@@ -154,7 +153,7 @@ abstract class AbstractRestfulController extends AbstractController
      */
     public function get(mixed $id): mixed
     {
-        \Jield\Stdlib\Value::instance($this->response, \Laminas\Http\Response::class)->setStatusCode(405);
+        Value::instance($this->response, \Laminas\Http\Response::class)->setStatusCode(405);
 
         return [
             'content' => 'Method Not Allowed',
@@ -168,7 +167,7 @@ abstract class AbstractRestfulController extends AbstractController
      */
     public function getList(): mixed
     {
-        \Jield\Stdlib\Value::instance($this->response, \Laminas\Http\Response::class)->setStatusCode(405);
+        Value::instance($this->response, \Laminas\Http\Response::class)->setStatusCode(405);
 
         return [
             'content' => 'Method Not Allowed',
@@ -186,7 +185,7 @@ abstract class AbstractRestfulController extends AbstractController
      */
     public function head($id = null): mixed
     {
-        \Jield\Stdlib\Value::instance($this->response, \Laminas\Http\Response::class)->setStatusCode(405);
+        Value::instance($this->response, \Laminas\Http\Response::class)->setStatusCode(405);
 
         return [
             'content' => 'Method Not Allowed',
@@ -206,7 +205,7 @@ abstract class AbstractRestfulController extends AbstractController
      */
     public function options(): mixed
     {
-        \Jield\Stdlib\Value::instance($this->response, \Laminas\Http\Response::class)->setStatusCode(405);
+        Value::instance($this->response, \Laminas\Http\Response::class)->setStatusCode(405);
 
         return [
             'content' => 'Method Not Allowed',
@@ -225,7 +224,7 @@ abstract class AbstractRestfulController extends AbstractController
      */
     public function patch($id, $data): mixed
     {
-        \Jield\Stdlib\Value::instance($this->response, \Laminas\Http\Response::class)->setStatusCode(405);
+        Value::instance($this->response, \Laminas\Http\Response::class)->setStatusCode(405);
 
         return [
             'content' => 'Method Not Allowed',
@@ -242,7 +241,7 @@ abstract class AbstractRestfulController extends AbstractController
      */
     public function replaceList(mixed $data): mixed
     {
-        \Jield\Stdlib\Value::instance($this->response, \Laminas\Http\Response::class)->setStatusCode(405);
+        Value::instance($this->response, \Laminas\Http\Response::class)->setStatusCode(405);
 
         return [
             'content' => 'Method Not Allowed',
@@ -259,7 +258,7 @@ abstract class AbstractRestfulController extends AbstractController
      */
     public function patchList(mixed $data): mixed
     {
-        \Jield\Stdlib\Value::instance($this->response, \Laminas\Http\Response::class)->setStatusCode(405);
+        Value::instance($this->response, \Laminas\Http\Response::class)->setStatusCode(405);
 
         return [
             'content' => 'Method Not Allowed',
@@ -273,7 +272,7 @@ abstract class AbstractRestfulController extends AbstractController
      */
     public function update(mixed $id, mixed $data): mixed
     {
-        \Jield\Stdlib\Value::instance($this->response, \Laminas\Http\Response::class)->setStatusCode(405);
+        Value::instance($this->response, \Laminas\Http\Response::class)->setStatusCode(405);
 
         return [
             'content' => 'Method Not Allowed',
@@ -287,7 +286,7 @@ abstract class AbstractRestfulController extends AbstractController
      */
     public function notFoundAction(): array
     {
-        \Jield\Stdlib\Value::instance($this->response, \Laminas\Http\Response::class)->setStatusCode(404);
+        Value::instance($this->response, \Laminas\Http\Response::class)->setStatusCode(404);
 
         return [
             'content' => 'Page not found',
@@ -335,25 +334,27 @@ abstract class AbstractRestfulController extends AbstractController
         $request = $e->getRequest();
 
         // Was an "action" requested?
-        /** @var mixed $action */
         $action = $routeMatch->getParam('action', false);
         if ($action) {
             // Handle arbitrary methods, ending in Action
-            $method = static::getMethodFromAction(\Jield\Stdlib\Value::string($action));
+            $method = static::getMethodFromAction(Value::string($action));
             if (!method_exists($this, $method)) {
                 $method = 'notFoundAction';
             }
-            /** @var mixed $return */
-            $return = \Jield\Stdlib\Value::call($this, $method, [], scope: self::class);
+            $return = Value::call($this, $method, [], scope: self::class);
             $e->setResult($return);
             return $return;
         }
 
         // RESTful methods
-        $method = strtolower(\Jield\Stdlib\Value::string(\Jield\Stdlib\Value::instance($request, \Laminas\Http\Request::class)->getMethod()));
+        $method = strtolower(
+            Value::string(
+                Value::instance($request, \Laminas\Http\Request::class)->getMethod(),
+            ),
+        );
         if (isset($this->customHttpMethodsMap[$method])) {
             /** @var mixed $return */
-            $return = ($this->customHttpMethodsMap[$method])($e);
+            $return = Value::callback($this->customHttpMethodsMap[$method])($e);
             $routeMatch->setParam('action', $method);
             $e->setResult($return);
             return $return;
@@ -366,16 +367,13 @@ abstract class AbstractRestfulController extends AbstractController
 
                 if ($id !== false) {
                     $action = 'delete';
-                    /** @var mixed $return */
                     $return = $this->delete($id);
                     break;
                 }
 
-                /** @var mixed $data */
                 $data = $this->processBodyContent($request);
 
                 $action = 'deleteList';
-                /** @var mixed $return */
                 $return = $this->deleteList($data);
                 break;
                 // GET
@@ -384,12 +382,10 @@ abstract class AbstractRestfulController extends AbstractController
                 $id = $this->getIdentifier($routeMatch, $request);
                 if ($id !== false) {
                     $action = 'get';
-                    /** @var mixed $return */
                     $return = $this->get($id);
                     break;
                 }
                 $action = 'getList';
-                /** @var mixed $return */
                 $return = $this->getList();
                 break;
                 // HEAD
@@ -400,7 +396,6 @@ abstract class AbstractRestfulController extends AbstractController
                     $id = null;
                 }
                 $action = 'head';
-                /** @var mixed $headResult */
                 $headResult = $this->head($id);
                 $response = $headResult instanceof Response ? clone $headResult : $e->getResponse();
                 $response->setContent('');
@@ -416,12 +411,10 @@ abstract class AbstractRestfulController extends AbstractController
             case 'patch':
                 /** @var mixed $id */
                 $id = $this->getIdentifier($routeMatch, $request);
-                /** @var mixed $data */
                 $data = $this->processBodyContent($request);
 
                 if ($id !== false) {
                     $action = 'patch';
-                    /** @var mixed $return */
                     $return = $this->patch($id, $data);
                     break;
                 }
@@ -431,42 +424,37 @@ abstract class AbstractRestfulController extends AbstractController
                 // instead of going to patchList
                 try {
                     $action = 'patchList';
-                    /** @var mixed $return */
                     $return = $this->patchList($data);
                 } catch (RuntimeException) {
                     $response = $e->getResponse();
-                    \Jield\Stdlib\Value::instance($response, \Laminas\Http\Response::class)->setStatusCode(405);
+                    Value::instance($response, \Laminas\Http\Response::class)->setStatusCode(405);
                     return $response;
                 }
                 break;
                 // POST
             case 'post':
                 $action = 'create';
-                /** @var mixed $return */
                 $return = $this->processPostData($request);
                 break;
                 // PUT
             case 'put':
                 /** @var mixed $id */
                 $id = $this->getIdentifier($routeMatch, $request);
-                /** @var mixed $data */
                 $data = $this->processBodyContent($request);
 
                 if ($id !== false) {
                     $action = 'update';
-                    /** @var mixed $return */
                     $return = $this->update($id, $data);
                     break;
                 }
 
                 $action = 'replaceList';
-                /** @var mixed $return */
                 $return = $this->replaceList($data);
                 break;
                 // All others...
             default:
                 $response = $e->getResponse();
-                \Jield\Stdlib\Value::instance($response, \Laminas\Http\Response::class)->setStatusCode(405);
+                Value::instance($response, \Laminas\Http\Response::class)->setStatusCode(405);
                 return $response;
         }
 
@@ -484,10 +472,13 @@ abstract class AbstractRestfulController extends AbstractController
     public function processPostData(Request $request): mixed
     {
         if ($this->requestHasContentType($request, self::CONTENT_TYPE_JSON)) {
-            return $this->create($this->jsonDecode(\Jield\Stdlib\Value::string($request->getContent())));
+            return $this->create($this->jsonDecode(Value::string($request->getContent())));
         }
 
-        return $this->create(\Jield\Stdlib\Value::call(\Jield\Stdlib\Value::instance($request, \Laminas\Http\Request::class)->getPost(), 'toArray'));
+        return $this->create(Value::call(
+            Value::instance($request, \Laminas\Http\Request::class)->getPost(),
+            'toArray',
+        ));
     }
 
     /**
@@ -498,7 +489,10 @@ abstract class AbstractRestfulController extends AbstractController
      */
     public function requestHasContentType(Request $request, $contentType = ''): bool
     {
-        $headerContentType = \Jield\Stdlib\Value::instance($request, \Laminas\Http\AbstractMessage::class)->getHeaders()->get('content-type');
+        $headerContentType = Value::instance(
+            $request,
+            AbstractMessage::class,
+        )->getHeaders()->get('content-type');
         if (!$headerContentType instanceof ContentType) {
             return false;
         }
@@ -510,9 +504,8 @@ abstract class AbstractRestfulController extends AbstractController
         }
         $requestedContentType = trim($requestedContentType);
         if ($contentType !== null && array_key_exists($contentType, $this->contentTypes)) {
-            /** @var mixed $contentTypeValue */
-            foreach (\Jield\Stdlib\Value::iterable($this->contentTypes[$contentType]) as $contentTypeValue) {
-                if (stripos(\Jield\Stdlib\Value::string($contentTypeValue), $requestedContentType) === 0) {
+            foreach (Value::iterable($this->contentTypes[$contentType]) as $contentTypeValue) {
+                if (stripos(Value::string($contentTypeValue), $requestedContentType) === 0) {
                     return true;
                 }
             }
@@ -572,14 +565,16 @@ abstract class AbstractRestfulController extends AbstractController
     protected function getIdentifier($routeMatch, $request): mixed
     {
         $identifier = $this->getIdentifierName();
-        /** @var mixed $id */
         $id = $routeMatch->getParam($identifier, false);
         if ($id !== false) {
             return $id;
         }
 
-        /** @var mixed $id */
-        $id = \Jield\Stdlib\Value::call(\Jield\Stdlib\Value::instance($request, \Laminas\Http\Request::class)->getQuery(), 'get', [$identifier, false]);
+        $id = Value::call(
+            Value::instance($request, \Laminas\Http\Request::class)->getQuery(),
+            'get',
+            [$identifier, false],
+        );
         if ($id !== false) {
             return $id;
         }
@@ -601,10 +596,13 @@ abstract class AbstractRestfulController extends AbstractController
      */
     protected function processBodyContent(mixed $request): mixed
     {
-        $content = \Jield\Stdlib\Value::string(\Jield\Stdlib\Value::call($request, 'getContent'));
+        $content = Value::string(Value::call($request, 'getContent'));
 
         // JSON content? decode and return it.
-        if ($this->requestHasContentType(\Jield\Stdlib\Value::instance($request, \Laminas\Stdlib\RequestInterface::class), self::CONTENT_TYPE_JSON)) {
+        if ($this->requestHasContentType(
+            Value::instance($request, \Laminas\Stdlib\RequestInterface::class),
+            self::CONTENT_TYPE_JSON,
+        )) {
             return $this->jsonDecode($content);
         }
 
@@ -612,7 +610,7 @@ abstract class AbstractRestfulController extends AbstractController
         parse_str($content, $parsedParams);
 
         // If parse_str fails to decode, or we have a single element with empty value
-        if (empty($parsedParams) || 1 === count($parsedParams) && '' === reset($parsedParams)) {
+        if ($parsedParams === [] || array_values($parsedParams) === ['']) {
             return $content;
         }
 

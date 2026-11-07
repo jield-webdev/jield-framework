@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Jield\Twig;
 
 use Laminas\Stdlib\AbstractOptions;
+use Twig\Environment;
 
 /**
  * @extends \Laminas\Stdlib\AbstractOptions<mixed>
@@ -13,7 +14,7 @@ class ModuleOptions extends AbstractOptions
 {
     protected string $environmentLoader = '';
 
-    /** @var class-string<\Twig\Environment>|'' */
+    /** @var class-string<Environment>|'' */
     protected string $environmentClass = '';
 
     protected array $environmentOptions = [];
@@ -42,13 +43,13 @@ class ModuleOptions extends AbstractOptions
         return $this;
     }
 
-    /** @return class-string<\Twig\Environment>|'' */
+    /** @return class-string<Environment>|'' */
     public function getEnvironmentClass(): string
     {
         return $this->environmentClass;
     }
 
-    /** @param class-string<\Twig\Environment> $environmentClass */
+    /** @param class-string<Environment> $environmentClass */
     public function setEnvironmentClass(string $environmentClass): ModuleOptions
     {
         $this->environmentClass = $environmentClass;

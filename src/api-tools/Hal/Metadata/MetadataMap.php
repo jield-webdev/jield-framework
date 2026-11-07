@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Jield\ApiTools\Hal\Metadata;
 
 use Jield\ApiTools\Hal\Exception;
+use Jield\Stdlib\Value;
 use Laminas\Hydrator\HydratorPluginManager;
 use Laminas\Hydrator\HydratorPluginManagerInterface;
 use Laminas\ServiceManager\ServiceManager;
@@ -81,7 +82,9 @@ class MetadataMap
                 ));
             }
 
-            $this->map[\Jield\Stdlib\Value::classString($class)] = $metadata instanceof Metadata ? $metadata : \Jield\Stdlib\Value::stringKeyedArray($metadata);
+            $this->map[Value::classString($class)] = $metadata instanceof Metadata
+                ? $metadata
+                : Value::stringKeyedArray($metadata);
         }
 
         return $this;
@@ -100,8 +103,9 @@ class MetadataMap
             return true;
         }
 
-        if (get_parent_class(object_or_class: $className)) {
-            return $this->has(class: get_parent_class(object_or_class: $className));
+        $parentClass = get_parent_class(object_or_class: $className);
+        if ($parentClass !== false) {
+            return $this->has(class: $parentClass);
         }
 
         return false;
@@ -122,8 +126,9 @@ class MetadataMap
             return $this->getMetadataInstance(class: $className);
         }
 
-        if (get_parent_class(object_or_class: $className)) {
-            return $this->get(class: get_parent_class(object_or_class: $className));
+        $parentClass = get_parent_class(object_or_class: $className);
+        if ($parentClass !== false) {
+            return $this->get(class: $parentClass);
         }
 
         return false;

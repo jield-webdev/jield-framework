@@ -8,9 +8,16 @@ namespace Jield\Mvc\Factory;
 use Jield\ModuleManager\Listener\ServiceListener;
 use Jield\ModuleManager\Listener\ServiceListenerInterface;
 use Jield\Mvc;
+use Jield\Mvc\View\Http\JsonStrategy;
+use Jield\Mvc\View\Renderer\PhpRenderer;
+use Jield\Stdlib\Value;
+use Laminas\Router\Http\TreeRouteStack;
+use Laminas\Router\RoutePluginManager;
+use Laminas\Router\RouteStackInterface;
 use Laminas\ServiceManager\Exception\ServiceNotCreatedException;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Laminas\ServiceManager\Factory\InvokableFactory;
+use Laminas\ServiceManager\ServiceManager;
 use Laminas\View;
 use Psr\Container\ContainerInterface;
 
@@ -36,10 +43,10 @@ class ServiceListenerFactory implements FactoryInterface
     protected array $defaultServiceConfig = [
         'abstract_factories' => [ViewHelperAbstractFactory::class],
         'aliases' => [
-            'ViewJsonStrategy' => \Jield\Mvc\View\Http\JsonStrategy::class,
-            'HttpRouter' => \Laminas\Router\Http\TreeRouteStack::class,
-            'Router' => \Laminas\Router\RouteStackInterface::class,
-            'RoutePluginManager' => \Laminas\Router\RoutePluginManager::class,
+            'ViewJsonStrategy' => JsonStrategy::class,
+            'HttpRouter' => TreeRouteStack::class,
+            'Router' => RouteStackInterface::class,
+            'RoutePluginManager' => RoutePluginManager::class,
             'application' => 'Application',
             'Config' => 'config',
             'configuration' => 'config',
@@ -52,11 +59,11 @@ class ServiceListenerFactory implements FactoryInterface
             'View' => View\View::class,
             View\HelperPluginManager::class => 'ViewHelperManager',
             View\HelperPluginManagerInterface::class => 'ViewHelperManager',
-            'ViewPhpRenderer' => \Jield\Mvc\View\Renderer\PhpRenderer::class,
-            'ViewRenderer' => \Jield\Mvc\View\Renderer\PhpRenderer::class,
+            'ViewPhpRenderer' => PhpRenderer::class,
+            'ViewRenderer' => PhpRenderer::class,
             Mvc\Controller\PluginManager::class => 'ControllerPluginManager',
             Mvc\View\Http\InjectTemplateListener::class => 'InjectTemplateListener',
-            View\Renderer\RendererInterface::class => \Jield\Mvc\View\Renderer\PhpRenderer::class,
+            View\Renderer\RendererInterface::class => PhpRenderer::class,
             View\Resolver\PrefixPathStackResolver::class => 'ViewPrefixPathStackResolver',
             View\Resolver\TemplateMapResolver::class => 'ViewTemplateMapResolver',
             View\Resolver\TemplatePathStack::class => 'ViewTemplatePathStack',
@@ -66,7 +73,7 @@ class ServiceListenerFactory implements FactoryInterface
         ],
         'invokables' => [],
         'factories' => [
-            \Jield\Mvc\View\Http\JsonStrategy::class => InvokableFactory::class,
+            JsonStrategy::class => InvokableFactory::class,
             \Laminas\View\Renderer\PhpRenderer::class => NativePhpRendererFactory::class,
             'Application' => ApplicationFactory::class,
             'config' => Mvc\Factory\ConfigFactory::class,
@@ -91,7 +98,7 @@ class ServiceListenerFactory implements FactoryInterface
             'ViewPrefixPathStackResolver' => Mvc\Factory\ViewPrefixPathStackResolverFactory::class,
             Mvc\RouteListener::class => InvokableFactory::class,
             Mvc\SendResponseListener::class => SendResponseListenerFactory::class,
-            \Jield\Mvc\View\Renderer\PhpRenderer::class => ViewPhpRendererFactory::class,
+            PhpRenderer::class => ViewPhpRendererFactory::class,
             View\View::class => ViewFactory::class,
         ],
     ];
@@ -125,13 +132,15 @@ class ServiceListenerFactory implements FactoryInterface
         string $requestedName,
         ?array $options = null,
     ): ServiceListenerInterface {
-        /** @var mixed $configuration */
         $configuration = $container->get('ApplicationConfig');
 
         /** @var mixed $serviceListener */
         $serviceListener = $container->has('ServiceListenerInterface')
             ? $container->get('ServiceListenerInterface')
-            : new ServiceListener(\Jield\Stdlib\Value::instance($container, \Laminas\ServiceManager\ServiceManager::class));
+            : new ServiceListener(Value::instance(
+                $container,
+                ServiceManager::class,
+            ));
 
         if (!$serviceListener instanceof ServiceListenerInterface) {
             throw new ServiceNotCreatedException('The service named ServiceListenerInterface must implement '
@@ -141,7 +150,10 @@ class ServiceListenerFactory implements FactoryInterface
         $serviceListener->setDefaultServiceConfig($this->defaultServiceConfig);
 
         if (isset($configuration['service_listener_options'])) {
-            $this->injectServiceListenerOptions(\Jield\Stdlib\Value::array($configuration['service_listener_options']), $serviceListener);
+            $this->injectServiceListenerOptions(
+                Value::array($configuration['service_listener_options']),
+                $serviceListener,
+            );
         }
 
         return $serviceListener;
@@ -162,15 +174,17 @@ class ServiceListenerFactory implements FactoryInterface
             ));
         }
 
-        /** @var mixed $newServiceManager */
         foreach ($options as $key => $newServiceManager) {
-            $this->validatePluginManagerOptions(\Jield\Stdlib\Value::array($newServiceManager), \Jield\Stdlib\Value::string($key));
+            $this->validatePluginManagerOptions(
+                Value::array($newServiceManager),
+                Value::string($key),
+            );
 
             $serviceListener->addServiceManager(
-                \Jield\Stdlib\Value::string($newServiceManager['service_manager']),
-                \Jield\Stdlib\Value::string($newServiceManager['config_key']),
-                \Jield\Stdlib\Value::string($newServiceManager['interface']),
-                \Jield\Stdlib\Value::string($newServiceManager['method']),
+                Value::string($newServiceManager['service_manager']),
+                Value::string($newServiceManager['config_key']),
+                Value::string($newServiceManager['interface']),
+                Value::string($newServiceManager['method']),
             );
         }
     }

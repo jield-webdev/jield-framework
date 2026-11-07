@@ -11,6 +11,7 @@ use Jield\Form\Factory;
 use Jield\Form\FieldsetInterface;
 use Jield\Form\FormFactoryAwareInterface;
 use Jield\Form\FormInterface;
+use Jield\Stdlib\Value;
 use Laminas\EventManager\Event;
 use Laminas\EventManager\EventManager;
 use Laminas\EventManager\EventManagerAwareInterface;
@@ -115,7 +116,10 @@ abstract class AbstractBuilder implements EventManagerAwareInterface, FormFactor
         if (!isset($formSpec['input_filter'])) {
             $formSpec['input_filter'] = $filterSpec;
         } elseif (is_array($formSpec['input_filter'])) {
-            $formSpec['input_filter'] = ArrayUtils::merge($filterSpec->getArrayCopy(), \Jield\Stdlib\Value::array($formSpec['input_filter']));
+            $formSpec['input_filter'] = ArrayUtils::merge(
+                $filterSpec->getArrayCopy(),
+                Value::array($formSpec['input_filter']),
+            );
         }
 
         return $formSpec;
@@ -242,15 +246,11 @@ abstract class AbstractBuilder implements EventManagerAwareInterface, FormFactor
         // Compose as a fieldset or an element, based on specification type.
         // If preserve defined order is true, all elements are composed as elements to keep their ordering
         if (!$this->preserveDefinedOrder() && is_subclass_of($type, FieldsetInterface::class)) {
-            if (!isset($formSpec['fieldsets'])) {
-                $formSpec['fieldsets'] = [];
-            }
-            \Jield\Stdlib\Value::setPath($formSpec, ['fieldsets', null], $params['elementSpec']);
+            $formSpec['fieldsets'] ??= [];
+            Value::setPath($formSpec, ['fieldsets', null], $params['elementSpec']);
         } else {
-            if (!isset($formSpec['elements'])) {
-                $formSpec['elements'] = [];
-            }
-            \Jield\Stdlib\Value::setPath($formSpec, ['elements', null], $params['elementSpec']);
+            $formSpec['elements'] ??= [];
+            Value::setPath($formSpec, ['elements', null], $params['elementSpec']);
         }
     }
 
@@ -288,7 +288,7 @@ abstract class AbstractBuilder implements EventManagerAwareInterface, FormFactor
         );
         // @codingStandardsIgnoreEnd
 
-        return \Jield\Stdlib\Value::string($results->last());
+        return Value::string($results->last());
     }
 
     /**
@@ -307,6 +307,6 @@ abstract class AbstractBuilder implements EventManagerAwareInterface, FormFactor
         $results = $this->getEventManager()->triggerEventUntil(static fn(?bool $r): bool => true === $r, $event);
         // @codingStandardsIgnoreEnd
 
-        return \Jield\Stdlib\Value::bool(\Jield\Stdlib\Value::truthy($results->last()));
+        return Value::bool(Value::truthy($results->last()));
     }
 }

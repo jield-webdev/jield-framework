@@ -9,8 +9,10 @@ use Jield\Mvc\Exception\InvalidArgumentException;
 use Jield\Mvc\InjectApplicationEventInterface;
 use Jield\Mvc\MvcEvent;
 use Jield\Mvc\View\Model\ViewModel;
+use Jield\Stdlib\Value;
 use Laminas\Http\Header\Accept;
 use Laminas\Http\Header\Accept\FieldValuePart\AbstractFieldValuePart;
+use Laminas\Http\Headers;
 use Laminas\Http\Request;
 use Laminas\View\Model\ModelInterface;
 
@@ -78,7 +80,7 @@ class AcceptableViewModelSelector extends AbstractPlugin
             throw new InvalidArgumentException('The supplied View Model could not be found');
         }
 
-        return new $name();
+        return Value::instance(Value::instantiate($name), ModelInterface::class);
     }
 
     /**
@@ -118,7 +120,10 @@ class AcceptableViewModelSelector extends AbstractPlugin
         $request = $this->getRequest();
         $headers = $request->getHeaders();
 
-        if (!$matchAgainst && !$this->defaultMatchAgainst || !\Jield\Stdlib\Value::instance($headers, \Laminas\Http\Headers::class)->has('accept')) {
+        if (
+            !$matchAgainst && !$this->defaultMatchAgainst
+            || !Value::instance($headers, Headers::class)->has('accept')
+        ) {
             return null;
         }
 
@@ -127,16 +132,17 @@ class AcceptableViewModelSelector extends AbstractPlugin
         }
 
         $matchAgainstString = '';
-        /** @var mixed $modelStrings */
         foreach ($matchAgainst as $modelName => $modelStrings) {
-            /** @var mixed $modelString */
-            foreach (\Jield\Stdlib\Value::toArray($modelStrings) as $modelString) {
-                $matchAgainstString .= $this->injectViewModelName(\Jield\Stdlib\Value::string($modelString), \Jield\Stdlib\Value::string($modelName));
+            foreach (Value::toArray($modelStrings) as $modelString) {
+                $matchAgainstString .= $this->injectViewModelName(
+                    Value::string($modelString),
+                    Value::string($modelName),
+                );
             }
         }
 
         /** @var Accept $accept */
-        $accept = \Jield\Stdlib\Value::instance($headers, \Laminas\Http\Headers::class)->get('Accept');
+        $accept = Value::instance($headers, Headers::class)->get('Accept');
         $res = $accept->match($matchAgainstString);
         if (!$res instanceof AbstractFieldValuePart) {
             return null;
@@ -200,6 +206,8 @@ class AcceptableViewModelSelector extends AbstractPlugin
     {
         $modelName = str_replace('\\', '|', $modelName);
 
+        $modelAcceptString = is_array($modelAcceptString) ? implode(', ', Value::strings($modelAcceptString)) : $modelAcceptString;
+
         return $modelAcceptString . '; ' . self::INJECT_VIEWMODEL_NAME . '="' . $modelName . '", ';
     }
 
@@ -210,8 +218,8 @@ class AcceptableViewModelSelector extends AbstractPlugin
      */
     protected function extractViewModelName(AbstractFieldValuePart $res): string
     {
-        $params = get_object_vars(\Jield\Stdlib\Value::present($res->getMatchedAgainst())->getParams());
-        $modelName = \Jield\Stdlib\Value::string($params[self::INJECT_VIEWMODEL_NAME]);
+        $params = get_object_vars(Value::present($res->getMatchedAgainst())->getParams());
+        $modelName = Value::string($params[self::INJECT_VIEWMODEL_NAME]);
         return str_replace('|', '\\', $modelName);
     }
 

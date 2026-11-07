@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Jield\Mvc\Controller\Plugin\Service;
 
 // phpcs:ignore
+use Jield\Mvc\Controller\ControllerManager;
 use Jield\Mvc\Controller\Plugin\Forward;
+use Jield\Stdlib\Service;
 use Laminas\ServiceManager\Exception\ServiceNotCreatedException;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Psr\Container\ContainerInterface;
@@ -29,7 +31,11 @@ class ForwardFactory implements FactoryInterface
                 'ControllerManager',
             ));
         }
-        $controllers = \Jield\Stdlib\Service::get($container, \Jield\Mvc\Controller\ControllerManager::class, 'ControllerManager');
+        $controllers = Service::get(
+            $container,
+            ControllerManager::class,
+            'ControllerManager',
+        );
 
         return new Forward($controllers);
     }

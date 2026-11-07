@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Jield\Form\Element;
 
 use Jield\Form\Element;
+use Jield\Stdlib\Value;
 use Laminas\Filter\StringTrim;
 use Laminas\InputFilter\InputProviderInterface;
 use Laminas\Validator\NumberComparison;
@@ -47,14 +48,14 @@ class Number extends Element implements InputProviderInterface
 
         if (isset($this->attributes['min'])) {
             $validators[] = new NumberComparison([
-                'min' => \Jield\Stdlib\Value::numeric($this->attributes['min']),
+                'min' => Value::numeric($this->attributes['min']),
                 'inclusiveMin' => (bool) $inclusive,
                 'inclusiveMax' => (bool) $inclusive,
             ]);
         }
         if (isset($this->attributes['max'])) {
             $validators[] = new NumberComparison([
-                'max' => \Jield\Stdlib\Value::numeric($this->attributes['max']),
+                'max' => Value::numeric($this->attributes['max']),
                 'inclusiveMin' => (bool) $inclusive,
                 'inclusiveMax' => (bool) $inclusive,
             ]);
@@ -62,8 +63,8 @@ class Number extends Element implements InputProviderInterface
 
         if (!isset($this->attributes['step']) || 'any' !== $this->attributes['step']) {
             $validators[] = new StepValidator(options: [
-                'baseValue' => \Jield\Stdlib\Value::numeric($this->attributes['min'] ?? 0),
-                'step' => \Jield\Stdlib\Value::numeric($this->attributes['step'] ?? 1),
+                'baseValue' => Value::numeric($this->attributes['min'] ?? 0),
+                'step' => Value::numeric($this->attributes['step'] ?? 1),
             ]);
         }
 

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Jield\ApiTools\OAuth2\Provider\UserId;
 
+use Jield\Stdlib\Service;
+use Jield\Stdlib\Value;
 use Laminas\ServiceManager\ServiceLocatorInterface;
 use Psr\Container\ContainerInterface;
 
@@ -11,17 +13,19 @@ class AuthenticationServiceFactory
 {
     public function __invoke(ContainerInterface $container): AuthenticationService
     {
-        /** @var mixed $config */
         $config = $container->get('config');
 
         if ($container->has(\Laminas\Authentication\AuthenticationService::class)) {
             return new AuthenticationService(
-                authenticationService: \Jield\Stdlib\Service::get($container, \Laminas\Authentication\AuthenticationService::class),
-                config: \Jield\Stdlib\Value::array($config),
+                authenticationService: Service::get(
+                    $container,
+                    \Laminas\Authentication\AuthenticationService::class,
+                ),
+                config: Value::array($config),
             );
         }
 
-        return new AuthenticationService(authenticationService: null, config: \Jield\Stdlib\Value::array($config));
+        return new AuthenticationService(authenticationService: null, config: Value::array($config));
     }
 
     /**

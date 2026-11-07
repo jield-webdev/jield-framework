@@ -6,6 +6,7 @@ namespace Jield\Mvc\View\Http;
 
 use Jield\Mvc\MvcEvent;
 use Jield\Mvc\View\Model\ViewModel;
+use Jield\Stdlib\Value;
 use Laminas\EventManager\AbstractListenerAggregate;
 use Laminas\EventManager\EventManagerInterface as Events;
 use Laminas\Stdlib\ArrayUtils;
@@ -17,8 +18,8 @@ class CreateViewModelListener extends AbstractListenerAggregate
      */
     public function attach(Events $events, $priority = 1): void
     {
-        $this->listeners[] = $events->attach(MvcEvent::EVENT_DISPATCH, [$this, 'createViewModelFromArray'], -80);
-        $this->listeners[] = $events->attach(MvcEvent::EVENT_DISPATCH, [$this, 'createViewModelFromNull'], -80);
+        $this->listeners[] = $events->attach(MvcEvent::EVENT_DISPATCH, $this->createViewModelFromArray(...), -80);
+        $this->listeners[] = $events->attach(MvcEvent::EVENT_DISPATCH, $this->createViewModelFromNull(...), -80);
     }
 
     /**
@@ -28,13 +29,12 @@ class CreateViewModelListener extends AbstractListenerAggregate
      */
     public function createViewModelFromArray(MvcEvent $e): void
     {
-        /** @var mixed $result */
         $result = $e->getResult();
         if (!ArrayUtils::hasStringKeys($result, true)) {
             return;
         }
 
-        $model = new ViewModel(\Jield\Stdlib\Value::namedValues($result));
+        $model = new ViewModel(Value::namedValues($result));
         $e->setResult($model);
     }
 
@@ -45,7 +45,6 @@ class CreateViewModelListener extends AbstractListenerAggregate
      */
     public function createViewModelFromNull(MvcEvent $e): void
     {
-        /** @var mixed $result */
         $result = $e->getResult();
         if (null !== $result) {
             return;

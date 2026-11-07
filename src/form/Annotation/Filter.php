@@ -8,6 +8,7 @@ use Attribute;
 use Doctrine\Common\Annotations\Annotation;
 use Doctrine\Common\Annotations\Annotation\NamedArgumentConstructor;
 
+use Jield\Stdlib\Value;
 use function is_array;
 use function sprintf;
 use function trigger_error;
@@ -58,9 +59,9 @@ final class Filter
                 E_USER_DEPRECATED,
             );
 
-            $this->name = \Jield\Stdlib\Value::string($name['name'] ?? null);
-            $this->options = \Jield\Stdlib\Value::array($name['options'] ?? $options);
-            $this->priority = \Jield\Stdlib\Value::nullableInt($name['priority'] ?? $priority);
+            $this->name = Value::string($name['name'] ?? null);
+            $this->options = Value::array($name['options'] ?? $options);
+            $this->priority = Value::nullableInt($name['priority'] ?? $priority);
         } else {
             $this->name = $name;
             $this->options = $options;

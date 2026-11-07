@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace DoctrineORMModule\Service;
 
 use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\EntityManagerInterface;
+use Jield\Stdlib\Service;
+use Jield\Stdlib\Value;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Psr\Container\ContainerInterface;
 
@@ -28,6 +31,13 @@ final class EntityManagerAliasCompatFactory implements FactoryInterface
         string $requestedName,
         ?array $options = null,
     ): EntityManager {
-        return \Jield\Stdlib\Value::instance(\Jield\Stdlib\Service::get($container, \Doctrine\ORM\EntityManagerInterface::class, 'doctrine.entitymanager.orm_default'), \Doctrine\ORM\EntityManager::class);
+        return Value::instance(
+            Service::get(
+                $container,
+                EntityManagerInterface::class,
+                'doctrine.entitymanager.orm_default',
+            ),
+            \Doctrine\ORM\EntityManager::class,
+        );
     }
 }

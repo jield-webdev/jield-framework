@@ -27,7 +27,7 @@ final class InputFilterValidator
         array $context = [],
     ): InputFilterValidationResult {
         $data = is_array($data) ? $data : iterator_to_array($data);
-        if ($group === null || ($filter instanceof OptionalInputFilter && $data === [])) {
+        if ($group === null || $filter instanceof OptionalInputFilter && $data === []) {
             /** @var InputFilterValidationResult<array<array-key, mixed>> $result */
             $result = $filter->validate($data, $context);
             return $result;
@@ -35,14 +35,15 @@ final class InputFilterValidator
 
         if ($filter instanceof CollectionInputFilter) {
             $collection = clone $filter;
-            $collection->setInputFilter(new CollectionValidationGroups($filter->getInputFilter(), array_values($group)));
+            $collection->setInputFilter(
+                new CollectionValidationGroups($filter->getInputFilter(), array_values($group)),
+            );
             $result = $collection->validate($data, $context);
             return $result;
         }
 
         $context = $context === [] ? $data : $context;
         $results = [];
-        /** @var mixed $selection */
         foreach ($group as $key => $selection) {
             $name = is_array($selection) ? $key : Value::key($selection);
             if (!$filter->has($name)) {
@@ -84,7 +85,6 @@ final class InputFilterValidator
             return array_keys($data);
         }
         $groups = [];
-        /** @var mixed $item */
         foreach ($data as $item) {
             $groups[] = array_keys(Value::array($item));
         }

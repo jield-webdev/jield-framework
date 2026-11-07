@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Jield\Search\Solr;
 
+use InvalidArgumentException;
+use Stringable;
 use function defined;
 use function gettype;
 use function ini_get;
@@ -71,10 +73,10 @@ final class Util
         }
 
         if (!is_string(value: $value)) {
-            if (is_scalar($value) || $value === null || $value instanceof \Stringable) {
+            if (is_scalar($value) || $value === null || $value instanceof Stringable) {
                 return (string) $value;
             }
-            throw new \InvalidArgumentException('Expected a scalar or stringable Solr value.');
+            throw new InvalidArgumentException('Expected a scalar or stringable Solr value.');
         }
 
         return '"' . str_replace(search: self::$search, replace: self::$replace, subject: $value) . '"';
@@ -103,13 +105,13 @@ final class Util
         if (is_bool($value)) {
             return $value ? 'true' : 'false';
         }
-        if ($value instanceof \Stringable) {
+        if ($value instanceof Stringable) {
             return (string) $value;
         }
         if ($value === null || $value === []) {
             return '';
         }
-        throw new \InvalidArgumentException('Expected a scalar or stringable Solr value.');
+        throw new InvalidArgumentException('Expected a scalar or stringable Solr value.');
     }
 
     /**
@@ -122,10 +124,10 @@ final class Util
         }
 
         if (!is_string(value: $value)) {
-            if (is_scalar($value) || $value === null || $value instanceof \Stringable) {
+            if (is_scalar($value) || $value === null || $value instanceof Stringable) {
                 return (string) $value;
             }
-            throw new \InvalidArgumentException('Expected a scalar or stringable Solr value.');
+            throw new InvalidArgumentException('Expected a scalar or stringable Solr value.');
         }
 
         return str_replace(search: self::$search, replace: self::$replace, subject: $value);

@@ -16,13 +16,9 @@ use function array_values;
  */
 class ObjectRepositoryProvider implements ProviderInterface
 {
-    /** @var ObjectRepository */
-    protected ObjectRepository $objectRepository;
-
-    public function __construct(ObjectRepository $objectRepository)
-    {
-        $this->objectRepository = $objectRepository;
-    }
+    public function __construct(
+        protected ObjectRepository $objectRepository,
+    ) {}
 
     /**
      * {@inheritDoc}
@@ -49,7 +45,7 @@ class ObjectRepositoryProvider implements ProviderInterface
         }
 
         // Pass Two: Re-inject parent objects to preserve hierarchy
-        
+
         foreach ($roles as $roleObj) {
             $parentRoleObj = $roleObj->getParent();
 

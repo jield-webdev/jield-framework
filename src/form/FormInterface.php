@@ -73,11 +73,11 @@ interface FormInterface extends FieldsetInterface
      * constants to shape the behavior.
      *
      * @param self::VALUES_* $flag
-     * @return TFilteredValues|object|array<string, mixed>
+     * @return TFilteredValues|object|array<array-key, mixed>
      * @psalm-return (
      *     $flag is self::VALUES_NORMALIZED
      *          ? TFilteredValues|object
-     *          : ($flag is self::VALUES_RAW ? array<string, mixed> : TFilteredValues)
+     *          : ($flag is self::VALUES_RAW ? array<array-key, mixed> : TFilteredValues)
      * )
      */
     public function getData(int $flag = FormInterface::VALUES_NORMALIZED): array|object;

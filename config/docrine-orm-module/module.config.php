@@ -186,7 +186,7 @@ $result = [
     'service_manager' => [
         'factories' => [
             CliConfigurator::class => Service\CliConfiguratorFactory::class,
-            'Doctrine\ORM\EntityManager' => Service\EntityManagerAliasCompatFactory::class,
+            \Doctrine\ORM\EntityManager::class => Service\EntityManagerAliasCompatFactory::class,
             // DBAL commands
             'doctrine.dbal_cmd.runsql' => Service\RunSqlCommandFactory::class,
             'doctrine.dbal_cmd.reserved_words'  => Service\ReservedWordsCommandFactory::class,

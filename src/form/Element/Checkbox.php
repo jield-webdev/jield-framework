@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Jield\Form\Element;
 
 use Jield\Form\Element;
+use Jield\Stdlib\Value;
 use Laminas\InputFilter\InputProviderInterface;
 use Laminas\Validator\InArray as InArrayValidator;
 use Laminas\Validator\ValidatorInterface;
@@ -41,15 +42,19 @@ class Checkbox extends Element implements InputProviderInterface
         parent::setOptions(options: $options);
 
         if (isset($this->options['use_hidden_element'])) {
-            $this->setUseHiddenElement(useHiddenElement: \Jield\Stdlib\Value::bool($this->options['use_hidden_element']));
+            $this->setUseHiddenElement(useHiddenElement: Value::bool(
+                $this->options['use_hidden_element'],
+            ));
         }
 
         if (isset($this->options['unchecked_value'])) {
-            $this->setUncheckedValue(uncheckedValue: \Jield\Stdlib\Value::nullableString($this->options['unchecked_value']));
+            $this->setUncheckedValue(uncheckedValue: Value::nullableString(
+                $this->options['unchecked_value'],
+            ));
         }
 
         if (isset($this->options['checked_value'])) {
-            $this->setCheckedValue(checkedValue: \Jield\Stdlib\Value::string($this->options['checked_value']));
+            $this->setCheckedValue(checkedValue: Value::string($this->options['checked_value']));
         }
 
         return $this;
@@ -117,12 +122,10 @@ class Checkbox extends Element implements InputProviderInterface
      */
     protected function getValidator(): ?ValidatorInterface
     {
-        if (null === $this->validator) {
-            $this->validator = new InArrayValidator(options: [
-                'haystack' => [$this->checkedValue, $this->uncheckedValue],
-                'strict' => false,
-            ]);
-        }
+        $this->validator ??= new InArrayValidator(options: [
+            'haystack' => [$this->checkedValue, $this->uncheckedValue],
+            'strict' => false,
+        ]);
         return $this->validator;
     }
 

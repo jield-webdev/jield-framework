@@ -4,14 +4,15 @@ declare(strict_types=1);
 
 namespace Jield\AssetManager\Resolver;
 
+use Assetic\Contracts\Asset\AssetInterface;
 use Assetic\Factory\Resource\DirectoryResource;
 use Jield\AssetManager\Asset\FileAsset;
 use Jield\AssetManager\Exception;
 use Jield\AssetManager\Service\MimeResolver;
+use Jield\Stdlib\Value;
 use Laminas\Stdlib\SplStack;
 use Override;
 use SplFileInfo;
-use Traversable;
 
 /**
  * This resolver allows you to resolve from a stack of paths.
@@ -74,9 +75,8 @@ class PathStackResolver implements ResolverInterface, MimeResolverAwareInterface
      */
     public function addPaths(iterable $paths): void
     {
-        /** @var mixed $path */
         foreach ($paths as $path) {
-            $this->addPath(path: \Jield\Stdlib\Value::string($path));
+            $this->addPath(path: Value::string($path));
         }
     }
 
@@ -88,8 +88,6 @@ class PathStackResolver implements ResolverInterface, MimeResolverAwareInterface
      */
     public function setPaths(iterable $paths): void
     {
-        
-
         $this->clearPaths();
         $this->addPaths(paths: $paths);
     }
@@ -116,8 +114,6 @@ class PathStackResolver implements ResolverInterface, MimeResolverAwareInterface
      */
     public function addPath(string $path): void
     {
-        
-
         $this->paths[] = $this->normalizePath(path: $path);
     }
 
@@ -168,20 +164,19 @@ class PathStackResolver implements ResolverInterface, MimeResolverAwareInterface
      * {@inheritDoc}
      */
     #[Override]
-    public function resolve(string $fileName): FileAsset|\Assetic\Contracts\Asset\AssetInterface|null
+    public function resolve(string $fileName): FileAsset|AssetInterface|null
     {
         if ($this->isLfiProtectionOn() && preg_match(pattern: '#\.\.[\\\/]#', subject: $fileName)) {
             return null;
         }
 
-        /** @var mixed $path */
         foreach ($this->getPaths() as $path) {
-            $file = new SplFileInfo(filename: \Jield\Stdlib\Value::stringify($path) . $fileName);
+            $file = new SplFileInfo(filename: Value::stringify($path) . $fileName);
 
             if ($file->isReadable() && !$file->isDir()) {
                 $filePath = $file->getRealPath();
-                $mimeType = $this->getMimeResolver()->getMimeType(filename: \Jield\Stdlib\Value::string($filePath));
-                $asset = new FileAsset(source: \Jield\Stdlib\Value::string($filePath));
+                $mimeType = $this->getMimeResolver()->getMimeType(filename: Value::string($filePath));
+                $asset = new FileAsset(source: Value::string($filePath));
 
                 $asset->mimetype = $mimeType;
 
@@ -195,12 +190,11 @@ class PathStackResolver implements ResolverInterface, MimeResolverAwareInterface
     public function collect(): array
     {
         $collection = [];
-        /** @var mixed $path */
         foreach ($this->getPaths() as $path) {
             $locations = new SplStack();
-            $pathInfo = new SplFileInfo(filename: \Jield\Stdlib\Value::string($path));
+            $pathInfo = new SplFileInfo(filename: Value::string($path));
             $locations->push(value: $pathInfo);
-            $basePath = $this->normalizePath(path: \Jield\Stdlib\Value::string($pathInfo->getRealPath()));
+            $basePath = $this->normalizePath(path: Value::string($pathInfo->getRealPath()));
 
             while (!$locations->isEmpty()) {
                 /** @var SplFileInfo $pathInfo */
@@ -210,13 +204,19 @@ class PathStackResolver implements ResolverInterface, MimeResolverAwareInterface
                 }
 
                 if ($pathInfo->isDir()) {
-                    $dir = new DirectoryResource(path: \Jield\Stdlib\Value::string($pathInfo->getRealPath()));
+                    $dir = new DirectoryResource(path: Value::string($pathInfo->getRealPath()));
                     /** @var mixed $resource */
                     foreach ($dir as $resource) {
-                        $locations->push(value: new SplFileInfo(filename: \Jield\Stdlib\Value::string($resource)));
+                        $locations->push(value: new SplFileInfo(filename: Value::string($resource)));
                     }
-                } elseif (!isset($collection[$pathInfo->getPath()])) {
-                    $collection[] = substr(string: \Jield\Stdlib\Value::string($pathInfo->getRealPath()), offset: strlen(string: $basePath));
+                } else {
+                    $relativePath = substr(
+                        string: Value::string($pathInfo->getRealPath()),
+                        offset: strlen(string: $basePath),
+                    );
+                    if (!in_array($relativePath, $collection, true)) {
+                        $collection[] = $relativePath;
+                    }
                 }
             }
         }

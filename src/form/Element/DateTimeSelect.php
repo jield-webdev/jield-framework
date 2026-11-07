@@ -9,6 +9,7 @@ use DateTimeInterface;
 use Exception;
 use Jield\Form\Exception\InvalidArgumentException;
 use Jield\Form\FormInterface;
+use Jield\Stdlib\Value;
 use Laminas\Validator\Date as DateValidator;
 use Laminas\Validator\ValidatorInterface;
 
@@ -80,19 +81,25 @@ class DateTimeSelect extends DateSelect
         parent::setOptions(options: $options);
 
         if (isset($this->options['hour_attributes'])) {
-            $this->setHourAttributes(hourAttributes: \Jield\Stdlib\Value::scalarMap($this->options['hour_attributes']));
+            $this->setHourAttributes(hourAttributes: Value::scalarMap($this->options['hour_attributes']));
         }
 
         if (isset($this->options['minute_attributes'])) {
-            $this->setMinuteAttributes(minuteAttributes: \Jield\Stdlib\Value::scalarMap($this->options['minute_attributes']));
+            $this->setMinuteAttributes(minuteAttributes: Value::scalarMap(
+                $this->options['minute_attributes'],
+            ));
         }
 
         if (isset($this->options['second_attributes'])) {
-            $this->setSecondAttributes(secondAttributes: \Jield\Stdlib\Value::scalarMap($this->options['second_attributes']));
+            $this->setSecondAttributes(secondAttributes: Value::scalarMap(
+                $this->options['second_attributes'],
+            ));
         }
 
         if (isset($this->options['should_show_seconds'])) {
-            $this->setShouldShowSeconds(shouldShowSeconds: \Jield\Stdlib\Value::bool($this->options['should_show_seconds']));
+            $this->setShouldShowSeconds(shouldShowSeconds: Value::bool(
+                $this->options['should_show_seconds'],
+            ));
         }
 
         return $this;
@@ -259,17 +266,11 @@ class DateTimeSelect extends DateSelect
 
     public function getValue(): ?string
     {
-        /** @var mixed $year */
         $year = $this->getYearElement()->getValue();
-        /** @var mixed $month */
         $month = $this->getMonthElement()->getValue();
-        /** @var mixed $day */
         $day = $this->getDayElement()->getValue();
-        /** @var mixed $hour */
         $hour = $this->getHourElement()->getValue();
-        /** @var mixed $minute */
         $minute = $this->getMinuteElement()->getValue();
-        /** @var mixed $second */
         $second = $this->getSecondElement()->getValue();
 
         // if everything is null, return null
@@ -305,7 +306,15 @@ class DateTimeSelect extends DateSelect
             $second = '00';
         }
 
-        return sprintf('%04d-%02d-%02d %02d:%02d:%02d', \Jield\Stdlib\Value::scalar($year), \Jield\Stdlib\Value::scalar($month), \Jield\Stdlib\Value::scalar($day), \Jield\Stdlib\Value::scalar($hour), \Jield\Stdlib\Value::scalar($minute), \Jield\Stdlib\Value::scalar($second));
+        return sprintf(
+            '%04d-%02d-%02d %02d:%02d:%02d',
+            Value::scalar($year),
+            Value::scalar($month),
+            Value::scalar($day),
+            Value::scalar($hour),
+            Value::scalar($minute),
+            Value::scalar($second),
+        );
     }
 
     /**
@@ -316,9 +325,9 @@ class DateTimeSelect extends DateSelect
         parent::prepareElement(form: $form);
 
         $name = $this->getName();
-        $this->hourElement->setName(name: (string) ($name) . '[hour]');
-        $this->minuteElement->setName(name: (string) ($name) . '[minute]');
-        $this->secondElement->setName(name: (string) ($name) . '[second]');
+        $this->hourElement->setName(name: (string) $name . '[hour]');
+        $this->minuteElement->setName(name: (string) $name . '[minute]');
+        $this->secondElement->setName(name: (string) $name . '[second]');
     }
 
     /**
@@ -326,9 +335,7 @@ class DateTimeSelect extends DateSelect
      */
     protected function getValidator(): ValidatorInterface
     {
-        if (null === $this->validator) {
-            $this->validator = new DateValidator(options: ['format' => 'Y-m-d H:i:s']);
-        }
+        $this->validator ??= new DateValidator(options: ['format' => 'Y-m-d H:i:s']);
 
         return $this->validator;
     }

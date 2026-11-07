@@ -5,9 +5,13 @@ declare(strict_types=1);
 namespace Jield\Mvc\Controller\Plugin;
 
 use ArrayAccess;
+use Jield\Mvc\Controller\AbstractController;
 use Jield\Mvc\Exception\RuntimeException;
 use Jield\Mvc\InjectApplicationEventInterface;
+use Jield\Mvc\MvcEvent;
+use Jield\Stdlib\Value;
 use Laminas\Http\Header\HeaderInterface;
+use Laminas\Http\Request;
 
 class Params extends AbstractPlugin
 {
@@ -54,14 +58,14 @@ class Params extends AbstractPlugin
         return $param === null ? $request->getQuery()->toArray() : $request->getQuery($param, $default);
     }
 
-    private function httpRequest(): \Laminas\Http\Request
+    private function httpRequest(): Request
     {
         $controller = $this->getController();
-        if (!$controller instanceof \Jield\Mvc\Controller\AbstractController) {
+        if (!$controller instanceof AbstractController) {
             throw new RuntimeException('This plugin requires a controller with an HTTP request.');
         }
         $request = $controller->getRequest();
-        if (!$request instanceof \Laminas\Http\Request) {
+        if (!$request instanceof Request) {
             throw new RuntimeException('This plugin requires an HTTP request.');
         }
         return $request;
@@ -86,9 +90,13 @@ class Params extends AbstractPlugin
         }
 
         if ($param === null) {
-            return \Jield\Stdlib\Value::present(\Jield\Stdlib\Value::instance($controller->getEvent(), \Jield\Mvc\MvcEvent::class)->getRouteMatch())->getParams();
+            return Value::present(
+                Value::instance($controller->getEvent(), MvcEvent::class)->getRouteMatch(),
+            )->getParams();
         }
 
-        return \Jield\Stdlib\Value::present(\Jield\Stdlib\Value::instance($controller->getEvent(), \Jield\Mvc\MvcEvent::class)->getRouteMatch())->getParam($param, $default);
+        return Value::present(
+            Value::instance($controller->getEvent(), MvcEvent::class)->getRouteMatch(),
+        )->getParam($param, $default);
     }
 }

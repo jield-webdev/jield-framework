@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Jield\Mvc;
 
 use Jield\Mvc\Router\RouteMatch;
+use Jield\Stdlib\Value;
 use Laminas\EventManager\AbstractListenerAggregate;
 use Laminas\EventManager\EventManagerInterface;
 
@@ -24,7 +25,7 @@ class ModuleRouteListener extends AbstractListenerAggregate
      */
     public function attach(EventManagerInterface $events, $priority = 1): void
     {
-        $this->listeners[] = $events->attach(MvcEvent::EVENT_ROUTE, [$this, 'onRoute'], $priority);
+        $this->listeners[] = $events->attach(MvcEvent::EVENT_ROUTE, $this->onRoute(...), $priority);
     }
 
     /**
@@ -43,14 +44,12 @@ class ModuleRouteListener extends AbstractListenerAggregate
             return;
         }
 
-        /** @var mixed $module */
         $module = $matches->getParam(self::MODULE_NAMESPACE, false);
         if (!$module) {
             // No module namespace found; nothing to do
             return;
         }
 
-        /** @var mixed $controller */
         $controller = $matches->getParam('controller', false);
         if (!$controller) {
             // no controller matched, nothing to do
@@ -58,7 +57,7 @@ class ModuleRouteListener extends AbstractListenerAggregate
         }
 
         // Ensure the module namespace has not already been applied
-        if (str_starts_with(\Jield\Stdlib\Value::string($controller), \Jield\Stdlib\Value::string($module))) {
+        if (str_starts_with(Value::string($controller), Value::string($module))) {
             return;
         }
 

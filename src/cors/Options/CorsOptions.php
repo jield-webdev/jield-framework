@@ -21,6 +21,7 @@ declare(strict_types=1);
 
 namespace Jield\Cors\Options;
 
+use Jield\Stdlib\Value;
 use Laminas\Stdlib\AbstractOptions;
 
 use function strtoupper;
@@ -77,9 +78,8 @@ class CorsOptions extends AbstractOptions
 
     public function setAllowedMethods(array $allowedMethods): void
     {
-        /** @var mixed $allowedMethod */
         foreach ($allowedMethods as &$allowedMethod) {
-            $allowedMethod = strtoupper(\Jield\Stdlib\Value::string($allowedMethod));
+            $allowedMethod = strtoupper(Value::string($allowedMethod));
         }
 
         $this->allowedMethods = $allowedMethods;

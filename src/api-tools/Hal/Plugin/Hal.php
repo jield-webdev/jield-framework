@@ -20,10 +20,12 @@ use Jield\ApiTools\Hal\Link\PaginationInjector;
 use Jield\ApiTools\Hal\Link\PaginationInjectorInterface;
 use Jield\ApiTools\Hal\Link\SelfLinkInjector;
 use Jield\ApiTools\Hal\Link\SelfLinkInjectorInterface;
+use Jield\ApiTools\Hal\Metadata\Metadata;
 use Jield\ApiTools\Hal\Metadata\MetadataMap;
 use Jield\ApiTools\Hal\ResourceFactory;
 use Jield\Mvc\Controller\Plugin\PluginInterface as ControllerPluginInterface;
 use Jield\Mvc\View\Helper\AbstractHelper;
+use Jield\Stdlib\Value;
 use Laminas\EventManager\Event;
 use Laminas\EventManager\EventInterface;
 use Laminas\EventManager\EventManagerAwareInterface;
@@ -112,7 +114,7 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
     #[Override]
     public function getController(): DispatchableInterface
     {
-        return \Jield\Stdlib\Value::instance($this->controller, \Laminas\Stdlib\DispatchableInterface::class);
+        return Value::instance($this->controller, \Laminas\Stdlib\DispatchableInterface::class);
     }
 
     /**
@@ -191,7 +193,7 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
         if (!$this->entityHydratorManager instanceof EntityHydratorManager) {
             $this->entityHydratorManager = new EntityHydratorManager(
                 hydrators: $this->hydrators,
-                map: $this->getMetadataMap(),
+                metadataMap: $this->getMetadataMap(),
             );
         }
 
@@ -333,7 +335,10 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
      */
     public function getLinkCollectionExtractor(): LinkCollectionExtractorInterface
     {
-        return \Jield\Stdlib\Value::instance($this->linkCollectionExtractor, \Jield\ApiTools\Hal\Extractor\LinkCollectionExtractorInterface::class);
+        return Value::instance(
+            $this->linkCollectionExtractor,
+            \Jield\ApiTools\Hal\Extractor\LinkCollectionExtractorInterface::class,
+        );
     }
 
     public function setLinkCollectionExtractor(LinkCollectionExtractorInterface $extractor): static
@@ -535,7 +540,10 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
 
         /** @psalm-suppress PossiblyFalseReference */
         $maxDepth = is_object(value: $collection) && $metadataMap->has(class: $collection)
-            ? \Jield\Stdlib\Value::instance($metadataMap->get(class: $collection), \Jield\ApiTools\Hal\Metadata\Metadata::class)->getMaxDepth()
+            ? Value::instance(
+                $metadataMap->get(class: $collection),
+                Metadata::class,
+            )->getMaxDepth()
             : null;
 
         /** @var array<string,mixed> $payload */
@@ -554,13 +562,13 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
             $payload['total_items'] = intval(value: $payload['total_items'] ?? count(value: $collection));
         }
 
-        $payload = new ArrayObject( $payload);
+        $payload = new ArrayObject($payload);
         $this->getEventManager()->trigger(eventName: __FUNCTION__ . '.post', target: $this, argv: [
             'payload' => $payload,
             'collection' => $halCollection,
         ]);
 
-        return \Jield\Stdlib\Value::toArray($payload);
+        return Value::toArray($payload);
     }
 
     /**
@@ -591,7 +599,10 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
         if (is_object(value: $entity)) {
             if ($maxDepth === null && $metadataMap->has(class: $entity)) {
                 /** @psalm-suppress PossiblyFalseReference */
-                $maxDepth = \Jield\Stdlib\Value::instance($metadataMap->get(class: $entity), \Jield\ApiTools\Hal\Metadata\Metadata::class)->getMaxDepth();
+                $maxDepth = Value::instance(
+                    $metadataMap->get(class: $entity),
+                    Metadata::class,
+                )->getMaxDepth();
             }
 
             if ($maxDepth === null) {
@@ -619,13 +630,15 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
             $entity = $this->getEntityExtractor()->extract(object: $entity);
         }
 
-        /** @var mixed $value */
         foreach ($entity as $key => $value) {
             if (is_object(value: $value) && $metadataMap->has(class: $value)) {
                 /** @psalm-suppress PossiblyFalseArgument,ArgumentTypeCoercion */
                 $value = $this->getResourceFactory()->createEntityFromMetadata(
                     object: $value,
-                    metadata: \Jield\Stdlib\Value::instance($metadataMap->get(class: $value), \Jield\ApiTools\Hal\Metadata\Metadata::class),
+                    metadata: Value::instance(
+                        $metadataMap->get(class: $value),
+                        Metadata::class,
+                    ),
                     renderEmbeddedEntities: $this->getRenderEmbeddedEntities(),
                 );
             }
@@ -669,7 +682,7 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
         $halEntity->setLinks(links: $entityLinks);
         $entity['_links'] = $this->fromResource(resource: $halEntity);
 
-        $payload = new ArrayObject( $entity);
+        $payload = new ArrayObject($entity);
         $this->getEventManager()->trigger(eventName: __FUNCTION__ . '.post', target: $this, argv: [
             'payload' => $payload,
             'entity' => $halEntity,
@@ -688,11 +701,14 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
 
         if (is_object($entity) && $metadataMap->has($entity)) {
             /** @psalm-suppress PossiblyFalseArgument,ArgumentTypeCoercion */
-            $halEntity = $this->getResourceFactory()->createEntityFromMetadata($entity, \Jield\Stdlib\Value::instance($metadataMap->get($entity), \Jield\ApiTools\Hal\Metadata\Metadata::class));
+            $halEntity = $this->getResourceFactory()->createEntityFromMetadata($entity, Value::instance(
+                $metadataMap->get($entity),
+                Metadata::class,
+            ));
         } elseif (!$entity instanceof \Jield\ApiTools\Hal\Entity) {
             /** @var mixed $id */
-            $id = $this->getIdFromEntity(\Jield\Stdlib\Value::arrayOrObject($entity)) ?: null;
-            $halEntity = new Entity(\Jield\Stdlib\Value::arrayOrObject($entity), $id);
+            $id = $this->getIdFromEntity(Value::arrayOrObject($entity)) ?: null;
+            $halEntity = new Entity(Value::arrayOrObject($entity), $id);
         } else {
             $halEntity = $entity;
         }
@@ -711,14 +727,14 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
      */
     public function fromLinkCollection(LinkCollection $collection): array
     {
-        return \Jield\Stdlib\Value::present($this->linkCollectionExtractor)->extract(collection: $collection);
+        return Value::present($this->linkCollectionExtractor)->extract(collection: $collection);
     }
 
     public function fromLink(\Jield\ApiTools\Hal\Link\Link $linkDefinition): array
     {
         $this->getEventManager()->trigger(__FUNCTION__ . '.pre', $this, ['linkDefinition' => $linkDefinition]);
 
-        $linkExtractor = \Jield\Stdlib\Value::present($this->linkCollectionExtractor)->getLinkExtractor();
+        $linkExtractor = Value::present($this->linkCollectionExtractor)->getLinkExtractor();
 
         return $linkExtractor->extract($linkDefinition);
     }
@@ -739,10 +755,10 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
         $metadataMap = $this->getMetadataMap();
         if (is_object(value: $collection) && $metadataMap->has(class: $collection)) {
             /** @psalm-suppress PossiblyFalseArgument */
-            $collection = $this->getResourceFactory()->createCollectionFromMetadata(
-                object: $collection,
-                metadata: \Jield\Stdlib\Value::instance($metadataMap->get(class: $collection), \Jield\ApiTools\Hal\Metadata\Metadata::class),
-            );
+            $collection = $this->getResourceFactory()->createCollectionFromMetadata(object: $collection, metadata: Value::instance(
+                $metadataMap->get(class: $collection),
+                Metadata::class,
+            ));
         }
 
         if (!$collection instanceof Collection) {
@@ -752,7 +768,7 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
         $metadata = $metadataMap->get(class: $collection);
         /** @psalm-suppress RedundantConditionGivenDocblockType */
         if (!$metadata || $metadata->getForceSelfLink()) {
-            $this->injectSelfLink(resource: $collection, route: \Jield\Stdlib\Value::string($route));
+            $this->injectSelfLink(resource: $collection, route: Value::string($route));
         }
 
         return $collection;
@@ -799,11 +815,9 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
         // No need to increment depth for this call
         $rendered = $this->renderEntity(halEntity: $entity, renderEntity: true, depth: $depth, maxDepth: $maxDepth);
 
-        if (!isset($parent['_embedded'])) {
-            $parent['_embedded'] = [];
-        }
+        $parent['_embedded'] ??= [];
 
-        \Jield\Stdlib\Value::setPath($parent, ['_embedded', $key], $rendered);
+        Value::setPath($parent, ['_embedded', $key], $rendered);
         unset($parent[$key]);
     }
 
@@ -827,11 +841,9 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
     ): void {
         $rendered = $this->extractCollection(halCollection: $collection, depth: $depth + 1, maxDepth: $maxDepth);
 
-        if (!isset($parent['_embedded'])) {
-            $parent['_embedded'] = [];
-        }
+        $parent['_embedded'] ??= [];
 
-        \Jield\Stdlib\Value::setPath($parent, ['_embedded', $key], $rendered);
+        Value::setPath($parent, ['_embedded', $key], $rendered);
         unset($parent[$key]);
     }
 
@@ -855,8 +867,7 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
 
         /** @var mixed $entity */
         foreach ($halCollection->getCollection() as $entity) {
-            /** @psalm-var ArrayObject<string, mixed> $eventParams */
-            $eventParams = new ArrayObject( [
+            $eventParams = new ArrayObject([
                 'collection' => $halCollection,
                 'entity' => $entity,
                 'resource' => $entity,
@@ -873,10 +884,10 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
             /** @psalm-suppress RedundantConditionGivenDocblockType */
             if (is_object(value: $entity) && $metadataMap->has(class: $entity)) {
                 /** @psalm-suppress PossiblyFalseArgument,ArgumentTypeCoercion */
-                $entity = $this->getResourceFactory()->createEntityFromMetadata(
-                    object: $entity,
-                    metadata: \Jield\Stdlib\Value::instance($metadataMap->get(class: $entity), \Jield\ApiTools\Hal\Metadata\Metadata::class),
-                );
+                $entity = $this->getResourceFactory()->createEntityFromMetadata(object: $entity, metadata: Value::instance(
+                    $metadataMap->get(class: $entity),
+                    Metadata::class,
+                ));
             }
 
             if ($entity instanceof Entity) {
@@ -892,17 +903,17 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
 
             /** @psalm-suppress RedundantConditionGivenDocblockType */
             if (!is_array(value: $entity)) {
-                $entity = $this->getEntityExtractor()->extract(object: \Jield\Stdlib\Value::object($entity));
+                $entity = $this->getEntityExtractor()->extract(object: Value::object($entity));
             }
 
             /** @var mixed $value */
             foreach ($entity as $key => $value) {
                 if (is_object(value: $value) && $metadataMap->has(class: $value)) {
                     /** @psalm-suppress PossiblyFalseArgument,ArgumentTypeCoercion */
-                    $value = $this->getResourceFactory()->createEntityFromMetadata(
-                        object: $value,
-                        metadata: \Jield\Stdlib\Value::instance($metadataMap->get(class: $value), \Jield\ApiTools\Hal\Metadata\Metadata::class),
-                    );
+                    $value = $this->getResourceFactory()->createEntityFromMetadata(object: $value, metadata: Value::instance(
+                        $metadataMap->get(class: $value),
+                        Metadata::class,
+                    ));
                 }
 
                 if ($value instanceof Entity) {
@@ -926,7 +937,6 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
                 }
             }
 
-            /** @var mixed $id */
             $id = $this->getIdFromEntity(entity: $entity);
 
             if ($id === false) {
@@ -955,7 +965,9 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
             $routeOptions = $eventParams['routeOptions'] ?? null;
             $selfLink->setRoute(
                 route: (string) $eventParams['route'],
-                params: array_merge(\Jield\Stdlib\Value::toArray($eventParams['routeParams']), [$routeIdentifierName => $id]),
+                params: array_merge(Value::toArray($eventParams['routeParams']), [
+                    $routeIdentifierName => $id,
+                ]),
                 options: $routeOptions,
             );
             $links->remove('self');
@@ -1043,8 +1055,6 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
 
             return $links;
         }
-
-        
 
         $links->idempotentAdd(link: $link);
 

@@ -9,6 +9,7 @@ use Exception;
 use Jield\Mvc\Application;
 use Jield\Mvc\ApplicationInterface;
 use Jield\Mvc\MvcEvent;
+use Jield\Stdlib\Value;
 use Laminas\Http\PhpEnvironment\Request as PhpEnvironmentRequest;
 use Laminas\Http\PhpEnvironment\Response as PhpEnvironmentResponse;
 use Laminas\Http\Request;
@@ -30,13 +31,9 @@ use function strtolower;
 
 class ParameterMatcher
 {
-    /** @var MvcEvent  */
-    protected MvcEvent $mvcEvent;
-
-    public function __construct(MvcEvent $mvcEvent)
-    {
-        $this->mvcEvent = $mvcEvent;
-    }
+    public function __construct(
+        protected MvcEvent $mvcEvent,
+    ) {}
 
     /**
      * @param callable $callable
@@ -52,7 +49,7 @@ class ParameterMatcher
         } elseif (is_array(value: $callable) && count(value: $callable) === 2) {
             $object = $callable[0];
             $method = $callable[1];
-            $reflection = new ReflectionObject(object: \Jield\Stdlib\Value::object($object));
+            $reflection = new ReflectionObject(object: Value::object($object));
             $reflMethodParams = $reflection->getMethod(name: $method)->getParameters();
         } else {
             throw new Exception(message: 'Unknown callable');
@@ -62,9 +59,12 @@ class ParameterMatcher
 
         // normalize names to that they can match potential php variables
         $normalParams = [];
-        /** @var mixed $pv */
         foreach ($parameters as $pn => $pv) {
-            $normalParams[str_replace(search: ['-', '_'], replace: '', subject: strtolower(string: \Jield\Stdlib\Value::string($pn)))] = $pv;
+            $normalParams[str_replace(
+                search: ['-', '_'],
+                replace: '',
+                subject: strtolower(string: Value::string($pn)),
+            )] = $pv;
         }
 
         foreach ($reflMethodParams as $reflMethodParam) {

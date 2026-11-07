@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Jield\ApiTools\MvcAuth\Factory;
 
 use Jield\ApiTools\MvcAuth\Authentication\HttpAdapter;
+use Jield\Stdlib\Service;
+use Laminas\Authentication\AuthenticationServiceInterface;
 use Laminas\ServiceManager\Exception\ServiceNotCreatedException;
 use Psr\Container\ContainerInterface;
 
@@ -37,7 +39,11 @@ final class AuthenticationHttpAdapterFactory
 
         return new HttpAdapter(
             httpAuth: HttpAdapterFactory::factory(config: $config['options'], container: $container),
-            authenticationService: \Jield\Stdlib\Service::get($container, \Laminas\Authentication\AuthenticationServiceInterface::class, 'authentication'),
+            authenticationService: Service::get(
+                $container,
+                AuthenticationServiceInterface::class,
+                'authentication',
+            ),
             providesBase: $type,
         );
     }

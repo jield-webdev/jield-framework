@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Jield\Twig;
 
+use Jield\Stdlib\Value;
 use Twig\Error;
 use Twig\Loader;
 use Twig\Source;
@@ -37,10 +38,17 @@ class MapLoader implements Loader\LoaderInterface
         if (!$this->exists($name)) {
             throw new Error\LoaderError(sprintf('Unable to find template "%s" from template map', $name));
         }
-        if (!file_exists(\Jield\Stdlib\Value::string($this->map[$name]))) {
-            throw new Error\LoaderError(sprintf('Unable to open file "%s" from template map', \Jield\Stdlib\Value::scalar($this->map[$name])));
+        if (!file_exists(Value::string($this->map[$name]))) {
+            throw new Error\LoaderError(sprintf(
+                'Unable to open file "%s" from template map',
+                Value::scalar($this->map[$name]),
+            ));
         }
-        return new Source(\Jield\Stdlib\Value::string(file_get_contents(\Jield\Stdlib\Value::string($this->map[$name]))), $name, \Jield\Stdlib\Value::string($this->map[$name]));
+        return new Source(
+            Value::string(file_get_contents(Value::string($this->map[$name]))),
+            $name,
+            Value::string($this->map[$name]),
+        );
     }
 
     public function getCacheKey(string $name): string
@@ -50,7 +58,7 @@ class MapLoader implements Loader\LoaderInterface
 
     public function isFresh(string $name, int $time): bool
     {
-        $modified = filemtime(\Jield\Stdlib\Value::string($this->map[$name]));
+        $modified = filemtime(Value::string($this->map[$name]));
         return $modified !== false && $modified <= $time;
     }
 }

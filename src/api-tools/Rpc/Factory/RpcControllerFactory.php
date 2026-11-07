@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Jield\ApiTools\Rpc\Factory;
 
 use Jield\ApiTools\Rpc\RpcController;
+use Jield\Mvc\Controller\ControllerManager;
+use Jield\Stdlib\Service;
+use Jield\Stdlib\Value;
 use Laminas\ServiceManager\Exception\ServiceNotCreatedException;
 use Laminas\ServiceManager\Factory\AbstractFactoryInterface;
 use Override;
@@ -43,7 +46,6 @@ class RpcControllerFactory implements AbstractFactoryInterface
             return false;
         }
 
-        /** @var mixed $config */
         $config = $container->get('config');
         if (!isset($config['api-tools-rpc'][$requestedName])) {
             return false;
@@ -64,10 +66,8 @@ class RpcControllerFactory implements AbstractFactoryInterface
     #[Override]
     public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): RpcController
     {
-        /** @var mixed $config */
         $config = $container->get('config');
-        /** @var mixed $callable */
-        $callable = \Jield\Stdlib\Value::path($config, ['api-tools-rpc', $requestedName, 'callable']);
+        $callable = Value::path($config, ['api-tools-rpc', $requestedName, 'callable']);
 
         if (!is_string(value: $callable) && !is_callable(value: $callable)) {
             throw new ServiceNotCreatedException(
@@ -80,7 +80,7 @@ class RpcControllerFactory implements AbstractFactoryInterface
         }
 
         $controller = new RpcController();
-        $controller->setWrappedCallable(wrappedCallable: \Jield\Stdlib\Value::callback($callable));
+        $controller->setWrappedCallable(wrappedCallable: Value::callback($callable));
         return $controller;
     }
 
@@ -100,7 +100,11 @@ class RpcControllerFactory implements AbstractFactoryInterface
             $callable = $this->marshalCallableFromContainer(
                 class: $class,
                 method: $method,
-                container: \Jield\Stdlib\Service::get($container, \Jield\Mvc\Controller\ControllerManager::class, 'ControllerManager'),
+                container: Service::get(
+                    $container,
+                    ControllerManager::class,
+                    'ControllerManager',
+                ),
             );
         }
 
@@ -111,18 +115,18 @@ class RpcControllerFactory implements AbstractFactoryInterface
         }
 
         if ($callable) {
-            return $callable;
+            return Value::callback($callable);
         }
 
         if (!class_exists(class: $class)) {
             throw new ServiceNotCreatedException(message: sprintf(
                 'Cannot create callback %s as class %s does not exist',
-                \Jield\Stdlib\Value::scalar($string),
+                Value::scalar($string),
                 $class,
             ));
         }
 
-        return [\Jield\Stdlib\Value::instantiate($class), $method];
+        return Value::callback([Value::instantiate($class), $method]);
     }
 
     /**

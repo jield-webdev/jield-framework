@@ -16,8 +16,8 @@ class FlashMessengerNamespace
     private string $messageSeparatorString = '</li><li>';
 
     public function __construct(
-        private string $name,
-        private string $classes = '',
+        private readonly string $name,
+        private readonly string $classes = '',
     ) {}
 
     public function getName(): string

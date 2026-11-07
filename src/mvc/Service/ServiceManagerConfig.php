@@ -10,6 +10,8 @@ use Jield\ModuleManager\ModuleManager;
 use Jield\Mvc\Factory\EventManagerFactory;
 use Jield\Mvc\Factory\ModuleManagerFactory;
 use Jield\Mvc\Factory\ServiceListenerFactory;
+use Jield\Stdlib\Service;
+use Jield\Stdlib\Value;
 use Laminas\EventManager\EventManager;
 use Laminas\EventManager\EventManagerAwareInterface;
 use Laminas\EventManager\EventManagerInterface;
@@ -67,19 +69,27 @@ class ServiceManagerConfig
      */
     public function __construct(array $config = [])
     {
-        \Jield\Stdlib\Value::setPath($this->config, ['factories', 'ServiceManager'], static fn(
-            ContainerInterface $container,
-            string $requestedName,
-            ?array $options = null,
-        ): ContainerInterface => $container);
+        Value::setPath(
+            $this->config,
+            ['factories', 'ServiceManager'],
+            static fn(
+                ContainerInterface $container,
+                string $requestedName,
+                ?array $options = null,
+            ): ContainerInterface => $container,
+        );
 
-        \Jield\Stdlib\Value::setPath($this->config, ['factories', 'SharedEventManager'], static fn(
-            ContainerInterface $container,
-            string $requestedName,
-            ?array $options = null,
-        ): SharedEventManager => new SharedEventManager());
+        Value::setPath(
+            $this->config,
+            ['factories', 'SharedEventManager'],
+            static fn(
+                ContainerInterface $container,
+                string $requestedName,
+                ?array $options = null,
+            ): SharedEventManager => new SharedEventManager(),
+        );
 
-        $this->config['initializers'] = ArrayUtils::merge(\Jield\Stdlib\Value::array($this->config['initializers']), [
+        $this->config['initializers'] = ArrayUtils::merge(Value::array($this->config['initializers']), [
             'EventManagerAwareInitializer' => static function (ContainerInterface $container, mixed $instance): void {
                 if (!$instance instanceof EventManagerAwareInterface) {
                     return;
@@ -89,7 +99,11 @@ class ServiceManagerConfig
                 if ($eventManager->getSharedManager() instanceof SharedEventManagerInterface) {
                     return;
                 }
-                $instance->setEventManager(\Jield\Stdlib\Service::get($container, \Laminas\EventManager\EventManagerInterface::class, 'EventManager'));
+                $instance->setEventManager(Service::get(
+                    $container,
+                    \Laminas\EventManager\EventManagerInterface::class,
+                    'EventManager',
+                ));
             },
         ]);
 
@@ -111,7 +125,7 @@ class ServiceManagerConfig
      */
     public function configureServiceManager(ServiceManager $services): ServiceManager
     {
-        \Jield\Stdlib\Value::setPath($this->config, ['services', ServiceManager::class], $services);
+        Value::setPath($this->config, ['services', ServiceManager::class], $services);
 
         // This is invoked as part of the bootstrapping process, and requires
         // the ability to override services.

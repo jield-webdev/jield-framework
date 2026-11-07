@@ -10,7 +10,10 @@ use Jield\ApiTools\Hal\Link;
 use Jield\ApiTools\Hal\Metadata\MetadataMap;
 use Jield\ApiTools\Hal\Plugin;
 use Jield\ApiTools\Hal\RendererOptions;
+use Jield\Stdlib\Service;
+use Jield\Stdlib\Value;
 use Laminas\EventManager\EventManagerInterface;
+use Laminas\Hydrator\ExtractionInterface;
 use Laminas\Hydrator\HydratorInterface;
 use Laminas\Hydrator\HydratorPluginManager;
 use Psr\Container\ContainerInterface;
@@ -22,9 +25,8 @@ class HalViewHelperFactory
 {
     public function __invoke(ContainerInterface $container): Plugin\Hal
     {
-        
-        $rendererOptions = \Jield\Stdlib\Service::get($container, RendererOptions::class);
-        $metadataMap = \Jield\Stdlib\Service::get($container, MetadataMap::class);
+        $rendererOptions = Service::get($container, RendererOptions::class);
+        $metadataMap = Service::get($container, MetadataMap::class);
 
         $hydrators = $metadataMap->getHydratorManager();
         Assert::isInstanceOf(value: $hydrators, class: HydratorPluginManager::class);
@@ -32,15 +34,19 @@ class HalViewHelperFactory
         $helper = new Plugin\Hal(hydrators: $hydrators);
 
         if ($container->has('EventManager')) {
-            $eventManager = \Jield\Stdlib\Service::get($container, \Laminas\EventManager\EventManagerInterface::class, 'EventManager');
+            $eventManager = Service::get(
+                $container,
+                \Laminas\EventManager\EventManagerInterface::class,
+                'EventManager',
+            );
             $helper->setEventManager(eventManager: $eventManager);
         }
 
         $helper->setMetadataMap(map: $metadataMap);
-        $linkUrlBuilder = \Jield\Stdlib\Service::get($container, Link\LinkUrlBuilder::class);
+        $linkUrlBuilder = Service::get($container, Link\LinkUrlBuilder::class);
         $helper->setLinkUrlBuilder(builder: $linkUrlBuilder);
 
-        $linkCollectionExtractor = \Jield\Stdlib\Service::get($container, LinkCollectionExtractor::class);
+        $linkCollectionExtractor = Service::get($container, LinkCollectionExtractor::class);
         $helper->setLinkCollectionExtractor(extractor: $linkCollectionExtractor);
 
         $defaultHydrator = $rendererOptions->getDefaultHydrator();
@@ -62,9 +68,14 @@ class HalViewHelperFactory
         $helper->setRenderCollections(value: $rendererOptions->getRenderEmbeddedCollections());
 
         $hydratorMap = $rendererOptions->getHydrators();
-        /** @var mixed $hydratorServiceName */
         foreach ($hydratorMap as $class => $hydratorServiceName) {
-            $helper->addHydrator(class: \Jield\Stdlib\Value::string($class), hydrator: \Jield\Stdlib\Value::instance($hydratorServiceName, \Laminas\Hydrator\ExtractionInterface::class));
+            $helper->addHydrator(
+                class: Value::string($class),
+                hydrator: Value::instance(
+                    $hydratorServiceName,
+                    ExtractionInterface::class,
+                ),
+            );
         }
 
         return $helper;

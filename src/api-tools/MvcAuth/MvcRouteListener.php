@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Jield\ApiTools\MvcAuth;
 
 use Jield\Mvc\MvcEvent;
+use Jield\Stdlib\Value;
 use Laminas\Authentication\AuthenticationService;
 use Laminas\Authentication\Result;
 use Laminas\EventManager\AbstractListenerAggregate;
@@ -17,9 +18,6 @@ use function is_bool;
 
 class MvcRouteListener extends AbstractListenerAggregate
 {
-    /** @var AuthenticationService */
-    protected AuthenticationService $authentication;
-
     /** @var EventManagerInterface */
     protected EventManagerInterface $events;
 
@@ -29,14 +27,13 @@ class MvcRouteListener extends AbstractListenerAggregate
     public function __construct(
         MvcAuthEvent $mvcAuthEvent,
         EventManagerInterface $events,
-        AuthenticationService $authentication,
+        protected AuthenticationService $authentication,
     ) {
         $this->attach(events: $events);
         $mvcAuthEvent->setTarget(target: $this);
         $this->mvcAuthEvent = $mvcAuthEvent;
 
         $this->events = $events;
-        $this->authentication = $authentication;
     }
 
     /**
@@ -75,7 +72,10 @@ class MvcRouteListener extends AbstractListenerAggregate
      */
     public function authentication(MvcEvent $mvcEvent): ?Response
     {
-        if (!$mvcEvent->getRequest() instanceof HttpRequest || \Jield\Stdlib\Value::instance($mvcEvent->getRequest(), \Laminas\Http\Request::class)->isOptions()) {
+        if (
+            !$mvcEvent->getRequest() instanceof HttpRequest
+            || Value::instance($mvcEvent->getRequest(), \Laminas\Http\Request::class)->isOptions()
+        ) {
             return null;
         }
 
@@ -91,7 +91,6 @@ class MvcRouteListener extends AbstractListenerAggregate
             event: $mvcAuthEvent,
         );
 
-        /** @var mixed $result */
         $result = $responses->last();
         $storage = $this->authentication->getStorage();
 
@@ -120,10 +119,15 @@ class MvcRouteListener extends AbstractListenerAggregate
             return null;
         }
 
-        if ($mvcAuthEvent->hasAuthenticationResult() && \Jield\Stdlib\Value::present($mvcAuthEvent->getAuthenticationResult())->isValid()) {
+        if (
+            $mvcAuthEvent->hasAuthenticationResult()
+            && Value::present($mvcAuthEvent->getAuthenticationResult())->isValid()
+        ) {
             $mvcAuthEvent->setIdentity(
                 identity: new Identity\AuthenticatedIdentity(
-                    identity: \Jield\Stdlib\Value::array(\Jield\Stdlib\Value::present($mvcAuthEvent->getAuthenticationResult())->getIdentity()),
+                    identity: Value::array(
+                        Value::present($mvcAuthEvent->getAuthenticationResult())->getIdentity(),
+                    ),
                 ),
             );
         }
@@ -149,7 +153,10 @@ class MvcRouteListener extends AbstractListenerAggregate
      */
     public function authenticationPost(MvcEvent $mvcEvent): mixed
     {
-        if (!$mvcEvent->getRequest() instanceof HttpRequest || \Jield\Stdlib\Value::instance($mvcEvent->getRequest(), \Laminas\Http\Request::class)->isOptions()) {
+        if (
+            !$mvcEvent->getRequest() instanceof HttpRequest
+            || Value::instance($mvcEvent->getRequest(), \Laminas\Http\Request::class)->isOptions()
+        ) {
             return null;
         }
 
@@ -170,7 +177,10 @@ class MvcRouteListener extends AbstractListenerAggregate
      */
     public function authorization(MvcEvent $mvcEvent): ?Response
     {
-        if (!$mvcEvent->getRequest() instanceof HttpRequest || \Jield\Stdlib\Value::instance($mvcEvent->getRequest(), \Laminas\Http\Request::class)->isOptions()) {
+        if (
+            !$mvcEvent->getRequest() instanceof HttpRequest
+            || Value::instance($mvcEvent->getRequest(), \Laminas\Http\Request::class)->isOptions()
+        ) {
             return null;
         }
 
@@ -182,7 +192,6 @@ class MvcRouteListener extends AbstractListenerAggregate
             event: $mvcAuthEvent,
         );
 
-        /** @var mixed $result */
         $result = $responses->last();
 
         if (is_bool(value: $result)) {
@@ -203,7 +212,10 @@ class MvcRouteListener extends AbstractListenerAggregate
      */
     public function authorizationPost(MvcEvent $mvcEvent): ?Response
     {
-        if (!$mvcEvent->getRequest() instanceof HttpRequest || \Jield\Stdlib\Value::instance($mvcEvent->getRequest(), \Laminas\Http\Request::class)->isOptions()) {
+        if (
+            !$mvcEvent->getRequest() instanceof HttpRequest
+            || Value::instance($mvcEvent->getRequest(), \Laminas\Http\Request::class)->isOptions()
+        ) {
             return null;
         }
 
@@ -215,6 +227,6 @@ class MvcRouteListener extends AbstractListenerAggregate
             event: $mvcAuthEvent,
         );
 
-        return \Jield\Stdlib\Value::nullableInstance($responses->last(), \Laminas\Stdlib\ResponseInterface::class);
+        return Value::nullableInstance($responses->last(), \Laminas\Stdlib\ResponseInterface::class);
     }
 }

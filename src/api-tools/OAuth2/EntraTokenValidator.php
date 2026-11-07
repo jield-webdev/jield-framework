@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Jield\ApiTools\OAuth2;
 
 use Firebase\JWT\JWT;
+use Jield\Stdlib\Value;
+use SensitiveParameter;
 use Throwable;
 
 class EntraTokenValidator
@@ -15,7 +17,7 @@ class EntraTokenValidator
         private readonly array $applicationRoles = [],
     ) {}
 
-    public function validate(#[\SensitiveParameter] string $token, EntraResourceInterface $service): array
+    public function validate(#[SensitiveParameter] string $token, EntraResourceInterface $service): array
     {
         $tenantId = $service->getTenantId();
         $clientId = $service->getClientId();
@@ -60,7 +62,6 @@ class EntraTokenValidator
         }
 
         try {
-            /** @var mixed $header */
             $header = json_decode(
                 json: JWT::urlsafeB64Decode($segments[0]),
                 associative: true,
@@ -102,7 +103,7 @@ class EntraTokenValidator
         }
 
         try {
-            $key = $this->keys->getKey(tenantId: \Jield\Stdlib\Value::string($tenantId), kid: $header['kid']);
+            $key = $this->keys->getKey(tenantId: Value::string($tenantId), kid: $header['kid']);
         } catch (EntraException $exception) {
             $this->signingKeyFailure(exception: $exception, kid: $header['kid']);
         }
@@ -208,8 +209,10 @@ class EntraTokenValidator
             if (
                 !is_array($claims['roles'] ?? null)
                 || !array_is_list($claims['roles'])
-                || array_filter(array: \Jield\Stdlib\Value::array($claims['roles']), callback: static fn(mixed $role): bool => !is_string($role))
-                    !== []
+                || array_filter(
+                    array: Value::array($claims['roles']),
+                    callback: static fn(mixed $role): bool => !is_string($role),
+                ) !== []
             ) {
                 $this->invalid(
                     standardMessage: $applicationError,

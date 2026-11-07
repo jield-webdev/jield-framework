@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Jield\Mvc\Navigation\Service;
 
 use ArrayAccess;
+use Jield\Stdlib\Value;
 use Laminas\Navigation\Navigation;
 use Laminas\ServiceManager\Factory\AbstractFactoryInterface;
 use Psr\Container\ContainerInterface;
@@ -25,17 +26,13 @@ final class NavigationAbstractServiceFactory implements AbstractFactoryInterface
 {
     /**
      * Top-level configuration key indicating navigation configuration
-     *
-     * @var string
      */
-    public const CONFIG_KEY = 'navigation';
+    public const string CONFIG_KEY = 'navigation';
 
     /**
      * Service manager factory prefix
-     *
-     * @var string
      */
-    public const SERVICE_PREFIX = 'Laminas\\Navigation\\';
+    public const string SERVICE_PREFIX = 'Laminas\\Navigation\\';
 
     /**
      * Navigation configuration
@@ -52,7 +49,7 @@ final class NavigationAbstractServiceFactory implements AbstractFactoryInterface
      */
     public function canCreate(ContainerInterface $container, string $requestedName): bool
     {
-        if (! str_starts_with($requestedName, self::SERVICE_PREFIX)) {
+        if (!str_starts_with($requestedName, self::SERVICE_PREFIX)) {
             return false;
         }
         $config = $this->getConfig($container);
@@ -68,7 +65,7 @@ final class NavigationAbstractServiceFactory implements AbstractFactoryInterface
      */
     public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): Navigation
     {
-        $config  = $this->getConfig($container);
+        $config = $this->getConfig($container);
         $factory = new ConstructedNavigationFactory($this->getNamedConfig($requestedName, $config));
         return $factory($container, $requestedName);
     }
@@ -78,29 +75,25 @@ final class NavigationAbstractServiceFactory implements AbstractFactoryInterface
      *
      * @return array<string, mixed>
      */
-    protected function getConfig(ContainerInterface $container): ?array
+    protected function getConfig(ContainerInterface $container): array
     {
         if ($this->config !== null) {
             return $this->config;
         }
 
-        if (! $container->has('config')) {
+        if (!$container->has('config')) {
             $this->config = [];
             return $this->config;
         }
 
-        /** @var mixed $config */
         $config = $container->get('config');
-        if (
-            ! isset($config[self::CONFIG_KEY])
-            || ! is_array($config[self::CONFIG_KEY])
-        ) {
+        if (!isset($config[self::CONFIG_KEY]) || !is_array($config[self::CONFIG_KEY])) {
             $this->config = [];
             return $this->config;
         }
 
-        $config       = $config[self::CONFIG_KEY];
-        $this->config = $config;
+        $config = $config[self::CONFIG_KEY];
+        $this->config = Value::stringKeyedArray($config);
 
         return $this->config;
     }
@@ -147,11 +140,11 @@ final class NavigationAbstractServiceFactory implements AbstractFactoryInterface
         $withoutPrefix = $this->getConfigName($name);
 
         if (isset($config[$withoutPrefix])) {
-            return \Jield\Stdlib\Value::array($config[$withoutPrefix]);
+            return Value::maps($config[$withoutPrefix]);
         }
 
         if (isset($config[strtolower($withoutPrefix)])) {
-            return \Jield\Stdlib\Value::array($config[strtolower($withoutPrefix)]);
+            return Value::maps($config[strtolower($withoutPrefix)]);
         }
 
         return [];

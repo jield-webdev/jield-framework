@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Jield\Mvc\View\Http;
 
 use Jield\Mvc\MvcEvent;
+use Jield\Stdlib\Value;
 use Laminas\EventManager\AbstractListenerAggregate;
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\Http\Request as HttpRequest;
+use Laminas\Stdlib\ParametersInterface;
 
 class InjectRoutematchParamsListener extends AbstractListenerAggregate
 {
@@ -23,7 +25,7 @@ class InjectRoutematchParamsListener extends AbstractListenerAggregate
      */
     public function attach(EventManagerInterface $events, $priority = 1): void
     {
-        $this->listeners[] = $events->attach(MvcEvent::EVENT_DISPATCH, [$this, 'injectParams'], 90);
+        $this->listeners[] = $events->attach(MvcEvent::EVENT_DISPATCH, $this->injectParams(...), 90);
     }
 
     /**
@@ -33,7 +35,7 @@ class InjectRoutematchParamsListener extends AbstractListenerAggregate
      */
     public function injectParams(MvcEvent $e): void
     {
-        $routeMatchParams = \Jield\Stdlib\Value::present($e->getRouteMatch())->getParams();
+        $routeMatchParams = Value::present($e->getRouteMatch())->getParams();
         $request = $e->getRequest();
 
         if (!$request instanceof HttpRequest) {
@@ -41,11 +43,10 @@ class InjectRoutematchParamsListener extends AbstractListenerAggregate
             return;
         }
 
-        $params = \Jield\Stdlib\Value::instance($request->getQuery(), \Laminas\Stdlib\ParametersInterface::class);
+        $params = Value::instance($request->getQuery(), ParametersInterface::class);
 
         if ($this->overwrite) {
             // Overwrite existing parameters, or create new ones if not present.
-            /** @var mixed $val */
             foreach ($routeMatchParams as $key => $val) {
                 $params->set($key, $val);
             }
@@ -53,9 +54,8 @@ class InjectRoutematchParamsListener extends AbstractListenerAggregate
         }
 
         // Only create new parameters.
-        /** @var mixed $val */
         foreach ($routeMatchParams as $key => $val) {
-            if (array_key_exists($key, \Jield\Stdlib\Value::array($params->toArray()))) {
+            if (array_key_exists($key, Value::array($params->toArray()))) {
                 continue;
             }
 

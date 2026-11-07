@@ -6,6 +6,7 @@ namespace DoctrineORMModule\Service;
 
 use Doctrine\ORM\EntityManager;
 use DoctrineModule\Form\Element\ObjectSelect;
+use Jield\Stdlib\Service;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Psr\Container\ContainerInterface;
 
@@ -23,7 +24,7 @@ final class ObjectSelectFactory implements FactoryInterface
      */
     public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): ObjectSelect
     {
-        $entityManager = \Jield\Stdlib\Service::get($container, EntityManager::class);
+        $entityManager = Service::get($container, EntityManager::class);
         $element = new ObjectSelect();
 
         $element->getProxy()->setObjectManager(objectManager: $entityManager);

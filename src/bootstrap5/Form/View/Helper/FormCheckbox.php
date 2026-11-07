@@ -6,6 +6,9 @@ namespace Jield\Bootstrap5\Form\View\Helper;
 
 use Jield\Form\ElementInterface;
 use Jield\Form\View\Helper;
+use Jield\Form\View\Helper\FormLabel;
+use Jield\Stdlib\Service;
+use Jield\Stdlib\Value;
 use Laminas\Translator\TranslatorInterface;
 use Laminas\View\HelperPluginManager;
 
@@ -18,24 +21,31 @@ use function md5;
  */
 final class FormCheckbox extends Helper\FormCheckbox
 {
-    private Helper\FormLabel $formLabel;
+    private readonly FormLabel $formLabel;
 
     public function __construct(HelperPluginManager $viewHelperManager, TranslatorInterface $translator)
     {
-        $this->formLabel = \Jield\Stdlib\Service::get($viewHelperManager, \Jield\Form\View\Helper\FormLabel::class, 'formlabel');
+        $this->formLabel = Service::get(
+            $viewHelperManager,
+            FormLabel::class,
+            'formlabel',
+        );
 
         $this->translator = $translator;
     }
 
     public function render(ElementInterface $element): string
     {
-        $element->setAttribute(key: 'class', value: 'form-check-input ' . (string) ($element->getAttribute(key: 'class')));
+        $element->setAttribute(
+            key: 'class',
+            value: 'form-check-input ' . (string) $element->getAttribute(key: 'class'),
+        );
 
         if (count(value: $element->getMessages()) > 0) {
             $element->setAttribute(key: 'class', value: 'form-check-input is-invalid');
         }
 
-        $id = md5(string: \Jield\Stdlib\Value::string($element->getName()));
+        $id = md5(string: Value::string($element->getName()));
         $element->setAttribute(key: 'id', value: $id);
 
         $renderedElement = parent::render(element: $element);
@@ -50,7 +60,7 @@ final class FormCheckbox extends Helper\FormCheckbox
         $label = $element->getAttribute(key: 'label') ?? $element->getLabel();
 
         if (null !== ($translator = $this->formLabel->getTranslator())) {
-            $label = $translator->translate(\Jield\Stdlib\Value::string($label));
+            $label = $translator->translate(Value::string($label));
         }
 
         return $label === null ? null : (string) $label;

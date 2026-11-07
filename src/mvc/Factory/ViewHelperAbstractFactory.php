@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Jield\Mvc\Factory;
 
+use Jield\Stdlib\Service;
 use Laminas\ServiceManager\Factory\AbstractFactoryInterface;
+use Laminas\View\HelperPluginManager;
 use Psr\Container\ContainerInterface;
 
 final class ViewHelperAbstractFactory implements AbstractFactoryInterface
@@ -16,12 +18,20 @@ final class ViewHelperAbstractFactory implements AbstractFactoryInterface
                 str_starts_with($requestedName, 'Laminas\\View\\Helper\\')
                 || str_starts_with($requestedName, 'Jield\\Bootstrap5\\Form\\View\\Helper\\')
             )
-            && \Jield\Stdlib\Service::get($container, \Laminas\View\HelperPluginManager::class, 'ViewHelperManager')->has($requestedName)
+            && Service::get(
+                $container,
+                HelperPluginManager::class,
+                'ViewHelperManager',
+            )->has($requestedName)
         );
     }
 
     public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): mixed
     {
-        return \Jield\Stdlib\Service::get($container, \Laminas\View\HelperPluginManager::class, 'ViewHelperManager')->get($requestedName);
+        return Service::get(
+            $container,
+            HelperPluginManager::class,
+            'ViewHelperManager',
+        )->get($requestedName);
     }
 }

@@ -21,4 +21,6 @@ declare(strict_types=1);
 
 namespace Jield\Cors\Exception;
 
-interface ExceptionInterface extends \Throwable {}
+use Throwable;
+
+interface ExceptionInterface extends Throwable {}

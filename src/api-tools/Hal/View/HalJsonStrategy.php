@@ -6,8 +6,11 @@ namespace Jield\ApiTools\Hal\View;
 
 use Jield\ApiTools\ApiProblem\View\ApiProblemModel;
 use Jield\Mvc\MvcEvent;
+use Jield\Stdlib\Value;
 use Laminas\EventManager\AbstractListenerAggregate;
 use Laminas\EventManager\EventManagerInterface;
+use Laminas\Http\AbstractMessage;
+use Laminas\Http\Response;
 
 class HalJsonStrategy extends AbstractListenerAggregate
 {
@@ -23,7 +26,6 @@ class HalJsonStrategy extends AbstractListenerAggregate
 
     public function render(MvcEvent $event): void
     {
-        /** @var mixed $model */
         $model = $event->getResult();
         if (!$model instanceof HalJsonModel) {
             $model = $event->getViewModel();
@@ -33,18 +35,21 @@ class HalJsonStrategy extends AbstractListenerAggregate
         }
         $this->renderer->setViewEvent($event);
         $body = $this->renderer->render($model);
-        /** @var mixed $problem */
         $problem = $event->getResult();
         $response = $event->getResponse();
         if ($problem instanceof ApiProblemModel) {
             $status = $problem->getApiProblem()->getStatus();
-            \Jield\Stdlib\Value::instance($response, \Laminas\Http\Response::class)->setStatusCode($status >= 100 && $status <= 599 ? $status : 500);
+            Value::instance($response, Response::class)->setStatusCode(
+                $status >= 100 && $status <= 599 ? $status : 500,
+            );
         }
         $response->setContent($body);
-        \Jield\Stdlib\Value::instance($response, \Laminas\Http\AbstractMessage::class)->getHeaders()->addHeaderLine(
-            'Content-Type',
-            $problem instanceof ApiProblemModel ? 'application/problem+json' : 'application/hal+json',
-        );
+        Value::instance($response, AbstractMessage::class)
+            ->getHeaders()
+            ->addHeaderLine(
+                'Content-Type',
+                $problem instanceof ApiProblemModel ? 'application/problem+json' : 'application/hal+json',
+            );
         $event->setResult($response);
         $event->stopPropagation();
     }

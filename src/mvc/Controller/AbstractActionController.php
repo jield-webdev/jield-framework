@@ -9,6 +9,7 @@ use Jield\Mvc\Exception\DomainException;
 use Jield\Mvc\MvcEvent;
 use Jield\Mvc\View\Model\ViewModel;
 
+use Jield\Stdlib\Value;
 use function method_exists;
 
 /**
@@ -42,11 +43,10 @@ abstract class AbstractActionController extends AbstractController
     {
         $event = $this->getEvent();
         $routeMatch = $event->getRouteMatch();
-        \Jield\Stdlib\Value::present($routeMatch)->setParam('action', 'not-found');
+        Value::present($routeMatch)->setParam('action', 'not-found');
 
-        /** @var mixed $helper */
         $helper = $this->plugin('createHttpNotFoundModel');
-        return \Jield\Stdlib\Value::instance($helper($event->getResponse()), \Jield\Mvc\View\Model\ViewModel::class);
+        return Value::instance(Value::callback($helper)($event->getResponse()), \Jield\Mvc\View\Model\ViewModel::class);
     }
 
     /**
@@ -66,16 +66,14 @@ abstract class AbstractActionController extends AbstractController
             throw new DomainException('Missing route matches; unsure how to retrieve action');
         }
 
-        /** @var mixed $action */
         $action = $routeMatch->getParam('action', 'not-found');
-        $method = static::getMethodFromAction(\Jield\Stdlib\Value::string($action));
+        $method = static::getMethodFromAction(Value::string($action));
 
         if (!method_exists($this, $method)) {
             $method = 'notFoundAction';
         }
 
-        /** @var mixed $actionResponse */
-        $actionResponse = \Jield\Stdlib\Value::call($this, $method, [], scope: self::class);
+        $actionResponse = Value::call($this, $method, [], scope: self::class);
 
         $e->setResult($actionResponse);
 

@@ -6,8 +6,10 @@ namespace Jield\Bootstrap5\Form\View\Helper;
 
 use Jield\Form\ElementInterface;
 use Jield\Form\Fieldset;
+use Jield\Form\FieldsetInterface;
 use Jield\Form\Form;
 
+use Jield\Stdlib\Value;
 use function implode;
 use function sprintf;
 
@@ -98,7 +100,10 @@ class FilterBarElement extends FormElement
                     </li>';
 
         /** @var Fieldset $facet */
-        foreach (\Jield\Stdlib\Value::instance($form->get(elementOrFieldset: 'facet'), \Jield\Form\FieldsetInterface::class)->getFieldsets() as $counter => $facet) {
+        foreach (Value::instance(
+            $form->get(elementOrFieldset: 'facet'),
+            FieldsetInterface::class,
+        )->getFieldsets() as $counter => $facet) {
             $yesNo = '';
             if ($facet->has(elementOrFieldset: 'yesNo')) {
                 $facet->get(elementOrFieldset: 'yesNo')->setAttribute(
@@ -111,7 +116,7 @@ class FilterBarElement extends FormElement
                 }
                 $yesNo =
                     '<div class="dropdown-item"><div class="form-check">'
-                    . (string) ($this->renderRaw(element: $facet->get(elementOrFieldset: 'yesNo')))
+                    . (string) $this->renderRaw(element: $facet->get(elementOrFieldset: 'yesNo'))
                     . '</div></div>';
             }
 
@@ -127,7 +132,7 @@ class FilterBarElement extends FormElement
                 }
                 $andOr =
                     '<div class="dropdown-item"><div class="form-check">'
-                    . (string) ($this->renderRaw(element: $facet->get(elementOrFieldset: 'andOr')))
+                    . (string) $this->renderRaw(element: $facet->get(elementOrFieldset: 'andOr'))
                     . '</div></div>';
             }
 
@@ -182,7 +187,10 @@ class FilterBarElement extends FormElement
                 return $formMultiCheckbox->render(element: $element);
             case 'text':
             case 'search':
-                $element->setAttribute(key: 'class', value: 'form-control ' . (string) ($element->getAttribute(key: 'class')));
+                $element->setAttribute(
+                    key: 'class',
+                    value: 'form-control ' . (string) $element->getAttribute(key: 'class'),
+                );
                 return $this->renderHelper(name: 'lbs5forminput', element: $element);
             case 'button':
                 $element->setAttribute(key: 'id', value: 'searchButton');
@@ -193,7 +201,7 @@ class FilterBarElement extends FormElement
             case 'submit':
                 return $this->renderHelper(name: 'formsubmit', element: $element);
             default:
-                return $this->renderHelper(name: \Jield\Stdlib\Value::string($type), element: $element);
+                return $this->renderHelper(name: Value::string($type), element: $element);
         }
     }
 }

@@ -6,6 +6,7 @@ namespace Jield\AssetManager\View\Helper;
 
 use Jield\AssetManager\Resolver\ResolverInterface;
 use Jield\Mvc\View\Helper\AbstractHelper;
+use Jield\Stdlib\Value;
 use Laminas\Cache\Storage\Adapter\AbstractAdapter as AbstractCacheAdapter;
 
 class Asset extends AbstractHelper
@@ -78,13 +79,15 @@ class Asset extends AbstractHelper
         // cache key based on the filename
         $cacheKey = md5(string: $filename);
         $itemIsFoundInCache = false;
-        /** @var mixed $filePath */
-        $filePath = $this->cache->getItem(\Jield\Stdlib\Value::nonEmptyString($cacheKey), $itemIsFoundInCache);
+        $filePath = $this->cache->getItem(Value::nonEmptyString($cacheKey), $itemIsFoundInCache);
 
         // if there is no element in the cache, elaborate and cache it
         if ($itemIsFoundInCache === false || $filePath === null) {
             $filePath = $this->elaborateFilePath(filename: $filename, queryString: $queryString);
-            \Jield\Stdlib\Value::present($this->cache)->setItem(\Jield\Stdlib\Value::nonEmptyString($cacheKey), $filePath);
+            Value::present($this->cache)->setItem(
+                Value::nonEmptyString($cacheKey),
+                $filePath,
+            );
         }
 
         return $filePath;
@@ -105,10 +108,8 @@ class Asset extends AbstractHelper
 
         // search the cache config for the specific file requested (if none, use the default one)
         if (isset($this->config['caching'][$filename])) {
-            /** @var mixed $cacheConfig */
             $cacheConfig = $this->config['caching'][$filename];
         } elseif (isset($this->config['caching']['default'])) {
-            /** @var mixed $cacheConfig */
             $cacheConfig = $this->config['caching']['default'];
         }
 
@@ -119,16 +120,18 @@ class Asset extends AbstractHelper
         // no cache dir is defined
         if (!isset($cacheConfig['options']['dir'])) {
             // append current timestamp to the filepath and use a custom query string
-            return $this->appendTimestamp(filename: $filename, queryString: \Jield\Stdlib\Value::string($queryString));
+            return $this->appendTimestamp(filename: $filename, queryString: Value::string($queryString));
         }
 
         // get the filePath from the cache (if available)
-        /** @var mixed $filePath */
-        $filePath = $this->getFilePathFromCache(filename: $filename, queryString: \Jield\Stdlib\Value::string($queryString));
+        $filePath = $this->getFilePathFromCache(
+            filename: $filename,
+            queryString: Value::string($queryString),
+        );
         if ($filePath !== null) {
-            return \Jield\Stdlib\Value::string($filePath);
+            return Value::string($filePath);
         }
 
-        return $this->elaborateFilePath(filename: $filename, queryString: \Jield\Stdlib\Value::string($queryString));
+        return $this->elaborateFilePath(filename: $filename, queryString: Value::string($queryString));
     }
 }

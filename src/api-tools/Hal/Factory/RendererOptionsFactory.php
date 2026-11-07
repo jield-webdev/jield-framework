@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Jield\ApiTools\Hal\Factory;
 
 use Jield\ApiTools\Hal\RendererOptions;
+use Jield\Stdlib\Value;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Container\NotFoundExceptionInterface;
@@ -19,7 +20,6 @@ class RendererOptionsFactory
      */
     public function __invoke(ContainerInterface $container): RendererOptions
     {
-        /** @var mixed $config */
         $config = $container->get('Jield\ApiTools\Hal\HalConfig');
 
         $rendererConfig = isset($config['renderer']) && is_array(value: $config['renderer']) ? $config['renderer'] : [];
@@ -30,6 +30,6 @@ class RendererOptionsFactory
             $rendererConfig['render_embedded_entities'] = $rendererConfig['render_embedded_resources'];
         }
 
-        return new RendererOptions(options: \Jield\Stdlib\Value::stringKeyedArray($rendererConfig));
+        return new RendererOptions(options: Value::stringKeyedArray($rendererConfig));
     }
 }

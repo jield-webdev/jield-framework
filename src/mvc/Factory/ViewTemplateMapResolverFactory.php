@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Jield\Mvc\Factory;
 
+use Jield\Stdlib\Value;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Laminas\View\Resolver as ViewResolver;
 use Psr\Container\ContainerInterface;
@@ -27,17 +28,19 @@ class ViewTemplateMapResolverFactory implements FactoryInterface
         string $requestedName,
         ?array $options = null,
     ): ViewResolver\TemplateMapResolver {
-        /** @var mixed $config */
         $config = $container->get('config');
         $map = [];
         if (is_array($config) && isset($config['view_manager'])) {
             /** @var mixed $config */
             $config = $config['view_manager'];
             if (is_array($config) && isset($config['template_map'])) {
-                /** @var mixed $map */
                 $map = $config['template_map'];
             }
         }
-        return new ViewResolver\TemplateMapResolver($map);
+        $templates = [];
+        foreach (Value::stringKeyedArray($map) as $name => $path) {
+            $templates[Value::nonEmptyString($name)] = Value::nonEmptyString($path);
+        }
+        return new ViewResolver\TemplateMapResolver($templates);
     }
 }

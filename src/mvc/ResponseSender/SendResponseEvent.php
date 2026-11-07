@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Jield\Mvc\ResponseSender;
 
+use Jield\Stdlib\Value;
 use Laminas\EventManager\Event;
 use Laminas\Stdlib\ResponseInterface;
 
@@ -58,7 +59,7 @@ class SendResponseEvent extends Event
         /** @var mixed $contentSent */
         $contentSent = $this->getParam('contentSent', []);
         $responseObjectHash = spl_object_hash($response);
-        \Jield\Stdlib\Value::setPath($contentSent, [$responseObjectHash], true);
+        Value::setPath($contentSent, [$responseObjectHash], true);
         $this->setParam('contentSent', $contentSent);
         $this->contentSent[$responseObjectHash] = true;
         return $this;
@@ -87,7 +88,7 @@ class SendResponseEvent extends Event
         /** @var mixed $headersSent */
         $headersSent = $this->getParam('headersSent', []);
         $responseObjectHash = spl_object_hash($response);
-        \Jield\Stdlib\Value::setPath($headersSent, [$responseObjectHash], true);
+        Value::setPath($headersSent, [$responseObjectHash], true);
         $this->setParam('headersSent', $headersSent);
         $this->headersSent[$responseObjectHash] = true;
         return $this;

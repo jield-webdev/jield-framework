@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Jield\ApiTools\ContentNegotiation;
 
+use Jield\Stdlib\Value;
 use Laminas\Http\PhpEnvironment\Request as BaseRequest;
 
+use RuntimeException;
 use function fopen;
 use function fwrite;
 use function is_resource;
@@ -44,16 +46,16 @@ class Request extends BaseRequest
         }
 
         if (empty($this->content)) {
-            $stream = fopen(filename: \Jield\Stdlib\Value::string($this->contentStream), mode: 'r');
+            $stream = fopen(filename: Value::string($this->contentStream), mode: 'r');
             if ($stream === false) {
-                throw new \RuntimeException('Unable to open the request content stream.');
+                throw new RuntimeException('Unable to open the request content stream.');
             }
             return $stream;
         }
 
         $stream = fopen(filename: 'php://temp', mode: 'r+');
         if ($stream === false) {
-            throw new \RuntimeException('Unable to buffer the request content.');
+            throw new RuntimeException('Unable to buffer the request content.');
         }
         $this->contentStream = $stream;
         fwrite(stream: $this->contentStream, data: (string) $this->content);

@@ -10,6 +10,7 @@ use Jield\Form\ElementInterface;
 use Jield\Form\Exception;
 use Jield\Form\LabelAwareInterface;
 
+use Jield\Stdlib\Value;
 use function in_array;
 use function method_exists;
 use function sprintf;
@@ -93,9 +94,7 @@ class FormRow extends AbstractHelper
             return $this;
         }
 
-        if ($labelPosition === null) {
-            $labelPosition = $this->getLabelPosition();
-        }
+        $labelPosition ??= $this->getLabelPosition();
 
         if ($renderErrors !== null) {
             $this->setRenderErrors(renderErrors: $renderErrors);
@@ -122,9 +121,7 @@ class FormRow extends AbstractHelper
         $label = $element->getLabel() ?? '';
         $inputErrorClass = $this->getInputErrorClass();
 
-        if ($labelPosition === null) {
-            $labelPosition = $this->labelPosition;
-        }
+        $labelPosition ??= $this->labelPosition;
 
         if ('' !== $label) {
             // Translate the label
@@ -181,11 +178,7 @@ class FormRow extends AbstractHelper
 
         // Multicheckbox elements have to be handled differently as the HTML standard does not allow nested
         // labels. The semantic way is to group them inside a fieldset
-        if (
-            $type === 'multi_checkbox'
-            || $type === 'radio'
-            || $element instanceof MonthSelect
-        ) {
+        if ($type === 'multi_checkbox' || $type === 'radio' || $element instanceof MonthSelect) {
             $markup = sprintf('<fieldset><legend>%s</legend>%s</fieldset>', $label, $elementString);
 
             return $markup . $elementErrors;
@@ -207,7 +200,8 @@ class FormRow extends AbstractHelper
 
         if (
             $label !== '' && !$element->hasAttribute(key: 'id')
-            || $element instanceof LabelAwareInterface && \Jield\Stdlib\Value::truthy($element->getLabelOption(key: 'always_wrap'))
+            || $element instanceof LabelAwareInterface
+            && Value::truthy($element->getLabelOption(key: 'always_wrap'))
         ) {
             $label = '<span>' . $label . '</span>';
         }
@@ -217,7 +211,10 @@ class FormRow extends AbstractHelper
             $labelOpen = $labelClose = $label = '';
         }
 
-        if ($element instanceof LabelAwareInterface && \Jield\Stdlib\Value::truthy($element->getLabelOption(key: 'label_position'))) {
+        if (
+            $element instanceof LabelAwareInterface
+            && Value::truthy($element->getLabelOption(key: 'label_position'))
+        ) {
             /** @var mixed $labelPosition */
             $labelPosition = $element->getLabelOption(key: 'label_position');
         }
@@ -391,7 +388,10 @@ class FormRow extends AbstractHelper
         }
 
         if ($this->view !== null && method_exists(object_or_class: $this->view, method: 'plugin')) {
-            $this->elementErrorsHelper = $this->getView()->plugin('form_element_errors', \Jield\Form\View\Helper\FormElementErrors::class);
+            $this->elementErrorsHelper = $this->getView()->plugin(
+                'form_element_errors',
+                \Jield\Form\View\Helper\FormElementErrors::class,
+            );
         }
 
         if (!$this->elementErrorsHelper instanceof FormElementErrors) {

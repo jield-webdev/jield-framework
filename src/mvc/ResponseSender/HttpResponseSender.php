@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Jield\Mvc\ResponseSender;
 
+use Jield\Stdlib\Value;
 use Laminas\Http\Response;
 
 class HttpResponseSender extends AbstractResponseSender
@@ -19,7 +20,7 @@ class HttpResponseSender extends AbstractResponseSender
             return $this;
         }
         $response = $event->getResponse();
-        echo $response->getContent();
+        echo Value::stringify($response->getContent());
         $event->setContentSent();
         return $this;
     }

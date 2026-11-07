@@ -49,7 +49,6 @@ class QueryString implements Stringable
     {
         $replacements = [];
 
-        /** @var mixed $value */
         foreach ($this->placeholders as $placeholder => $value) {
             if ($value instanceof DateTime) {
                 $value = new DateTimeExpression(date: $value);

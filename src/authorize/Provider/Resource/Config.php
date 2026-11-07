@@ -11,16 +11,12 @@ use Laminas\Permissions\Acl\Resource\ResourceInterface;
  */
 class Config implements ProviderInterface
 {
-    /** @var ResourceInterface[] */
-    protected array $resources = [];
-
     /**
-     * @param ResourceInterface[] $config
+     * @param array<array-key, mixed> $resources Resource names, instances, or nested resource configuration.
      */
-    public function __construct(array $config = [])
-    {
-        $this->resources = $config;
-    }
+    public function __construct(
+        protected array $resources = [],
+    ) {}
 
     /**
      * {@inheritDoc}

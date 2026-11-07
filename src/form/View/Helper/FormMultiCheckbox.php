@@ -7,8 +7,8 @@ namespace Jield\Form\View\Helper;
 use Jield\Form\Element\MultiCheckbox as MultiCheckboxElement;
 use Jield\Form\ElementInterface;
 use Jield\Form\Exception;
-use Jield\Form\LabelAwareInterface;
 
+use Jield\Stdlib\Value;
 use function array_key_exists;
 use function array_merge;
 use function implode;
@@ -116,7 +116,7 @@ class FormMultiCheckbox extends FormInput
         $attributes = $element->getAttributes();
         $attributes['name'] = $name;
         $attributes['type'] = $this->getInputType();
-        $selectedOptions = \Jield\Stdlib\Value::toArray($element->getValue());
+        $selectedOptions = Value::toArray($element->getValue());
 
         $rendered = $this->renderOptions(
             element: $element,
@@ -157,7 +157,6 @@ class FormMultiCheckbox extends FormInput
         $combinedMarkup = [];
         $count = 0;
 
-        /** @var mixed $optionSpec */
         foreach ($options as $key => $optionSpec) {
             $count++;
             if ($count > 1 && array_key_exists(key: 'id', array: $attributes)) {
@@ -171,8 +170,9 @@ class FormMultiCheckbox extends FormInput
             $selected =
                 isset($inputAttributes['selected'])
                 && $inputAttributes['type'] !== 'radio'
-                && \Jield\Stdlib\Value::truthy($inputAttributes['selected']);
-            $disabled = isset($inputAttributes['disabled']) && \Jield\Stdlib\Value::truthy($inputAttributes['disabled']);
+                && Value::truthy($inputAttributes['selected']);
+            $disabled =
+                isset($inputAttributes['disabled']) && Value::truthy($inputAttributes['disabled']);
 
             if (is_scalar(value: $optionSpec)) {
                 $optionSpec = [
@@ -182,29 +182,25 @@ class FormMultiCheckbox extends FormInput
             }
 
             if (isset($optionSpec['value'])) {
-                /** @var mixed $value */
                 $value = $optionSpec['value'];
             }
             if (isset($optionSpec['label'])) {
-                /** @var mixed $label */
                 $label = $optionSpec['label'];
             }
             if (isset($optionSpec['selected'])) {
-                /** @var mixed $selected */
                 $selected = $optionSpec['selected'];
             }
             if (isset($optionSpec['disabled'])) {
-                /** @var mixed $disabled */
                 $disabled = $optionSpec['disabled'];
             }
             if (isset($optionSpec['label_attributes'])) {
                 /** @var mixed $labelAttributes */
                 $labelAttributes = isset($labelAttributes)
-                    ? array_merge($labelAttributes, \Jield\Stdlib\Value::array($optionSpec['label_attributes']))
+                    ? array_merge($labelAttributes, Value::array($optionSpec['label_attributes']))
                     : $optionSpec['label_attributes'];
             }
             if (isset($optionSpec['attributes'])) {
-                $inputAttributes = array_merge($inputAttributes, \Jield\Stdlib\Value::array($optionSpec['attributes']));
+                $inputAttributes = array_merge($inputAttributes, Value::array($optionSpec['attributes']));
             }
 
             if (in_array(needle: $value, haystack: $selectedOptions, strict: true)) {
@@ -221,10 +217,10 @@ class FormMultiCheckbox extends FormInput
                 $closingBracket,
             );
 
-            $label = $this->translateLabel(label: \Jield\Stdlib\Value::string($label));
+            $label = $this->translateLabel(label: Value::string($label));
             $label = $this->escapeLabel(element: $element, label: $label);
 
-            $labelOpen = $labelHelper->openTag(attributesOrElement: $labelAttributes);
+            $labelOpen = $labelHelper->openTag(attributesOrElement: Value::array($labelAttributes));
             $template = $labelOpen . '%s%s' . $labelClose;
             $markup = match ($labelPosition) {
                 self::LABEL_PREPEND => sprintf($template, $label, $input),
@@ -407,9 +403,7 @@ class FormMultiCheckbox extends FormInput
             $this->inputHelper = $this->getView()->plugin('form_input', \Jield\Form\View\Helper\FormInput::class);
         }
 
-        if (null === $this->inputHelper) {
-            $this->inputHelper = new FormInput();
-        }
+        $this->inputHelper ??= new FormInput();
 
         return $this->inputHelper;
     }
@@ -423,7 +417,7 @@ class FormMultiCheckbox extends FormInput
             return $this->labelHelper;
         }
 
-        if (method_exists(object_or_class: \Jield\Stdlib\Value::objectOrString($this->view), method: 'plugin')) {
+        if (method_exists(object_or_class: Value::objectOrString($this->view), method: 'plugin')) {
             $this->labelHelper = $this->getView()->plugin('form_label', \Jield\Form\View\Helper\FormLabel::class);
         }
 

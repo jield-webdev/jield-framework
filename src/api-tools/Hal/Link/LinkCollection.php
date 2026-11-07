@@ -23,13 +23,13 @@ use function sprintf;
 
 /**
  * Object describing a collection of link relations
- 
+ *
  *
  * @implements \IteratorAggregate<array-key, mixed>
  */
 class LinkCollection implements Countable, IteratorAggregate
 {
-    /** @var array<mixed> */
+    /** @var array<array-key, LinkInterface|array<array-key, LinkInterface>> */
     protected array $links = [];
 
     /**
@@ -104,7 +104,6 @@ class LinkCollection implements Countable, IteratorAggregate
         // update existing rels
         $intersection = array_intersect($linkRels, $existingRels);
         foreach ($intersection as $relation) {
-            /** @var mixed $relationLinks */
             $relationLinks = $this->links[$relation];
             if (!is_array(value: $relationLinks)) {
                 $relationLinks = [$relationLinks];
@@ -135,7 +134,6 @@ class LinkCollection implements Countable, IteratorAggregate
             return null;
         }
 
-        /** @psalm-var LinkInterface|Link|array<mixed>|null $value */
         return $this->links[$relation];
     }
 

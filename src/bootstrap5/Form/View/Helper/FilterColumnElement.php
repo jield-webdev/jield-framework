@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Jield\Bootstrap5\Form\View\Helper;
 
+use Jield\Form\Element\MultiCheckbox;
 use Jield\Form\ElementInterface;
 use Jield\Form\Fieldset;
+use Jield\Form\FieldsetInterface;
 use Jield\Form\Form;
 use Jield\Search\ValueObject\FacetField;
 
+use Jield\Stdlib\Value;
 use function implode;
 use function sprintf;
 
@@ -44,10 +47,15 @@ class FilterColumnElement extends FormElement
 
     private function appendScript(): void
     {
-        \Jield\Stdlib\Value::call($this->getContainer(
-            containerName: self::HEADSCRIPT,
-        ), 'appendFile', ['assets/js/jield-bootstrap5/filter-column.js', ['type' => 'text/javascript'] + []]);
-        \Jield\Stdlib\Value::call($this->getContainer(containerName: self::HEADLINK), 'appendStylesheet', ['assets/css/jield-bootstrap5/filter-column.css']);
+        Value::call($this->getContainer(containerName: self::HEADSCRIPT), 'appendFile', [
+            'assets/js/jield-bootstrap5/filter-column.js',
+            ['type' => 'text/javascript'] + [],
+        ]);
+        Value::call(
+            $this->getContainer(containerName: self::HEADLINK),
+            'appendStylesheet',
+            ['assets/css/jield-bootstrap5/filter-column.css'],
+        );
     }
 
     private function renderFacets(Form $form): string
@@ -58,7 +66,10 @@ class FilterColumnElement extends FormElement
 
         $facets = [];
         /** @var Fieldset $facet */
-        foreach (\Jield\Stdlib\Value::instance($form->get(elementOrFieldset: 'facet'), \Jield\Form\FieldsetInterface::class)->getFieldsets() as $facet) {
+        foreach (Value::instance(
+            $form->get(elementOrFieldset: 'facet'),
+            FieldsetInterface::class,
+        )->getFieldsets() as $facet) {
             $facets[] = '<div class="simple-load-more">';
             $facets[] = sprintf('<strong>%s</strong>', $facet->get(elementOrFieldset: 'values')->getLabel());
 
@@ -117,21 +128,28 @@ class FilterColumnElement extends FormElement
 
                 //Reset the options so the checked one is always on top
                 $sortedValueOptions = [];
-                /** @var mixed $currentValueOptions */
-                $currentValueOptions = \Jield\Stdlib\Value::instance($element, \Jield\Form\Element\MultiCheckbox::class)->getValueOptions();
+                $currentValueOptions = Value::instance(
+                    $element,
+                    MultiCheckbox::class,
+                )->getValueOptions();
 
-                /** @var mixed $value */
-                foreach ((array) ($element->getValue() ?? []) as $value) {
+                foreach (Value::toArray($element->getValue()) as $value) {
+                    $value = Value::key($value);
                     //We can only unset the value if it is in the value options
-                    if (!array_key_exists(key: \Jield\Stdlib\Value::plainScalar($value), array: \Jield\Stdlib\Value::array($currentValueOptions))) {
+                    if (!array_key_exists(
+                        key: $value,
+                        array: $currentValueOptions,
+                    )) {
                         continue;
                     }
 
-                    $sortedValueOptions[\Jield\Stdlib\Value::key($value)] = $currentValueOptions[$value];
+                    $sortedValueOptions[Value::key($value)] = $currentValueOptions[$value];
                     unset($currentValueOptions[$value]);
                 }
 
-                \Jield\Stdlib\Value::instance($element, \Jield\Form\Element\MultiCheckbox::class)->setValueOptions(options: $sortedValueOptions + \Jield\Stdlib\Value::array($currentValueOptions));
+                Value::instance($element, MultiCheckbox::class)->setValueOptions(
+                    options: $sortedValueOptions + $currentValueOptions,
+                );
 
                 return $formMultiCheckbox->render(element: $element);
             case 'checkbox':
@@ -150,7 +168,7 @@ class FilterColumnElement extends FormElement
 
                 return $formMultiCheckbox->render(element: $element);
             default:
-                return $this->renderHelper(name: \Jield\Stdlib\Value::string($type), element: $element);
+                return $this->renderHelper(name: Value::string($type), element: $element);
         }
     }
 }

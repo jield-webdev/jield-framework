@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Jield\Form;
 
+use Jield\Stdlib\Value;
 use Laminas\ServiceManager\AbstractPluginManager;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Laminas\ServiceManager\ServiceManager;
@@ -25,10 +26,11 @@ final class FormElementManagerFactory implements FactoryInterface
         $requestedName,
         ?array $options = null,
     ): AbstractPluginManager {
-        
         /** @var ServiceManagerConfiguration $options */
-        $options = $options ?? [];
-        $pluginManager = new FormElementManager(creationContext: $container, config: \Jield\Stdlib\Value::array($options));
+        $pluginManager = new FormElementManager(
+            creationContext: $container,
+            config: Value::array($options),
+        );
 
         // If this is in a jield-mvc application, the ServiceListener will inject
         // merged configuration during bootstrap.
@@ -41,7 +43,6 @@ final class FormElementManagerFactory implements FactoryInterface
             return $pluginManager;
         }
 
-        /** @var mixed $config */
         $config = $container->get('config');
 
         // If we do not have form_elements configuration, nothing more to do

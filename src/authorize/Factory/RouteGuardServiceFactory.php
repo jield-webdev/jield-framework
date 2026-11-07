@@ -6,6 +6,7 @@ namespace Jield\Authorize\Factory;
 
 use Jield\Authorize\Config;
 use Jield\Authorize\Guard\Route;
+use Jield\Stdlib\Value;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Psr\Container\ContainerInterface;
 
@@ -21,6 +22,12 @@ class RouteGuardServiceFactory implements FactoryInterface
      */
     public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): Route
     {
-        return new Route(rules: \Jield\Stdlib\Value::array(\Jield\Stdlib\Value::path($container->get(Config::class), ['guards', Route::class])), container: $container);
+        return new Route(
+            rules: Value::array(Value::path(
+                $container->get(Config::class),
+                ['guards', Route::class],
+            )),
+            container: $container,
+        );
     }
 }

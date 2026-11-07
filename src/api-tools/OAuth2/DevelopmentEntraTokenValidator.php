@@ -15,8 +15,9 @@ final class DevelopmentEntraTokenValidator extends EntraTokenValidator
     {
         throw new EntraException(
             $exception->error,
-            $exception->getMessage() . ': signing key lookup failed for kid '
-                . (string) (json_encode($kid, JSON_INVALID_UTF8_SUBSTITUTE)),
+            $exception->getMessage()
+            . ': signing key lookup failed for kid '
+            . (string) json_encode($kid, JSON_INVALID_UTF8_SUBSTITUTE),
             $exception->status,
         );
     }

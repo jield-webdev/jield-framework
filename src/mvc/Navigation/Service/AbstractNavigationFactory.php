@@ -5,16 +5,22 @@ declare(strict_types=1);
 namespace Jield\Mvc\Navigation\Service;
 
 use Jield\Mvc\Application;
+use Jield\Mvc\ApplicationInterface;
+use Jield\Mvc\Navigation\MvcPage;
+use Jield\Mvc\Router\RouteMatch;
+use Jield\Stdlib\Service;
+use Jield\Stdlib\Value;
+use Laminas\Http\Request;
 use Laminas\Navigation\Exception;
 use Laminas\Navigation\Exception\InvalidArgumentException;
 use Laminas\Navigation\Navigation;
-use Laminas\Http\Request;
-use Jield\Mvc\Router\RouteMatch;
+use Laminas\Navigation\Page\Mvc;
 use Laminas\Router\RouteStackInterface as Router;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Laminas\Stdlib\ArrayUtils;
 use Psr\Container\ContainerInterface;
 use Traversable;
+
 use function assert;
 use function get_debug_type;
 use function is_array;
@@ -53,7 +59,6 @@ abstract class AbstractNavigationFactory implements FactoryInterface
     protected function getPages(ContainerInterface $container): ?array
     {
         if (null === $this->pages) {
-            /** @var mixed $configuration */
             $configuration = $container->get('config');
 
             if (!isset($configuration['navigation'])) {
@@ -62,16 +67,15 @@ abstract class AbstractNavigationFactory implements FactoryInterface
             if (!isset($configuration['navigation'][$this->getName()])) {
                 throw new Exception\InvalidArgumentException(sprintf(
                     'Failed to find a navigation container by the name "%s"',
-                    $this->getName()
+                    $this->getName(),
                 ));
             }
 
             /** @var mixed $configuration */
             $configuration = $configuration['navigation'];
-            /** @var mixed $navigation */
-            $navigation    = \Jield\Stdlib\Value::accessible($configuration)[$this->getName()];
-            $pages         = $this->getPagesFromConfig($navigation);
-            $this->pages   = $this->preparePages($container, $pages);
+            $navigation = Value::accessible($configuration)[$this->getName()];
+            $pages = $this->getPagesFromConfig($navigation);
+            $this->pages = $this->preparePages($container, $pages);
         }
 
         return $this->pages;
@@ -84,12 +88,12 @@ abstract class AbstractNavigationFactory implements FactoryInterface
      */
     protected function preparePages(ContainerInterface $container, array $pages): array
     {
-        $application = \Jield\Stdlib\Service::get($container, \Jield\Mvc\ApplicationInterface::class, 'Application');
+        $application = Service::get($container, ApplicationInterface::class, 'Application');
         assert($application instanceof Application);
 
         $routeMatch = $application->getMvcEvent()->getRouteMatch();
-        $router     = $application->getMvcEvent()->getRouter();
-        $request    = $application->getMvcEvent()->getRequest();
+        $router = $application->getMvcEvent()->getRouter();
+        $request = $application->getMvcEvent()->getRequest();
 
         // HTTP request is the only one that may be injected
         if (!$request instanceof Request) {
@@ -100,7 +104,7 @@ abstract class AbstractNavigationFactory implements FactoryInterface
     }
 
     /**
-     * @param array<array-key, array<string, mixed>>|Traversable<array-key, mixed> $config
+     * @param mixed $config
      * @return array<array-key, array<string, mixed>>
      * @throws InvalidArgumentException
      */
@@ -109,12 +113,10 @@ abstract class AbstractNavigationFactory implements FactoryInterface
         if ($config instanceof Traversable) {
             $config = ArrayUtils::iteratorToArray($config);
         } elseif (!is_array($config)) {
-            throw new Exception\InvalidArgumentException(
-                'Invalid input, expected array or Traversable object'
-            );
+            throw new Exception\InvalidArgumentException('Invalid input, expected array or Traversable object');
         }
 
-        return \Jield\Stdlib\Value::maps($config);
+        return Value::maps($config);
     }
 
     /**
@@ -125,34 +127,34 @@ abstract class AbstractNavigationFactory implements FactoryInterface
      * @return array<array-key, array<string, mixed>>
      */
     protected function injectComponents(
-        array       $pages,
+        array $pages,
         ?RouteMatch $routeMatch = null,
-        ?Router     $router = null,
-        ?Request    $request = null
-    ): array
-    {
+        ?Router $router = null,
+        ?Request $request = null,
+    ): array {
         $this->validateRouteMatch($routeMatch);
         $this->validateRouter($router);
 
         foreach ($pages as &$page) {
             $hasUri = isset($page['uri']);
             $hasMvc = isset($page['action']) || isset($page['controller']) || isset($page['route']);
-            if ($hasMvc || in_array($page['type'] ?? null, ['mvc', \Laminas\Navigation\Page\Mvc::class], true)) {
-                $page['type'] = \Jield\Mvc\Navigation\MvcPage::class;
+            if ($hasMvc || in_array($page['type'] ?? null, ['mvc', Mvc::class], true)) {
+                $page['type'] = MvcPage::class;
                 if (!isset($page['routeMatch']) && $routeMatch) {
                     $page['routeMatch'] = $routeMatch;
                 }
-                if (!isset($page['router'])) {
-                    $page['router'] = $router;
-                }
+                $page['router'] ??= $router;
             } elseif ($hasUri) {
-                if (!isset($page['request'])) {
-                    $page['request'] = $request;
-                }
+                $page['request'] ??= $request;
             }
 
             if (isset($page['pages'])) {
-                $page['pages'] = $this->injectComponents(\Jield\Stdlib\Value::maps($page['pages']), $routeMatch, $router, $request);
+                $page['pages'] = $this->injectComponents(
+                    Value::maps($page['pages']),
+                    $routeMatch,
+                    $router,
+                    $request,
+                );
             }
         }
 
@@ -176,7 +178,7 @@ abstract class AbstractNavigationFactory implements FactoryInterface
                 '%s expected by %s::injectComponents; received %s',
                 RouteMatch::class,
                 self::class,
-                get_debug_type($routeMatch)
+                get_debug_type($routeMatch),
             ));
         }
     }

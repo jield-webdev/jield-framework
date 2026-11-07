@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DoctrineModule\Service;
 
+use Jield\Stdlib\Value;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Laminas\Stdlib\AbstractOptions;
 use Psr\Container\ContainerInterface;
@@ -49,19 +50,16 @@ abstract class AbstractFactory implements FactoryInterface
      */
     public function getOptions(ContainerInterface $container, string $key, ?string $name = null): AbstractOptions
     {
-        if ($name === null) {
-            $name = $this->getName();
-        }
+        $name ??= $this->getName();
 
-        /** @var mixed $options */
         $options = $container->get('config');
         /** @var mixed $options */
-        $options = \Jield\Stdlib\Value::accessible($options)['doctrine'];
+        $options = Value::accessible($options)['doctrine'];
 
         $mappingType = $this->getMappingType();
         if ($mappingType !== '' && $mappingType !== '0') {
             /** @var mixed $options */
-            $options = \Jield\Stdlib\Value::accessible($options)[$mappingType];
+            $options = Value::accessible($options)[$mappingType];
         }
 
         /** @var mixed $options */
@@ -77,7 +75,10 @@ abstract class AbstractFactory implements FactoryInterface
 
         $optionsClass = $this->getOptionsClass();
 
-        return \Jield\Stdlib\Value::instance(\Jield\Stdlib\Value::instantiate($optionsClass, [$options]), \Laminas\Stdlib\AbstractOptions::class);
+        return Value::instance(
+            Value::instantiate($optionsClass, [$options]),
+            \Laminas\Stdlib\AbstractOptions::class,
+        );
     }
 
     /**

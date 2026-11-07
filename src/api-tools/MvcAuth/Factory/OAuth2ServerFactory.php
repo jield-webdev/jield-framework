@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Jield\ApiTools\MvcAuth\Factory;
 
 use Jield\ApiTools\OAuth2\Adapter\PdoAdapter;
+use Jield\Stdlib\Value;
 use Laminas\ServiceManager\Exception\ServiceNotCreatedException;
 use OAuth2\GrantType\AuthorizationCode;
 use OAuth2\GrantType\ClientCredentials;
@@ -13,6 +14,11 @@ use OAuth2\GrantType\RefreshToken;
 use OAuth2\GrantType\UserCredentials;
 use OAuth2\OpenID\GrantType\AuthorizationCode as OpenIDAuthorizationCodeGrantType;
 use OAuth2\Server as OAuth2Server;
+use OAuth2\Storage\AuthorizationCodeInterface;
+use OAuth2\Storage\ClientCredentialsInterface;
+use OAuth2\Storage\JwtBearerInterface;
+use OAuth2\Storage\RefreshTokenInterface;
+use OAuth2\Storage\UserCredentialsInterface;
 use Psr\Container\ContainerInterface;
 
 use function array_key_exists;
@@ -34,20 +40,22 @@ final class OAuth2ServerFactory
      */
     public static function factory(array $config, ContainerInterface $container): OAuth2Server
     {
-        /** @var mixed $allConfig */
         $allConfig = $container->get('config');
         /** @var mixed $oauth2Config */
         $oauth2Config = $allConfig['api-tools-oauth2'] ?? [];
-        $options = self::marshalOptions(config: \Jield\Stdlib\Value::array($oauth2Config));
+        $options = self::marshalOptions(config: Value::array($oauth2Config));
 
         $oauth2Server = new OAuth2Server(
-            storage: self::createStorage(config: array_merge(\Jield\Stdlib\Value::array($oauth2Config), $config), container: $container),
+            storage: self::createStorage(
+                config: array_merge(Value::array($oauth2Config), $config),
+                container: $container,
+            ),
             config: $options,
         );
 
         return self::injectGrantTypes(
             server: $oauth2Server,
-            availableGrantTypes: \Jield\Stdlib\Value::array($oauth2Config['grant_types']),
+            availableGrantTypes: Value::array($oauth2Config['grant_types']),
             options: $options,
         );
     }
@@ -67,7 +75,10 @@ final class OAuth2ServerFactory
             isset($config['storage'])
             && (is_string(value: $config['storage']) || is_array(value: $config['storage']))
         ) {
-            return self::createStorageFromServices(storage: \Jield\Stdlib\Value::arrayOrString($config['storage']), container: $container);
+            return self::createStorageFromServices(
+                storage: is_array($config['storage']) ? Value::strings($config['storage']) : $config['storage'],
+                container: $container,
+            );
         }
 
         throw new ServiceNotCreatedException(message: 'Missing or invalid storage adapter information for OAuth2');
@@ -189,7 +200,7 @@ final class OAuth2ServerFactory
             'allow_implicit' => $allowImplicit,
             'audience' => $audience,
             'enforce_state' => $enforceState,
-        ], $options);
+        ], Value::array($options));
     }
 
     /**
@@ -213,7 +224,10 @@ final class OAuth2ServerFactory
 
             // Add the "Client Credentials" grant type (it is the simplest of the grant types)
             $server->addGrantType(grantType: new ClientCredentials(
-                storage: \Jield\Stdlib\Value::instance($server->getStorage(name: 'client_credentials'), \OAuth2\Storage\ClientCredentialsInterface::class),
+                storage: Value::instance(
+                    $server->getStorage(name: 'client_credentials'),
+                    ClientCredentialsInterface::class,
+                ),
                 config: $clientOptions,
             ));
         }
@@ -222,13 +236,14 @@ final class OAuth2ServerFactory
             array_key_exists(key: 'authorization_code', array: $availableGrantTypes)
             && $availableGrantTypes['authorization_code'] === true
         ) {
-            $authCodeClass = array_key_exists(key: 'use_openid_connect', array: $options)
-            && $options['use_openid_connect'] === true
-                ? OpenIDAuthorizationCodeGrantType::class
-                : AuthorizationCode::class;
-
-            // Add the "Authorization Code" grant type (this is where the oauth magic happens)
-            $server->addGrantType(grantType: new $authCodeClass(\Jield\Stdlib\Value::instance($server->getStorage(name: 'authorization_code'), \OAuth2\Storage\AuthorizationCodeInterface::class)));
+            $storage = Value::instance(
+                $server->getStorage(name: 'authorization_code'),
+                AuthorizationCodeInterface::class,
+            );
+            $grantType = ($options['use_openid_connect'] ?? false) === true
+                ? new OpenIDAuthorizationCodeGrantType($storage)
+                : new AuthorizationCode($storage);
+            $server->addGrantType(grantType: $grantType);
         }
 
         if (
@@ -237,15 +252,21 @@ final class OAuth2ServerFactory
         ) {
             // Add the "User Credentials" grant type
             $server->addGrantType(
-                grantType: new UserCredentials(storage: \Jield\Stdlib\Value::instance($server->getStorage(name: 'user_credentials'), \OAuth2\Storage\UserCredentialsInterface::class)),
+                grantType: new UserCredentials(storage: Value::instance(
+                    $server->getStorage(name: 'user_credentials'),
+                    UserCredentialsInterface::class,
+                )),
             );
         }
 
         if (array_key_exists(key: 'jwt', array: $availableGrantTypes) && $availableGrantTypes['jwt'] === true) {
             // Add the "JWT Bearer" grant type
             $server->addGrantType(grantType: new JwtBearer(
-                storage: \Jield\Stdlib\Value::instance($server->getStorage(name: 'jwt_bearer'), \OAuth2\Storage\JwtBearerInterface::class),
-                audience: \Jield\Stdlib\Value::string($options['audience']),
+                storage: Value::instance(
+                    $server->getStorage(name: 'jwt_bearer'),
+                    JwtBearerInterface::class,
+                ),
+                audience: Value::string($options['audience']),
             ));
         }
 
@@ -268,7 +289,10 @@ final class OAuth2ServerFactory
 
             // Add the "Refresh Token" grant type
             $server->addGrantType(grantType: new RefreshToken(
-                storage: \Jield\Stdlib\Value::instance($server->getStorage(name: 'refresh_token'), \OAuth2\Storage\RefreshTokenInterface::class),
+                storage: Value::instance(
+                    $server->getStorage(name: 'refresh_token'),
+                    RefreshTokenInterface::class,
+                ),
                 config: $refreshOptions,
             ));
         }

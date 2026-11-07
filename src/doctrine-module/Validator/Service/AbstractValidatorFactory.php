@@ -8,6 +8,7 @@ use BadMethodCallException;
 use Doctrine\Persistence\ObjectManager;
 use Doctrine\Persistence\ObjectRepository;
 use DoctrineModule\Validator\Service\Exception\ServiceCreationException;
+use Jield\Stdlib\Value;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Laminas\Stdlib\ArrayUtils;
 use Psr\Container\ContainerInterface;
@@ -49,14 +50,16 @@ abstract class AbstractValidatorFactory implements FactoryInterface
         }
 
         $objectManager = $this->getObjectManager(container: $container, options: $options);
-        /** @var mixed $targetClassName */
         $targetClassName = $options['target_class'];
 
-        if (!class_exists(class: \Jield\Stdlib\Value::string($targetClassName))) {
-            throw new BadMethodCallException(message: sprintf('Class %s could not be found.', \Jield\Stdlib\Value::scalar($targetClassName)));
+        if (!class_exists(class: Value::string($targetClassName))) {
+            throw new BadMethodCallException(message: sprintf(
+                'Class %s could not be found.',
+                Value::scalar($targetClassName),
+            ));
         }
 
-        return $objectManager->getRepository(className: \Jield\Stdlib\Value::classString($targetClassName));
+        return $objectManager->getRepository(className: Value::classString($targetClassName));
     }
 
     /** @param array $options */
@@ -70,7 +73,7 @@ abstract class AbstractValidatorFactory implements FactoryInterface
             $objectManager = $container->get($objectManager);
         }
 
-        return \Jield\Stdlib\Value::instance($objectManager, \Doctrine\Persistence\ObjectManager::class);
+        return Value::instance($objectManager, \Doctrine\Persistence\ObjectManager::class);
     }
 
     /**
@@ -81,7 +84,7 @@ abstract class AbstractValidatorFactory implements FactoryInterface
     protected function getFields(array $options): array
     {
         if (isset($options['fields'])) {
-            return \Jield\Stdlib\Value::toArray($options['fields']);
+            return Value::toArray($options['fields']);
         }
 
         return [];

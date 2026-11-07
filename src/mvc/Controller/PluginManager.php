@@ -13,9 +13,11 @@ use Jield\Mvc\Controller\Plugin\PluginInterface;
 use Jield\Mvc\Controller\Plugin\Redirect;
 use Jield\Mvc\Controller\Plugin\Service\ForwardFactory;
 use Jield\Mvc\Controller\Plugin\Url;
+use Jield\Stdlib\Value;
 use Laminas\ServiceManager\AbstractPluginManager;
 use Laminas\ServiceManager\Exception\InvalidServiceException;
 use Laminas\ServiceManager\Factory\InvokableFactory;
+use Laminas\ServiceManager\ServiceManager;
 use Laminas\Stdlib\DispatchableInterface;
 
 use function get_debug_type;
@@ -27,8 +29,8 @@ use function sprintf;
  *
  * Registers a number of default plugins, and contains an initializer for
  * injecting plugins with the current controller.
- * @psalm-import-type FactoriesConfiguration from \Laminas\ServiceManager\ServiceManager
- 
+ * @psalm-import-type FactoriesConfiguration from ServiceManager
+ *
  *
  * @extends \Laminas\ServiceManager\AbstractPluginManager<\Jield\Mvc\Controller\Plugin\PluginInterface>
  */
@@ -90,9 +92,9 @@ class PluginManager extends AbstractPluginManager
     {
         /** @var mixed $plugin */
         $plugin = $options === null ? parent::get($id) : parent::build($id, $options);
-        $this->injectController(plugin: \Jield\Stdlib\Value::object($plugin));
+        $this->injectController(plugin: Value::object($plugin));
 
-        return \Jield\Stdlib\Value::instance($plugin, PluginInterface::class);
+        return Value::instance($plugin, PluginInterface::class);
     }
 
     /**

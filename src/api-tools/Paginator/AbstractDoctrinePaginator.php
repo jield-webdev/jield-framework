@@ -4,20 +4,27 @@ declare(strict_types=1);
 
 namespace Jield\ApiTools\Paginator;
 
+use ArrayIterator;
+use Countable;
 use Doctrine\ORM\Query;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\Tools\Pagination\OffsetPaginator;
 use Doctrine\ORM\Tools\Pagination\Window;
+use IteratorAggregate;
+use Jield\Stdlib\Value;
+use Traversable;
 
-/** @implements \IteratorAggregate<int, object> */
-abstract class AbstractDoctrinePaginator implements \Countable, \IteratorAggregate
+/** @implements IteratorAggregate<int, object> */
+abstract class AbstractDoctrinePaginator implements Countable, IteratorAggregate
 {
     private readonly Query $query;
     private ?bool $useOutputWalkers = null;
     private ?int $totalCount = null;
 
-    public function __construct(Query|QueryBuilder $query, private readonly bool $fetchJoinCollection = true)
-    {
+    public function __construct(
+        Query|QueryBuilder $query,
+        private readonly bool $fetchJoinCollection = true,
+    ) {
         $this->query = $query instanceof QueryBuilder ? $query->getQuery() : $query;
     }
 
@@ -61,12 +68,15 @@ abstract class AbstractDoctrinePaginator implements \Countable, \IteratorAggrega
         if ($this->totalCount === null) {
             $this->pageItems(0, 1);
         }
-        return $this->totalCount ?? 0;
+        return $this->totalCount;
     }
 
-    /** @return \Traversable<int, object> */
-    public function getIterator(): \Traversable
+    /** @return Traversable<int, object> */
+    public function getIterator(): Traversable
     {
-        return new \ArrayIterator($this->pageItems($this->query->getFirstResult(), \Jield\Stdlib\Value::int($this->query->getMaxResults())));
+        return new ArrayIterator($this->pageItems(
+            $this->query->getFirstResult(),
+            Value::int($this->query->getMaxResults()),
+        ));
     }
 }

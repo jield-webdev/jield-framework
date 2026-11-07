@@ -17,6 +17,9 @@ use Jield\Export\Enum\ExportFileTypeEnum;
 use Jield\Export\Json\AbstractEntityJson;
 use Jield\Export\Options\ModuleOptions;
 use Jield\Export\ValueObject\Column;
+use Jield\Stdlib\Service;
+use Jield\Stdlib\Value;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Cell\DataType;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -44,7 +47,6 @@ class ConsoleService
         private readonly ModuleOptions $moduleOptions,
     ) {
         //Do an init check
-        /** @var mixed $entityColumnsName */
         foreach ($this->moduleOptions->getEntities() as $key => $entityColumnsName) {
             $this->entities[$key] = $entityColumnsName;
         }
@@ -56,13 +58,15 @@ class ConsoleService
         $handle = fopen(filename: $tempImageFile, mode: 'wb');
         $entities = [];
 
-        /** @var mixed $entityInformation */
         foreach ($this->moduleOptions->getEntities() as $entityInformation) {
-            if (!array_key_exists('columns', \Jield\Stdlib\Value::array($entityInformation))) {
+            if (!array_key_exists('columns', Value::array($entityInformation))) {
                 continue;
             }
 
-            $this->collectDocumentationEntities(entityColumnsName: \Jield\Stdlib\Value::string($entityInformation['columns']), entities: $entities);
+            $this->collectDocumentationEntities(
+                entityColumnsName: Value::string($entityInformation['columns']),
+                entities: $entities,
+            );
         }
 
         uasort($entities, static fn(AbstractEntityColumns $left, AbstractEntityColumns $right): int => strcasecmp(
@@ -70,11 +74,19 @@ class ConsoleService
             $right->getName(),
         ));
 
-        /** @var mixed $entity */
         foreach ($entities as $entity) {
-            $output->writeln(messages: sprintf('<info>Writing MarkDown file for %s</info>', \Jield\Stdlib\Value::scalar(\Jield\Stdlib\Value::call($entity, 'getName'))));
+            $output->writeln(messages: sprintf(
+                '<info>Writing MarkDown file for %s</info>',
+                Value::scalar(Value::call($entity, 'getName')),
+            ));
 
-            $this->writeMarkdownContent(createColumnsClass: \Jield\Stdlib\Value::instance($entity, \Jield\Export\Columns\AbstractEntityColumns::class), handle: $handle);
+            $this->writeMarkdownContent(
+                createColumnsClass: Value::instance(
+                    $entity,
+                    \Jield\Export\Columns\AbstractEntityColumns::class,
+                ),
+                handle: $handle,
+            );
         }
 
         fclose(stream: $handle);
@@ -89,9 +101,11 @@ class ConsoleService
         $createColumnsClass = $this->getEntityColumnsClass(entityColumnsName: $entityColumnsName);
         $entities[$entityColumnsName] = $createColumnsClass;
 
-        /** @var mixed $dependency */
         foreach ($createColumnsClass->getDependencies() as $dependency) {
-            $this->collectDocumentationEntities(entityColumnsName: \Jield\Stdlib\Value::string($dependency), entities: $entities);
+            $this->collectDocumentationEntities(
+                entityColumnsName: Value::string($dependency),
+                entities: $entities,
+            );
         }
     }
 
@@ -102,7 +116,10 @@ class ConsoleService
             $createColumnsClass = $this->container->get($entityColumnsName);
         } else {
             /** @var AbstractEntityColumns $createColumnsClass */
-            $createColumnsClass = \Jield\Stdlib\Value::instantiate($entityColumnsName, [\Jield\Stdlib\Service::get($this->container, EntityManager::class)]);
+            $createColumnsClass = Value::instantiate($entityColumnsName, [Service::get(
+                $this->container,
+                EntityManager::class,
+            )]);
         }
 
         return $createColumnsClass;
@@ -127,7 +144,7 @@ class ConsoleService
                 MARKDOWN;
         }
 
-        fwrite(stream: \Jield\Stdlib\Value::resource($handle), data: $markDown);
+        fwrite(stream: Value::resource($handle), data: $markDown);
     }
 
     /**
@@ -139,15 +156,14 @@ class ConsoleService
     public function sendEntity(OutputInterface $output, string $entity, array $storageLocations): void
     {
         if ($entity === 'all') {
-            /** @var mixed $entityInformation */
             foreach ($this->entities as $entityInformation) {
                 foreach ($storageLocations as $storageLocation) {
                     $columnKey = $storageLocation->getExportFileType()->getColumnKey();
 
-                    if (array_key_exists($columnKey, \Jield\Stdlib\Value::array($entityInformation))) {
+                    if (array_key_exists($columnKey, Value::array($entityInformation))) {
                         $this->handleEntity(
                             storageLocation: $storageLocation,
-                            columnOrJsonClass: \Jield\Stdlib\Value::string($entityInformation[$columnKey]),
+                            columnOrJsonClass: Value::string($entityInformation[$columnKey]),
                             output: $output,
                         );
                     }
@@ -170,7 +186,9 @@ class ConsoleService
 
             $this->handleEntity(
                 storageLocation: $storageLocation,
-                columnOrJsonClass: \Jield\Stdlib\Value::string(\Jield\Stdlib\Value::accessible($this->entities[$entity])[$columnKey]),
+                columnOrJsonClass: Value::string(
+                    Value::accessible($this->entities[$entity])[$columnKey],
+                ),
                 output: $output,
             );
         }
@@ -197,7 +215,10 @@ class ConsoleService
                     $createColumnsOrJsonClass = $this->container->get($columnOrJsonClass);
                 } else {
                     /** @var AbstractEntityColumns $createColumnsOrJsonClass */
-                    $createColumnsOrJsonClass = \Jield\Stdlib\Value::instantiate($columnOrJsonClass, [\Jield\Stdlib\Service::get($this->container, EntityManager::class)]);
+                    $createColumnsOrJsonClass = Value::instantiate($columnOrJsonClass, [Service::get(
+                        $this->container,
+                        EntityManager::class,
+                    )]);
                 }
                 $columns = $createColumnsOrJsonClass->getColumns();
                 //Fetch the columns so we have to do this once
@@ -215,7 +236,10 @@ class ConsoleService
                     $createColumnsOrJsonClass = $this->container->get($columnOrJsonClass);
                 } else {
                     /** @var AbstractEntityColumns $createColumnsOrJsonClass */
-                    $createColumnsOrJsonClass = \Jield\Stdlib\Value::instantiate($columnOrJsonClass, [\Jield\Stdlib\Service::get($this->container, EntityManager::class)]);
+                    $createColumnsOrJsonClass = Value::instantiate($columnOrJsonClass, [Service::get(
+                        $this->container,
+                        EntityManager::class,
+                    )]);
                 }
                 $columns = $createColumnsOrJsonClass->getColumns();
                 $this->createExcel(
@@ -226,7 +250,7 @@ class ConsoleService
                 break;
             case ExportFileTypeEnum::JSON:
                 /** @var AbstractEntityJson $createColumnsOrJsonClass */
-                $createColumnsOrJsonClass = \Jield\Stdlib\Value::instantiate($columnOrJsonClass, [$this->container]);
+                $createColumnsOrJsonClass = Value::instantiate($columnOrJsonClass, [$this->container]);
 
                 $this->createJson(storageLocation: $storageLocation, jsonHelper: $createColumnsOrJsonClass);
                 break;
@@ -246,7 +270,11 @@ class ConsoleService
         //Check if the entity has dependencies
         /** @var mixed $dependency */
         foreach ($createColumnsOrJsonClass->getDependencies() as $dependency) {
-            $this->handleEntity(storageLocation: $storageLocation, columnOrJsonClass: \Jield\Stdlib\Value::string($dependency), output: $output);
+            $this->handleEntity(
+                storageLocation: $storageLocation,
+                columnOrJsonClass: Value::string($dependency),
+                output: $output,
+            );
         }
     }
 
@@ -281,7 +309,7 @@ class ConsoleService
         $this->getBlobClient()->createBlockBlob(
             container: $storageLocation->getContainer(),
             blob: $this->generateBlobName(storageLocation: $storageLocation, name: $columnsHelper->getName()),
-            content: file_get_contents(filename: $fileName),
+            content: Value::string(file_get_contents(filename: $fileName)),
         );
     }
 
@@ -325,20 +353,22 @@ class ConsoleService
 
         /** @var Column $column */
         foreach ($columns as $column) {
-            $excelColumn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($excelColumnIndex++);
+            $excelColumn = Coordinate::stringFromColumnIndex($excelColumnIndex++);
             $worksheet->setCellValue(coordinate: $excelColumn . 1, value: $column->toParquetColumn()->getField()->name);
 
-            /** @var mixed $data */
             foreach ($column->toParquetColumn()->getData() as $row => $data) {
                 //When we accept a string, we explicitly set the type to string to avoid issues with formulas
                 if ($column->getType() === Column::TYPE_STRING) {
                     $worksheet->setCellValueExplicit(
-                        coordinate: $excelColumn . (\Jield\Stdlib\Value::int($row) + 2),
+                        coordinate: $excelColumn . (Value::int($row) + 2),
                         value: $data,
                         dataType: DataType::TYPE_STRING,
                     );
                 } else {
-                    $worksheet->setCellValue(coordinate: $excelColumn . (\Jield\Stdlib\Value::int($row) + 2), value: $data);
+                    $worksheet->setCellValue(
+                        coordinate: $excelColumn . (Value::int($row) + 2),
+                        value: $data,
+                    );
                 }
             }
 
@@ -359,7 +389,7 @@ class ConsoleService
         $this->getBlobClient()->createBlockBlob(
             container: $storageLocation->getContainer(),
             blob: $this->generateBlobName(storageLocation: $storageLocation, name: $columnsHelper->getName()),
-            content: file_get_contents(filename: $fileName),
+            content: Value::string(file_get_contents(filename: $fileName)),
         );
 
         $spreadsheet->disconnectWorksheets();
@@ -391,7 +421,10 @@ class ConsoleService
                 throw new InvalidArgumentException('StorageLocationServiceInterface not found in container');
             }
 
-            $this->storageLocationService = \Jield\Stdlib\Service::get($this->container, StorageLocationServiceInterface::class);
+            $this->storageLocationService = Service::get(
+                $this->container,
+                StorageLocationServiceInterface::class,
+            );
 
             $this->blobClient = $this->storageLocationService->getBlobService();
         }
@@ -404,23 +437,26 @@ class ConsoleService
         return $this->entities;
     }
 
+    /** @return array<array-key, StorageLocationInterface> */
     public function getStorageLocationsForExport(): array
     {
         if (null === $this->storageLocations) {
             //Find the entity which holds the storage location
-            $storageLocationEntity = $this->moduleOptions->getStorageLocationEntity();
+            $storageLocationEntity = Value::subclass(
+                $this->moduleOptions->getStorageLocationEntity(),
+                StorageLocationInterface::class,
+            );
 
             //This entity has to implement the StorageLocationInterface
             Assert::implementsInterface(
-                value: \Jield\Stdlib\Value::instantiate($storageLocationEntity),
+                value: Value::instantiate($storageLocationEntity),
                 interface: StorageLocationInterface::class,
             );
 
-            $storageLocations = $this->entityManager->getRepository(
-                \Jield\Stdlib\Value::classString($storageLocationEntity),
-            )->findBy(criteria: [], orderBy: [
-                'name' => Order::Ascending->value,
-            ]);
+            $storageLocations = $this->entityManager->getRepository($storageLocationEntity)->findBy(
+                criteria: [],
+                orderBy: ['name' => Order::Ascending->value],
+            );
 
             //Based on the getType() of the storage location, we filter the storage locations on the export file type
             //This does not have to be a column but can also be derived from a local purpose or ID
@@ -429,6 +465,6 @@ class ConsoleService
                 ->isExport());
         }
 
-        return \Jield\Stdlib\Value::array($this->storageLocations);
+        return $this->storageLocations;
     }
 }

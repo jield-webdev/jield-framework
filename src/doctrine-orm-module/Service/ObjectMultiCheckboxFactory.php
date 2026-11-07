@@ -6,6 +6,7 @@ namespace DoctrineORMModule\Service;
 
 use Doctrine\ORM\EntityManager;
 use DoctrineModule\Form\Element\ObjectMultiCheckbox;
+use Jield\Stdlib\Service;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Psr\Container\ContainerInterface;
 
@@ -26,7 +27,7 @@ final class ObjectMultiCheckboxFactory implements FactoryInterface
         string $requestedName,
         ?array $options = null,
     ): ObjectMultiCheckbox {
-        $entityManager = \Jield\Stdlib\Service::get($container, EntityManager::class);
+        $entityManager = Service::get($container, EntityManager::class);
         $element = new ObjectMultiCheckbox();
 
         $element->getProxy()->setObjectManager(objectManager: $entityManager);

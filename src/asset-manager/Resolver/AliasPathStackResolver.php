@@ -8,6 +8,7 @@ use Assetic\Factory\Resource\DirectoryResource;
 use Jield\AssetManager\Asset\FileAsset;
 use Jield\AssetManager\Exception;
 use Jield\AssetManager\Service\MimeResolver;
+use Jield\Stdlib\Value;
 use Laminas\Stdlib\SplStack;
 use Override;
 use RuntimeException;
@@ -42,9 +43,8 @@ class AliasPathStackResolver implements ResolverInterface, MimeResolverAwareInte
      */
     public function __construct(array $aliases)
     {
-        /** @var mixed $path */
         foreach ($aliases as $alias => $path) {
-            $this->addAlias(alias: \Jield\Stdlib\Value::string($alias), path: \Jield\Stdlib\Value::string($path));
+            $this->addAlias(alias: Value::string($alias), path: Value::string($path));
         }
     }
 
@@ -122,9 +122,8 @@ class AliasPathStackResolver implements ResolverInterface, MimeResolverAwareInte
             return null;
         }
 
-        /** @var mixed $path */
         foreach ($this->aliases as $alias => $path) {
-            if (!str_contains(haystack: $fileName, needle: \Jield\Stdlib\Value::string($alias))) {
+            if (!str_contains(haystack: $fileName, needle: Value::string($alias))) {
                 continue;
             }
 
@@ -132,15 +131,15 @@ class AliasPathStackResolver implements ResolverInterface, MimeResolverAwareInte
                 string: $fileName,
                 replace: '',
                 offset: 0,
-                length: strlen(string: \Jield\Stdlib\Value::string($alias)),
+                length: strlen(string: Value::string($alias)),
             );
 
-            $file = new SplFileInfo(filename: \Jield\Stdlib\Value::stringify($path) . $correctedFilename);
+            $file = new SplFileInfo(filename: Value::stringify($path) . $correctedFilename);
 
             if ($file->isReadable() && !$file->isDir()) {
                 $filePath = $file->getRealPath();
-                $mimeType = $this->getMimeResolver()->getMimeType(filename: \Jield\Stdlib\Value::string($filePath));
-                $asset = new FileAsset(source: \Jield\Stdlib\Value::string($filePath));
+                $mimeType = $this->getMimeResolver()->getMimeType(filename: Value::string($filePath));
+                $asset = new FileAsset(source: Value::string($filePath));
 
                 $asset->setMimetype(mimetype: $mimeType);
 
@@ -155,12 +154,11 @@ class AliasPathStackResolver implements ResolverInterface, MimeResolverAwareInte
     {
         $collection = [];
 
-        /** @var mixed $path */
         foreach ($this->aliases as $alias => $path) {
             $locations = new SplStack();
-            $pathInfo = new SplFileInfo(filename: \Jield\Stdlib\Value::string($path));
+            $pathInfo = new SplFileInfo(filename: Value::string($path));
             $locations->push(value: $pathInfo);
-            $basePath = $this->normalizePath(path: \Jield\Stdlib\Value::string($pathInfo->getRealPath()));
+            $basePath = $this->normalizePath(path: Value::string($pathInfo->getRealPath()));
 
             while (!$locations->isEmpty()) {
                 /** @var SplFileInfo $pathInfo */
@@ -171,12 +169,18 @@ class AliasPathStackResolver implements ResolverInterface, MimeResolverAwareInte
 
                 if ($pathInfo->isDir()) {
                     /** @var mixed $resource */
-                    foreach (new DirectoryResource(path: \Jield\Stdlib\Value::string($pathInfo->getRealPath())) as $resource) {
-                        $locations->push(value: new SplFileInfo(filename: \Jield\Stdlib\Value::string($resource)));
+                    foreach (new DirectoryResource(
+                        path: Value::string($pathInfo->getRealPath()),
+                    ) as $resource) {
+                        $locations->push(value: new SplFileInfo(filename: Value::string($resource)));
                     }
                 } else {
                     $collection[] =
-                        $alias . substr(string: \Jield\Stdlib\Value::string($pathInfo->getRealPath()), offset: strlen(string: $basePath));
+                        $alias
+                        . substr(
+                            string: Value::string($pathInfo->getRealPath()),
+                            offset: strlen(string: $basePath),
+                        );
                 }
             }
         }

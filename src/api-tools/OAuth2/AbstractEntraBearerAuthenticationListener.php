@@ -7,9 +7,13 @@ namespace Jield\ApiTools\OAuth2;
 use Firebase\JWT\JWT;
 use Jield\ApiTools\MvcAuth\Identity\AuthenticatedIdentity;
 use Jield\ApiTools\MvcAuth\MvcAuthEvent;
+use Jield\Stdlib\Value;
 use Laminas\Authentication\Storage\NonPersistent;
+use Laminas\Http\Header\HeaderInterface;
+use Laminas\Http\Headers;
 use Laminas\Http\Request;
 use Laminas\Http\Response;
+use SensitiveParameter;
 use Throwable;
 
 abstract class AbstractEntraBearerAuthenticationListener
@@ -18,7 +22,7 @@ abstract class AbstractEntraBearerAuthenticationListener
 
     /** Unverified claims may only select local configuration; validate the token before returning an identity. */
     abstract protected function createIdentity(
-        #[\SensitiveParameter]
+        #[SensitiveParameter]
         string $token,
         array $unverified,
         Response $response,
@@ -34,8 +38,17 @@ abstract class AbstractEntraBearerAuthenticationListener
             return null;
         }
 
-        $header = \Jield\Stdlib\Value::instance($request->getHeaders(), \Laminas\Http\Headers::class)->get('Authorization');
-        if (!$header || !preg_match('/^Bearer (\S+)$/iD', \Jield\Stdlib\Value::instance($header, \Laminas\Http\Header\HeaderInterface::class)->getFieldValue(), $matches)) {
+        $header = Value::instance($request->getHeaders(), Headers::class)->get(
+            'Authorization',
+        );
+        if (
+            !$header
+            || !preg_match(
+                '/^Bearer (\S+)$/iD',
+                Value::instance($header, HeaderInterface::class)->getFieldValue(),
+                $matches,
+            )
+        ) {
             return null;
         }
 
@@ -45,7 +58,6 @@ abstract class AbstractEntraBearerAuthenticationListener
             return null;
         }
         try {
-            /** @var mixed $unverified */
             $unverified = json_decode(JWT::urlsafeB64Decode($parts[1]), true, 16, JSON_THROW_ON_ERROR);
         } catch (Throwable) {
             return null;
@@ -81,7 +93,7 @@ abstract class AbstractEntraBearerAuthenticationListener
         }
 
         // A bearer token must never populate the browser session.
-        \Jield\Stdlib\Value::call($event->getAuthenticationService(), 'setStorage', [new NonPersistent()]);
+        Value::call($event->getAuthenticationService(), 'setStorage', [new NonPersistent()]);
         $mvc->setParam(AuthenticatedIdentity::class, $identity);
         $mvc->setParam(static::class, true);
         return $identity;
@@ -96,11 +108,14 @@ abstract class AbstractEntraBearerAuthenticationListener
             'WWW-Authenticate',
             'Bearer error="' . ($status === 403 ? 'insufficient_scope' : 'invalid_token') . '"',
         );
-        return \Jield\Stdlib\Value::instance($response->setContent(json_encode([
-            'error' => $status === 403 ? 'insufficient_scope' : 'invalid_token',
-            'error_description' => $status === 503
-                ? 'Entra signing keys are unavailable'
-                : 'Entra token is not authorized for this API',
-        ], JSON_THROW_ON_ERROR)), \Laminas\Http\Response::class);
+        return Value::instance(
+            $response->setContent(json_encode([
+                'error' => $status === 403 ? 'insufficient_scope' : 'invalid_token',
+                'error_description' => $status === 503
+                    ? 'Entra signing keys are unavailable'
+                    : 'Entra token is not authorized for this API',
+            ], JSON_THROW_ON_ERROR)),
+            \Laminas\Http\Response::class,
+        );
     }
 }

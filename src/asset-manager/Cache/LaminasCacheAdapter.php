@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Jield\AssetManager\Cache;
 
 use Assetic\Contracts\Cache\CacheInterface;
+use Jield\Stdlib\Value;
 use Laminas\Cache\Storage\StorageInterface;
 use Override;
 
@@ -13,18 +14,14 @@ use Override;
  */
 class LaminasCacheAdapter implements CacheInterface
 {
-    /** @var StorageInterface */
-    protected StorageInterface $jieldCache;
-
     /**
      * Constructor
      *
      * @param StorageInterface $jieldCache Jield Configured Cache Storage
      */
-    public function __construct(StorageInterface $jieldCache)
-    {
-        $this->jieldCache = $jieldCache;
-    }
+    public function __construct(
+        protected StorageInterface $jieldCache,
+    ) {}
 
     /**
      * {@inheritDoc}
@@ -32,7 +29,7 @@ class LaminasCacheAdapter implements CacheInterface
     #[Override]
     public function has($key)
     {
-        return $this->jieldCache->hasItem(\Jield\Stdlib\Value::nonEmptyString($key));
+        return $this->jieldCache->hasItem(Value::nonEmptyString($key));
     }
 
     /**
@@ -41,7 +38,9 @@ class LaminasCacheAdapter implements CacheInterface
     #[Override]
     public function get($key)
     {
-        return \Jield\Stdlib\Value::nullableString($this->jieldCache->getItem(\Jield\Stdlib\Value::nonEmptyString($key)));
+        return Value::nullableString($this->jieldCache->getItem(Value::nonEmptyString(
+            $key,
+        )));
     }
 
     /**
@@ -50,7 +49,7 @@ class LaminasCacheAdapter implements CacheInterface
     #[Override]
     public function set($key, $value)
     {
-        return $this->jieldCache->setItem(\Jield\Stdlib\Value::nonEmptyString($key), $value);
+        return $this->jieldCache->setItem(Value::nonEmptyString($key), $value);
     }
 
     /**
@@ -59,6 +58,6 @@ class LaminasCacheAdapter implements CacheInterface
     #[Override]
     public function remove($key)
     {
-        return $this->jieldCache->removeItem(\Jield\Stdlib\Value::nonEmptyString($key));
+        return $this->jieldCache->removeItem(Value::nonEmptyString($key));
     }
 }

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Jield\ApiTools\ContentNegotiation;
 
+use finfo;
+use Jield\Stdlib\Value;
 use Laminas\Http\Header\ContentType as ContentTypeHeader;
 use Laminas\Http\Request as HttpRequest;
 use Laminas\Stdlib\Parameters;
@@ -11,7 +13,6 @@ use Laminas\Stdlib\Parameters;
 use function fclose;
 use function fgets;
 use function filesize;
-use function finfo_file;
 use function finfo_open;
 use function fopen;
 use function function_exists;
@@ -41,14 +42,13 @@ class MultipartContentParser
      */
     protected string $boundary;
 
-    /** @var HttpRequest */
-    protected HttpRequest $request;
-
     /**
      * @throws Exception\InvalidMultipartContentException If unable to detect MIME boundary.
      */
-    public function __construct(ContentTypeHeader $contentType, HttpRequest $request)
-    {
+    public function __construct(
+        ContentTypeHeader $contentType,
+        protected HttpRequest $request,
+    ) {
         $matches = [];
         if (!preg_match(
             pattern: '/boundary=(?P<boundary>[^\s]+)/',
@@ -59,7 +59,6 @@ class MultipartContentParser
         }
 
         $this->boundary = $matches['boundary'];
-        $this->request = $request;
     }
 
     /**
@@ -120,7 +119,7 @@ class MultipartContentParser
         $header = false;
         $name = false;
         $content = '';
-        $file = [];
+        $file = ['error' => UPLOAD_ERR_OK];
         $filename = false;
         $mimeType = false;
         $tmpFile = false;
@@ -142,9 +141,14 @@ class MultipartContentParser
                     }
 
                     // File (successful upload so far)
-                    if ($filename && $tmpFile) {
+                    if ($filename && $tmpFile && isset($file['tmp_name'])) {
                         // Write the last line, stripping the EOL characters
-                        if (false === fwrite(stream: $tmpFile, data: rtrim(string: \Jield\Stdlib\Value::string($lastLine), characters: "\r\n"))) {
+                        if (
+                            false === fwrite(stream: $tmpFile, data: rtrim(
+                                string: Value::string($lastLine),
+                                characters: "\r\n",
+                            ))
+                        ) {
                             // Ooops! error writing the very last line!
                             $file['error'] = UPLOAD_ERR_CANT_WRITE;
                             fclose(stream: $tmpFile);
@@ -153,21 +157,23 @@ class MultipartContentParser
                             fclose(stream: $tmpFile);
 
                             if ($mimeType === 'application/octet-stream' && function_exists(function: 'finfo_open')) {
-                                $finfo = finfo_open(flags: FILEINFO_MIME_TYPE);
-                                $type = finfo_file(finfo: $finfo, filename: \Jield\Stdlib\Value::string($file['tmp_name']));
+                                $finfo = new finfo(FILEINFO_MIME_TYPE);
+                                $type = $finfo->file(
+                                    filename: Value::string($file['tmp_name']),
+                                );
                                 if (false !== $type) {
                                     $file['type'] = $type;
                                 }
                             }
 
                             // Finally, set the filesize
-                            $file['size'] = filesize(filename: \Jield\Stdlib\Value::string($file['tmp_name']));
+                            $file['size'] = filesize(filename: Value::string($file['tmp_name']));
                         }
                     }
 
                     if ($filename) {
                         // At this point, we can add the file entry, regardless of error condition
-                        $files->set(name: $name, value: $file);
+                        $files->set(name: Value::string($name), value: $file);
                     }
                 }
 
@@ -263,7 +269,7 @@ class MultipartContentParser
                 }
 
                 $file['tmp_name'] = tempnam(directory: $tmpDir, prefix: 'laminasc');
-                $tmpFile = fopen(filename: \Jield\Stdlib\Value::string($file['tmp_name']), mode: 'wb');
+                $tmpFile = fopen(filename: Value::string($file['tmp_name']), mode: 'wb');
                 if (false === $tmpFile) {
                     // Cannot open the temporary file for writing; this is an error
                     $file['error'] = UPLOAD_ERR_CANT_WRITE;
@@ -358,6 +364,6 @@ class MultipartContentParser
             return 'application/octet-stream';
         }
 
-        return \Jield\Stdlib\Value::string($headers['CONTENT-TYPE']);
+        return Value::string($headers['CONTENT-TYPE']);
     }
 }

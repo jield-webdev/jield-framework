@@ -10,6 +10,7 @@ use Jield\Authorize\Role\UserAsRole;
 use Jield\Authorize\Role\UserAsRoleInterface;
 use Jield\Authorize\Service\AccessRolesByUserInterface;
 use Jield\Authorize\Service\HasPermitInterface;
+use Jield\Stdlib\Value;
 use Laminas\Authentication\AuthenticationService;
 use Laminas\Permissions\Acl\Role\RoleInterface;
 
@@ -27,12 +28,18 @@ class AuthenticationIdentityProvider implements ProviderInterface
     #[Pure]
     public function __construct(
         protected AuthenticationService $authService,
-        private AccessRolesByUserInterface $accessOrUserService,
-        private HasPermitInterface $permitService,
+        private readonly AccessRolesByUserInterface $accessOrUserService,
+        private readonly HasPermitInterface $permitService,
         array $authorizeConfig,
     ) {
-        $this->defaultRole = \Jield\Stdlib\Value::instanceOrString($authorizeConfig['default_role'] ?? self::ACCESS_PUBLIC, RoleInterface::class);
-        $this->authenticatedRole = \Jield\Stdlib\Value::instanceOrString($authorizeConfig['authenticated_role'] ?? self::ACCESS_AUTHENTICATED, RoleInterface::class);
+        $this->defaultRole = Value::instanceOrString(
+            $authorizeConfig['default_role'] ?? self::ACCESS_PUBLIC,
+            RoleInterface::class,
+        );
+        $this->authenticatedRole = Value::instanceOrString(
+            $authorizeConfig['authenticated_role'] ?? self::ACCESS_AUTHENTICATED,
+            RoleInterface::class,
+        );
     }
 
     public function getIdentityAsRole(): UserAsRole
@@ -64,12 +71,19 @@ class AuthenticationIdentityProvider implements ProviderInterface
             return [$this->defaultRole];
         }
 
-        return $this->accessOrUserService->getAccessRolesByUser(user: \Jield\Stdlib\Value::instance($this->authService->getIdentity(), \Jield\Authorize\Role\UserAsRoleInterface::class));
+        return $this->accessOrUserService->getAccessRolesByUser(user: Value::instance(
+            $this->authService->getIdentity(),
+            \Jield\Authorize\Role\UserAsRoleInterface::class,
+        ));
     }
 
     public function hasPermit(object $resource, string|array $privilege): bool
     {
-        return $this->permitService->hasPermit(user: \Jield\Stdlib\Value::instance($this->getIdentity(), \Jield\Authorize\Role\UserAsRoleInterface::class), resource: $resource, privilege: $privilege);
+        return $this->permitService->hasPermit(
+            user: Value::instance($this->getIdentity(), \Jield\Authorize\Role\UserAsRoleInterface::class),
+            resource: $resource,
+            privilege: $privilege,
+        );
     }
 
     public function getIdentity(): ?UserAsRoleInterface
@@ -78,13 +92,16 @@ class AuthenticationIdentityProvider implements ProviderInterface
             return null;
         }
 
-        return \Jield\Stdlib\Value::nullableInstance($this->authService->getIdentity(), \Jield\Authorize\Role\UserAsRoleInterface::class);
+        return Value::nullableInstance(
+            $this->authService->getIdentity(),
+            \Jield\Authorize\Role\UserAsRoleInterface::class,
+        );
     }
 
     public function hasGeneralPermit(string $className, string $privilege): bool
     {
         return $this->permitService->hasGeneralPermit(
-            user: \Jield\Stdlib\Value::instance($this->getIdentity(), \Jield\Authorize\Role\UserAsRoleInterface::class),
+            user: Value::instance($this->getIdentity(), \Jield\Authorize\Role\UserAsRoleInterface::class),
             className: $className,
             privilege: $privilege,
         );

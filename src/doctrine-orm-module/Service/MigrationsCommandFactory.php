@@ -8,7 +8,9 @@ use Doctrine\Migrations\Configuration\EntityManager\ExistingEntityManager;
 use Doctrine\Migrations\Configuration\Migration\ConfigurationArray;
 use Doctrine\Migrations\DependencyFactory;
 use Doctrine\Migrations\Tools\Console\Command\DoctrineCommand;
+use Doctrine\ORM\EntityManagerInterface;
 use InvalidArgumentException;
+use Jield\Stdlib\Value;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Psr\Container\ContainerInterface;
 use RuntimeException;
@@ -24,7 +26,7 @@ use function ucfirst;
  */
 final class MigrationsCommandFactory implements FactoryInterface
 {
-    private string $commandClassName;
+    private readonly string $commandClassName;
 
     private string $defaultObjectManagerName = 'doctrine.entitymanager.orm_default';
 
@@ -32,20 +34,12 @@ final class MigrationsCommandFactory implements FactoryInterface
     {
         // The configuration of migrations looses the case of the command name so mixed
         // case names must be resolved here.
-        switch ($name) {
-            case 'dumpschema':
-                $name = 'DumpSchema';
-                break;
-            case 'syncmetadatastorage':
-                $name = 'SyncMetadata';
-                break;
-            case 'uptodate':
-                $name = 'UpToDate';
-                break;
-            default:
-                $name = ucfirst(string: $name);
-                break;
-        }
+        $name = match ($name) {
+            'dumpschema' => 'DumpSchema',
+            'syncmetadatastorage' => 'SyncMetadata',
+            'uptodate' => 'UpToDate',
+            default => ucfirst(string: $name),
+        };
 
         $this->commandClassName = 'Doctrine\Migrations\Tools\Console\Command\\' . $name . 'Command';
     }
@@ -71,7 +65,6 @@ final class MigrationsCommandFactory implements FactoryInterface
             throw new InvalidArgumentException(message: 'The class ' . $commandClassName . ' does not exist');
         }
 
-        /** @var mixed $config */
         $config = $container->get('config');
         $objectManagerName = $this->getObjectManagerName();
 
@@ -88,27 +81,35 @@ final class MigrationsCommandFactory implements FactoryInterface
         $migrationConfig = $config['doctrine']['migrations_configuration'][$matches['serviceName']] ?? [];
         $dependencyFactoryServices = [];
 
-        if (array_key_exists(key: 'dependency_factory_services', array: \Jield\Stdlib\Value::array($migrationConfig))) {
-            /** @var mixed $dependencyFactoryServices */
+        if (array_key_exists(key: 'dependency_factory_services', array: Value::array($migrationConfig))) {
             $dependencyFactoryServices = $migrationConfig['dependency_factory_services'];
             unset($migrationConfig['dependency_factory_services']);
         }
 
         $dependencyFactory = DependencyFactory::fromEntityManager(
-            new ConfigurationArray(\Jield\Stdlib\Value::stringKeyedArray($migrationConfig)),
-            new ExistingEntityManager(\Jield\Stdlib\Value::instance($container->get($objectManagerName), \Doctrine\ORM\EntityManagerInterface::class)),
+            new ConfigurationArray(Value::stringKeyedArray($migrationConfig)),
+            new ExistingEntityManager(Value::instance(
+                $container->get($objectManagerName),
+                EntityManagerInterface::class,
+            )),
         );
 
         /** @var mixed $id
          * @var mixed $service
          */
-        foreach (\Jield\Stdlib\Value::iterable($dependencyFactoryServices) as $id => $service) {
-            $dependencyFactory->setService(\Jield\Stdlib\Value::string($id), \Jield\Stdlib\Value::callback($container->get(\Jield\Stdlib\Value::string($service))));
+        foreach (Value::iterable($dependencyFactoryServices) as $id => $service) {
+            $dependencyFactory->setService(
+                Value::string($id),
+                Value::callback($container->get(Value::string($service))),
+            );
         }
 
         // An object manager may not have a migrations configuration and that's OK.
         // Use default values in that case.
-        return \Jield\Stdlib\Value::instance(\Jield\Stdlib\Value::instantiate($commandClassName, [$dependencyFactory]), \Doctrine\Migrations\Tools\Console\Command\DoctrineCommand::class);
+        return Value::instance(
+            Value::instantiate($commandClassName, [$dependencyFactory]),
+            \Doctrine\Migrations\Tools\Console\Command\DoctrineCommand::class,
+        );
     }
 
     private function getObjectManagerName(): string
@@ -119,6 +120,6 @@ final class MigrationsCommandFactory implements FactoryInterface
             return $this->defaultObjectManagerName;
         }
 
-        return \Jield\Stdlib\Value::string($arguments->getParameterOption(values: '--object-manager'));
+        return Value::string($arguments->getParameterOption(values: '--object-manager'));
     }
 }

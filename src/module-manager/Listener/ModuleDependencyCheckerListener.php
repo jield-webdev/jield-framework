@@ -8,6 +8,7 @@ use Jield\ModuleManager\Exception;
 use Jield\ModuleManager\Feature\DependencyIndicatorInterface;
 use Jield\ModuleManager\ModuleEvent;
 
+use Jield\Stdlib\Value;
 use function method_exists;
 use function sprintf;
 
@@ -23,18 +24,19 @@ class ModuleDependencyCheckerListener
 
         if (
             $module instanceof DependencyIndicatorInterface
-            || method_exists(object_or_class: \Jield\Stdlib\Value::objectOrString($module), method: 'getModuleDependencies')
+            || method_exists(
+                object_or_class: Value::objectOrString($module),
+                method: 'getModuleDependencies',
+            )
         ) {
-            /** @var mixed $dependencies */
-            $dependencies = \Jield\Stdlib\Value::call(\Jield\Stdlib\Value::present($module), 'getModuleDependencies');
+            $dependencies = Value::call(Value::present($module), 'getModuleDependencies');
 
-            /** @var mixed $dependencyModule */
-            foreach (\Jield\Stdlib\Value::iterable($dependencies) as $dependencyModule) {
+            foreach (Value::iterable($dependencies) as $dependencyModule) {
                 if (!isset($this->loaded[$dependencyModule])) {
                     throw new Exception\MissingDependencyModuleException(message: sprintf(
                         'Module "%s" depends on module "%s", which was not initialized before it',
                         $e->getModuleName(),
-                        \Jield\Stdlib\Value::scalar($dependencyModule),
+                        Value::scalar($dependencyModule),
                     ));
                 }
             }

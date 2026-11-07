@@ -8,6 +8,7 @@ use Jield\ApiTools\MvcAuth\Identity;
 use Jield\ApiTools\MvcAuth\Identity\AuthenticatedIdentity;
 use Jield\ApiTools\MvcAuth\MvcAuthEvent;
 use Jield\Mvc\Router\RouteMatch;
+use Jield\Stdlib\Value;
 use Laminas\Http\Request as HttpRequest;
 use Laminas\Http\Response;
 use Laminas\Http\Response as HttpResponse;
@@ -135,21 +136,19 @@ class DefaultAuthenticationListener
             return false;
         }
 
-        /** @var mixed $controller */
         $controller = $routeMatch->getParam(name: 'controller', default: false);
         if (false === $controller) {
             return false;
         }
 
-        /** @var mixed $type */
         foreach ($this->authMap as $api => $type) {
-            $api = rtrim(string: \Jield\Stdlib\Value::string($api), characters: '\\') . '\\';
+            $api = rtrim(string: Value::string($api), characters: '\\') . '\\';
             if (strlen(string: $api) > strlen(string: (string) $controller)) {
                 continue;
             }
 
             if (str_starts_with(haystack: (string) $controller, needle: $api)) {
-                return $type;
+                return Value::string($type);
             }
         }
 
@@ -165,7 +164,7 @@ class DefaultAuthenticationListener
         foreach ($this->adapters as $adapter) {
             $type = $adapter->getTypeFromRequest(request: $request);
             if (false !== $type) {
-                return $type;
+                return Value::string($type);
             }
         }
 
@@ -193,7 +192,7 @@ class DefaultAuthenticationListener
         HttpRequest $request,
         HttpResponse $response,
         MvcAuthEvent $mvcAuthEvent,
-    ): false|\Laminas\Http\PhpEnvironment\Response|Identity\IdentityInterface {
+    ): false|HttpResponse|Identity\IdentityInterface {
         foreach ($this->adapters as $adapter) {
             if (!$adapter->matches(type: $type)) {
                 continue;

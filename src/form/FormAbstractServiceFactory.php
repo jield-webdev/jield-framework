@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Jield\Form;
 
+use Jield\Stdlib\Service;
+use Jield\Stdlib\Value;
 use Laminas\InputFilter\InputFilterInterface;
 use Laminas\InputFilter\InputFilterPluginManager;
 use Laminas\ServiceManager\Factory\AbstractFactoryInterface;
@@ -35,7 +37,7 @@ final class FormAbstractServiceFactory implements AbstractFactoryInterface
         ?array $options = null,
     ): FormInterface {
         $config = $this->getConfig(container: $container);
-        $config = \Jield\Stdlib\Value::array($config[$requestedName]);
+        $config = Value::array($config[$requestedName]);
         $factory = $this->getFormFactory(container: $container);
 
         $this->marshalInputFilter(config: $config, container: $container, formFactory: $factory);
@@ -80,7 +82,6 @@ final class FormAbstractServiceFactory implements AbstractFactoryInterface
             return $this->config;
         }
 
-        /** @var mixed $config */
         $config = $container->get('config');
         if (!isset($config[$this->configKey]) || !is_array(value: $config[$this->configKey])) {
             $this->config = [];
@@ -102,7 +103,7 @@ final class FormAbstractServiceFactory implements AbstractFactoryInterface
 
         $elements = null;
         if ($container->has(FormElementManager::class)) {
-            $elements = \Jield\Stdlib\Service::get($container, FormElementManager::class);
+            $elements = Service::get($container, FormElementManager::class);
         }
 
         $this->factory = new Factory(formElementManager: $elements);
@@ -129,7 +130,7 @@ final class FormAbstractServiceFactory implements AbstractFactoryInterface
         }
 
         if (is_string(value: $config['input_filter']) && $container->has(InputFilterPluginManager::class)) {
-            $inputFilters = \Jield\Stdlib\Service::get($container, InputFilterPluginManager::class);
+            $inputFilters = Service::get($container, InputFilterPluginManager::class);
             if ($inputFilters->has($config['input_filter'])) {
                 $config['input_filter'] = $inputFilters->get($config['input_filter']);
                 return;

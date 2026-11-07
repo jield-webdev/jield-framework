@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Jield\ErrorHandler\Handler;
 
 use ErrorException;
+use InvalidArgumentException;
 use Jield\ErrorHandler\HeroConstant;
-use Laminas\Diactoros\Stream;
+use Jield\Stdlib\Value;
 use Laminas\Http\Header\Cookie;
 use Laminas\Http\PhpEnvironment\RemoteAddress;
 use Laminas\Http\PhpEnvironment\Request as HttpRequest;
-use Laminas\Stdlib\ParametersInterface;
 use Laminas\Stdlib\RequestInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
@@ -18,7 +18,6 @@ use RuntimeException;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Email;
 use Throwable;
-use Webmozart\Assert\Assert;
 
 use function basename;
 use function get_current_user;
@@ -32,6 +31,7 @@ use const PHP_EOL;
 
 final class Logging
 {
+    /** @var array<array-key, string> */
     private array $emailReceivers = [];
 
     private readonly string $emailSender;
@@ -56,8 +56,14 @@ final class Logging
         private readonly ?MailerInterface $mailer = null,
         private readonly bool $includeFilesToAttachments = true,
     ) {
-        $this->emailReceivers = \Jield\Stdlib\Value::array(\Jield\Stdlib\Value::accessible($errorHeroModuleLocalConfig['email-notification-settings'])['email-to-send']);
-        $this->emailSender = \Jield\Stdlib\Value::string(\Jield\Stdlib\Value::accessible($errorHeroModuleLocalConfig['email-notification-settings'])['email-from']);
+        $this->emailReceivers = Value::strings(
+            Value::accessible(
+                $errorHeroModuleLocalConfig['email-notification-settings'],
+            )['email-to-send'],
+        );
+        $this->emailSender = Value::string(
+            Value::accessible($errorHeroModuleLocalConfig['email-notification-settings'])['email-from'],
+        );
     }
 
     /**
@@ -69,17 +75,11 @@ final class Logging
             return [];
         }
 
-
-        /** @var ParametersInterface $query */
         $query = $request->getQuery();
-        /** @var ParametersInterface $post */
         $post = $request->getPost();
-        /** @var ParametersInterface $files */
         $files = $request->getFiles();
 
         $content = $request->getContent();
-
-        
 
         $queryData = $query->toArray();
         $requestMethod = $request->getMethod();
@@ -147,7 +147,7 @@ final class Logging
                 E_ERROR, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR, E_RECOVERABLE_ERROR, E_PARSE => LogLevel::ERROR,
                 E_WARNING, E_CORE_WARNING, E_COMPILE_WARNING, E_USER_WARNING => LogLevel::WARNING,
                 E_NOTICE, E_USER_NOTICE, E_DEPRECATED, E_USER_DEPRECATED => LogLevel::NOTICE,
-                default => throw new \InvalidArgumentException('Invalid severity level: ' . $severity),
+                default => throw new InvalidArgumentException('Invalid severity level: ' . $severity),
             };
         }
 
@@ -160,7 +160,7 @@ final class Logging
             5 => LogLevel::NOTICE,
             6 => LogLevel::INFO,
             7 => LogLevel::DEBUG,
-            default => throw new \InvalidArgumentException('Invalid severity level: ' . $severity),
+            default => throw new InvalidArgumentException('Invalid severity level: ' . $severity),
         };
     }
 
@@ -186,17 +186,17 @@ final class Logging
             $url .= $params;
         } else {
             $http = $request->getUri();
-            $serverUrl = (string) ($http->getScheme()) . '://' . (string) ($http->getHost());
+            $serverUrl = (string) $http->getScheme() . '://' . (string) $http->getHost();
             $url = $http->toString();
         }
 
         return [
             self::SERVER_URL => $serverUrl,
             'url' => $url,
-            'file' => \Jield\Stdlib\Value::string($collectedExceptionData[self::ERROR_FILE]),
-            'line' => \Jield\Stdlib\Value::int($collectedExceptionData[self::ERROR_LINE]),
-            'error_type' => \Jield\Stdlib\Value::string($collectedExceptionData[self::ERROR_TYPE]),
-            self::TRACE => \Jield\Stdlib\Value::string($collectedExceptionData[self::TRACE]),
+            'file' => Value::string($collectedExceptionData[self::ERROR_FILE]),
+            'line' => Value::int($collectedExceptionData[self::ERROR_LINE]),
+            'error_type' => Value::string($collectedExceptionData[self::ERROR_TYPE]),
+            self::TRACE => Value::string($collectedExceptionData[self::TRACE]),
             'request_data' => $this->getRequestData($request),
         ];
     }

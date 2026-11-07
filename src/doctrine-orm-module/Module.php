@@ -9,6 +9,7 @@ use Jield\ModuleManager\Feature\ControllerProviderInterface;
 use Jield\ModuleManager\Feature\DependencyIndicatorInterface;
 use Jield\ModuleManager\Feature\InitProviderInterface;
 use Jield\ModuleManager\ModuleManagerInterface;
+use Jield\Stdlib\Value;
 use Laminas\EventManager\EventInterface;
 
 /**
@@ -23,18 +24,22 @@ final class Module implements
     public function init(ModuleManagerInterface $manager): void
     {
         // Initialize the console
-        \Jield\Stdlib\Value::present($manager
-            ->getEventManager()
-            ->getSharedManager())
-            ->attach(
-                'doctrine',
-                'loadCli.post',
-                listener: static function (EventInterface $event): void {
-                    \Jield\Stdlib\Value::call(\Jield\Stdlib\Value::call($event
-                        ->getParam(name: 'ServiceManager'), 'get', [CliConfigurator::class]), 'configure', [$event->getTarget()]);
-                },
-                priority: 1,
-            );
+        Value::present($manager->getEventManager()->getSharedManager())->attach(
+            'doctrine',
+            'loadCli.post',
+            listener: static function (EventInterface $event): void {
+                Value::call(
+                    Value::call(
+                        $event->getParam(name: 'ServiceManager'),
+                        'get',
+                        [CliConfigurator::class],
+                    ),
+                    'configure',
+                    [$event->getTarget()],
+                );
+            },
+            priority: 1,
+        );
     }
 
     /**

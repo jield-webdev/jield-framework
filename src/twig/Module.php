@@ -7,9 +7,14 @@ namespace Jield\Twig;
 use InvalidArgumentException;
 use Jield\ModuleManager\Feature\BootstrapListenerInterface;
 use Jield\ModuleManager\Feature\ConfigProviderInterface;
+use Jield\Mvc\MvcEvent;
+use Jield\Stdlib\Service;
+use Jield\Stdlib\Value;
 use Laminas\EventManager\EventInterface;
+use Psr\Container\ContainerInterface;
 use Twig\Environment;
 
+use Twig\Extension\ExtensionInterface;
 use function is_object;
 use function is_string;
 
@@ -20,16 +25,22 @@ class Module implements BootstrapListenerInterface, ConfigProviderInterface
      */
     public function onBootstrap(EventInterface $e): void
     {
-        $application = \Jield\Stdlib\Value::present(\Jield\Stdlib\Value::instance($e, \Jield\Mvc\MvcEvent::class)->getApplication());
+        $application = Value::present(
+            Value::instance($e, MvcEvent::class)->getApplication(),
+        );
         /** @var mixed $serviceManager */
         $serviceManager = $application->getServiceManager();
-        $environment = \Jield\Stdlib\Service::get(\Jield\Stdlib\Value::instance($serviceManager, \Psr\Container\ContainerInterface::class), Environment::class);
+        $environment = Service::get(
+            Value::instance($serviceManager, ContainerInterface::class),
+            Environment::class,
+        );
 
-        
-        $options = \Jield\Stdlib\Service::get(\Jield\Stdlib\Value::instance($serviceManager, \Psr\Container\ContainerInterface::class), ModuleOptions::class);
+        $options = Service::get(
+            Value::instance($serviceManager, ContainerInterface::class),
+            ModuleOptions::class,
+        );
 
         // Setup extensions
-        /** @var mixed $extension */
         foreach ($options->getExtensions() as $extension) {
             // Allows modules to override/remove extensions.
             if (empty($extension)) {
@@ -41,13 +52,16 @@ class Module implements BootstrapListenerInterface, ConfigProviderInterface
                     /** @var mixed $extension */
                     $extension = $serviceManager->get($extension);
                 } else {
-                    $extension = \Jield\Stdlib\Value::instantiate($extension);
+                    $extension = Value::instantiate($extension);
                 }
             } elseif (!is_object($extension)) {
                 throw new InvalidArgumentException('Extensions should be a string or object.');
             }
 
-            $environment->addExtension(\Jield\Stdlib\Value::instance($extension, \Twig\Extension\ExtensionInterface::class));
+            $environment->addExtension(Value::instance(
+                $extension,
+                ExtensionInterface::class,
+            ));
         }
     }
 

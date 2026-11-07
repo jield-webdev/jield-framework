@@ -10,6 +10,7 @@ use Doctrine\Persistence\Mapping\Driver\MappingDriver;
 use Doctrine\Persistence\Mapping\Driver\MappingDriverChain;
 use DoctrineModule\Options\Driver;
 use InvalidArgumentException;
+use Jield\Stdlib\Value;
 use Psr\Container\ContainerInterface;
 use RuntimeException;
 
@@ -65,7 +66,7 @@ final class DriverFactory extends AbstractFactory
         // Not all drivers (DriverChain) require paths.
         $paths = $options->getPaths();
 
-        $driver = \Jield\Stdlib\Value::instantiate($class, [$paths]);
+        $driver = Value::instantiate($class, [$paths]);
 
         if ($options->getExtension() && $driver instanceof FileDriver) {
             $locator = $driver->getLocator();
@@ -89,13 +90,16 @@ final class DriverFactory extends AbstractFactory
         if ($driver instanceof MappingDriverChain && $options->getDrivers() !== []) {
             $drivers = $options->getDrivers();
 
-            /** @var mixed $driverName */
             foreach ($drivers as $namespace => $driverName) {
                 if ($driverName === null) {
                     continue;
                 }
 
-                $options = $this->getOptions(container: $container, key: 'driver', name: \Jield\Stdlib\Value::nullableString($driverName));
+                $options = $this->getOptions(
+                    container: $container,
+                    key: 'driver',
+                    name: Value::nullableString($driverName),
+                );
 
                 if (!$options instanceof Driver) {
                     throw new RuntimeException(message: sprintf(
@@ -107,11 +111,11 @@ final class DriverFactory extends AbstractFactory
 
                 $driver->addDriver(
                     nestedDriver: $this->createDriver(container: $container, options: $options),
-                    namespace: \Jield\Stdlib\Value::string($namespace),
+                    namespace: Value::string($namespace),
                 );
             }
         }
 
-        return \Jield\Stdlib\Value::instance($driver, \Doctrine\Persistence\Mapping\Driver\MappingDriver::class);
+        return Value::instance($driver, \Doctrine\Persistence\Mapping\Driver\MappingDriver::class);
     }
 }

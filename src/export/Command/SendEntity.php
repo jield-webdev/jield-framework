@@ -6,6 +6,7 @@ namespace Jield\Export\Command;
 
 use Jield\Export\Entity\StorageLocationInterface;
 use Jield\Export\Service\ConsoleService;
+use Jield\Stdlib\Value;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -56,14 +57,11 @@ final class SendEntity extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        /** @var mixed $memoryLimit */
         $memoryLimit = $input->getOption(name: 'memory-limit');
 
-        ini_set(option: 'memory_limit', value: $memoryLimit);
+        ini_set(option: 'memory_limit', value: Value::string($memoryLimit));
 
-        /** @var mixed $entity */
         $entity = $input->getArgument(name: 'entity');
-        /** @var mixed $storageLocation */
         $storageLocation = $input->getArgument(name: 'storage-location');
 
         $storageLocations = array_filter(
@@ -76,19 +74,23 @@ final class SendEntity extends Command
 
         $startMessage = sprintf(
             '<info>Send entity %s, to: %s</info>',
-            \Jield\Stdlib\Value::scalar($entity),
+            Value::scalar($entity),
             implode(', ', array_map(
                 callback: static fn(StorageLocationInterface $location) => $location->getName(),
                 array: $storageLocations,
             )),
         );
         $memoryMessage = sprintf('Memory limit set to %s', ini_get(option: 'memory_limit'));
-        $endMessage = sprintf('<info>Sending %s completed</info>', \Jield\Stdlib\Value::scalar($entity));
+        $endMessage = sprintf('<info>Sending %s completed</info>', Value::scalar($entity));
 
         $output->writeln(messages: $startMessage);
         $output->writeln(messages: $memoryMessage);
 
-        $this->consoleService->sendEntity(output: $output, entity: \Jield\Stdlib\Value::string($entity), storageLocations: $storageLocations);
+        $this->consoleService->sendEntity(
+            output: $output,
+            entity: Value::string($entity),
+            storageLocations: $storageLocations,
+        );
 
         $output->writeln(messages: $endMessage);
 

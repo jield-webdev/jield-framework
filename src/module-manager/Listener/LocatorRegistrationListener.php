@@ -8,6 +8,7 @@ use Jield\ModuleManager\ModuleEvent;
 use Jield\ModuleManager\ModuleManager;
 use Jield\Mvc\Application;
 use Jield\Mvc\MvcEvent;
+use Jield\Stdlib\Value;
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\EventManager\ListenerAggregateInterface;
 use Laminas\EventManager\ListenerAggregateTrait;
@@ -43,32 +44,47 @@ class LocatorRegistrationListener extends AbstractListener implements ListenerAg
     public function onLoadModules(ModuleEvent $e): void
     {
         $moduleManager = $e->getTarget();
-        /** @var mixed $events */
-        $events = \Jield\Stdlib\Value::call(\Jield\Stdlib\Value::call(\Jield\Stdlib\Value::present(\Jield\Stdlib\Value::object($moduleManager)), 'getEventManager'), 'getSharedManager');
+        $events = Value::call(
+            Value::call(
+                Value::present(Value::object($moduleManager)),
+                'getEventManager',
+            ),
+            'getSharedManager',
+        );
 
         if (!$events) {
             return;
         }
 
         // Shared instance for module manager
-        \Jield\Stdlib\Value::call($events, 'attach', [Application::class, ModuleManager::EVENT_BOOTSTRAP, static function (MvcEvent $e) use ($moduleManager): void {
+        Value::call($events, 'attach', [
+            Application::class,
+            ModuleManager::EVENT_BOOTSTRAP,
+            static function (MvcEvent $e) use ($moduleManager): void {
                 $moduleClassName = $moduleManager::class;
                 $moduleClassNameArray = explode(separator: '\\', string: $moduleClassName);
                 $moduleClassNameAlias = end(array: $moduleClassNameArray);
                 $application = $e->getApplication();
                 /** @var ServiceManager $services */
-                $services = \Jield\Stdlib\Value::present($application)->getServiceManager();
+                $services = Value::present($application)->getServiceManager();
                 if (!$services->has($moduleClassName)) {
                     $services->setAlias(alias: $moduleClassName, target: $moduleClassNameAlias);
                 }
-            }, 1000]);
+            },
+            1000,
+        ]);
 
         if (!$this->modules) {
             return;
         }
 
         // Attach to the bootstrap event if there are modules we need to process
-        \Jield\Stdlib\Value::call($events, 'attach', [Application::class, ModuleManager::EVENT_BOOTSTRAP, [$this, 'onBootstrap'], 1000]);
+        Value::call($events, 'attach', [
+            Application::class,
+            ModuleManager::EVENT_BOOTSTRAP,
+            $this->onBootstrap(...),
+            1000,
+        ]);
     }
 
     /**
@@ -83,14 +99,13 @@ class LocatorRegistrationListener extends AbstractListener implements ListenerAg
     {
         $application = $e->getApplication();
         /** @var ServiceManager $services */
-        $services = \Jield\Stdlib\Value::present($application)->getServiceManager();
+        $services = Value::present($application)->getServiceManager();
 
-        /** @var mixed $module */
         foreach ($this->modules as $module) {
             /** @var mixed $moduleClassName */
             $moduleClassName = $module::class;
-            if (!$services->has(\Jield\Stdlib\Value::string($moduleClassName))) {
-                $services->setService(name: \Jield\Stdlib\Value::string($moduleClassName), service: $module);
+            if (!$services->has(Value::string($moduleClassName))) {
+                $services->setService(name: Value::string($moduleClassName), service: $module);
             }
         }
     }
@@ -99,13 +114,13 @@ class LocatorRegistrationListener extends AbstractListener implements ListenerAg
     #[Override]
     public function attach(EventManagerInterface $events, $priority = 1): void
     {
-        $this->listeners[] = $events->attach(eventName: ModuleEvent::EVENT_LOAD_MODULE, listener: [
-            $this,
-            'onLoadModule',
-        ]);
+        $this->listeners[] = $events->attach(
+            eventName: ModuleEvent::EVENT_LOAD_MODULE,
+            listener: $this->onLoadModule(...),
+        );
         $this->listeners[] = $events->attach(
             eventName: ModuleEvent::EVENT_LOAD_MODULES,
-            listener: [$this, 'onLoadModules'],
+            listener: $this->onLoadModules(...),
             priority: -1000,
         );
     }

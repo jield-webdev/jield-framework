@@ -8,6 +8,7 @@ use ArrayIterator;
 use Countable;
 use IteratorAggregate;
 use Jield\Mvc\Controller\Plugin\AbstractPlugin;
+use Jield\Stdlib\Value;
 use Laminas\Session\Container;
 use Laminas\Session\ManagerInterface as Manager;
 use Laminas\Stdlib\SplQueue;
@@ -79,20 +80,18 @@ class FlashMessenger extends AbstractPlugin implements IteratorAggregate, Counta
     {
         $container = $this->getContainer();
 
-        if (null === $namespace) {
-            $namespace = $this->getNamespace();
-        }
+        $namespace ??= $this->getNamespace();
 
         if (!$this->messageAdded) {
             $this->getMessagesFromContainer();
             $container->setExpirationHops(hops: $hops, vars: null);
         }
 
-        if (!isset($container[$namespace]) || !$container[$namespace] instanceof SplQueue) {
+        if (!(($container[$namespace] ?? null) instanceof SplQueue)) {
             $container[$namespace] = new SplQueue();
         }
 
-        \Jield\Stdlib\Value::call($container[$namespace], 'push', [$message]);
+        Value::call($container[$namespace], 'push', [$message]);
 
         $this->messageAdded = true;
 
@@ -181,7 +180,12 @@ class FlashMessenger extends AbstractPlugin implements IteratorAggregate, Counta
         $namespaces = [];
         /** @var mixed $messages */
         foreach ($container as $namespace => $messages) {
-            $this->messages[$namespace] = \Jield\Stdlib\Value::instance($messages, SplQueue::class);
+            $messages = Value::instance($messages, SplQueue::class);
+            foreach ($messages as $message) {
+                Value::string($message);
+            }
+            /** @var MessageList $messages */
+            $this->messages[$namespace] = $messages;
             $namespaces[] = $namespace;
         }
 
@@ -215,9 +219,7 @@ class FlashMessenger extends AbstractPlugin implements IteratorAggregate, Counta
 
     public function hasMessages(?string $namespace = null): bool
     {
-        if (null === $namespace) {
-            $namespace = $this->getNamespace();
-        }
+        $namespace ??= $this->getNamespace();
 
         $this->getMessagesFromContainer();
 
@@ -257,9 +259,7 @@ class FlashMessenger extends AbstractPlugin implements IteratorAggregate, Counta
      */
     public function getMessages(?string $namespace = null): array
     {
-        if (null === $namespace) {
-            $namespace = $this->getNamespace();
-        }
+        $namespace ??= $this->getNamespace();
 
         if ($this->hasMessages(namespace: $namespace)) {
             return $this->messages[$namespace]->toArray();
@@ -317,9 +317,7 @@ class FlashMessenger extends AbstractPlugin implements IteratorAggregate, Counta
      */
     public function clearMessages(?string $namespace = null): bool
     {
-        if (null === $namespace) {
-            $namespace = $this->getNamespace();
-        }
+        $namespace ??= $this->getNamespace();
 
         if ($this->hasMessages(namespace: $namespace)) {
             unset($this->messages[$namespace]);
@@ -341,7 +339,6 @@ class FlashMessenger extends AbstractPlugin implements IteratorAggregate, Counta
             return false;
         }
 
-        unset($this->messages);
         $this->messages = [];
 
         return true;
@@ -368,9 +365,7 @@ class FlashMessenger extends AbstractPlugin implements IteratorAggregate, Counta
     public function hasCurrentMessages(?string $namespace = null): bool
     {
         $container = $this->getContainer();
-        if (null === $namespace) {
-            $namespace = $this->getNamespace();
-        }
+        $namespace ??= $this->getNamespace();
 
         return isset($container[$namespace]);
     }
@@ -428,13 +423,11 @@ class FlashMessenger extends AbstractPlugin implements IteratorAggregate, Counta
      */
     public function getCurrentMessages(?string $namespace = null): array
     {
-        if (null === $namespace) {
-            $namespace = $this->getNamespace();
-        }
+        $namespace ??= $this->getNamespace();
 
         if ($this->hasCurrentMessages(namespace: $namespace)) {
             $container = $this->getContainer();
-            return \Jield\Stdlib\Value::strings(\Jield\Stdlib\Value::call($container[$namespace], 'toArray'));
+            return Value::strings(Value::call($container[$namespace], 'toArray'));
         }
 
         return [];
@@ -504,9 +497,7 @@ class FlashMessenger extends AbstractPlugin implements IteratorAggregate, Counta
      */
     public function clearCurrentMessages(?string $namespace = null): bool
     {
-        if (null === $namespace) {
-            $namespace = $this->getNamespace();
-        }
+        $namespace ??= $this->getNamespace();
 
         if ($this->hasCurrentMessages(namespace: $namespace)) {
             $container = $this->getContainer();

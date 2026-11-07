@@ -8,6 +8,8 @@ use Jield\Authorize\Exception\UnAuthorizedException;
 use Jield\Authorize\Service\AuthorizeService;
 use Jield\Mvc\Application;
 use Jield\Mvc\MvcEvent;
+use Jield\Stdlib\Service;
+use Jield\Stdlib\Value;
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\Http\Response;
 
@@ -27,7 +29,7 @@ class Route extends AbstractGuard
      */
     protected function extractResourcesFromRule(array $rule): array
     {
-        return ['route/' . \Jield\Stdlib\Value::stringify($rule['route'])];
+        return ['route/' . Value::stringify($rule['route'])];
     }
 
     /**
@@ -48,10 +50,9 @@ class Route extends AbstractGuard
      */
     public function onRoute(MvcEvent $event): mixed
     {
-        
-        $service = \Jield\Stdlib\Service::get($this->container, AuthorizeService::class);
+        $service = Service::get($this->container, AuthorizeService::class);
         $match = $event->getRouteMatch();
-        $routeName = \Jield\Stdlib\Value::present($match)->getMatchedRouteName();
+        $routeName = Value::present($match)->getMatchedRouteName();
 
         if ($service->isAllowed(resource: 'route/' . $routeName)) {
             return null;
@@ -72,7 +73,6 @@ class Route extends AbstractGuard
         $event->setName(name: MvcEvent::EVENT_DISPATCH_ERROR);
         $results = $eventManager->triggerEvent(event: $event);
 
-        /** @var mixed $return */
         $return = $results->last();
 
         if (!$return) {

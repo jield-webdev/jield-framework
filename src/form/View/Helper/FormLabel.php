@@ -82,7 +82,7 @@ class FormLabel extends AbstractHelper
             $labelContent = $label;
         }
 
-        return $openTag . (string) ($labelContent) . $this->closeTag();
+        return $openTag . (string) $labelContent . $this->closeTag();
     }
 
     /**
@@ -102,8 +102,6 @@ class FormLabel extends AbstractHelper
             $attributes = $this->createAttributesString(attributes: $attributesOrElement);
             return sprintf('<label %s>', $attributes);
         }
-
-        
 
         $id = $this->getId(element: $attributesOrElement);
         if (null === $id) {

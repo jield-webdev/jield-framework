@@ -69,9 +69,18 @@ use Jield\ApiTools\MvcAuth\Factory\FileResolverFactory;
 use Jield\ApiTools\MvcAuth\Factory\NamedOAuth2ServerFactory;
 use Jield\ApiTools\MvcAuth\Identity\IdentityPlugin;
 use Jield\ApiTools\OAuth2\Adapter\PdoAdapter;
+use Jield\ApiTools\OAuth2\Controller\AuthController;
+use Jield\ApiTools\OAuth2\EntraJwksProvider;
+use Jield\ApiTools\OAuth2\EntraOnBehalfOfClient;
+use Jield\ApiTools\OAuth2\EntraTokenValidator;
 use Jield\ApiTools\OAuth2\Factory\AuthControllerFactory;
+use Jield\ApiTools\OAuth2\Factory\EntraJwksProviderFactory;
+use Jield\ApiTools\OAuth2\Factory\EntraOnBehalfOfClientFactory;
+use Jield\ApiTools\OAuth2\Factory\EntraTokenValidatorFactory;
 use Jield\ApiTools\OAuth2\Factory\PdoAdapterFactory;
+use Jield\ApiTools\OAuth2\Factory\TokenExchangeFactory;
 use Jield\ApiTools\OAuth2\Provider\UserId\AuthenticationService;
+use Jield\ApiTools\OAuth2\TokenExchange;
 use Jield\ApiTools\Rest\Factory\RestControllerFactory;
 use Jield\ApiTools\Rest\Listener\RestParametersListener;
 use Jield\ApiTools\Rpc\Factory\OptionsListenerFactory;
@@ -179,14 +188,14 @@ final class ConfigProvider
                 RestParametersListener::class => RestParametersListener::class,
             ],
             'factories' => [
-                \Jield\ApiTools\OAuth2\EntraJwksProvider::class =>
-                    \Jield\ApiTools\OAuth2\Factory\EntraJwksProviderFactory::class,
-                \Jield\ApiTools\OAuth2\EntraOnBehalfOfClient::class =>
-                    \Jield\ApiTools\OAuth2\Factory\EntraOnBehalfOfClientFactory::class,
-                \Jield\ApiTools\OAuth2\EntraTokenValidator::class =>
-                    \Jield\ApiTools\OAuth2\Factory\EntraTokenValidatorFactory::class,
-                \Jield\ApiTools\OAuth2\TokenExchange::class =>
-                    \Jield\ApiTools\OAuth2\Factory\TokenExchangeFactory::class,
+                EntraJwksProvider::class =>
+                    EntraJwksProviderFactory::class,
+                EntraOnBehalfOfClient::class =>
+                    EntraOnBehalfOfClientFactory::class,
+                EntraTokenValidator::class =>
+                    EntraTokenValidatorFactory::class,
+                TokenExchange::class =>
+                    TokenExchangeFactory::class,
 
                 \Jield\ApiTools\Rest\Listener\OptionsListener::class =>
                     \Jield\ApiTools\Rest\Factory\OptionsListenerFactory::class,
@@ -258,7 +267,7 @@ final class ConfigProvider
     {
         return [
             'factories' => [
-                \Jield\ApiTools\OAuth2\Controller\AuthController::class => AuthControllerFactory::class,
+                AuthController::class => AuthControllerFactory::class,
             ],
             'abstract_factories' => [
                 RestControllerFactory::class,

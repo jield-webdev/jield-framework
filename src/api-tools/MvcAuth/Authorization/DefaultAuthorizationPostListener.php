@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Jield\ApiTools\MvcAuth\Authorization;
 
 use Jield\ApiTools\MvcAuth\MvcAuthEvent;
+use Jield\Stdlib\Value;
 use Laminas\Http\Response as HttpResponse;
 
 class DefaultAuthorizationPostListener
@@ -27,7 +28,7 @@ class DefaultAuthorizationPostListener
         }
 
         if (!$response instanceof HttpResponse) {
-            return \Jield\Stdlib\Value::nullableInstance($response, \Laminas\Http\Response::class);
+            return Value::nullableInstance($response, \Laminas\Http\Response::class);
         }
 
         $response->setStatusCode(code: 403);

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Jield\Form\View\Helper\Factory;
 
 use Jield\Form\View\Helper\FormElementErrors;
+use Jield\Stdlib\Value;
 use Psr\Container\ContainerInterface;
 
 use function array_key_exists;
@@ -20,10 +21,8 @@ final class FormElementErrorsFactory
             return $helper;
         }
 
-        /** @var mixed $config */
         $config = $container->get('config');
         if (isset($config['view_helper_config']['form_element_errors'])) {
-            /** @var mixed $configHelper */
             $configHelper = $config['view_helper_config']['form_element_errors'];
 
             // Attributes
@@ -32,23 +31,29 @@ final class FormElementErrorsFactory
             }
 
             // Message close string
-            if (array_key_exists(key: 'message_close_string', array: \Jield\Stdlib\Value::array($configHelper))) {
-                $helper->setMessageCloseString(messageCloseString: \Jield\Stdlib\Value::string($configHelper['message_close_string']));
+            if (array_key_exists(key: 'message_close_string', array: Value::array($configHelper))) {
+                $helper->setMessageCloseString(messageCloseString: Value::string(
+                    $configHelper['message_close_string'],
+                ));
             }
 
             // Message open format
-            if (array_key_exists(key: 'message_open_format', array: \Jield\Stdlib\Value::array($configHelper))) {
-                $helper->setMessageOpenFormat(messageOpenFormat: \Jield\Stdlib\Value::string($configHelper['message_open_format']));
+            if (array_key_exists(key: 'message_open_format', array: Value::array($configHelper))) {
+                $helper->setMessageOpenFormat(messageOpenFormat: Value::string(
+                    $configHelper['message_open_format'],
+                ));
             }
 
             // Message separator string
-            if (array_key_exists(key: 'message_separator_string', array: \Jield\Stdlib\Value::array($configHelper))) {
-                $helper->setMessageSeparatorString(messageSeparatorString: \Jield\Stdlib\Value::string($configHelper['message_separator_string']));
+            if (array_key_exists(key: 'message_separator_string', array: Value::array($configHelper))) {
+                $helper->setMessageSeparatorString(messageSeparatorString: Value::string(
+                    $configHelper['message_separator_string'],
+                ));
             }
 
             // Translate error messages
-            if (array_key_exists(key: 'translate_messages', array: \Jield\Stdlib\Value::array($configHelper))) {
-                $helper->setTranslateMessages(flag: \Jield\Stdlib\Value::bool($configHelper['translate_messages']));
+            if (array_key_exists(key: 'translate_messages', array: Value::array($configHelper))) {
+                $helper->setTranslateMessages(flag: Value::bool($configHelper['translate_messages']));
             }
         }
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Jield\ApiTools\OAuth2\Provider\UserId;
 
+use Jield\Stdlib\Value;
 use Laminas\Authentication\AuthenticationServiceInterface;
 use Laminas\Stdlib\RequestInterface;
 use Override;
@@ -28,7 +29,7 @@ class AuthenticationService implements UserIdProviderInterface
         array $config = [],
     ) {
         if (isset($config['api-tools-oauth2']['user_id'])) {
-            $this->userId = \Jield\Stdlib\Value::string($config['api-tools-oauth2']['user_id']);
+            $this->userId = Value::string($config['api-tools-oauth2']['user_id']);
         }
     }
 
@@ -43,17 +44,16 @@ class AuthenticationService implements UserIdProviderInterface
             return null;
         }
 
-        /** @var mixed $identity */
         $identity = $this->authenticationService->getIdentity();
 
         if (is_object(value: $identity)) {
             if (property_exists(object_or_class: $identity, property: $this->userId)) {
-                return $identity->{$this->userId};
+                return Value::property($identity, $this->userId);
             }
 
             $method = 'get' . ucfirst(string: $this->userId);
             if (method_exists(object_or_class: $identity, method: $method)) {
-                return \Jield\Stdlib\Value::call($identity, $method);
+                return Value::call($identity, $method);
             }
 
             return null;

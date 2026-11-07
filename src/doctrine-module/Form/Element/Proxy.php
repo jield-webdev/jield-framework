@@ -11,6 +11,7 @@ use Doctrine\Inflector\InflectorFactory;
 use Doctrine\Persistence\ObjectManager;
 use DoctrineModule\Form\Element\Exception\InvalidRepositoryResultException;
 use DoctrineModule\Persistence\ObjectManagerAwareInterface;
+use Jield\Stdlib\Value;
 use Laminas\Stdlib\ArrayUtils;
 use Laminas\Stdlib\Guard\ArrayOrTraversableGuardTrait;
 use ReflectionMethod;
@@ -82,50 +83,55 @@ class Proxy implements ObjectManagerAwareInterface
         }
 
         if (isset($options['object_manager'])) {
-            $this->setObjectManager(objectManager: \Jield\Stdlib\Value::instance($options['object_manager'], \Doctrine\Persistence\ObjectManager::class));
+            $this->setObjectManager(objectManager: Value::instance(
+                $options['object_manager'],
+                \Doctrine\Persistence\ObjectManager::class,
+            ));
         }
 
         if (isset($options['target_class'])) {
-            $this->setTargetClass(targetClass: \Jield\Stdlib\Value::string($options['target_class']));
+            $this->setTargetClass(targetClass: Value::string($options['target_class']));
         }
 
         if (isset($options['property'])) {
-            $this->setProperty(property: \Jield\Stdlib\Value::string($options['property']));
+            $this->setProperty(property: Value::string($options['property']));
         }
 
         if (isset($options['label_generator'])) {
-            $this->setLabelGenerator(callable: \Jield\Stdlib\Value::callback($options['label_generator']));
+            $this->setLabelGenerator(callable: Value::callback($options['label_generator']));
         }
 
         if (isset($options['find_method'])) {
-            $this->setFindMethod(findMethod: \Jield\Stdlib\Value::array($options['find_method']));
+            $this->setFindMethod(findMethod: Value::array($options['find_method']));
         }
 
         if (isset($options['is_method'])) {
-            $this->setIsMethod(method: \Jield\Stdlib\Value::bool($options['is_method']));
+            $this->setIsMethod(method: Value::bool($options['is_method']));
         }
 
         if (isset($options['display_empty_item'])) {
-            $this->setDisplayEmptyItem(displayEmptyItem: \Jield\Stdlib\Value::bool($options['display_empty_item']));
+            $this->setDisplayEmptyItem(displayEmptyItem: Value::bool($options['display_empty_item']));
         }
 
         if (isset($options['empty_item_label'])) {
-            $this->setEmptyItemLabel(emptyItemLabel: \Jield\Stdlib\Value::string($options['empty_item_label']));
+            $this->setEmptyItemLabel(emptyItemLabel: Value::string($options['empty_item_label']));
         }
 
         if (isset($options['option_attributes'])) {
-            $this->setOptionAttributes(optionAttributes: \Jield\Stdlib\Value::array($options['option_attributes']));
+            $this->setOptionAttributes(optionAttributes: Value::array($options['option_attributes']));
         }
 
         if (isset($options['optgroup_identifier'])) {
-            $this->setOptgroupIdentifier(optgroupIdentifier: \Jield\Stdlib\Value::string($options['optgroup_identifier']));
+            $this->setOptgroupIdentifier(optgroupIdentifier: Value::string(
+                $options['optgroup_identifier'],
+            ));
         }
 
         if (!isset($options['optgroup_default'])) {
             return;
         }
 
-        $this->setOptgroupDefault(optgroupDefault: \Jield\Stdlib\Value::string($options['optgroup_default']));
+        $this->setOptgroupDefault(optgroupDefault: Value::string($options['optgroup_default']));
     }
 
     public function getValueOptions(): mixed
@@ -227,7 +233,7 @@ class Proxy implements ObjectManagerAwareInterface
             throw new RuntimeException(message: 'No target class was set');
         }
 
-        return \Jield\Stdlib\Value::classString($this->targetClass);
+        return Value::classString($this->targetClass);
     }
 
     /**
@@ -322,7 +328,10 @@ class Proxy implements ObjectManagerAwareInterface
             return null;
         }
 
-        return \Jield\Stdlib\Value::nullableString(call_user_func(\Jield\Stdlib\Value::callback($this->getLabelGenerator()), $targetEntity));
+        return Value::nullableString(call_user_func(
+            Value::callback($this->getLabelGenerator()),
+            $targetEntity,
+        ));
     }
 
     /** @throws \RuntimeException */
@@ -336,7 +345,7 @@ class Proxy implements ObjectManagerAwareInterface
 
                 /** @var mixed $object */
                 foreach ($value as $object) {
-                    $values = $metadata->getIdentifierValues(\Jield\Stdlib\Value::object($object));
+                    $values = $metadata->getIdentifierValues(Value::object($object));
                     $data[] = array_shift(array: $values);
                 }
 
@@ -377,27 +386,33 @@ class Proxy implements ObjectManagerAwareInterface
 
         if ($findMethod === []) {
             $findMethodName = 'findAll';
-            $repository = \Jield\Stdlib\Value::present($this->objectManager)->getRepository(className: $this->getTargetClass());
+            $repository = Value::present($this->objectManager)->getRepository(
+                className: $this->getTargetClass(),
+            );
             $objects = $repository->findAll();
         } else {
             if (!isset($findMethod['name'])) {
                 throw new RuntimeException(message: 'No method name was set');
             }
 
-            /** @var mixed $findMethodName */
             $findMethodName = $findMethod['name'];
-            $findMethodParams = isset($findMethod['params']) ? array_change_key_case(array: $findMethod['params']) : [];
-            $repository = \Jield\Stdlib\Value::present($this->objectManager)->getRepository(className: $this->getTargetClass());
+            $findMethodParams = isset($findMethod['params']) ? array_change_key_case(array: Value::stringKeyedArray($findMethod['params'])) : [];
+            $repository = Value::present($this->objectManager)->getRepository(
+                className: $this->getTargetClass(),
+            );
 
-            if (!method_exists(object_or_class: $repository, method: \Jield\Stdlib\Value::string($findMethodName))) {
+            if (!method_exists(object_or_class: $repository, method: Value::string($findMethodName))) {
                 throw new RuntimeException(message: sprintf(
                     'Method "%s" could not be found in repository "%s"',
-                    \Jield\Stdlib\Value::scalar($findMethodName),
+                    Value::scalar($findMethodName),
                     $repository::class,
                 ));
             }
 
-            $r = new ReflectionMethod(objectOrMethod: $repository, method: \Jield\Stdlib\Value::nullableString($findMethodName));
+            $r = new ReflectionMethod(
+                objectOrMethod: $repository,
+                method: Value::nullableString($findMethodName),
+            );
             $args = [];
 
             foreach ($r->getParameters() as $param) {
@@ -410,7 +425,7 @@ class Proxy implements ObjectManagerAwareInterface
                         'Required parameter "%s" with no default value for method "%s" in repository "%s"'
                         . ' was not provided',
                         $param->getName(),
-                        \Jield\Stdlib\Value::scalar($findMethodName),
+                        Value::scalar($findMethodName),
                         $repository::class,
                     ));
                 }
@@ -421,11 +436,15 @@ class Proxy implements ObjectManagerAwareInterface
 
         $this->guardForArrayOrTraversable(
             data: $objects,
-            dataName: sprintf('%s::%s() return value', $repository::class, \Jield\Stdlib\Value::scalar($findMethodName)),
+            dataName: sprintf(
+                '%s::%s() return value',
+                $repository::class,
+                Value::scalar($findMethodName),
+            ),
             exceptionClass: InvalidRepositoryResultException::class,
         );
 
-        $this->objects = $objects;
+        $this->objects = array_map(Value::object(...), is_array($objects) ? $objects : iterator_to_array(Value::iterable($objects)));
     }
 
     /**
@@ -437,7 +456,6 @@ class Proxy implements ObjectManagerAwareInterface
     {
         $metadata = $this->getObjectManager()->getClassMetadata(className: $this->getTargetClass());
         $identifier = $metadata->getIdentifierFieldNames();
-        /** @var mixed $objects */
         $objects = $this->getObjects();
         $options = [];
         $optionAttributes = [];
@@ -449,7 +467,7 @@ class Proxy implements ObjectManagerAwareInterface
         /** @var mixed $key
          * @var mixed $object
          */
-        foreach (\Jield\Stdlib\Value::iterable($objects) as $key => $object) {
+        foreach (Value::iterable($objects) as $key => $object) {
             $generatedLabel = $this->generateLabel(targetEntity: $object);
             if ($generatedLabel !== null) {
                 $label = $generatedLabel;
@@ -458,16 +476,16 @@ class Proxy implements ObjectManagerAwareInterface
                 $property = $this->property;
                 if (
                     ($this->getIsMethod() === false || $this->getIsMethod() === null)
-                    && !$metadata->hasField(fieldName: \Jield\Stdlib\Value::string($property))
+                    && !$metadata->hasField(fieldName: Value::string($property))
                 ) {
                     throw new RuntimeException(message: sprintf(
                         'Property "%s" could not be found in object "%s"',
-                        \Jield\Stdlib\Value::scalar($property),
+                        Value::scalar($property),
                         $this->getTargetClass(),
                     ));
                 }
 
-                $getter = 'get' . $this->inflector->classify(word: \Jield\Stdlib\Value::string($property));
+                $getter = 'get' . $this->inflector->classify(word: Value::string($property));
 
                 if (!is_callable(value: [$object, $getter])) {
                     throw new RuntimeException(message: sprintf(
@@ -477,8 +495,7 @@ class Proxy implements ObjectManagerAwareInterface
                     ));
                 }
 
-                /** @var mixed $label */
-                $label = $object->{$getter}();
+                $label = Value::call($object, $getter);
             } else {
                 if (!is_callable(value: [$object, '__toString'])) {
                     throw new RuntimeException(message: sprintf(
@@ -492,9 +509,10 @@ class Proxy implements ObjectManagerAwareInterface
             }
 
             /** @var mixed $value */
-            $value = count(value: $identifier) > 1 ? $key : current(array: $metadata->getIdentifierValues(\Jield\Stdlib\Value::object($object)));
+            $value = count(value: $identifier) > 1
+                ? $key
+                : current(array: $metadata->getIdentifierValues(Value::object($object)));
 
-            /** @var mixed $optionValue */
             foreach ($this->getOptionAttributes() as $optionKey => $optionValue) {
                 if (is_string(value: $optionValue)) {
                     $optionAttributes[$optionKey] = $optionValue;
@@ -503,7 +521,6 @@ class Proxy implements ObjectManagerAwareInterface
                 }
 
                 if (is_callable(value: $optionValue)) {
-                    /** @var mixed $callableValue */
                     $callableValue = call_user_func($optionValue, $object);
                     $optionAttributes[$optionKey] = (string) $callableValue;
 
@@ -525,7 +542,8 @@ class Proxy implements ObjectManagerAwareInterface
             }
 
             // optgroup_identifier found, handle grouping
-            $optgroupGetter = 'get' . $this->inflector->classify(word: \Jield\Stdlib\Value::string($this->getOptgroupIdentifier()));
+            $optgroupGetter =
+                'get' . $this->inflector->classify(word: Value::string($this->getOptgroupIdentifier()));
 
             if (!is_callable(value: [$object, $optgroupGetter])) {
                 throw new RuntimeException(message: sprintf(
@@ -535,11 +553,10 @@ class Proxy implements ObjectManagerAwareInterface
                 ));
             }
 
-            /** @var mixed $optgroup */
-            $optgroup = $object->{$optgroupGetter}();
+            $optgroup = Value::call($object, $optgroupGetter);
 
             // optgroup_identifier contains a valid group-name. Handle default grouping.
-            if ($optgroup !== null && trim(string: \Jield\Stdlib\Value::string($optgroup)) !== '') {
+            if ($optgroup !== null && trim(string: Value::string($optgroup)) !== '') {
                 $options[$optgroup]['label'] = $optgroup;
                 $options[$optgroup]['options'][] = [
                     'label' => $label,

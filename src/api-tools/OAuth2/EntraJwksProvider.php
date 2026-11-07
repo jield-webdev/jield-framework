@@ -7,6 +7,7 @@ namespace Jield\ApiTools\OAuth2;
 use Firebase\JWT\JWK;
 use Firebase\JWT\Key;
 use GuzzleHttp\ClientInterface;
+use Jield\Stdlib\Value;
 use Psr\Cache\CacheItemPoolInterface;
 use RuntimeException;
 use Throwable;
@@ -25,7 +26,9 @@ readonly class EntraJwksProvider
         /** @var mixed $data */
         $data = $item->isHit() ? $item->get() : null;
 
-        $key = is_array($data) ? $this->findKey(keys: \Jield\Stdlib\Value::array($data['keys'] ?? []), tenantId: $tenantId, kid: $kid) : null;
+        $key = is_array($data)
+            ? $this->findKey(keys: Value::array($data['keys'] ?? []), tenantId: $tenantId, kid: $kid)
+            : null;
         if ($key instanceof Key) {
             return $key;
         }
@@ -48,7 +51,6 @@ readonly class EntraJwksProvider
             if ($response->getStatusCode() !== 200 || ($response->getBody()->getSize() ?? 0) > 1_048_576) {
                 throw new RuntimeException('Invalid JWKS response');
             }
-            /** @var mixed $document */
             $document = json_decode(
                 json: (string) $response->getBody(),
                 associative: true,
@@ -79,7 +81,6 @@ readonly class EntraJwksProvider
     private function findKey(array $keys, string $tenantId, string $kid): ?Key
     {
         $issuer = 'https://login.microsoftonline.com/' . $tenantId . '/v2.0';
-        /** @var mixed $key */
         foreach ($keys as $key) {
             if (!is_array($key) || ($key['kid'] ?? null) !== $kid) {
                 continue;

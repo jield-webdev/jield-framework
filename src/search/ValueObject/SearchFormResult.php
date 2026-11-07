@@ -6,6 +6,8 @@ namespace Jield\Search\ValueObject;
 
 use Doctrine\Common\Collections\Order;
 
+use Exception;
+use Jield\Stdlib\Value;
 use function array_key_exists;
 use function base64_decode;
 use function base64_encode;
@@ -25,30 +27,37 @@ final class SearchFormResult
 
     public static function fromArray(array $params): SearchFormResult
     {
-        $query = null === ($params['query'] ?? null) ? null : trim(string: \Jield\Stdlib\Value::string($params['query']));
+        $query = null === ($params['query'] ?? null)
+            ? null
+            : trim(string: Value::string($params['query']));
 
         return new self(
-            order: \Jield\Stdlib\Value::string($params['order'] ?? 'default'),
-            direction: \Jield\Stdlib\Value::string($params['direction'] ?? Order::Ascending->value),
+            order: Value::string($params['order'] ?? 'default'),
+            direction: Value::string($params['direction'] ?? Order::Ascending->value),
             query: $query,
-            filter: \Jield\Stdlib\Value::array($params['filter'] ?? []),
-            facet: \Jield\Stdlib\Value::array($params['facet'] ?? []),
-            dateInterval: DateInterval::fromValue(value: \Jield\Stdlib\Value::string($params['dateInterval'] ?? '')),
+            filter: Value::array($params['filter'] ?? []),
+            facet: Value::array($params['facet'] ?? []),
+            dateInterval: DateInterval::fromValue(value: Value::string($params['dateInterval'] ?? '')),
         );
     }
 
     public function updateFromEncodedFilter(string $encodedFilter): SearchFormResult
     {
         try {
-            $filter = \Jield\Stdlib\Value::toArray(json_decode(json: \Jield\Stdlib\Value::string(base64_decode(string: $encodedFilter, strict: true)), associative: true));
-        } catch (\Exception) {
+            $filter = Value::toArray(json_decode(
+                json: Value::string(base64_decode(string: $encodedFilter, strict: true)),
+                associative: true,
+            ));
+        } catch (Exception) {
             $filter = [];
         }
 
-        $this->filter = \Jield\Stdlib\Value::toArray($filter['filter'] ?? []);
-        $this->facet = \Jield\Stdlib\Value::toArray($filter['facet'] ?? []);
-        $this->dateInterval = DateInterval::fromValue(value: \Jield\Stdlib\Value::string($filter['dateInterval'] ?? ''));
-        $this->query = \Jield\Stdlib\Value::nullableString($filter['query'] ?? null);
+        $this->filter = Value::toArray($filter['filter'] ?? []);
+        $this->facet = Value::toArray($filter['facet'] ?? []);
+        $this->dateInterval = DateInterval::fromValue(value: Value::string(
+            $filter['dateInterval'] ?? '',
+        ));
+        $this->query = Value::nullableString($filter['query'] ?? null);
 
         return $this;
     }
@@ -67,7 +76,7 @@ final class SearchFormResult
 
     public function getHash(): string
     {
-        return base64_encode(string: \Jield\Stdlib\Value::string(json_encode(value: $this->toArray())));
+        return base64_encode(string: Value::string(json_encode(value: $this->toArray())));
     }
 
     public function toArray(): array
@@ -106,7 +115,7 @@ final class SearchFormResult
     {
         //Only set the value when we force it or when it does not exist
         if ($force || !array_key_exists(key: $key, array: $this->facet)) {
-            \Jield\Stdlib\Value::setPath($this->facet, [$key, 'values'], $value);
+            Value::setPath($this->facet, [$key, 'values'], $value);
         }
 
         return $this;
@@ -177,9 +186,8 @@ final class SearchFormResult
 
     public function addFilters(array $filters): SearchFormResult
     {
-        /** @var mixed $value */
         foreach ($filters as $key => $value) {
-            $this->addFilter(key: \Jield\Stdlib\Value::string($key), value: $value);
+            $this->addFilter(key: Value::string($key), value: $value);
         }
 
         return $this;
@@ -188,11 +196,10 @@ final class SearchFormResult
     public function addFilter(string $key, mixed $value): SearchFormResult
     {
         if (array_key_exists(key: $key, array: $this->filter)) {
-            /** @var mixed $existing */
             $existing = $this->filter[$key];
             $this->filter[$key] = is_array($existing) && is_array($value)
                 ? $existing + $value
-                : \Jield\Stdlib\Value::numeric($existing) + \Jield\Stdlib\Value::numeric($value);
+                : Value::numeric($existing) + Value::numeric($value);
         } else {
             $this->filter[$key] = $value;
         }

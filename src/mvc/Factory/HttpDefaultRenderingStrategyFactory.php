@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace Jield\Mvc\Factory;
 
 // phpcs:ignore
+use ArrayAccess;
 use Jield\Mvc\Service\HttpViewManagerConfigTrait;
 use Jield\Mvc\View\Http\DefaultRenderingStrategy;
+use Jield\Stdlib\Service;
+use Jield\Stdlib\Value;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Laminas\View\View;
 use Psr\Container\ContainerInterface;
@@ -25,7 +28,7 @@ class HttpDefaultRenderingStrategyFactory implements FactoryInterface
         string $requestedName,
         ?array $options = null,
     ): DefaultRenderingStrategy {
-        $strategy = new DefaultRenderingStrategy(\Jield\Stdlib\Service::get($container, View::class));
+        $strategy = new DefaultRenderingStrategy(Service::get($container, View::class));
         $config = $this->getConfig($container);
 
         $this->injectLayoutTemplate($strategy, $config);
@@ -38,10 +41,10 @@ class HttpDefaultRenderingStrategyFactory implements FactoryInterface
      *
      * Uses layout template from configuration; if none available, defaults to "layout/layout".
      */
-    private function injectLayoutTemplate(DefaultRenderingStrategy $strategy, array $config): void
+    private function injectLayoutTemplate(DefaultRenderingStrategy $strategy, array|ArrayAccess $config): void
     {
         /** @var mixed $layout */
         $layout = $config['layout'] ?? 'layout/layout';
-        $strategy->setLayoutTemplate(\Jield\Stdlib\Value::string($layout));
+        $strategy->setLayoutTemplate(Value::string($layout));
     }
 }

@@ -53,8 +53,6 @@ class ListenerOptions extends AbstractOptions
      */
     public function setModulePaths(Traversable|array $modulePaths): static
     {
-        
-
         $this->modulePaths = is_array($modulePaths) ? $modulePaths : iterator_to_array($modulePaths);
         return $this;
     }
@@ -88,8 +86,6 @@ class ListenerOptions extends AbstractOptions
      */
     public function setConfigGlobPaths(Traversable|array $configGlobPaths): static
     {
-        
-
         $this->configGlobPaths = is_array($configGlobPaths) ? $configGlobPaths : iterator_to_array($configGlobPaths);
         return $this;
     }
@@ -103,9 +99,9 @@ class ListenerOptions extends AbstractOptions
      */
     public function setConfigStaticPaths(Traversable|array $configStaticPaths): static
     {
-        
-
-        $this->configStaticPaths = is_array($configStaticPaths) ? $configStaticPaths : iterator_to_array($configStaticPaths);
+        $this->configStaticPaths = is_array($configStaticPaths)
+            ? $configStaticPaths
+            : iterator_to_array($configStaticPaths);
         return $this;
     }
 
@@ -129,8 +125,6 @@ class ListenerOptions extends AbstractOptions
      */
     public function setExtraConfig(Traversable|array $extraConfig): static
     {
-        
-
         $this->extraConfig = is_array($extraConfig) ? $extraConfig : iterator_to_array($extraConfig);
         return $this;
     }
@@ -190,10 +184,10 @@ class ListenerOptions extends AbstractOptions
     public function getConfigCacheFile(): string
     {
         if ($this->getConfigCacheKey()) {
-            return (string) ($this->getCacheDir()) . '/module-config-cache.' . $this->getConfigCacheKey() . '.php';
+            return (string) $this->getCacheDir() . '/module-config-cache.' . $this->getConfigCacheKey() . '.php';
         }
 
-        return (string) ($this->getCacheDir()) . '/module-config-cache.php';
+        return (string) $this->getCacheDir() . '/module-config-cache.php';
     }
 
     /**
@@ -271,10 +265,10 @@ class ListenerOptions extends AbstractOptions
     public function getModuleMapCacheFile(): string
     {
         if ($this->getModuleMapCacheKey()) {
-            return (string) ($this->getCacheDir()) . '/module-classmap-cache.' . $this->getModuleMapCacheKey() . '.php';
+            return (string) $this->getCacheDir() . '/module-classmap-cache.' . $this->getModuleMapCacheKey() . '.php';
         }
 
-        return (string) ($this->getCacheDir()) . '/module-classmap-cache.php';
+        return (string) $this->getCacheDir() . '/module-classmap-cache.php';
     }
 
     /**

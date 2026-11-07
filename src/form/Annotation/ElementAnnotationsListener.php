@@ -8,6 +8,7 @@ use ArrayAccess;
 use Jield\Form\Element\Collection;
 use Jield\Form\Fieldset;
 use Jield\Form\InputFilterProviderFieldset;
+use Jield\Stdlib\Value;
 use Laminas\EventManager\EventInterface;
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\InputFilter\InputFilter;
@@ -80,15 +81,13 @@ final class ElementAnnotationsListener extends AbstractAnnotationsListener
      */
     public function handleAllowEmptyAnnotation(EventInterface $e): void
     {
-        /** @var mixed $annotation */
         $annotation = $e->getParam('annotation');
         if (!$annotation instanceof AllowEmpty) {
             return;
         }
 
-        /** @var mixed $inputSpec */
         $inputSpec = $e->getParam('inputSpec');
-        \Jield\Stdlib\Value::setPath($inputSpec, ['allow_empty'], true);
+        Value::setPath($inputSpec, ['allow_empty'], true);
     }
 
     /**
@@ -98,23 +97,21 @@ final class ElementAnnotationsListener extends AbstractAnnotationsListener
      */
     public function handleAttributesAnnotation(EventInterface $e): void
     {
-        /** @var mixed $annotation */
         $annotation = $e->getParam('annotation');
         if (!$annotation instanceof Attributes) {
             return;
         }
 
-        /** @var mixed $elementSpec */
         $elementSpec = $e->getParam('elementSpec');
         if (isset($elementSpec['spec']['attributes'])) {
             $elementSpec['spec']['attributes'] = array_merge(
-                \Jield\Stdlib\Value::array($elementSpec['spec']['attributes']),
+                Value::array($elementSpec['spec']['attributes']),
                 $annotation->getAttributes(),
             );
             return;
         }
 
-        \Jield\Stdlib\Value::setPath($elementSpec, ['spec', 'attributes'], $annotation->getAttributes());
+        Value::setPath($elementSpec, ['spec', 'attributes'], $annotation->getAttributes());
     }
 
     /**
@@ -122,7 +119,6 @@ final class ElementAnnotationsListener extends AbstractAnnotationsListener
      */
     public function handleComposedObjectAnnotation(EventInterface $e): void
     {
-        /** @var mixed $annotation */
         $annotation = $e->getParam('annotation');
         if (!$annotation instanceof ComposedObject) {
             return;
@@ -130,12 +126,13 @@ final class ElementAnnotationsListener extends AbstractAnnotationsListener
 
         $class = $annotation->getComposedObject();
         $annotationManager = $e->getTarget();
-        /** @var mixed $specification */
-        $specification = \Jield\Stdlib\Value::call(\Jield\Stdlib\Value::present(\Jield\Stdlib\Value::object($annotationManager)), 'getFormSpecification', [$class]);
+        $specification = Value::call(
+            Value::present(Value::object($annotationManager)),
+            'getFormSpecification',
+            [$class],
+        );
 
-        /** @var mixed $name */
         $name = $e->getParam('name');
-        /** @var mixed $elementSpec */
         $elementSpec = $e->getParam('elementSpec');
 
         if ($annotation->isCollection()) {
@@ -144,61 +141,77 @@ final class ElementAnnotationsListener extends AbstractAnnotationsListener
                 //use input filter provider fieldset so we can compose the input filter into the fieldset
                 //it is assumed that if someone uses a custom fieldset, they will take care of the input
                 //filtering themselves or consume the input_filter_spec option.
-                \Jield\Stdlib\Value::setPath($specification, ['type'], InputFilterProviderFieldset::class);
+                Value::setPath($specification, ['type'], InputFilterProviderFieldset::class);
             }
 
-            /** @var mixed $inputFilter */
-            $inputFilter = \Jield\Stdlib\Value::accessible($specification)['input_filter'];
+            $inputFilter = Value::accessible($specification)['input_filter'];
             if (!isset($inputFilter['type'])) {
-                \Jield\Stdlib\Value::setPath($inputFilter, ['type'], InputFilter::class);
+                Value::setPath($inputFilter, ['type'], InputFilter::class);
             }
-            $specification = \Jield\Stdlib\Value::accessible($specification);
+            $specification = Value::accessible($specification);
             unset($specification['input_filter']);
 
-            \Jield\Stdlib\Value::setPath($elementSpec, ['spec', 'type'], Collection::class);
-            \Jield\Stdlib\Value::setPath($elementSpec, ['spec', 'name'], $name);
+            Value::setPath($elementSpec, ['spec', 'type'], Collection::class);
+            Value::setPath($elementSpec, ['spec', 'name'], $name);
 
             /** @var mixed $targetElementOptions */
             $targetElementOptions = $specification['options'] ?? [];
             assert(is_array($targetElementOptions));
             $targetElementOptions['input_filter_spec'] = $inputFilter;
             $targetElementOptions['target_type'] = $class;
-            \Jield\Stdlib\Value::setPath($specification, ['options'], $targetElementOptions);
+            Value::setPath($specification, ['options'], $targetElementOptions);
 
-            \Jield\Stdlib\Value::setPath($elementSpec, ['spec', 'options'], new ArrayObject($this->mergeOptions($elementSpec, $annotation)));
+            Value::setPath(
+                $elementSpec,
+                ['spec', 'options'],
+                new ArrayObject($this->mergeOptions($elementSpec, $annotation)),
+            );
 
-            \Jield\Stdlib\Value::setPath($elementSpec, ['spec', 'options', 'target_element'], $specification);
+            Value::setPath($elementSpec, ['spec', 'options', 'target_element'], $specification);
 
             if (isset($specification['hydrator'])) {
-                \Jield\Stdlib\Value::setPath($elementSpec, ['spec', 'hydrator'], $specification['hydrator']);
+                Value::setPath($elementSpec, ['spec', 'hydrator'], $specification['hydrator']);
             }
         } else {
             // Compose input filter into parent input filter
-            /** @var mixed $inputFilter */
-            $inputFilter = \Jield\Stdlib\Value::accessible($specification)['input_filter'];
+            $inputFilter = Value::accessible($specification)['input_filter'];
             if (!isset($inputFilter['type'])) {
-                \Jield\Stdlib\Value::setPath($inputFilter, ['type'], InputFilter::class);
+                Value::setPath($inputFilter, ['type'], InputFilter::class);
             }
-            /** @var mixed $inputSpec */
             $inputSpec = $e->getParam('inputSpec');
-            \Jield\Stdlib\Value::call($inputSpec, 'exchangeArray', [$inputFilter instanceof \ArrayObject ? $inputFilter->getArrayCopy() : \Jield\Stdlib\Value::toArray($inputFilter)]);
-            $specification = \Jield\Stdlib\Value::accessible($specification);
+            Value::call($inputSpec, 'exchangeArray', [
+                $inputFilter instanceof \ArrayObject
+                    ? $inputFilter->getArrayCopy()
+                    : Value::toArray($inputFilter),
+            ]);
+            $specification = Value::accessible($specification);
             unset($specification['input_filter']);
 
             // Compose specification as a fieldset into parent form/fieldset
             if (!isset($specification['type'])) {
-                \Jield\Stdlib\Value::setPath($specification, ['type'], Fieldset::class);
+                Value::setPath($specification, ['type'], Fieldset::class);
             }
 
             if (isset($elementSpec['spec']['options'])) {
                 $specification['options'] ??= [];
-                \Jield\Stdlib\Value::setPath($specification, ['options'], array_merge(\Jield\Stdlib\Value::array($elementSpec['spec']['options']), \Jield\Stdlib\Value::array(\Jield\Stdlib\Value::accessible($specification)['options'])));
+                Value::setPath(
+                    $specification,
+                    ['options'],
+                    array_merge(
+                        Value::array($elementSpec['spec']['options']),
+                        Value::array(Value::accessible($specification)['options']),
+                    ),
+                );
             }
 
             // Add element spec:
-            \Jield\Stdlib\Value::setPath($elementSpec, ['spec'], $specification);
-            \Jield\Stdlib\Value::setPath($elementSpec, ['spec', 'name'], $name);
-            \Jield\Stdlib\Value::setPath($elementSpec, ['spec', 'options'], new ArrayObject($this->mergeOptions($elementSpec, $annotation)));
+            Value::setPath($elementSpec, ['spec'], $specification);
+            Value::setPath($elementSpec, ['spec', 'name'], $name);
+            Value::setPath(
+                $elementSpec,
+                ['spec', 'options'],
+                new ArrayObject($this->mergeOptions($elementSpec, $annotation)),
+            );
         }
     }
 
@@ -209,15 +222,13 @@ final class ElementAnnotationsListener extends AbstractAnnotationsListener
      */
     public function handleContinueIfEmptyAnnotation(EventInterface $e): void
     {
-        /** @var mixed $annotation */
         $annotation = $e->getParam('annotation');
         if (!$annotation instanceof ContinueIfEmpty) {
             return;
         }
 
-        /** @var mixed $inputSpec */
         $inputSpec = $e->getParam('inputSpec');
-        \Jield\Stdlib\Value::setPath($inputSpec, ['continue_if_empty'], true);
+        Value::setPath($inputSpec, ['continue_if_empty'], true);
     }
 
     /**
@@ -227,15 +238,13 @@ final class ElementAnnotationsListener extends AbstractAnnotationsListener
      */
     public function handleErrorMessageAnnotation(EventInterface $e): void
     {
-        /** @var mixed $annotation */
         $annotation = $e->getParam('annotation');
         if (!$annotation instanceof ErrorMessage) {
             return;
         }
 
-        /** @var mixed $inputSpec */
         $inputSpec = $e->getParam('inputSpec');
-        \Jield\Stdlib\Value::setPath($inputSpec, ['error_message'], $annotation->getMessage());
+        Value::setPath($inputSpec, ['error_message'], $annotation->getMessage());
     }
 
     /**
@@ -243,7 +252,6 @@ final class ElementAnnotationsListener extends AbstractAnnotationsListener
      */
     public function handleExcludeAnnotation(EventInterface $e): bool
     {
-        /** @var mixed $annotations */
         $annotations = $e->getParam('annotations');
         assert($annotations instanceof AnnotationCollection);
 
@@ -260,18 +268,16 @@ final class ElementAnnotationsListener extends AbstractAnnotationsListener
      */
     public function handleFilterAnnotation(EventInterface $e): void
     {
-        /** @var mixed $annotation */
         $annotation = $e->getParam('annotation');
         if (!$annotation instanceof Filter) {
             return;
         }
 
-        /** @var mixed $inputSpec */
         $inputSpec = $e->getParam('inputSpec');
         if (!isset($inputSpec['filters'])) {
-            \Jield\Stdlib\Value::setPath($inputSpec, ['filters'], []);
+            Value::setPath($inputSpec, ['filters'], []);
         }
-        \Jield\Stdlib\Value::setPath($inputSpec, ['filters', null], $annotation->getFilterSpecification());
+        Value::setPath($inputSpec, ['filters', null], $annotation->getFilterSpecification());
     }
 
     /**
@@ -282,15 +288,13 @@ final class ElementAnnotationsListener extends AbstractAnnotationsListener
      */
     public function handleFlagsAnnotation(EventInterface $e): void
     {
-        /** @var mixed $annotation */
         $annotation = $e->getParam('annotation');
         if (!$annotation instanceof Flags) {
             return;
         }
 
-        /** @var mixed $elementSpec */
         $elementSpec = $e->getParam('elementSpec');
-        \Jield\Stdlib\Value::setPath($elementSpec, ['flags'], $annotation->getFlags());
+        Value::setPath($elementSpec, ['flags'], $annotation->getFlags());
     }
 
     /**
@@ -300,15 +304,13 @@ final class ElementAnnotationsListener extends AbstractAnnotationsListener
      */
     public function handleHydratorAnnotation(EventInterface $e): void
     {
-        /** @var mixed $annotation */
         $annotation = $e->getParam('annotation');
         if (!$annotation instanceof Hydrator) {
             return;
         }
 
-        /** @var mixed $elementSpec */
         $elementSpec = $e->getParam('elementSpec');
-        \Jield\Stdlib\Value::setPath($elementSpec, ['spec', 'hydrator'], $annotation->getHydratorSpecification());
+        Value::setPath($elementSpec, ['spec', 'hydrator'], $annotation->getHydratorSpecification());
     }
 
     /**
@@ -319,15 +321,13 @@ final class ElementAnnotationsListener extends AbstractAnnotationsListener
      */
     public function handleInputAnnotation(EventInterface $e): void
     {
-        /** @var mixed $annotation */
         $annotation = $e->getParam('annotation');
         if (!$annotation instanceof Input) {
             return;
         }
 
-        /** @var mixed $inputSpec */
         $inputSpec = $e->getParam('inputSpec');
-        \Jield\Stdlib\Value::setPath($inputSpec, ['type'], $annotation->getInput());
+        Value::setPath($inputSpec, ['type'], $annotation->getInput());
     }
 
     /**
@@ -337,15 +337,13 @@ final class ElementAnnotationsListener extends AbstractAnnotationsListener
      */
     public function handleInstanceAnnotation(EventInterface $e): void
     {
-        /** @var mixed $annotation */
         $annotation = $e->getParam('annotation');
         if (!$annotation instanceof Instance) {
             return;
         }
 
-        /** @var mixed $elementSpec */
         $elementSpec = $e->getParam('elementSpec');
-        \Jield\Stdlib\Value::setPath($elementSpec, ['spec', 'object'], $annotation->getInstance());
+        Value::setPath($elementSpec, ['spec', 'object'], $annotation->getInstance());
     }
 
     /**
@@ -355,15 +353,17 @@ final class ElementAnnotationsListener extends AbstractAnnotationsListener
      */
     public function handleOptionsAnnotation(EventInterface $e): void
     {
-        /** @var mixed $annotation */
         $annotation = $e->getParam('annotation');
         if (!$annotation instanceof Options) {
             return;
         }
 
-        /** @var mixed $elementSpec */
         $elementSpec = $e->getParam('elementSpec');
-        \Jield\Stdlib\Value::setPath($elementSpec, ['spec', 'options'], $this->mergeOptions(\Jield\Stdlib\Value::accessible($elementSpec), $annotation));
+        Value::setPath(
+            $elementSpec,
+            ['spec', 'options'],
+            $this->mergeOptions(Value::accessible($elementSpec), $annotation),
+        );
     }
 
     /**
@@ -373,25 +373,22 @@ final class ElementAnnotationsListener extends AbstractAnnotationsListener
      */
     public function handleRequiredAnnotation(EventInterface $e): void
     {
-        /** @var mixed $annotation */
         $annotation = $e->getParam('annotation');
         if (!$annotation instanceof Required) {
             return;
         }
 
         $required = $annotation->getRequired();
-        /** @var mixed $inputSpec */
         $inputSpec = $e->getParam('inputSpec');
-        \Jield\Stdlib\Value::setPath($inputSpec, ['required'], $required);
+        Value::setPath($inputSpec, ['required'], $required);
 
         if ($required) {
-            /** @var mixed $elementSpec */
             $elementSpec = $e->getParam('elementSpec');
             if (!isset($elementSpec['spec']['attributes'])) {
-                \Jield\Stdlib\Value::setPath($elementSpec, ['spec', 'attributes'], []);
+                Value::setPath($elementSpec, ['spec', 'attributes'], []);
             }
 
-            \Jield\Stdlib\Value::setPath($elementSpec, ['spec', 'attributes', 'required'], 'required');
+            Value::setPath($elementSpec, ['spec', 'attributes', 'required'], 'required');
         }
     }
 
@@ -402,15 +399,13 @@ final class ElementAnnotationsListener extends AbstractAnnotationsListener
      */
     public function handleTypeAnnotation(EventInterface $e): void
     {
-        /** @var mixed $annotation */
         $annotation = $e->getParam('annotation');
         if (!$annotation instanceof Type) {
             return;
         }
 
-        /** @var mixed $elementSpec */
         $elementSpec = $e->getParam('elementSpec');
-        \Jield\Stdlib\Value::setPath($elementSpec, ['spec', 'type'], $annotation->getType());
+        Value::setPath($elementSpec, ['spec', 'type'], $annotation->getType());
     }
 
     /**
@@ -420,18 +415,16 @@ final class ElementAnnotationsListener extends AbstractAnnotationsListener
      */
     public function handleValidatorAnnotation(EventInterface $e): void
     {
-        /** @var mixed $annotation */
         $annotation = $e->getParam('annotation');
         if (!$annotation instanceof Validator) {
             return;
         }
 
-        /** @var mixed $inputSpec */
         $inputSpec = $e->getParam('inputSpec');
         if (!isset($inputSpec['validators'])) {
-            \Jield\Stdlib\Value::setPath($inputSpec, ['validators'], []);
+            Value::setPath($inputSpec, ['validators'], []);
         }
-        \Jield\Stdlib\Value::setPath($inputSpec, ['validators', null], $annotation->getValidatorSpecification());
+        Value::setPath($inputSpec, ['validators', null], $annotation->getValidatorSpecification());
     }
 
     /**

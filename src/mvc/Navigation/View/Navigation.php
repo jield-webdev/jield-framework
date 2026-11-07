@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace Jield\Mvc\Navigation\View;
 
-use Laminas\Navigation\AbstractContainer;
-use Laminas\Navigation\Exception\ExceptionInterface;
 use Jield\Mvc\Navigation\View\Navigation\AbstractHelper as AbstractNavigationHelper;
 use Jield\Mvc\Navigation\View\Navigation\HelperInterface as NavigationHelper;
+use Jield\Mvc\View\Helper\AbstractTranslatorHelper;
+use Jield\Stdlib\Value;
+use Laminas\Navigation\AbstractContainer;
+use Laminas\Navigation\Exception\ExceptionInterface;
 use Laminas\View\Exception;
 use Laminas\View\Renderer\RendererInterface as Renderer;
+
 use function assert;
 use function call_user_func_array;
 use function method_exists;
@@ -118,7 +121,7 @@ class Navigation extends AbstractNavigationHelper
             if (method_exists($helper, 'setServiceLocator') && $this->getServiceLocator()) {
                 $helper->setServiceLocator($this->getServiceLocator());
             }
-            return call_user_func_array(\Jield\Stdlib\Value::callback($helper), $arguments);
+            return call_user_func_array(Value::callback($helper), $arguments);
         }
 
         // default behaviour: proxy call to container
@@ -155,10 +158,7 @@ class Navigation extends AbstractNavigationHelper
         $plugins = $this->getPluginManager();
         if (!$plugins->has($proxy)) {
             if ($strict) {
-                throw new Exception\RuntimeException(sprintf(
-                    'Failed to find plugin for %s',
-                    $proxy
-                ));
+                throw new Exception\RuntimeException(sprintf('Failed to find plugin for %s', $proxy));
             }
 
             return false;
@@ -168,7 +168,7 @@ class Navigation extends AbstractNavigationHelper
         $helper = $plugins->get($proxy);
         assert($helper instanceof NavigationHelper);
         $container = $this->getContainer();
-        $hash      = spl_object_hash($container) . spl_object_hash($helper);
+        $hash = spl_object_hash($container) . spl_object_hash($helper);
 
         if (!isset($this->injected[$hash])) {
             $helper->setContainer();
@@ -205,11 +205,12 @@ class Navigation extends AbstractNavigationHelper
             }
         }
 
-        if ($this->getInjectTranslator() && $helper instanceof \Jield\Mvc\View\Helper\AbstractTranslatorHelper && !$helper->hasTranslator()) {
-            $helper->setTranslator(
-                $this->getTranslator(),
-                $this->getTranslatorTextDomain()
-            );
+        if (
+            $this->getInjectTranslator()
+            && $helper instanceof AbstractTranslatorHelper
+            && !$helper->hasTranslator()
+        ) {
+            $helper->setTranslator($this->getTranslator(), $this->getTranslatorTextDomain());
         }
     }
 
@@ -331,7 +332,7 @@ class Navigation extends AbstractNavigationHelper
             if ($serviceLocator === null) {
                 throw new Exception\RuntimeException(sprintf(
                     '%s requires a service locator; none was injected before retrieving the plugin manager',
-                    self::class
+                    self::class,
                 ));
             }
 
@@ -350,7 +351,7 @@ class Navigation extends AbstractNavigationHelper
     public function setView(Renderer $view): static
     {
         parent::setView($view);
-        if ($view && $this->plugins) {
+        if ($this->plugins !== null) {
             $this->plugins->setRenderer($view);
         }
         return $this;

@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace Jield\Mvc\Plugin\FlashMessenger\Factory;
 
+use Jield\Mvc\Controller\PluginManager;
 use Jield\Mvc\Plugin\FlashMessenger\View\Helper\FlashMessenger;
 use Jield\Mvc\Plugin\FlashMessenger\View\Helper\FlashMessengerNamespace;
+use Jield\Stdlib\Service;
+use Jield\Stdlib\Value;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Psr\Container\ContainerInterface;
 
@@ -16,14 +19,17 @@ class FlashMessengerFactory implements FactoryInterface
         string $requestedName,
         ?array $options = null,
     ): FlashMessenger {
-        $controllerPluginManager = \Jield\Stdlib\Service::get($container, \Jield\Mvc\Controller\PluginManager::class, 'ControllerPluginManager');
+        $controllerPluginManager = Service::get(
+            $container,
+            PluginManager::class,
+            'ControllerPluginManager',
+        );
         /** @var \Jield\Mvc\Plugin\FlashMessenger\FlashMessenger $flashMessenger */
         $flashMessenger = $controllerPluginManager->get('flashmessenger');
 
-        /** @var mixed $config */
         $config = $container->get('config');
         if (isset($config['view_helper_config']['flashmessenger'])) {
-            $configHelper = \Jield\Stdlib\Value::toArray($config['view_helper_config']['flashmessenger']);
+            $configHelper = Value::toArray($config['view_helper_config']['flashmessenger']);
             return $this->createHelperWithActualConfig(flashMessenger: $flashMessenger, configHelper: $configHelper);
         }
 

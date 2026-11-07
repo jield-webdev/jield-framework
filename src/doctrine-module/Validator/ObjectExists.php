@@ -5,14 +5,14 @@ declare(strict_types=1);
 namespace DoctrineModule\Validator;
 
 use Doctrine\Persistence\ObjectRepository;
+use Jield\Stdlib\Value;
+use Jield\Validator\Options;
 use Laminas\Stdlib\ArrayUtils;
 use Laminas\Validator\AbstractValidator;
 use Laminas\Validator\Exception;
-use ValueError;
 
 use function array_combine;
 use function array_key_exists;
-use function array_values;
 use function count;
 use function gettype;
 use function is_countable;
@@ -40,8 +40,9 @@ class ObjectExists extends AbstractValidator
 
     /**
      * Fields to be checked
+     * @var list<string>
      */
-    protected mixed $fields = null;
+    protected array $fields = [];
 
     /**
      * Constructor
@@ -77,28 +78,26 @@ class ObjectExists extends AbstractValidator
             . ' existing instances');
         }
 
-        $this->fields = $options['fields'];
-        $this->validateFields();
+        $this->fields = $this->validateFields($options['fields']);
 
-        parent::__construct(options: $options);
+        parent::__construct(options: Options::normalize($options));
     }
 
     /**
      * Filters and validates the fields passed to the constructor
      *
-     * @return array
+     * @return list<string>
      *
      * @throws Exception\InvalidArgumentException
      */
-    private function validateFields(): array
+    private function validateFields(mixed $fields): array
     {
-        $fields = \Jield\Stdlib\Value::toArray($this->fields);
+        $fields = Value::toArray($fields);
 
         if ($fields === []) {
             throw new Exception\InvalidArgumentException(message: 'Provided fields list was empty!');
         }
 
-        /** @var mixed $field */
         foreach ($fields as $key => $field) {
             if (!is_string(value: $field)) {
                 throw new Exception\InvalidArgumentException(message: sprintf(
@@ -109,44 +108,39 @@ class ObjectExists extends AbstractValidator
             }
         }
 
-        $this->fields = array_values(array: $fields);
-
-        return $this->fields;
+        return Value::stringList($fields);
     }
 
     /**
-     * @param string|int|object|array $value a field value or an array of field values if more fields have been configured to be
+     * @param mixed $value a field value or an array of field values if more fields have been configured to be
      *                      matched
      *
      * @return array
      *
      * @throws Exception\RuntimeException
      */
-    protected function cleanSearchValue(string|int|object|array $value): array
+    protected function cleanSearchValue(mixed $value): array
     {
-        $value = is_object(value: $value) ? [$value] : (array) $value;
+        $value = is_object(value: $value) ? [$value] : Value::toArray($value);
 
         if (ArrayUtils::isHashTable(value: $value)) {
             $matchedFieldsValues = [];
 
-            /** @var mixed $field */
-            foreach (\Jield\Stdlib\Value::iterable($this->fields) as $field) {
-                if (!array_key_exists(key: \Jield\Stdlib\Value::plainScalar($field), array: $value)) {
+            foreach ($this->fields as $field) {
+                if (!array_key_exists(key: $field, array: $value)) {
                     throw new Exception\RuntimeException(message: sprintf(
                         'Field "%s" was not provided, but was expected since the configured field lists needs'
                         . ' it for validation',
-                        \Jield\Stdlib\Value::scalar($field),
+                        Value::scalar($field),
                     ));
                 }
 
-                $matchedFieldsValues[\Jield\Stdlib\Value::key($field)] = $value[$field];
+                $matchedFieldsValues[Value::key($field)] = $value[$field];
             }
         } else {
-            try {
-                $matchedFieldsValues = @array_combine(keys: $this->fields, values: $value);
-            } catch (ValueError) {
-                $matchedFieldsValues = false;
-            }
+            $matchedFieldsValues = count($this->fields) === count($value)
+                ? array_combine(keys: $this->fields, values: $value)
+                : false;
 
             if ($matchedFieldsValues === false) {
                 throw new Exception\RuntimeException(message: sprintf(
@@ -166,7 +160,7 @@ class ObjectExists extends AbstractValidator
     public function isValid($value): bool
     {
         $cleanedValue = $this->cleanSearchValue(value: $value);
-        $match = $this->objectRepository->findOneBy(criteria: \Jield\Stdlib\Value::stringKeyedArray($cleanedValue));
+        $match = $this->objectRepository->findOneBy(criteria: Value::stringKeyedArray($cleanedValue));
 
         if (is_object(value: $match)) {
             return true;

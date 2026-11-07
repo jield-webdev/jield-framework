@@ -6,12 +6,14 @@ namespace Jield\Bootstrap5\Navigation\View;
 
 use Jield\Bootstrap5\View\Helper\Navigation;
 use Jield\Bootstrap5\View\Helper\Navigation\Menu;
+use Jield\Stdlib\Service;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Laminas\Translator\TranslatorInterface;
 use Laminas\View\Helper\EscapeHtml;
 use Laminas\View\Helper\EscapeHtmlAttr;
 use Laminas\View\Helper\HtmlAttributes;
 use Psr\Container\ContainerInterface;
+use ReflectionException;
 use ReflectionProperty;
 
 final class NavigationHelperFactory implements FactoryInterface
@@ -21,10 +23,12 @@ final class NavigationHelperFactory implements FactoryInterface
         $services = $this->getApplicationServicesFromContainer($container);
 
         $menu = new Menu(
-            escapeHtml: \Jield\Stdlib\Service::get($container, EscapeHtml::class),
-            escapeHtmlAttr: \Jield\Stdlib\Service::get($container, EscapeHtmlAttr::class),
-            htmlAttributes: \Jield\Stdlib\Service::get($container, HtmlAttributes::class),
-            translator: $services->has(TranslatorInterface::class) ? \Jield\Stdlib\Service::get($services, TranslatorInterface::class) : null,
+            escapeHtml: Service::get($container, EscapeHtml::class),
+            escapeHtmlAttr: Service::get($container, EscapeHtmlAttr::class),
+            htmlAttributes: Service::get($container, HtmlAttributes::class),
+            translator: $services->has(TranslatorInterface::class)
+                ? Service::get($services, TranslatorInterface::class)
+                : null,
         );
 
         return new Navigation($menu, $services);
@@ -34,9 +38,8 @@ final class NavigationHelperFactory implements FactoryInterface
     {
         try {
             $r = new ReflectionProperty($container, 'creationContext');
-            /** @var mixed $services */
             $services = $r->getValue($container);
-        } catch (\ReflectionException) {
+        } catch (ReflectionException) {
             return $container;
         }
 

@@ -7,6 +7,7 @@ namespace Jield\ApiTools\OAuth2;
 use Jield\ApiTools\Listener\AbstractRoutedListener;
 use Jield\ApiTools\MvcAuth\Identity\AuthenticatedIdentity;
 use Jield\Mvc\MvcEvent;
+use Jield\Stdlib\Value;
 use Laminas\Http\Request;
 use Laminas\Http\Response;
 
@@ -41,7 +42,7 @@ abstract class AbstractListenerScopeGuard
         }
 
         $required = $listener === null ? [] : $listener::getScopesForMethod($request->getMethod());
-        $scopes = Scope::split(\Jield\Stdlib\Value::nullableString($data['scope'] ?? null));
+        $scopes = Scope::split(Value::nullableString($data['scope'] ?? null));
         if ($required === [] || array_intersect($scopes, $required) === []) {
             return $this->deny(
                 $event,
@@ -52,8 +53,9 @@ abstract class AbstractListenerScopeGuard
             );
         }
         if (
-            $this->isApplicationIdentity($data)
-            && array_intersect($scopes, $required, \Jield\Stdlib\Value::array($listener::getApplicationScopes())) === []
+            $listener !== null
+            && $this->isApplicationIdentity($data)
+            && array_intersect($scopes, $required, Value::array($listener::getApplicationScopes())) === []
         ) {
             return $this->deny(
                 $event,
@@ -92,9 +94,12 @@ abstract class AbstractListenerScopeGuard
             'WWW-Authenticate',
             'Bearer error="' . $error . '"' . ($scopes === [] ? '' : ', scope="' . implode(' ', $scopes) . '"'),
         );
-        return \Jield\Stdlib\Value::instance($response->setContent(json_encode([
-            'error' => $error,
-            'error_description' => $description,
-        ], JSON_THROW_ON_ERROR)), \Laminas\Http\Response::class);
+        return Value::instance(
+            $response->setContent(json_encode([
+                'error' => $error,
+                'error_description' => $description,
+            ], JSON_THROW_ON_ERROR)),
+            \Laminas\Http\Response::class,
+        );
     }
 }
