@@ -132,8 +132,10 @@ class ServiceListenerFactory implements FactoryInterface
         string $requestedName,
         ?array $options = null,
     ): ServiceListenerInterface {
+        /** @mago-var mixed $configuration */
         $configuration = $container->get('ApplicationConfig');
 
+        /** @mago-var mixed $serviceListener */
         $serviceListener = $container->has('ServiceListenerInterface')
             ? $container->get('ServiceListenerInterface')
             : new ServiceListener(Assert::isInstanceOf($container, ServiceManager::class));
@@ -170,14 +172,15 @@ class ServiceListenerFactory implements FactoryInterface
             ));
         }
 
+        /** @mago-var mixed $newServiceManager */
         foreach ($options as $key => $newServiceManager) {
             $this->validatePluginManagerOptions(Assert::isArray($newServiceManager), Assert::string($key));
 
             $serviceListener->addServiceManager(
                 Assert::string($newServiceManager['service_manager']),
-                $newServiceManager['config_key'],
-                $newServiceManager['interface'],
-                $newServiceManager['method'],
+                Assert::string($newServiceManager['config_key']),
+                Assert::string($newServiceManager['interface']),
+                Assert::string($newServiceManager['method']),
             );
         }
     }

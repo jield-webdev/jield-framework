@@ -17,15 +17,17 @@ class PathStackResolverServiceFactory implements FactoryInterface
     #[Override]
     public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): PathStackResolver
     {
+        /** @mago-var mixed $config */
         $config = $container->get('config');
         $pathStackResolver = new PathStackResolver();
         $paths = [];
 
         if (isset($config['asset_manager']['resolver_configs']['paths'])) {
+            /** @mago-var mixed $paths */
             $paths = $config['asset_manager']['resolver_configs']['paths'];
         }
 
-        $pathStackResolver->addPaths(paths: $paths);
+        $pathStackResolver->addPaths(paths: \Webmozart\Assert\Assert::isIterable($paths));
 
         return $pathStackResolver;
     }

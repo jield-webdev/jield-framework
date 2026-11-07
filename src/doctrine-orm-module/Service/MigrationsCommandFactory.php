@@ -65,6 +65,7 @@ final class MigrationsCommandFactory implements FactoryInterface
             throw new InvalidArgumentException(message: 'The class ' . $commandClassName . ' does not exist');
         }
 
+        /** @mago-var mixed $config */
         $config = $container->get('config');
         $objectManagerName = $this->getObjectManagerName();
 
@@ -77,21 +78,27 @@ final class MigrationsCommandFactory implements FactoryInterface
             throw new RuntimeException(message: 'The object manager name is invalid: ' . $objectManagerName);
         }
 
+        /** @mago-var mixed $migrationConfig */
         $migrationConfig = $config['doctrine']['migrations_configuration'][$matches['serviceName']] ?? [];
         $dependencyFactoryServices = [];
 
-        if (array_key_exists(key: 'dependency_factory_services', array: $migrationConfig)) {
+        if (array_key_exists(key: 'dependency_factory_services', array: Assert::isArray($migrationConfig))) {
+            /** @mago-var mixed $dependencyFactoryServices */
             $dependencyFactoryServices = $migrationConfig['dependency_factory_services'];
             unset($migrationConfig['dependency_factory_services']);
         }
 
         $dependencyFactory = DependencyFactory::fromEntityManager(
-            new ConfigurationArray($migrationConfig),
-            new ExistingEntityManager($container->get($objectManagerName)),
+            new ConfigurationArray(Value::stringKeyedArray($migrationConfig)),
+            new ExistingEntityManager(Assert::isInstanceOf($container->get($objectManagerName), \Doctrine\ORM\EntityManagerInterface::class)),
         );
 
+        /**
+         * @mago-var mixed $id
+         * @mago-var mixed $service
+         */
         foreach (Assert::isIterable($dependencyFactoryServices) as $id => $service) {
-            $dependencyFactory->setService($id, Assert::isCallable($container->get($service)));
+            $dependencyFactory->setService(Assert::string($id), Assert::isCallable($container->get(Assert::string($service))));
         }
 
         // An object manager may not have a migrations configuration and that's OK.
@@ -110,6 +117,6 @@ final class MigrationsCommandFactory implements FactoryInterface
             return $this->defaultObjectManagerName;
         }
 
-        return $arguments->getParameterOption(values: '--object-manager');
+        return Assert::string($arguments->getParameterOption(values: '--object-manager'));
     }
 }

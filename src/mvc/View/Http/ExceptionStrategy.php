@@ -100,6 +100,7 @@ class ExceptionStrategy extends AbstractListenerAggregate
         }
 
         // Do nothing if the result is a response object
+        /** @mago-var mixed $result */
         $result = $e->getResult();
         if ($result instanceof Response) {
             return;

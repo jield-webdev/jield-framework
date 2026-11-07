@@ -53,27 +53,32 @@ class AssetFilterManager implements MimeResolverAwareInterface
         $mimeType = $asset->getMimeType() ?? '';
 
         if (!empty($config[$path])) {
+            /** @mago-var mixed $filters */
             $filters = $config[$path];
         } elseif (!empty($config[$mimeType])) {
+            /** @mago-var mixed $filters */
             $filters = $config[$mimeType];
         } else {
+            /** @mago-var mixed $extension */
             $extension = $this->getMimeResolver()->getExtension(mimetype: $mimeType);
             if (!empty($config[$extension])) {
+                /** @mago-var mixed $filters */
                 $filters = $config[$extension];
             } else {
                 return;
             }
         }
 
+        /** @mago-var mixed $filter */
         foreach (Assert::isIterable($filters) as $filter) {
             if (is_null(value: $filter)) {
                 continue;
             }
 
             if (!empty($filter['filter'])) {
-                $this->ensureByFilter(asset: $asset, filter: $filter['filter']);
+                $this->ensureByFilter(asset: $asset, filter: Value::instanceOrString($filter['filter'], \Assetic\Contracts\Filter\FilterInterface::class));
             } elseif (!empty($filter['service'])) {
-                $this->ensureByService(asset: $asset, service: $filter['service']);
+                $this->ensureByService(asset: $asset, service: Assert::string(Value::accessible($filter)['service']));
             } else {
                 throw new Exception\RuntimeException(message: 'Invalid filter supplied. Expected Filter or Service.');
             }
@@ -89,7 +94,7 @@ class AssetFilterManager implements MimeResolverAwareInterface
      */
     protected function ensureByService(AssetInterface $asset, string $service): void
     {
-        $this->ensureByFilter(asset: $asset, filter: $this->container->get($service));
+        $this->ensureByFilter(asset: $asset, filter: Value::instanceOrString($this->container->get($service), \Assetic\Contracts\Filter\FilterInterface::class));
     }
 
     /**

@@ -38,9 +38,10 @@ class SearchUpdateService
 
         $searchServiceNames = $this->findSearchServicesFromEntity(entity: $entity);
 
+        /** @mago-var mixed $searchServiceName */
         foreach ($searchServiceNames as $searchServiceName) {
             /** @var AbstractSearchService $searchServiceInstance */
-            $searchServiceInstance = $this->container->get($searchServiceName);
+            $searchServiceInstance = $this->container->get(Assert::string($searchServiceName));
             $searchServiceInstance->updateEntity(entity: $entity);
         }
     }
@@ -49,9 +50,10 @@ class SearchUpdateService
     {
         $searchServiceNames = $this->findSearchServicesFromEntity(entity: $entity);
 
+        /** @mago-var mixed $searchServiceName */
         foreach ($searchServiceNames as $searchServiceName) {
             /** @var AbstractSearchService $searchServiceInstance */
-            $searchServiceInstance = $this->container->get($searchServiceName);
+            $searchServiceInstance = $this->container->get(Assert::string($searchServiceName));
             $searchServiceInstance->deleteDocument(entity: $entity);
         }
     }
@@ -77,16 +79,17 @@ class SearchUpdateService
 
         //We only push the ID's and the classname and the service into the job
         $entityIds = [];
+        /** @mago-var mixed $updateAbleEntity */
         foreach ($entities as $updateAbleEntity) {
             //We only allow entities of the same class
             if (
-                ClassUtils::getRealClass(className: $updateAbleEntity::class) !== ClassUtils::getRealClass(
+                ClassUtils::getRealClass(className: Value::classString($updateAbleEntity::class)) !== ClassUtils::getRealClass(
                     className: $entityClassName,
                 )
             ) {
                 throw new InvalidArgumentException(
                     message: 'All entities must be of the same class, got '
-                    . ClassUtils::getRealClass(className: $updateAbleEntity::class)
+                    . ClassUtils::getRealClass(className: Value::classString($updateAbleEntity::class))
                     . ' and expected '
                     . $entityClassName,
                 );
@@ -105,7 +108,7 @@ class SearchUpdateService
     public function updateIndex(string $entityClassName): void
     {
         //Sometimes we get proxies, then we need to get the real class
-        $entityClassName = ClassUtils::getRealClass(className: $entityClassName);
+        $entityClassName = ClassUtils::getRealClass(className: Value::classString($entityClassName));
 
         //Only entity classnames which implement interface can be used
         Assert::isInstanceOf(value: Value::instantiate($entityClassName), class: HasSearchInterface::class);
@@ -127,8 +130,10 @@ class SearchUpdateService
 
         $services = [];
 
+        /** @mago-var mixed $core */
         foreach ($this->cores as $core) {
-            if ($core['entity'] !== $entity) {
+            $core = Assert::isArray($core);
+            if (Value::accessible($core)['entity'] !== $entity) {
                 continue;
             }
 

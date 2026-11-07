@@ -75,7 +75,7 @@ abstract class AbstractRestfulController extends AbstractController
     /**
      * Map of custom HTTP methods and their handlers
      *
-     * @var array
+     * @var array<string, callable(MvcEvent): mixed>
      */
     protected array $customHttpMethodsMap = [];
 
@@ -335,6 +335,7 @@ abstract class AbstractRestfulController extends AbstractController
         $request = $e->getRequest();
 
         // Was an "action" requested?
+        /** @mago-var mixed $action */
         $action = $routeMatch->getParam('action', false);
         if ($action) {
             // Handle arbitrary methods, ending in Action
@@ -342,6 +343,7 @@ abstract class AbstractRestfulController extends AbstractController
             if (!method_exists($this, $method)) {
                 $method = 'notFoundAction';
             }
+            /** @mago-var mixed $return */
             $return = Value::call($this, $method, [], scope: self::class);
             $e->setResult($return);
             return $return;
@@ -350,6 +352,7 @@ abstract class AbstractRestfulController extends AbstractController
         // RESTful methods
         $method = strtolower(Assert::isInstanceOf($request, \Laminas\Http\Request::class)->getMethod());
         if (isset($this->customHttpMethodsMap[$method])) {
+            /** @mago-var mixed $return */
             $return = $this->customHttpMethodsMap[$method]($e);
             $routeMatch->setParam('action', $method);
             $e->setResult($return);
@@ -358,37 +361,46 @@ abstract class AbstractRestfulController extends AbstractController
         switch ($method) {
             // DELETE
             case 'delete':
+                /** @mago-var mixed $id */
                 $id = $this->getIdentifier($routeMatch, $request);
 
                 if ($id !== false) {
                     $action = 'delete';
+                    /** @mago-var mixed $return */
                     $return = $this->delete($id);
                     break;
                 }
 
+                /** @mago-var mixed $data */
                 $data = $this->processBodyContent($request);
 
                 $action = 'deleteList';
+                /** @mago-var mixed $return */
                 $return = $this->deleteList($data);
                 break;
                 // GET
             case 'get':
+                /** @mago-var mixed $id */
                 $id = $this->getIdentifier($routeMatch, $request);
                 if ($id !== false) {
                     $action = 'get';
+                    /** @mago-var mixed $return */
                     $return = $this->get($id);
                     break;
                 }
                 $action = 'getList';
+                /** @mago-var mixed $return */
                 $return = $this->getList();
                 break;
                 // HEAD
             case 'head':
+                /** @mago-var mixed $id */
                 $id = $this->getIdentifier($routeMatch, $request);
                 if ($id === false) {
                     $id = null;
                 }
                 $action = 'head';
+                /** @mago-var mixed $headResult */
                 $headResult = $this->head($id);
                 $response = $headResult instanceof Response ? clone $headResult : $e->getResponse();
                 $response->setContent('');
@@ -402,11 +414,14 @@ abstract class AbstractRestfulController extends AbstractController
                 break;
                 // PATCH
             case 'patch':
+                /** @mago-var mixed $id */
                 $id = $this->getIdentifier($routeMatch, $request);
+                /** @mago-var mixed $data */
                 $data = $this->processBodyContent($request);
 
                 if ($id !== false) {
                     $action = 'patch';
+                    /** @mago-var mixed $return */
                     $return = $this->patch($id, $data);
                     break;
                 }
@@ -416,6 +431,7 @@ abstract class AbstractRestfulController extends AbstractController
                 // instead of going to patchList
                 try {
                     $action = 'patchList';
+                    /** @mago-var mixed $return */
                     $return = $this->patchList($data);
                 } catch (RuntimeException) {
                     $response = $e->getResponse();
@@ -426,20 +442,25 @@ abstract class AbstractRestfulController extends AbstractController
                 // POST
             case 'post':
                 $action = 'create';
+                /** @mago-var mixed $return */
                 $return = $this->processPostData($request);
                 break;
                 // PUT
             case 'put':
+                /** @mago-var mixed $id */
                 $id = $this->getIdentifier($routeMatch, $request);
+                /** @mago-var mixed $data */
                 $data = $this->processBodyContent($request);
 
                 if ($id !== false) {
                     $action = 'update';
+                    /** @mago-var mixed $return */
                     $return = $this->update($id, $data);
                     break;
                 }
 
                 $action = 'replaceList';
+                /** @mago-var mixed $return */
                 $return = $this->replaceList($data);
                 break;
                 // All others...
@@ -492,8 +513,9 @@ abstract class AbstractRestfulController extends AbstractController
         }
         $requestedContentType = trim($requestedContentType);
         if ($contentType !== null && array_key_exists($contentType, $this->contentTypes)) {
+            /** @mago-var mixed $contentTypeValue */
             foreach (Assert::isIterable($this->contentTypes[$contentType]) as $contentTypeValue) {
-                if (stripos($contentTypeValue, $requestedContentType) === 0) {
+                if (stripos(Assert::string($contentTypeValue), $requestedContentType) === 0) {
                     return true;
                 }
             }
@@ -553,11 +575,13 @@ abstract class AbstractRestfulController extends AbstractController
     protected function getIdentifier($routeMatch, $request): mixed
     {
         $identifier = $this->getIdentifierName();
+        /** @mago-var mixed $id */
         $id = $routeMatch->getParam($identifier, false);
         if ($id !== false) {
             return $id;
         }
 
+        /** @mago-var mixed $id */
         $id = Value::call(
             Assert::isInstanceOf($request, \Laminas\Http\Request::class)->getQuery(),
             'get',
@@ -587,7 +611,7 @@ abstract class AbstractRestfulController extends AbstractController
         $content = Assert::string(Value::call($request, 'getContent'));
 
         // JSON content? decode and return it.
-        if ($this->requestHasContentType($request, self::CONTENT_TYPE_JSON)) {
+        if ($this->requestHasContentType(Assert::isInstanceOf($request, \Laminas\Stdlib\RequestInterface::class), self::CONTENT_TYPE_JSON)) {
             return $this->jsonDecode($content);
         }
 

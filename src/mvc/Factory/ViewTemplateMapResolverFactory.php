@@ -28,15 +28,21 @@ class ViewTemplateMapResolverFactory implements FactoryInterface
         string $requestedName,
         ?array $options = null,
     ): ViewResolver\TemplateMapResolver {
+        /** @mago-var mixed $config */
         $config = $container->get('config');
         $map = [];
         if (is_array($config) && isset($config['view_manager'])) {
+            /** @mago-var mixed $config */
             $config = $config['view_manager'];
             if (is_array($config) && isset($config['template_map'])) {
-                $map = $config['template_map'];
+                $map = Assert::isIterable($config['template_map']);
             }
         }
         $templates = [];
+        /**
+         * @mago-var mixed $name
+         * @mago-var mixed $path
+         */
         foreach ($map as $name => $path) {
             $templates[Assert::stringNotEmpty($name)] = Assert::stringNotEmpty($path);
         }

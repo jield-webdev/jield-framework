@@ -78,8 +78,9 @@ class MapResolver implements ResolverInterface, MimeResolverAwareInterface
             return null;
         }
 
+        /** @mago-var mixed $file */
         $file = $this->map[$fileName];
-        $mimeType = $this->getMimeResolver()->getMimeType(filename: $file);
+        $mimeType = $this->getMimeResolver()->getMimeType(filename: Assert::string($file));
 
         if (false === filter_var(value: $file, filter: FILTER_VALIDATE_URL)) {
             $asset = new FileAsset(source: Assert::string($file));

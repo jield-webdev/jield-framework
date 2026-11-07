@@ -56,6 +56,7 @@ final class Value
     public static function namedValues(mixed $value): array
     {
         $result = [];
+        /** @mago-var mixed $item */
         foreach (self::stringKeyedArray($value) as $key => $item) {
             $result[self::nonEmptyString($key)] = $item;
         }
@@ -82,6 +83,7 @@ final class Value
     public static function maps(mixed $value): array
     {
         $result = [];
+        /** @mago-var mixed $item */
         foreach (self::array($value) as $key => $item) {
             $result[$key] = self::stringKeyedArray($item);
         }
@@ -98,6 +100,7 @@ final class Value
     public static function keys(mixed $value): array
     {
         $result = [];
+        /** @mago-var mixed $item */
         foreach (self::array($value) as $key => $item) {
             $result[$key] = self::key($item);
         }
@@ -127,6 +130,7 @@ final class Value
     public static function instances(mixed $value, string $type): array
     {
         $result = [];
+        /** @mago-var mixed $item */
         foreach (self::array($value) as $key => $item) {
             $result[$key] = self::instance($item, $type);
         }
@@ -204,6 +208,7 @@ final class Value
     public static function routeParams(mixed $value): array
     {
         $values = self::stringKeyedArray($value);
+        /** @mago-var mixed $item */
         foreach ($values as $item) {
             if (!is_int($item) && !is_float($item) && !is_string($item) && $item !== null) {
                 throw self::invalid('route parameter', $item);
@@ -406,6 +411,7 @@ final class Value
     public static function scalars(mixed $value): array
     {
         $result = [];
+        /** @mago-var mixed $item */
         foreach (self::array($value) as $key => $item) {
             $result[$key] = self::scalar($item);
         }
@@ -416,6 +422,7 @@ final class Value
     public static function scalarMap(mixed $value): array
     {
         $result = [];
+        /** @mago-var mixed $item */
         foreach (self::stringKeyedArray($value) as $key => $item) {
             $result[$key] = self::plainScalar($item);
         }
@@ -426,16 +433,66 @@ final class Value
     public static function strings(mixed $value): array
     {
         $result = [];
+        /** @mago-var mixed $item */
         foreach (self::array($value) as $key => $item) {
             $result[$key] = self::string($item);
         }
         return $result;
     }
 
+    /** @return array<array-key, string>|string */
+    public static function stringsOrString(mixed $value): array|string
+    {
+        return is_array($value) ? self::strings($value) : self::string($value);
+    }
+
+    /**
+     * @template TValue
+     * @param array<array-key, TValue> $allowed
+     * @return TValue
+     */
+    public static function oneOf(mixed $value, array $allowed): mixed
+    {
+        foreach ($allowed as $candidate) {
+            if ($candidate === $value) {
+                return $candidate;
+            }
+        }
+
+        throw self::invalid('one of the allowed values', $value);
+    }
+
+    /** @return iterable<non-empty-string, mixed> */
+    public static function namedIterable(mixed $value): iterable
+    {
+        /**
+         * @mago-var mixed $key
+         * @mago-var mixed $item
+         */
+        foreach (self::iterable($value) as $key => $item) {
+            yield self::nonEmptyString($key) => $item;
+        }
+    }
+
+    /** @return \Laminas\Stdlib\AbstractOptions<mixed>|array<string, mixed>|null */
+    public static function options(mixed $value): \Laminas\Stdlib\AbstractOptions|array|null
+    {
+        if ($value === null || $value instanceof \Laminas\Stdlib\AbstractOptions) {
+            return $value;
+        }
+
+        if ($value instanceof \Traversable) {
+            $value = iterator_to_array($value);
+        }
+
+        return self::stringKeyedArray($value);
+    }
+
     /** @return array<string, string> */
     public static function stringMap(mixed $value): array
     {
         $result = [];
+        /** @mago-var mixed $item */
         foreach (self::stringKeyedArray($value) as $key => $item) {
             $result[$key] = self::string($item);
         }
@@ -510,7 +567,11 @@ final class Value
         if (!class_exists($class)) {
             throw new TypeError(sprintf('Configured class "%s" does not exist.', $class));
         }
-        return new $class(...$arguments);
+        $reflection = new ReflectionClass(self::classString($class));
+
+        return self::object($reflection->getConstructor() === null
+            ? $reflection->newInstance()
+            : $reflection->newInstanceArgs($arguments));
     }
 
     /**

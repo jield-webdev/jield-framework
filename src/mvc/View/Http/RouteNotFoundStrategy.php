@@ -158,6 +158,7 @@ class RouteNotFoundStrategy extends AbstractListenerAggregate
      */
     public function prepareNotFoundViewModel(MvcEvent $e): void
     {
+        /** @mago-var mixed $vars */
         $vars = $e->getResult();
         if ($vars instanceof Response) {
             // Already have a response as the result
@@ -242,6 +243,7 @@ class RouteNotFoundStrategy extends AbstractListenerAggregate
 
         $model->setVariable('display_exceptions', true);
 
+        /** @mago-var mixed $exception */
         $exception = $e->getParam('exception', false);
 
         // @TODO clean up once PHP 7 requirement is enforced
@@ -278,6 +280,7 @@ class RouteNotFoundStrategy extends AbstractListenerAggregate
                 return;
             }
 
+            /** @mago-var mixed $controller */
             $controller = $routeMatch->getParam('controller', false);
             if (!$controller) {
                 return;

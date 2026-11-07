@@ -90,8 +90,9 @@ class PluginManager extends AbstractPluginManager
      */
     public function get($id, ?array $options = null): mixed
     {
+        /** @mago-var mixed $plugin */
         $plugin = $options === null ? parent::get($id) : parent::build($id, $options);
-        $this->injectController(plugin: $plugin);
+        $this->injectController(plugin: Assert::object($plugin));
 
         return Assert::isInstanceOf($plugin, PluginInterface::class);
     }

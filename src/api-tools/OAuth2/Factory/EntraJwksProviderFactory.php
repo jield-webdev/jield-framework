@@ -13,11 +13,12 @@ final class EntraJwksProviderFactory
 {
     public function __invoke(ContainerInterface $container): EntraJwksProvider
     {
+        /** @mago-var mixed $config */
         $config = $container->get('config')['api-tools-oauth2']['entra'] ?? [];
 
         return new EntraJwksProvider(
             new Client(),
-            new FilesystemAdapter('entra_jwks', 3600, $config['cache_directory'] ?? null),
+            new FilesystemAdapter('entra_jwks', 3600, \Webmozart\Assert\Assert::nullOrString($config['cache_directory'] ?? null)),
         );
     }
 }

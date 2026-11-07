@@ -34,7 +34,7 @@ final readonly class EntraOnBehalfOfClient
         }
 
         try {
-            $response = $this->http->request(method: 'POST', uri: $middleTier->getAccessTokenUrl(), options: [
+            $response = $this->http->request(method: 'POST', uri: \Jield\Stdlib\Value::instanceOrString($middleTier->getAccessTokenUrl(), \Psr\Http\Message\UriInterface::class), options: [
                 'form_params' => [
                     'client_id' => $middleTier->getClientId(),
                     'client_secret' => $middleTier->getClientSecret(),
@@ -48,6 +48,7 @@ final readonly class EntraOnBehalfOfClient
                 'allow_redirects' => false,
                 'http_errors' => false,
             ]);
+            /** @mago-var mixed $result */
             $result = json_decode(
                 json: (string) $response->getBody(),
                 associative: true,

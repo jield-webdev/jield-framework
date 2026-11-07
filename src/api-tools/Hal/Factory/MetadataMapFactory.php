@@ -22,8 +22,10 @@ class MetadataMapFactory
      */
     public function __invoke(ContainerInterface $container): Metadata\MetadataMap
     {
+        /** @mago-var mixed $config */
         $config = $container->get('Jield\ApiTools\Hal\HalConfig');
 
+        /** @mago-var mixed $hydrators */
         $hydrators = $container->has('HydratorManager')
             ? $container->get('HydratorManager')
             : new HydratorPluginManager(creationContext: $container);

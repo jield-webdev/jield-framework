@@ -79,6 +79,7 @@ class ViewManager extends AbstractListenerAggregate
     {
         $application = $event->getApplication();
         $services = Assert::notNull($application)->getServiceManager();
+        /** @mago-var mixed $config */
         $config = $services->get('config');
         $events = Assert::notNull($application)->getEventManager();
         $sharedEvents = $events->getSharedManager();
@@ -90,8 +91,11 @@ class ViewManager extends AbstractListenerAggregate
         $this->services = $services;
         $this->event = $event;
 
+        /** @mago-var mixed $routeNotFoundStrategy */
         $routeNotFoundStrategy = $services->get('HttpRouteNotFoundStrategy');
+        /** @mago-var mixed $exceptionStrategy */
         $exceptionStrategy = $services->get('HttpExceptionStrategy');
+        /** @mago-var mixed $mvcRenderingStrategy */
         $mvcRenderingStrategy = $services->get('HttpDefaultRenderingStrategy');
 
         $this->injectViewModelIntoPlugin();
@@ -176,6 +180,7 @@ class ViewManager extends AbstractListenerAggregate
         }
 
         $this->viewModel = $model = $this->event->getViewModel();
+        /** @mago-var mixed $layoutTemplate */
         $layoutTemplate = Value::call($this->services->get('HttpDefaultRenderingStrategy'), 'getLayoutTemplate');
         $model->setTemplate(Assert::stringNotEmpty($layoutTemplate));
 
@@ -198,6 +203,7 @@ class ViewManager extends AbstractListenerAggregate
         if (!isset($this->config['mvc_strategies'])) {
             return;
         }
+        /** @mago-var mixed $mvcStrategies */
         $mvcStrategies = $this->config['mvc_strategies'];
         if (is_string($mvcStrategies)) {
             $mvcStrategies = [$mvcStrategies];
@@ -206,11 +212,13 @@ class ViewManager extends AbstractListenerAggregate
             return;
         }
 
+        /** @mago-var mixed $mvcStrategy */
         foreach ($mvcStrategies as $mvcStrategy) {
             if (!is_string($mvcStrategy)) {
                 continue;
             }
 
+            /** @mago-var mixed $listener */
             $listener = $this->services->get($mvcStrategy);
             if ($listener instanceof ListenerAggregateInterface) {
                 $listener->attach(events: $events, priority: 100);
@@ -234,6 +242,7 @@ class ViewManager extends AbstractListenerAggregate
         if (!isset($this->config['strategies'])) {
             return;
         }
+        /** @mago-var mixed $strategies */
         $strategies = $this->config['strategies'];
         if (is_string($strategies)) {
             $strategies = [$strategies];
@@ -244,11 +253,13 @@ class ViewManager extends AbstractListenerAggregate
 
         $view = $this->getView();
 
+        /** @mago-var mixed $strategy */
         foreach ($strategies as $strategy) {
             if (!is_string($strategy)) {
                 continue;
             }
 
+            /** @mago-var mixed $listener */
             $listener = $this->services->get($strategy);
             if ($listener instanceof ListenerAggregateInterface) {
                 $listener->attach(events: $events, priority: 100);

@@ -66,6 +66,7 @@ final class Validator
 
             $this->name = Assert::string($name['name'] ?? null);
             $this->options = Assert::isArray($name['options'] ?? $options);
+            /** @mago-var mixed $breakChainOnFailure */
             $breakChainOnFailure = $name['break_chain_on_failure'] ?? $breakChainOnFailure;
             $this->breakChainOnFailure = $breakChainOnFailure === null ? null : Assert::boolean($breakChainOnFailure);
             $this->priority = Assert::nullOrInteger($name['priority'] ?? $priority);

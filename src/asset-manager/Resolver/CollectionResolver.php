@@ -86,6 +86,7 @@ class CollectionResolver implements ResolverInterface, AggregateResolverAwareInt
         $collection = new AssetCollection();
         $mimeType = null;
         $collection->setTargetPath(targetPath: $fileName);
+        /** @mago-var mixed $asset */
         foreach ($this->collections[$fileName] as $asset) {
             if (!is_string(value: $asset)) {
                 throw new Exception\RuntimeException(

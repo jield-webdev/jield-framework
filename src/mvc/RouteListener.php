@@ -44,11 +44,12 @@ class RouteListener extends AbstractListenerAggregate
             $request->getHeaders()->toArray(),
             $request->getContent(),
             $request->getVersion(),
-            Value::call($request->getServer(), 'toArray'),
+            Assert::isArray(Value::call($request->getServer(), 'toArray')),
         );
         $matched = $router->match($routingRequest);
-        $routeMatch = $matched === null ? null : new RouteMatch($matched->getParams());
-        if ($routeMatch !== null) {
+        $routeMatch = null;
+        if ($matched !== null) {
+            $routeMatch = new RouteMatch($matched->getParams());
             $routeMatch->setMatchedRouteName($matched->getMatchedRouteName());
         }
 
@@ -61,6 +62,7 @@ class RouteListener extends AbstractListenerAggregate
         $event->setError(Application::ERROR_ROUTER_NO_MATCH);
 
         $target = $event->getTarget();
+        /** @mago-var mixed $results */
         $results = Value::call(Value::call(Assert::object($target), 'getEventManager'), 'triggerEvent', [$event]);
         if (!empty($results)) {
             return Value::call($results, 'last');

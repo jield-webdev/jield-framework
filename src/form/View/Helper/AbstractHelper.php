@@ -262,13 +262,14 @@ abstract class AbstractHelper extends BaseAbstractHelper
         $doctypeHelper = $this->getDoctypeHelper();
         $strings = [];
 
+        /** @mago-var mixed $value */
         foreach ($attributes as $key => $value) {
             $key = strtolower(string: (string) $key);
 
             if (isset($this->booleanAttributes[$key])) {
                 if (!$value) {
                     // Skip boolean attributes that expect empty string as false value
-                    if ('' === $this->booleanAttributes[$key]['off']) {
+                    if ('' === Value::accessible($this->booleanAttributes[$key])['off']) {
                         continue;
                     }
                 } elseif ($doctypeHelper->isHtml5() && !$doctypeHelper->isXhtml()) {
@@ -278,19 +279,20 @@ abstract class AbstractHelper extends BaseAbstractHelper
             }
 
             //check if attribute is translatable and translate it
-            $value = $this->translateHtmlAttributeValue(key: $key, value: $value);
+            $value = $this->translateHtmlAttributeValue(key: $key, value: Assert::nullOrString($value));
 
             // @todo Escape event attributes like AbstractHtmlElement view helper does in htmlAttribs ??
             try {
+                /** @mago-var mixed $escapedAttribute */
                 $escapedAttribute = $escapeAttr(value: $value);
-                $strings[] = sprintf('%s="%s"', $escape(value: $key), $escapedAttribute);
+                $strings[] = sprintf('%s="%s"', Value::scalar($escape(value: $key)), Value::scalar($escapedAttribute));
             } catch (EscaperException) {
                 // If an escaper exception happens, escape only the key, and use a blank value.
-                $strings[] = sprintf('%s=""', $escape(value: $key));
+                $strings[] = sprintf('%s=""', Value::scalar($escape(value: $key)));
             }
         }
 
-        return implode(separator: ' ', array: $strings);
+        return implode(separator: ' ', array: Value::scalars($strings));
     }
 
     /**
@@ -397,6 +399,7 @@ abstract class AbstractHelper extends BaseAbstractHelper
      */
     protected function prepareAttributes(array $attributes): array
     {
+        /** @mago-var mixed $value */
         foreach ($attributes as $key => $value) {
             $attribute = strtolower(string: (string) $key);
 
@@ -435,13 +438,13 @@ abstract class AbstractHelper extends BaseAbstractHelper
     {
         if (
             !is_bool(value: $value)
-            && in_array(needle: $value, haystack: $this->booleanAttributes[$attribute], strict: true)
+            && in_array(needle: $value, haystack: Assert::isArray($this->booleanAttributes[$attribute]), strict: true)
         ) {
-            return $value;
+            return Assert::string($value);
         }
 
         $value = Value::truthy($value);
-        return $value ? $this->booleanAttributes[$attribute]['on'] : $this->booleanAttributes[$attribute]['off'];
+        return Assert::string($value ? Value::accessible($this->booleanAttributes[$attribute])['on'] : Value::accessible($this->booleanAttributes[$attribute])['off']);
     }
 
     /**
@@ -449,23 +452,26 @@ abstract class AbstractHelper extends BaseAbstractHelper
      */
     protected function translateHtmlAttributeValue(string $key, ?string $value): ?string
     {
-        if (empty($value) || $this->getTranslator() === null) {
+        $translator = $this->getTranslator();
+        if (empty($value) || $translator === null) {
             return $value;
         }
 
         if (isset($this->translatableAttributes[$key]) || isset(self::$defaultTranslatableHtmlAttributes[$key])) {
-            return $this->getTranslator()->translate($value, $this->getTranslatorTextDomain());
+            return $translator->translate($value, $this->getTranslatorTextDomain());
         } else {
+            /** @mago-var mixed $prefix */
             foreach ($this->translatableAttributePrefixes as $prefix) {
                 if (0 === mb_strpos($key, (string) $prefix)) {
                     // prefix matches => return translated $value
-                    return $this->getTranslator()->translate($value, $this->getTranslatorTextDomain());
+                    return $translator->translate($value, $this->getTranslatorTextDomain());
                 }
             }
+            /** @mago-var mixed $prefix */
             foreach (self::$defaultTranslatableHtmlAttributePrefixes as $prefix) {
                 if (0 === mb_strpos($key, (string) $prefix)) {
                     // default prefix matches => return translated $value
-                    return $this->getTranslator()->translate($value, $this->getTranslatorTextDomain());
+                    return $translator->translate($value, $this->getTranslatorTextDomain());
                 }
             }
         }
@@ -597,6 +603,6 @@ abstract class AbstractHelper extends BaseAbstractHelper
         }
 
         $escapeHtmlHelper = $this->getEscapeHtmlHelper();
-        return $escapeHtmlHelper(value: $label);
+        return Assert::string($escapeHtmlHelper(value: $label));
     }
 }

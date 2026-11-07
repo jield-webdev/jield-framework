@@ -14,7 +14,7 @@ class JsonModel extends ViewModel
         iterable $variables = [],
         protected array $options = [],
     ) {
-        parent::__construct($variables);
+        parent::__construct(\Jield\Stdlib\Value::namedIterable($variables));
         parent::setTerminal(true);
     }
 

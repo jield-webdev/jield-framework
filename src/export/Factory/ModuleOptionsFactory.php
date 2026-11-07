@@ -12,8 +12,9 @@ final class ModuleOptionsFactory implements FactoryInterface
 {
     public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): ModuleOptions
     {
+        /** @mago-var mixed $config */
         $config = $container->get('Config');
 
-        return new ModuleOptions(options: $config['jield_export'] ?? []);
+        return new ModuleOptions(options: \Jield\Stdlib\Value::options($config['jield_export'] ?? []));
     }
 }

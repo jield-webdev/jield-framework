@@ -20,8 +20,10 @@ final class FormElementErrorsFactory
             return $helper;
         }
 
+        /** @mago-var mixed $config */
         $config = $container->get('config');
         if (isset($config['view_helper_config']['form_element_errors'])) {
+            /** @mago-var mixed $configHelper */
             $configHelper = $config['view_helper_config']['form_element_errors'];
 
             // Attributes
@@ -30,23 +32,23 @@ final class FormElementErrorsFactory
             }
 
             // Message close string
-            if (array_key_exists(key: 'message_close_string', array: $configHelper)) {
-                $helper->setMessageCloseString(messageCloseString: $configHelper['message_close_string']);
+            if (array_key_exists(key: 'message_close_string', array: \Webmozart\Assert\Assert::isArray($configHelper))) {
+                $helper->setMessageCloseString(messageCloseString: \Webmozart\Assert\Assert::string($configHelper['message_close_string']));
             }
 
             // Message open format
-            if (array_key_exists(key: 'message_open_format', array: $configHelper)) {
-                $helper->setMessageOpenFormat(messageOpenFormat: $configHelper['message_open_format']);
+            if (array_key_exists(key: 'message_open_format', array: \Webmozart\Assert\Assert::isArray($configHelper))) {
+                $helper->setMessageOpenFormat(messageOpenFormat: \Webmozart\Assert\Assert::string($configHelper['message_open_format']));
             }
 
             // Message separator string
-            if (array_key_exists(key: 'message_separator_string', array: $configHelper)) {
-                $helper->setMessageSeparatorString(messageSeparatorString: $configHelper['message_separator_string']);
+            if (array_key_exists(key: 'message_separator_string', array: \Webmozart\Assert\Assert::isArray($configHelper))) {
+                $helper->setMessageSeparatorString(messageSeparatorString: \Webmozart\Assert\Assert::string($configHelper['message_separator_string']));
             }
 
             // Translate error messages
-            if (array_key_exists(key: 'translate_messages', array: $configHelper)) {
-                $helper->setTranslateMessages(flag: $configHelper['translate_messages']);
+            if (array_key_exists(key: 'translate_messages', array: \Webmozart\Assert\Assert::isArray($configHelper))) {
+                $helper->setTranslateMessages(flag: \Webmozart\Assert\Assert::boolean($configHelper['translate_messages']));
             }
         }
 

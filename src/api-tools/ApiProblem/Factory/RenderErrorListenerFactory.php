@@ -12,6 +12,7 @@ class RenderErrorListenerFactory
 {
     public function __invoke(ContainerInterface $container): RenderErrorListener
     {
+        /** @mago-var mixed $config */
         $config = $container->get('config');
         $displayExceptions = false;
 

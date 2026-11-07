@@ -103,7 +103,7 @@ class Application implements ApplicationInterface, EventManagerAwareInterface
      */
     public function getConfig(): object|array
     {
-        return $this->serviceManager->get('config');
+        return Value::arrayOrObject($this->serviceManager->get('config'));
     }
 
     /**
@@ -124,8 +124,9 @@ class Application implements ApplicationInterface, EventManagerAwareInterface
         // Setup default listeners
         $listeners = array_unique(array: array_merge($this->defaultListeners, $listeners));
 
+        /** @mago-var mixed $listener */
         foreach ($listeners as $listener) {
-            Value::call($serviceManager->get($listener), 'attach', [$events]);
+            Value::call($serviceManager->get(Assert::string($listener)), 'attach', [$events]);
         }
 
         // Setup MVC Event
@@ -229,8 +230,9 @@ class Application implements ApplicationInterface, EventManagerAwareInterface
     public static function init($configuration = []): Application
     {
         // Prepare the service manager
+        /** @mago-var mixed $smConfig */
         $smConfig = $configuration['service_manager'] ?? [];
-        $smConfig = new ServiceManagerConfig(config: $smConfig);
+        $smConfig = new ServiceManagerConfig(config: Assert::isArray($smConfig));
 
         $serviceManager = new ServiceManager();
         $smConfig->configureServiceManager(services: $serviceManager);
@@ -240,17 +242,20 @@ class Application implements ApplicationInterface, EventManagerAwareInterface
         Service::get($serviceManager, ModuleManager::class, 'ModuleManager')->loadModules();
 
         // Prepare list of listeners to bootstrap
+        /** @mago-var mixed $listenersFromAppConfig */
         $listenersFromAppConfig = $configuration['listeners'] ?? [];
+        /** @mago-var mixed $config */
         $config = $serviceManager->get('config');
+        /** @mago-var mixed $listenersFromConfigService */
         $listenersFromConfigService = $config['listeners'] ?? [];
 
         $listeners = array_unique(array: array_merge(
-            $listenersFromConfigService,
+            Assert::isArray($listenersFromConfigService),
             Assert::isArray($listenersFromAppConfig),
         ));
 
         return Assert::isInstanceOf(
-            Service::get($serviceManager, \Jield\Mvc\ApplicationInterface::class, 'Application')->bootstrap($listeners),
+            Service::get($serviceManager, \Jield\Mvc\ApplicationInterface::class, 'Application')->bootstrap(Value::strings($listeners)),
             \Jield\Mvc\Application::class,
         );
     }
@@ -292,6 +297,7 @@ class Application implements ApplicationInterface, EventManagerAwareInterface
         $event->stopPropagation(flag: false); // Clear before triggering
         $result = Assert::notNull($events)->triggerEventUntil(callback: $shortCircuit, event: $event);
         if ($result->stopped()) {
+            /** @mago-var mixed $response */
             $response = $result->last();
             if ($response instanceof ResponseInterface) {
                 $event->setName(name: MvcEvent::EVENT_FINISH);
@@ -314,6 +320,7 @@ class Application implements ApplicationInterface, EventManagerAwareInterface
         $result = Assert::notNull($events)->triggerEventUntil(callback: $shortCircuit, event: $event);
 
         // Complete response
+        /** @mago-var mixed $response */
         $response = $result->last();
         if ($response instanceof ResponseInterface) {
             $event->setName(name: MvcEvent::EVENT_FINISH);

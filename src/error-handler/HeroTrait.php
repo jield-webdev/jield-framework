@@ -45,7 +45,7 @@ trait HeroTrait
             $this->mvcEvent = $args[0];
         }
 
-        if (!$this->getErrorHandlerConfiguration()['display-settings']['display_errors']) {
+        if (!Value::accessible($this->getErrorHandlerConfiguration()['display-settings'])['display_errors']) {
             error_reporting(error_level: E_ALL);
             ini_set(option: 'display_errors', value: '0');
         }
@@ -115,10 +115,10 @@ trait HeroTrait
         );
 
         if (AtLeast::once(
-            data: Value::path($this->getErrorHandlerConfiguration(), [
+            data: Assert::isArray(Value::path($this->getErrorHandlerConfiguration(), [
                 'display-settings',
                 'exclude-php-errors',
-            ]),
+            ])),
             filter: $filter,
         )) {
             return true;

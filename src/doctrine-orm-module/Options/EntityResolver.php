@@ -47,12 +47,13 @@ final class EntityResolver extends AbstractOptions
      */
     public function setResolvers(array $resolvers): void
     {
+        /** @mago-var mixed $new */
         foreach ($resolvers as $old => $new) {
-            if (!class_exists(class: $new)) {
+            if (!class_exists(class: \Webmozart\Assert\Assert::string($new))) {
                 throw new InvalidArgumentException(message: sprintf(
                     '%s is resolved to the entity %s, which does not exist',
                     $old,
-                    $new,
+                    \Jield\Stdlib\Value::scalar($new),
                 ));
             }
 

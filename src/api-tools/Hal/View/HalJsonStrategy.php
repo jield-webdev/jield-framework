@@ -26,6 +26,7 @@ class HalJsonStrategy extends AbstractListenerAggregate
 
     public function render(MvcEvent $event): void
     {
+        /** @mago-var mixed $model */
         $model = $event->getResult();
         if (!$model instanceof HalJsonModel) {
             $model = $event->getViewModel();
@@ -35,6 +36,7 @@ class HalJsonStrategy extends AbstractListenerAggregate
         }
         $this->renderer->setViewEvent($event);
         $body = $this->renderer->render($model);
+        /** @mago-var mixed $problem */
         $problem = $event->getResult();
         $response = $event->getResponse();
         if ($problem instanceof ApiProblemModel) {

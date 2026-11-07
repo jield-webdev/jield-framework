@@ -108,11 +108,11 @@ class FormDateTimeSelect extends AbstractFormDateSelect
         $shouldRenderDelimiters = $element->shouldRenderDelimiters();
         $selectHelper = $this->getSelectElementHelper();
         $pattern = $this->parsePattern(renderDelimiters: $shouldRenderDelimiters);
-        $daysOptions = $this->getDaysOptions(pattern: $pattern['day']);
-        $monthsOptions = $this->getMonthsOptions(pattern: $pattern['month']);
+        $daysOptions = $this->getDaysOptions(pattern: \Webmozart\Assert\Assert::string($pattern['day']));
+        $monthsOptions = $this->getMonthsOptions(pattern: \Webmozart\Assert\Assert::string($pattern['month']));
         $yearOptions = $this->getYearsOptions(minYear: $element->getMinYear(), maxYear: $element->getMaxYear());
-        $hourOptions = $this->getHoursOptions(pattern: $pattern['hour']);
-        $minuteOptions = $this->getMinutesOptions(pattern: $pattern['minute']);
+        $hourOptions = $this->getHoursOptions(pattern: \Webmozart\Assert\Assert::string($pattern['hour']));
+        $minuteOptions = $this->getMinutesOptions(pattern: \Webmozart\Assert\Assert::string($pattern['minute']));
 
         $dayElement = $element->getDayElement()->setValueOptions(options: $daysOptions);
         $monthElement = $element->getMonthElement()->setValueOptions(options: $monthsOptions);
@@ -131,12 +131,12 @@ class FormDateTimeSelect extends AbstractFormDateSelect
         $data = [];
         $data[$pattern['day']] = $selectHelper->render(element: $dayElement);
         $data[$pattern['month']] = $selectHelper->render(element: $monthElement);
-        $data[$pattern['year']] = $selectHelper->render(element: $yearElement);
+        $data[Value::key($pattern['year'])] = $selectHelper->render(element: $yearElement);
         $data[$pattern['hour']] = $selectHelper->render(element: $hourElement);
         $data[$pattern['minute']] = $selectHelper->render(element: $minuteElement);
 
         if ($element->shouldShowSeconds() && array_key_exists(key: 'second', array: $pattern)) {
-            $secondOptions = $this->getSecondsOptions(pattern: $pattern['second']);
+            $secondOptions = $this->getSecondsOptions(pattern: \Webmozart\Assert\Assert::string($pattern['second']));
             $secondElement = $element->getSecondElement()->setValueOptions(options: $secondOptions);
 
             if ($element->shouldCreateEmptyOption()) {
@@ -153,6 +153,7 @@ class FormDateTimeSelect extends AbstractFormDateSelect
         }
 
         $markup = '';
+        /** @mago-var mixed $value */
         foreach ($pattern as $key => $value) {
             // Delimiter
             if (is_numeric(value: $key)) {

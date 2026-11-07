@@ -39,9 +39,11 @@ class RulesWithAssertion extends Route
                 continue;
             }
 
+            /** @mago-var mixed $assertionClass */
             $assertionClass = $rule['assertion'];
-            if ($this->container->has($assertionClass)) {
-                $assert = $this->container->get($assertionClass);
+            if ($this->container->has(Assert::string($assertionClass))) {
+                /** @mago-var mixed $assert */
+                $assert = $this->container->get(Assert::string($assertionClass));
 
                 if ($assert instanceof AbstractAssertion) {
                     $assert->setRouteMatch(routeMatch: Assert::isInstanceOf(
@@ -54,13 +56,13 @@ class RulesWithAssertion extends Route
                 //Do not specify any roles, we do that in the assertion, giving a role would lead to ignorance of the assertion
                 $acl->allow(
                     roles: null,
-                    resources: $resource,
+                    resources: \Jield\Stdlib\Value::instanceOrArrayOrString($resource, \Laminas\Permissions\Acl\Resource\ResourceInterface::class),
                     assert: Assert::isInstanceOf($assert, AssertionInterface::class),
                 );
             } else {
                 throw new InvalidArgumentException(message: sprintf(
                     'Assertion class %s cannot be found',
-                    $assertionClass,
+                    \Jield\Stdlib\Value::scalar($assertionClass),
                 ));
             }
         }

@@ -20,7 +20,7 @@ final class MvcFactory
         $viewRenderer = Service::get($container, \Jield\Mvc\View\Renderer\PhpRenderer::class, 'ViewRenderer');
 
         return new Mvc(
-            errorHeroModuleConfig: $config['error-hero-module'],
+            errorHeroModuleConfig: \Webmozart\Assert\Assert::isArray($config['error-hero-module']),
             logging: $logging,
             phpRenderer: $viewRenderer,
         );

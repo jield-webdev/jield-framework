@@ -78,8 +78,12 @@ class PluginClassLoader implements PluginClassLocator
         if (!is_array($map) && !$map instanceof Traversable) {
             throw new Exception\InvalidArgumentException('Expects an array or Traversable object');
         }
+        /**
+         * @mago-var mixed $key
+         * @mago-var mixed $value
+         */
         foreach ($map as $key => $value) {
-            static::$staticMap[$key] = $value;
+            static::$staticMap[Value::key($key)] = $value;
         }
     }
 
@@ -133,9 +137,13 @@ class PluginClassLoader implements PluginClassLocator
             $map = $map->getIterator();
         }
 
+        /**
+         * @mago-var mixed $name
+         * @mago-var mixed $class
+         */
         foreach ($map as $name => $class) {
             if (is_int($name) || is_numeric($name)) {
-                if (!is_object($class) && class_exists($class)) {
+                if (!is_object($class) && class_exists(Assert::string($class))) {
                     $class = Value::instantiate($class);
                 }
 
@@ -159,7 +167,7 @@ class PluginClassLoader implements PluginClassLocator
      */
     public function unregisterPlugin($shortName)
     {
-        $lookup = strtolower($shortName);
+        $lookup = strtolower(Assert::string($shortName));
         if (array_key_exists($lookup, $this->plugins)) {
             unset($this->plugins[$lookup]);
         }

@@ -66,6 +66,7 @@ class Module implements ConfigProviderInterface, BootstrapListenerInterface
         /* @var $eventManager EventManagerInterface
          * @var mixed $eventManager
          */
+        /** @mago-var mixed $eventManager */
         $eventManager = Value::call(Assert::object($e->getTarget()), 'getEventManager');
         $callback = $this->onDispatch(...);
         $priority = -9_999_999;

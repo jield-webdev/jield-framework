@@ -58,6 +58,7 @@ class ParameterMatcher
 
         // normalize names to that they can match potential php variables
         $normalParams = [];
+        /** @mago-var mixed $pv */
         foreach ($parameters as $pn => $pv) {
             $normalParams[str_replace(
                 search: ['-', '_'],

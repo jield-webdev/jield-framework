@@ -55,6 +55,7 @@ class HalViewHelperFactory
                 ));
             }
 
+            /** @mago-var mixed $hydrator */
             $hydrator = $hydrators->get($defaultHydrator);
             Assert::isInstanceOf(value: $hydrator, class: HydratorInterface::class);
             $helper->setDefaultHydrator(hydrator: $hydrator);
@@ -64,8 +65,9 @@ class HalViewHelperFactory
         $helper->setRenderCollections(value: $rendererOptions->getRenderEmbeddedCollections());
 
         $hydratorMap = $rendererOptions->getHydrators();
+        /** @mago-var mixed $hydratorServiceName */
         foreach ($hydratorMap as $class => $hydratorServiceName) {
-            $helper->addHydrator(class: Assert::string($class), hydrator: $hydratorServiceName);
+            $helper->addHydrator(class: Assert::string($class), hydrator: Assert::isInstanceOf($hydratorServiceName, \Laminas\Hydrator\ExtractionInterface::class));
         }
 
         return $helper;

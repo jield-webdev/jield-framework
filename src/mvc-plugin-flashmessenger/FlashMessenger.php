@@ -179,8 +179,10 @@ class FlashMessenger extends AbstractPlugin implements IteratorAggregate, Counta
         $container = $this->getContainer();
 
         $namespaces = [];
+        /** @mago-var mixed $messages */
         foreach ($container as $namespace => $messages) {
             $messages = Assert::isInstanceOf($messages, SplQueue::class);
+            /** @mago-var mixed $message */
             foreach ($messages as $message) {
                 Assert::string($message);
             }
@@ -427,7 +429,7 @@ class FlashMessenger extends AbstractPlugin implements IteratorAggregate, Counta
 
         if ($this->hasCurrentMessages(namespace: $namespace)) {
             $container = $this->getContainer();
-            return Value::call($container[$namespace], 'toArray');
+            return Value::strings(Value::call($container[$namespace], 'toArray'));
         }
 
         return [];
@@ -518,6 +520,7 @@ class FlashMessenger extends AbstractPlugin implements IteratorAggregate, Counta
         $container = $this->getContainer();
 
         $namespaces = [];
+        /** @mago-var mixed $messages */
         foreach ($container as $namespace => $messages) {
             $namespaces[] = $namespace;
         }

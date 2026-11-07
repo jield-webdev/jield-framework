@@ -79,8 +79,9 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
         if (
             isset($this->config['methods_without_bodies']) && is_array(value: $this->config['methods_without_bodies'])
         ) {
+            /** @mago-var mixed $method */
             foreach ($this->config['methods_without_bodies'] as $method) {
-                $this->addMethodWithoutBody(method: $method);
+                $this->addMethodWithoutBody(method: Assert::string($method));
             }
         }
     }
@@ -164,12 +165,14 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
             return null;
         }
 
+        /** @mago-var mixed $controllerService */
         $controllerService = $routeMatches->getParam(name: 'controller', default: false);
         if (!$controllerService) {
             return null;
         }
 
         $method = $request->getMethod();
+        /** @mago-var mixed $dataContainer */
         $dataContainer = $e->getParam(name: 'LaminasContentNegotiationParameterData', default: false);
         if (!$dataContainer instanceof ParameterDataContainer) {
             return new ApiProblemResponse(apiProblem: new ApiProblem(
@@ -186,14 +189,14 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
             : $dataContainer->getBodyParams();
 
         $isCollection = $this->isCollection(
-            serviceName: $controllerService,
+            serviceName: Assert::string($controllerService),
             data: $data,
             matches: $routeMatches,
             request: $request,
         );
 
         $inputFilterService = $this->getInputFilterService(
-            controllerService: $controllerService,
+            controllerService: Assert::string($controllerService),
             method: $method,
             isCollection: $isCollection,
         );
@@ -210,10 +213,10 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
         }
 
         $files = $request->getFiles();
-        if (!$isCollection && 0 < count(value: Assert::isInstanceOf($files, ParametersInterface::class)->toArray())) {
+        if (!$isCollection && 0 < count(value: Assert::isArray(Assert::isInstanceOf($files, ParametersInterface::class)->toArray()))) {
             // File uploads are not validated for collections; impossible to
             // match file fields to discrete sets
-            $data = ArrayUtils::merge(a: $data, b: $files->toArray(), preserveNumericKeys: true);
+            $data = ArrayUtils::merge(a: $data, b: Assert::isArray($files->toArray()), preserveNumericKeys: true);
         }
 
         $inputFilter = $this->getInputFilter(inputFilterService: $inputFilterService);
@@ -241,6 +244,7 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
         );
         $e->setName(name: Assert::string($currentEventName));
 
+        /** @mago-var mixed $last */
         $last = $results->last();
 
         if ($last instanceof ApiProblem) {
@@ -253,7 +257,7 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
 
         $data = ArrayUtils::merge(
             a: $data,
-            b: $e->getParam(name: 'Jield\ApiTools\ContentValidation\ParameterData'),
+            b: Assert::isArray($e->getParam(name: 'Jield\ApiTools\ContentValidation\ParameterData')),
             preserveNumericKeys: true,
         );
 
@@ -291,7 +295,7 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
         //   that was the default experience starting in 1.0.
         // - If the flag is present AND is boolean true, that is also
         //   an indicator that the raw data should be present.
-        $useRawData = $this->useRawData(controllerService: $controllerService);
+        $useRawData = $this->useRawData(controllerService: Assert::string($controllerService));
         if (!$useRawData) {
             $data = $validationResult->value();
         }
@@ -301,7 +305,7 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
         // - If `remove_empty_data` flag is present AND is boolean true, then remove
         //   empty data from current data array
         // - Does not remove empty data if keys matched received data
-        $removeEmptyData = $this->shouldRemoveEmptyData(controllerService: $controllerService);
+        $removeEmptyData = $this->shouldRemoveEmptyData(controllerService: Assert::string($controllerService));
         if ($removeEmptyData) {
             $data = $this->removeEmptyData(data: $data, compareTo: $receivedData);
         }
@@ -316,12 +320,13 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
 
         $unknown = $inputFilter->getUnknown();
 
-        if ($this->allowsOnlyFieldsInFilter(controllerService: $controllerService)) {
+        if ($this->allowsOnlyFieldsInFilter(controllerService: Assert::string($controllerService))) {
             if ($inputFilter instanceof CollectionInputFilter) {
                 $unknownFields = [];
+                /** @mago-var mixed $fields */
                 foreach ($unknown as $key => $fields) {
                     $unknownFields[] =
-                        '[' . $key . ': ' . implode(separator: ', ', array: array_keys(array: $fields)) . ']';
+                        '[' . $key . ': ' . implode(separator: ', ', array: array_keys(array: Assert::isArray($fields))) . ']';
                 }
 
                 $fields = implode(separator: ', ', array: $unknownFields);
@@ -430,6 +435,7 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
             return $data;
         }
 
+        /** @mago-var mixed $value */
         foreach ($data as $key => $value) {
             if (
                 !is_array(value: $value)
@@ -497,7 +503,7 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
             return false;
         }
 
-        return $this->config[$controllerService]['input_filter'] ?? false;
+        return Value::stringOrFalse($this->config[$controllerService]['input_filter'] ?? false);
     }
 
     /**
@@ -516,6 +522,7 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
             return false;
         }
 
+        /** @mago-var mixed $inputFilter */
         $inputFilter = $this->inputFilterManager->get($inputFilterService);
         if (!$inputFilter instanceof InputFilterInterface) {
             return false;
@@ -533,7 +540,7 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
      */
     protected function getInputFilter(string $inputFilterService): InputFilterInterface
     {
-        return $this->inputFilters[$inputFilterService];
+        return Assert::isInstanceOf($this->inputFilters[$inputFilterService], \Laminas\InputFilter\InputFilterInterface::class);
     }
 
     /**
@@ -553,6 +560,7 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
             return false;
         }
 
+        /** @mago-var mixed $identifierName */
         $identifierName = $this->restControllers[$serviceName];
         if ($matches->getParam(name: Assert::string($identifierName)) !== null) {
             return false;
@@ -575,8 +583,9 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
         $data = is_object($data) ? get_object_vars($data) : $data;
         if ($isCollection) {
             $validationGroup = $data;
+            /** @mago-var mixed $subData */
             foreach ($validationGroup as &$subData) {
-                $subData = array_keys(array: $subData);
+                $subData = array_keys(array: Assert::isArray($subData));
             }
         } else {
             $validationGroup = array_keys(array: $data);

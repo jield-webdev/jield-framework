@@ -53,8 +53,9 @@ class ModuleManager implements ModuleManagerInterface
             return;
         }
 
+        /** @mago-var mixed $moduleName */
         foreach ($this->getModules() as $moduleName) {
-            $this->loadModule(moduleName: $moduleName);
+            $this->loadModule(moduleName: \Webmozart\Assert\Assert::string($moduleName));
         }
 
         $this->modulesAreLoaded = true;
@@ -127,8 +128,9 @@ class ModuleManager implements ModuleManagerInterface
 
         $this->loadFinished++;
 
+        /** @mago-var mixed $module */
         $module = $this->loadModuleByName(event: $event);
-        $event->setModule(module: $module);
+        $event->setModule(module: \Webmozart\Assert\Assert::object($module));
         $event->setName(name: ModuleEvent::EVENT_LOAD_MODULE);
 
         $this->loadedModules[$moduleName] = $module;
@@ -152,6 +154,7 @@ class ModuleManager implements ModuleManagerInterface
             value: $r,
         ), event: $event);
 
+        /** @mago-var mixed $module */
         $module = $result->last();
 
         if (!is_object(value: $module)) {

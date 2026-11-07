@@ -56,6 +56,7 @@ class SendResponseEvent extends Event
     public function setContentSent(): static
     {
         $response = $this->getResponse();
+        /** @mago-var mixed $contentSent */
         $contentSent = $this->getParam('contentSent', []);
         $responseObjectHash = spl_object_hash($response);
         Value::setPath($contentSent, [$responseObjectHash], true);
@@ -84,6 +85,7 @@ class SendResponseEvent extends Event
     public function setHeadersSent(): static
     {
         $response = $this->getResponse();
+        /** @mago-var mixed $headersSent */
         $headersSent = $this->getParam('headersSent', []);
         $responseObjectHash = spl_object_hash($response);
         Value::setPath($headersSent, [$responseObjectHash], true);

@@ -361,6 +361,6 @@ class MultipartContentParser
             return 'application/octet-stream';
         }
 
-        return $headers['CONTENT-TYPE'];
+        return Assert::string($headers['CONTENT-TYPE']);
     }
 }

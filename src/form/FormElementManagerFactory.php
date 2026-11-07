@@ -40,6 +40,7 @@ final class FormElementManagerFactory implements FactoryInterface
             return $pluginManager;
         }
 
+        /** @mago-var mixed $config */
         $config = $container->get('config');
 
         // If we do not have form_elements configuration, nothing more to do

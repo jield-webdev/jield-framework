@@ -41,15 +41,15 @@ class Checkbox extends Element implements InputProviderInterface
         parent::setOptions(options: $options);
 
         if (isset($this->options['use_hidden_element'])) {
-            $this->setUseHiddenElement(useHiddenElement: $this->options['use_hidden_element']);
+            $this->setUseHiddenElement(useHiddenElement: \Webmozart\Assert\Assert::boolean($this->options['use_hidden_element']));
         }
 
         if (isset($this->options['unchecked_value'])) {
-            $this->setUncheckedValue(uncheckedValue: $this->options['unchecked_value']);
+            $this->setUncheckedValue(uncheckedValue: \Webmozart\Assert\Assert::nullOrString($this->options['unchecked_value']));
         }
 
         if (isset($this->options['checked_value'])) {
-            $this->setCheckedValue(checkedValue: $this->options['checked_value']);
+            $this->setCheckedValue(checkedValue: \Webmozart\Assert\Assert::string($this->options['checked_value']));
         }
 
         return $this;

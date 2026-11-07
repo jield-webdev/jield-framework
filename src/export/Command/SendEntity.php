@@ -57,11 +57,14 @@ final class SendEntity extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
+        /** @mago-var mixed $memoryLimit */
         $memoryLimit = $input->getOption(name: 'memory-limit');
 
         ini_set(option: 'memory_limit', value: Assert::string($memoryLimit));
 
+        /** @mago-var mixed $entity */
         $entity = $input->getArgument(name: 'entity');
+        /** @mago-var mixed $storageLocation */
         $storageLocation = $input->getArgument(name: 'storage-location');
 
         $storageLocations = array_filter(
@@ -74,19 +77,19 @@ final class SendEntity extends Command
 
         $startMessage = sprintf(
             '<info>Send entity %s, to: %s</info>',
-            $entity,
+            \Jield\Stdlib\Value::scalar($entity),
             implode(', ', array_map(
                 callback: static fn(StorageLocationInterface $location) => $location->getName(),
                 array: $storageLocations,
             )),
         );
         $memoryMessage = sprintf('Memory limit set to %s', ini_get(option: 'memory_limit'));
-        $endMessage = sprintf('<info>Sending %s completed</info>', $entity);
+        $endMessage = sprintf('<info>Sending %s completed</info>', \Jield\Stdlib\Value::scalar($entity));
 
         $output->writeln(messages: $startMessage);
         $output->writeln(messages: $memoryMessage);
 
-        $this->consoleService->sendEntity(output: $output, entity: $entity, storageLocations: $storageLocations);
+        $this->consoleService->sendEntity(output: $output, entity: Assert::string($entity), storageLocations: $storageLocations);
 
         $output->writeln(messages: $endMessage);
 

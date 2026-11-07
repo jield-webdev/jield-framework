@@ -24,11 +24,12 @@ class OptionsListenerFactory
             return [];
         }
 
+        /** @mago-var mixed $config */
         $config = $container->get('config');
         if (!isset($config['api-tools-rpc'])) {
             return [];
         }
 
-        return $config['api-tools-rpc'];
+        return \Webmozart\Assert\Assert::isArray($config['api-tools-rpc']);
     }
 }

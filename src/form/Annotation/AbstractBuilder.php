@@ -116,7 +116,7 @@ abstract class AbstractBuilder implements EventManagerAwareInterface, FormFactor
         if (!isset($formSpec['input_filter'])) {
             $formSpec['input_filter'] = $filterSpec;
         } elseif (is_array($formSpec['input_filter'])) {
-            $formSpec['input_filter'] = ArrayUtils::merge($filterSpec->getArrayCopy(), $formSpec['input_filter']);
+            $formSpec['input_filter'] = ArrayUtils::merge($filterSpec->getArrayCopy(), \Webmozart\Assert\Assert::isArray($formSpec['input_filter']));
         }
 
         return $formSpec;
@@ -285,7 +285,7 @@ abstract class AbstractBuilder implements EventManagerAwareInterface, FormFactor
         );
         // @codingStandardsIgnoreEnd
 
-        return $results->last();
+        return \Webmozart\Assert\Assert::string($results->last());
     }
 
     /**

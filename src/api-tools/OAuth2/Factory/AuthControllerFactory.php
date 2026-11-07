@@ -20,7 +20,7 @@ class AuthControllerFactory implements FactoryInterface
     {
         $authController = new AuthController(
             serverFactory: $this->getOAuth2ServerFactory(container: $container),
-            userIdProvider: $container->get('Jield\ApiTools\OAuth2\Provider\UserId'),
+            userIdProvider: \Webmozart\Assert\Assert::isInstanceOf($container->get('Jield\ApiTools\OAuth2\Provider\UserId'), \Jield\ApiTools\OAuth2\Provider\UserId\UserIdProviderInterface::class),
         );
 
         $authController->setApiProblemErrorResponse(apiProblemErrorResponse: $this->marshalApiProblemErrorResponse(
@@ -38,9 +38,10 @@ class AuthControllerFactory implements FactoryInterface
      */
     private function getOAuth2ServerFactory(ContainerInterface $container): callable
     {
+        /** @mago-var mixed $oauth2ServerFactory */
         $oauth2ServerFactory = $container->get('Jield\ApiTools\OAuth2\Service\OAuth2Server');
         if (!$oauth2ServerFactory instanceof OAuth2Server) {
-            return $oauth2ServerFactory;
+            return \Webmozart\Assert\Assert::isCallable($oauth2ServerFactory);
         }
 
         return static fn() => $oauth2ServerFactory;
@@ -55,6 +56,7 @@ class AuthControllerFactory implements FactoryInterface
             return false;
         }
 
+        /** @mago-var mixed $config */
         $config = $container->get('config');
 
         return (

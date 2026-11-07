@@ -22,16 +22,17 @@ class AssetViewHelperFactory implements FactoryInterface
     #[Override]
     public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): Asset
     {
-        $config = $container->get('config')['asset_manager'];
+        /** @mago-var mixed $config */
+        $config = \Jield\Stdlib\Value::accessible($container->get('config'))['asset_manager'];
 
         $assetManagerResolver = Service::get($container, AssetManager::class)->getResolver();
 
         $cache = $this->loadCache(
             container: Assert::isInstanceOf($container, \Laminas\ServiceManager\ServiceLocatorInterface::class),
-            config: $config,
+            config: Assert::isArray($config),
         );
 
-        return new Asset(assetManagerResolver: $assetManagerResolver, cache: $cache, config: $config);
+        return new Asset(assetManagerResolver: $assetManagerResolver, cache: $cache, config: Assert::isArray($config));
     }
 
     /**
@@ -48,8 +49,10 @@ class AssetViewHelperFactory implements FactoryInterface
         }
 
         // get the cache, if it's a string, search it among services
+        /** @mago-var mixed $cache */
         $cache = $config['view_helper']['cache'];
         if (is_string(value: $cache)) {
+            /** @mago-var mixed $cache */
             $cache = $container->get($cache);
         }
 

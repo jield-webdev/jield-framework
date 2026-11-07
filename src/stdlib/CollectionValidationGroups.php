@@ -33,6 +33,7 @@ final class CollectionValidationGroups extends BaseInputFilter
      */
     public function validate(iterable $data, array $context = []): InputFilterValidationResult
     {
+        /** @mago-var mixed $group */
         $group = $this->groups[$this->position++] ?? null;
         return InputFilterValidator::validate(
             $this->filter,

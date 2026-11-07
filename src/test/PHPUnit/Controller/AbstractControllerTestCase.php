@@ -225,10 +225,12 @@ abstract class AbstractControllerTestCase extends TestCase
     public function url($url, $method = HttpRequest::METHOD_GET, $params = [])
     {
         $request = $this->getRequest();
+        /** @mago-var mixed $query */
         $query = Value::call(
             WebmozartAssert::isInstanceOf($request, \Laminas\Http\Request::class)->getQuery(),
             'toArray',
         );
+        /** @mago-var mixed $post */
         $post = Value::call(
             WebmozartAssert::isInstanceOf($request, \Laminas\Http\Request::class)->getPost(),
             'toArray',
@@ -247,7 +249,7 @@ abstract class AbstractControllerTestCase extends TestCase
                     break;
                 case HttpRequest::METHOD_GET:
                 case HttpRequest::METHOD_DELETE:
-                    $query = array_merge($query, $params);
+                    $query = array_merge(\Webmozart\Assert\Assert::isArray($query), $params);
                     break;
                 case HttpRequest::METHOD_PUT:
                 case HttpRequest::METHOD_PATCH:
@@ -265,8 +267,8 @@ abstract class AbstractControllerTestCase extends TestCase
         WebmozartAssert::isInstanceOf($request, \Laminas\Http\Request::class)->setMethod(WebmozartAssert::string(
             $method,
         ));
-        WebmozartAssert::isInstanceOf($request, \Laminas\Http\Request::class)->setQuery(new Parameters($query));
-        WebmozartAssert::isInstanceOf($request, \Laminas\Http\Request::class)->setPost(new Parameters($post));
+        WebmozartAssert::isInstanceOf($request, \Laminas\Http\Request::class)->setQuery(new Parameters(Value::nullableArray($query)));
+        WebmozartAssert::isInstanceOf($request, \Laminas\Http\Request::class)->setPost(new Parameters(Value::nullableArray($post)));
         WebmozartAssert::isInstanceOf($request, \Laminas\Http\Request::class)->setUri($uri);
         WebmozartAssert::isInstanceOf($request, Request::class)->setRequestUri(
             WebmozartAssert::string($uri->getPath()),
@@ -291,7 +293,7 @@ abstract class AbstractControllerTestCase extends TestCase
     public function dispatch($url, $method = null, $params = [], $isXmlHttpRequest = false)
     {
         if (null === $method && $this->getRequest() instanceof HttpRequest) {
-            $method = $this->getRequest()->getMethod();
+            $method = \Webmozart\Assert\Assert::isInstanceOf($this->getRequest(), \Laminas\Http\Request::class)->getMethod();
         } elseif (null === $method) {
             $method = HttpRequest::METHOD_GET;
         }
@@ -301,7 +303,7 @@ abstract class AbstractControllerTestCase extends TestCase
             Value::call($headers, 'addHeaderLine', ['X_REQUESTED_WITH', 'XMLHttpRequest']);
         }
 
-        $this->url($url, $method, $params);
+        $this->url($url, \Webmozart\Assert\Assert::nullOrString($method), $params);
         $this->getApplication()->run();
     }
 
@@ -371,10 +373,11 @@ abstract class AbstractControllerTestCase extends TestCase
      */
     public function assertModulesLoaded(array $modules)
     {
+        /** @mago-var mixed $moduleManager */
         $moduleManager = $this->getApplicationServiceLocator()->get('ModuleManager');
         assert($moduleManager instanceof ModuleManager);
         $modulesLoaded = array_keys($moduleManager->getLoadedModules());
-        $list = array_diff($modules, $modulesLoaded);
+        $list = array_diff(Value::strings($modules), Value::strings($modulesLoaded));
         if ($list) {
             throw new ExpectationFailedException(FailureMessage::format($this, sprintf('Several modules are not loaded "%s"', implode(
                 ', ',
@@ -391,13 +394,15 @@ abstract class AbstractControllerTestCase extends TestCase
      */
     public function assertNotModulesLoaded(array $modules)
     {
+        /** @mago-var mixed $moduleManager */
         $moduleManager = $this->getApplicationServiceLocator()->get('ModuleManager');
+        /** @mago-var mixed $modulesLoaded */
         $modulesLoaded = Value::call($moduleManager, 'getModules');
-        $list = array_intersect($modules, $modulesLoaded);
+        $list = array_intersect($modules, \Webmozart\Assert\Assert::isArray($modulesLoaded));
         if ($list) {
             throw new ExpectationFailedException(FailureMessage::format($this, sprintf('Several modules WAS not loaded "%s"', implode(
                 ', ',
-                $list,
+                Value::scalars($list),
             ))));
         }
         $this->assertEquals(count($list), 0);
@@ -459,6 +464,7 @@ abstract class AbstractControllerTestCase extends TestCase
      */
     public function assertApplicationException($type, $message = null)
     {
+        /** @mago-var mixed $exception */
         $exception = $this->getApplication()->getMvcEvent()->getParam('exception');
         if (!$exception) {
             throw new ExpectationFailedException(FailureMessage::format(
@@ -502,14 +508,17 @@ abstract class AbstractControllerTestCase extends TestCase
             Assert::fail('No route matched');
         }
 
+        /** @mago-var mixed $controllerIdentifier */
         $controllerIdentifier = $routeMatch->getParam('controller');
         Assert::assertIsString($controllerIdentifier, 'No string controller identifier discovered in route match');
 
+        /** @mago-var mixed $controllerManager */
         $controllerManager = $this->getApplicationServiceLocator()->get('ControllerManager');
         if (!$controllerManager instanceof ControllerManager) {
             Assert::fail('Invalid ControllerManager instance in ServiceManager');
         }
 
+        /** @mago-var mixed $controller */
         $controller = $controllerManager->get($controllerIdentifier);
         Assert::assertIsObject($controller, sprintf(
             'Did not receive an object back for the controller %s',
@@ -596,8 +605,9 @@ abstract class AbstractControllerTestCase extends TestCase
         if (!$routeMatch) {
             throw new ExpectationFailedException(FailureMessage::format($this, 'No route matched'));
         }
+        /** @mago-var mixed $match */
         $match = $routeMatch->getParam('controller');
-        $match = strtolower($match);
+        $match = strtolower(\Webmozart\Assert\Assert::string($match));
         $controller = strtolower($controller);
         if ($controller !== $match) {
             throw new ExpectationFailedException(FailureMessage::format($this, sprintf(
@@ -621,8 +631,9 @@ abstract class AbstractControllerTestCase extends TestCase
         if (!$routeMatch) {
             throw new ExpectationFailedException(FailureMessage::format($this, 'No route matched'));
         }
+        /** @mago-var mixed $match */
         $match = $routeMatch->getParam('controller');
-        $match = strtolower($match);
+        $match = strtolower(\Webmozart\Assert\Assert::string($match));
         $controller = strtolower($controller);
         if ($controller === $match) {
             throw new ExpectationFailedException(FailureMessage::format($this, sprintf(
@@ -645,8 +656,9 @@ abstract class AbstractControllerTestCase extends TestCase
         if (!$routeMatch) {
             throw new ExpectationFailedException(FailureMessage::format($this, 'No route matched'));
         }
+        /** @mago-var mixed $match */
         $match = $routeMatch->getParam('action');
-        $match = strtolower($match);
+        $match = strtolower(\Webmozart\Assert\Assert::string($match));
         $action = strtolower($action);
         if ($action !== $match) {
             throw new ExpectationFailedException(FailureMessage::format($this, sprintf(
@@ -670,8 +682,9 @@ abstract class AbstractControllerTestCase extends TestCase
         if (!$routeMatch) {
             throw new ExpectationFailedException(FailureMessage::format($this, 'No route matched'));
         }
+        /** @mago-var mixed $match */
         $match = $routeMatch->getParam('action');
-        $match = strtolower($match);
+        $match = strtolower(\Webmozart\Assert\Assert::string($match));
         $action = strtolower($action);
         if ($action === $match) {
             throw new ExpectationFailedException(FailureMessage::format($this, sprintf(

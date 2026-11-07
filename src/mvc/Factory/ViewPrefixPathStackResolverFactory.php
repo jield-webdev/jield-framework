@@ -29,11 +29,15 @@ class ViewPrefixPathStackResolverFactory implements FactoryInterface
         ?array $options = null,
     ): PrefixPathStackResolver {
         $config = Configuration::get($container);
-        $prefixes = $config['view_manager']['prefix_template_path_stack'] ?? [];
+        $prefixes = Assert::isIterable($config['view_manager']['prefix_template_path_stack'] ?? []);
 
         $paths = [];
+        /**
+         * @mago-var mixed $prefix
+         * @mago-var mixed $path
+         */
         foreach ($prefixes as $prefix => $path) {
-            $paths[$prefix] = $path instanceof ResolverInterface
+            $paths[Assert::stringNotEmpty($prefix)] = $path instanceof ResolverInterface
                 ? $path
                 : (
                     is_array($path)

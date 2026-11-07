@@ -50,7 +50,7 @@ class DateSelect extends MonthSelect
         parent::setOptions(options: $options);
 
         if (isset($this->options['day_attributes'])) {
-            $this->setDayAttributes(dayAttributes: $this->options['day_attributes']);
+            $this->setDayAttributes(dayAttributes: \Jield\Stdlib\Value::scalarMap($this->options['day_attributes']));
         }
 
         return $this;
@@ -137,15 +137,18 @@ class DateSelect extends MonthSelect
 
     public function getValue(): ?string
     {
+        /** @mago-var mixed $year */
         $year = $this->getYearElement()->getValue();
+        /** @mago-var mixed $month */
         $month = $this->getMonthElement()->getValue();
+        /** @mago-var mixed $day */
         $day = $this->getDayElement()->getValue();
 
         if ($this->shouldCreateEmptyOption() && null === $year && null === $month && null === $day) {
             return null;
         }
 
-        return sprintf('%04d-%02d-%02d', $year, $month, $day);
+        return sprintf('%04d-%02d-%02d', \Jield\Stdlib\Value::scalar($year), \Jield\Stdlib\Value::scalar($month), \Jield\Stdlib\Value::scalar($day));
     }
 
     /**

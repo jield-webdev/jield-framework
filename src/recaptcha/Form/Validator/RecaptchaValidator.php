@@ -101,6 +101,7 @@ class RecaptchaValidator extends AbstractValidator
                 throw new ErrorException(message: 'Site could not be reached');
             }
 
+            /** @mago-var mixed $json */
             $json = json_decode(json: $googleResponse, associative: true, flags: JSON_THROW_ON_ERROR);
             if (!is_array($json) || !isset($json['success']) || !is_bool($json['success'])) {
                 $this->errorCodes[] = self::ERROR_INVALID_INPUT_RESPONSE;
@@ -119,6 +120,7 @@ class RecaptchaValidator extends AbstractValidator
 
         if (!$json['success']) {
             if (!empty($json['error-codes']) && is_array($json['error-codes'])) {
+                /** @mago-var mixed $r */
                 foreach ($json['error-codes'] as $r) {
                     if (!is_string($r)) {
                         continue;

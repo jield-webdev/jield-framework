@@ -27,11 +27,12 @@ final class TestIndex extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
+        /** @mago-var mixed $reset */
         $reset = $input->getOption(name: 'reset');
 
         $output->writeln(messages: '<info>Testing the search engine index</info>');
 
-        $this->consoleService->testIndex(output: $output, clearIndex: $reset);
+        $this->consoleService->testIndex(output: $output, clearIndex: \Webmozart\Assert\Assert::boolean($reset));
 
         $output->writeln(messages: '');
         $output->writeln(messages: '<info>Test the search engine index completed</info>');

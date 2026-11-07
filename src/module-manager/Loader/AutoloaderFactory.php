@@ -78,19 +78,24 @@ abstract class AutoloaderFactory
             throw new Exception\InvalidArgumentException('Options provided must be an array or Traversable');
         }
 
+        /**
+         * @mago-var mixed $class
+         * @mago-var mixed $autoloaderOptions
+         */
         foreach ($options as $class => $autoloaderOptions) {
+            $class = Assert::string($class);
             if (!isset(static::$loaders[$class])) {
                 $autoloader = static::getStandardAutoloader();
-                if (!class_exists($class) && !$autoloader->autoload(Assert::string($class))) {
+                if (!class_exists(Assert::string($class)) && !$autoloader->autoload(Assert::string($class))) {
                     require_once 'Exception/InvalidArgumentException.php';
                     throw new Exception\InvalidArgumentException(sprintf('Autoloader class "%s" not loaded', $class));
                 }
 
-                if (!is_subclass_of($class, SplAutoloader::class)) {
+                if (!is_subclass_of(Assert::string($class), SplAutoloader::class)) {
                     require_once 'Exception/InvalidArgumentException.php';
                     throw new Exception\InvalidArgumentException(sprintf(
                         'Autoloader class %s must implement Laminas\\Loader\\SplAutoloader',
-                        $class,
+                        Value::scalar($class),
                     ));
                 }
 
@@ -146,6 +151,7 @@ abstract class AutoloaderFactory
      */
     public static function unregisterAutoloaders()
     {
+        /** @mago-var mixed $autoloader */
         foreach (static::getRegisteredAutoloaders() as $class => $autoloader) {
             spl_autoload_unregister(Assert::isCallable([$autoloader, 'autoload']));
             unset(static::$loaders[$class]);
@@ -209,6 +215,6 @@ abstract class AutoloaderFactory
      */
     protected static function isSubclassOf($className, $type)
     {
-        return is_subclass_of($className, $type);
+        return is_subclass_of($className, Value::classString($type));
     }
 }

@@ -39,6 +39,7 @@ final class FormMultiSlider extends Helper\FormText
         $minValue = reset(array: $rawValueOptions);
         $maxValue = end(array: $rawValueOptions);
 
+        /** @mago-var mixed $value */
         $value = $element->getValue(); // The SearchFormResult helper transforms the result into an array.
 
         $element->setAttribute(key: 'data-provide', value: 'slider');

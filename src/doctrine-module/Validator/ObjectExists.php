@@ -97,6 +97,7 @@ class ObjectExists extends AbstractValidator
             throw new Exception\InvalidArgumentException(message: 'Provided fields list was empty!');
         }
 
+        /** @mago-var mixed $field */
         foreach ($fields as $key => $field) {
             if (!is_string(value: $field)) {
                 throw new Exception\InvalidArgumentException(message: sprintf(
@@ -159,7 +160,7 @@ class ObjectExists extends AbstractValidator
     public function isValid($value): bool
     {
         $cleanedValue = $this->cleanSearchValue(value: $value);
-        $match = $this->objectRepository->findOneBy(criteria: $cleanedValue);
+        $match = $this->objectRepository->findOneBy(criteria: Value::stringKeyedArray($cleanedValue));
 
         if (is_object(value: $match)) {
             return true;

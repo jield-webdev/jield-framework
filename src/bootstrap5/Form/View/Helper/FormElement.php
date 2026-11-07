@@ -157,9 +157,9 @@ class FormElement extends Helper\FormElement
             $this->getView()->headLink()->appendStylesheet('assets/css/jield-bootstrap5/codemirror.css');
 
             $element->setAttribute(key: 'class', value: 'codemirror-element form-control');
-            $element->setAttribute(key: 'data-mode', value: $element->getOption(option: 'mode'));
-            $element->setAttribute(key: 'data-line-numbers', value: $element->getOption(option: 'line-numbers'));
-            $element->setAttribute(key: 'data-height', value: $element->getOption(option: 'height'));
+            $element->setAttribute(key: 'data-mode', value: Value::plainScalar($element->getOption(option: 'mode')));
+            $element->setAttribute(key: 'data-line-numbers', value: Value::plainScalar($element->getOption(option: 'line-numbers')));
+            $element->setAttribute(key: 'data-height', value: Value::plainScalar($element->getOption(option: 'height')));
         }
 
         $renderedType = $this->renderType(element: $element);
@@ -168,7 +168,7 @@ class FormElement extends Helper\FormElement
             return $renderedType;
         }
 
-        $element->setValue(value: Assert::notNull($this->translator)->translate(message: $element->getValue()));
+        $element->setValue(value: Assert::notNull($this->translator)->translate(message: Assert::string($element->getValue())));
 
         return parent::render(element: $element);
     }
@@ -360,6 +360,7 @@ class FormElement extends Helper\FormElement
         $openTag = Assert::notNull($this->formLabel)->openTag(attributesOrElement: $openTagAttributes);
 
         if (!$element instanceof LabelAwareInterface || !$element->getLabelOption(key: 'disable_html_escape')) {
+            /** @mago-var mixed $label */
             $label = Assert::notNull($this->escapeHtml)->__invoke(value: $label);
         }
 
@@ -369,22 +370,22 @@ class FormElement extends Helper\FormElement
     private function getDefaultElement($label, $element, $error, $description): string
     {
         return match ($this->type) {
-            self::TYPE_INLINE, self::TYPE_DEFAULT => sprintf('%s%s%s%s', $label, $element, $error, $description),
-            self::TYPE_ELEMENT_ONLY => sprintf('%s%s%s', $element, $error, $description),
+            self::TYPE_INLINE, self::TYPE_DEFAULT => sprintf('%s%s%s%s', Value::scalar($label), Value::scalar($element), Value::scalar($error), Value::scalar($description)),
+            self::TYPE_ELEMENT_ONLY => sprintf('%s%s%s', Value::scalar($element), Value::scalar($error), Value::scalar($description)),
             self::TYPE_FLOATING_LABEL => sprintf(
                 '<div class="form-floating mb-3">%s%s%s%s</div>',
-                $element,
-                $label,
-                $error,
-                $description,
+                Value::scalar($element),
+                Value::scalar($label),
+                Value::scalar($error),
+                Value::scalar($description),
             ),
             default => sprintf(
                 '<div class="row mb-3">%s<div class="col-sm-%d">%s%s%s</div></div>',
-                $label,
+                Value::scalar($label),
                 $this->elementCols,
-                $element,
-                $error,
-                $description,
+                Value::scalar($element),
+                Value::scalar($error),
+                Value::scalar($description),
             ),
         };
     }

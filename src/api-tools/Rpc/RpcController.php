@@ -40,7 +40,9 @@ final class RpcController extends BaseAbstractActionController
     {
         $routeMatch = $e->getRouteMatch();
 
+        /** @mago-var mixed $contentNegotiationParams */
         $contentNegotiationParams = $e->getParam(name: 'LaminasContentNegotiationParameterData');
+        /** @mago-var mixed $routeParameters */
         $routeParameters = $contentNegotiationParams
             ? Value::call($contentNegotiationParams, 'getRouteParams')
             : Assert::notNull($routeMatch)->getParams();
@@ -53,6 +55,7 @@ final class RpcController extends BaseAbstractActionController
         } elseif (is_array(value: $this->wrappedCallable)) {
             $callable = $this->wrappedCallable;
         } elseif (is_object(value: $this->wrappedCallable)) {
+            /** @mago-var mixed $action */
             $action = Assert::notNull($routeMatch)->getParam(name: 'action', default: 'not-found');
             $method = static::getMethodFromAction(action: Assert::string($action));
             $callable = $this->wrappedCallable;
@@ -67,8 +70,9 @@ final class RpcController extends BaseAbstractActionController
 
         $dispatchParameters = $parameterMatcher->getMatchedParameters(
             callable: Assert::isCallable($callable),
-            parameters: $routeParameters ?: [],
+            parameters: Assert::isArray($routeParameters ?: []),
         );
+        /** @mago-var mixed $result */
         $result = call_user_func_array(callback: $callable, args: $dispatchParameters);
 
         $e->setParam(name: 'LaminasContentNegotiationFallback', value: [JsonModel::class => ['application/json']]);

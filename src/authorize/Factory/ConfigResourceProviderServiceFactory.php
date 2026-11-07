@@ -22,9 +22,9 @@ class ConfigResourceProviderServiceFactory implements FactoryInterface
      */
     public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): Config
     {
-        return new Config(resources: Value::path(
+        return new Config(resources: \Webmozart\Assert\Assert::isArray(Value::path(
             $container->get(AuthorizeConfig::class),
             ['resource_providers', Config::class],
-        ));
+        )));
     }
 }

@@ -82,6 +82,7 @@ final class FormAbstractServiceFactory implements AbstractFactoryInterface
             return $this->config;
         }
 
+        /** @mago-var mixed $config */
         $config = $container->get('config');
         if (!isset($config[$this->configKey]) || !is_array(value: $config[$this->configKey])) {
             $this->config = [];

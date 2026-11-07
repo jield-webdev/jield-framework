@@ -61,6 +61,7 @@ class ContentTypeFilterListener extends AbstractListenerAggregate
             return null;
         }
 
+        /** @mago-var mixed $controllerName */
         $controllerName = Assert::notNull($e->getRouteMatch())->getParam(name: 'controller');
         if (!isset($this->config[$controllerName])) {
             return null;
@@ -80,6 +81,7 @@ class ContentTypeFilterListener extends AbstractListenerAggregate
             return null;
         }
 
+        /** @mago-var mixed $headers */
         $headers = $request->getHeaders();
         if (!Value::call($headers, 'has', ['content-type'])) {
             return new ApiProblemResponse(apiProblem: new ApiProblem(
@@ -88,6 +90,7 @@ class ContentTypeFilterListener extends AbstractListenerAggregate
             ));
         }
 
+        /** @mago-var mixed $contentTypeHeader */
         $contentTypeHeader = Value::call($headers, 'get', ['content-type']);
         if (!$contentTypeHeader instanceof ContentType) {
             return new ApiProblemResponse(apiProblem: new ApiProblem(
@@ -96,7 +99,7 @@ class ContentTypeFilterListener extends AbstractListenerAggregate
             ));
         }
 
-        $matched = $contentTypeHeader->match($this->config[$controllerName]);
+        $matched = $contentTypeHeader->match(Value::arrayOrString($this->config[$controllerName]));
 
         if (false === $matched) {
             return new ApiProblemResponse(apiProblem: new ApiProblem(

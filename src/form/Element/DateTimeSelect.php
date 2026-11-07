@@ -80,19 +80,19 @@ class DateTimeSelect extends DateSelect
         parent::setOptions(options: $options);
 
         if (isset($this->options['hour_attributes'])) {
-            $this->setHourAttributes(hourAttributes: $this->options['hour_attributes']);
+            $this->setHourAttributes(hourAttributes: \Jield\Stdlib\Value::scalarMap($this->options['hour_attributes']));
         }
 
         if (isset($this->options['minute_attributes'])) {
-            $this->setMinuteAttributes(minuteAttributes: $this->options['minute_attributes']);
+            $this->setMinuteAttributes(minuteAttributes: \Jield\Stdlib\Value::scalarMap($this->options['minute_attributes']));
         }
 
         if (isset($this->options['second_attributes'])) {
-            $this->setSecondAttributes(secondAttributes: $this->options['second_attributes']);
+            $this->setSecondAttributes(secondAttributes: \Jield\Stdlib\Value::scalarMap($this->options['second_attributes']));
         }
 
         if (isset($this->options['should_show_seconds'])) {
-            $this->setShouldShowSeconds(shouldShowSeconds: $this->options['should_show_seconds']);
+            $this->setShouldShowSeconds(shouldShowSeconds: \Webmozart\Assert\Assert::boolean($this->options['should_show_seconds']));
         }
 
         return $this;
@@ -259,11 +259,17 @@ class DateTimeSelect extends DateSelect
 
     public function getValue(): ?string
     {
+        /** @mago-var mixed $year */
         $year = $this->getYearElement()->getValue();
+        /** @mago-var mixed $month */
         $month = $this->getMonthElement()->getValue();
+        /** @mago-var mixed $day */
         $day = $this->getDayElement()->getValue();
+        /** @mago-var mixed $hour */
         $hour = $this->getHourElement()->getValue();
+        /** @mago-var mixed $minute */
         $minute = $this->getMinuteElement()->getValue();
+        /** @mago-var mixed $second */
         $second = $this->getSecondElement()->getValue();
 
         // if everything is null, return null
@@ -299,7 +305,7 @@ class DateTimeSelect extends DateSelect
             $second = '00';
         }
 
-        return sprintf('%04d-%02d-%02d %02d:%02d:%02d', $year, $month, $day, $hour, $minute, $second);
+        return sprintf('%04d-%02d-%02d %02d:%02d:%02d', \Jield\Stdlib\Value::scalar($year), \Jield\Stdlib\Value::scalar($month), \Jield\Stdlib\Value::scalar($day), \Jield\Stdlib\Value::scalar($hour), \Jield\Stdlib\Value::scalar($minute), \Jield\Stdlib\Value::scalar($second));
     }
 
     /**

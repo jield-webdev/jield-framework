@@ -64,6 +64,7 @@ class InjectTemplateListener extends AbstractListenerAggregate
      */
     public function injectTemplate(MvcEvent $e): void
     {
+        /** @mago-var mixed $model */
         $model = $e->getResult();
         if (!$model instanceof ViewModel) {
             return;
@@ -75,6 +76,7 @@ class InjectTemplateListener extends AbstractListenerAggregate
         }
 
         $routeMatch = $e->getRouteMatch();
+        /** @mago-var mixed $preferRouteMatchController */
         if (
             $preferRouteMatchController = Assert::notNull($routeMatch)->getParam('prefer_route_match_controller', false)
         ) {
@@ -86,13 +88,16 @@ class InjectTemplateListener extends AbstractListenerAggregate
             $controller = $controller::class;
         }
 
+        /** @mago-var mixed $routeMatchController */
         $routeMatchController = Assert::notNull($routeMatch)->getParam('controller', '');
         if (!$controller || $this->preferRouteMatchController && Value::truthy($routeMatchController)) {
+            /** @mago-var mixed $controller */
             $controller = $routeMatchController;
         }
 
         $template = $this->mapController(Assert::string($controller));
 
+        /** @mago-var mixed $action */
         $action = Assert::notNull($routeMatch)->getParam('action');
         if (null !== $action) {
             $template = (string) $template . '/' . $this->inflectName(Assert::string($action));
@@ -121,6 +126,7 @@ class InjectTemplateListener extends AbstractListenerAggregate
     public function mapController($controller): false|string
     {
         $mapped = '';
+        /** @mago-var mixed $replacement */
         foreach ($this->controllerMap as $namespace => $replacement) {
             if (
                 // Allow disabling rule by setting value to false since config

@@ -119,18 +119,21 @@ class HttpAdapter extends AbstractAdapter
             return new Identity\GuestIdentity();
         }
 
+        /** @mago-var mixed $resultIdentity */
         $resultIdentity = $result->getIdentity();
 
         // Pass fully discovered identity to AuthenticatedIdentity instance
         $identity = new Identity\AuthenticatedIdentity(identity: $resultIdentity);
 
         // But determine the name separately
+        /** @mago-var mixed $name */
         $name = $resultIdentity;
         if (is_array(value: $resultIdentity)) {
+            /** @mago-var mixed $name */
             $name = $resultIdentity['username'] ?? (string) array_shift(array: $resultIdentity);
         }
 
-        $identity->setName(name: $name);
+        $identity->setName(name: \Webmozart\Assert\Assert::string($name));
 
         return $identity;
     }

@@ -27,7 +27,6 @@ final class InputFilterValidator
     ): InputFilterValidationResult {
         $data = is_array($data) ? $data : iterator_to_array($data);
         if ($group === null || $filter instanceof OptionalInputFilter && $data === []) {
-            /** @var InputFilterValidationResult<array<array-key, mixed>> $result */
             $result = $filter->validate($data, $context);
             return self::preserveCollectionKeys($filter, $data, $result);
         }
@@ -43,15 +42,18 @@ final class InputFilterValidator
 
         $context = $context === [] ? $data : $context;
         $results = [];
+        /** @mago-var mixed $selection */
         foreach ($group as $key => $selection) {
+            /** @mago-var mixed $name */
             $name = is_array($selection) ? $key : $selection;
-            if (!$filter->has($name)) {
+            if (!$filter->has(\Jield\Stdlib\Value::key($name))) {
                 throw new InvalidArgumentException(sprintf(
                     'Validation group expects a list of valid input names; "%s" was not found',
-                    $name,
+                    \Jield\Stdlib\Value::scalar($name),
                 ));
             }
-            $input = $filter->get($name);
+            $input = $filter->get(\Jield\Stdlib\Value::key($name));
+            /** @mago-var mixed $value */
             $value = $data[$name] ?? null;
             if ($input instanceof InputFilterInterface) {
                 $results[$name] = self::validate(
@@ -101,6 +103,7 @@ final class InputFilterValidator
                 $input = $filter->getInputFilter();
             }
             if ($input instanceof InputFilterInterface && $child instanceof InputFilterValidationResult) {
+                /** @mago-var mixed $value */
                 $value = $data[$key] ?? [];
                 $child = self::preserveCollectionKeys(
                     $input,
@@ -123,8 +126,9 @@ final class InputFilterValidator
             return array_keys($data);
         }
         $groups = [];
+        /** @mago-var mixed $item */
         foreach ($data as $item) {
-            $groups[] = array_keys($item);
+            $groups[] = array_keys(\Webmozart\Assert\Assert::isArray($item));
         }
         return $groups;
     }

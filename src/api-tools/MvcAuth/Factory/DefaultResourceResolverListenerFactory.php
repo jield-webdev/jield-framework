@@ -36,9 +36,10 @@ class DefaultResourceResolverListenerFactory implements FactoryInterface
         $requestedName,
         ?array $options = null,
     ): DefaultResourceResolverListener {
+        /** @mago-var mixed $config */
         $config = $container->has('config') ? $container->get('config') : [];
 
-        return new DefaultResourceResolverListener(restControllers: $this->getRestServicesFromConfig(config: $config));
+        return new DefaultResourceResolverListener(restControllers: $this->getRestServicesFromConfig(config: Assert::isArray($config)));
     }
 
     /**
@@ -57,12 +58,16 @@ class DefaultResourceResolverListenerFactory implements FactoryInterface
             return $restServices;
         }
 
+        /**
+         * @mago-var mixed $controllerService
+         * @mago-var mixed $restConfig
+         */
         foreach (Assert::isIterable($config['api-tools-rest']) as $controllerService => $restConfig) {
             if (!isset($restConfig['route_identifier_name'])) {
                 continue;
             }
 
-            $restServices[$controllerService] = $restConfig['route_identifier_name'];
+            $restServices[\Jield\Stdlib\Value::key($controllerService)] = $restConfig['route_identifier_name'];
         }
 
         return $restServices;

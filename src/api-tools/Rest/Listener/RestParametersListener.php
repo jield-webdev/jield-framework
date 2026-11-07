@@ -43,9 +43,10 @@ class RestParametersListener implements ListenerAggregateInterface
 
     public function detachShared(SharedEventManagerInterface $events): void
     {
+        /** @mago-var mixed $listener */
         foreach ($this->sharedListeners as $index => $listener) {
             $events->detach(
-                listener: $listener,
+                listener: \Webmozart\Assert\Assert::isCallable($listener),
                 identifier: RestController::class,
                 eventName: MvcEvent::EVENT_DISPATCH,
             );
@@ -68,10 +69,11 @@ class RestParametersListener implements ListenerAggregateInterface
             return;
         }
 
+        /** @mago-var mixed $query */
         $query = $request->getQuery();
         $matches = $e->getRouteMatch();
         $resource = $controller->getResource();
-        $resource->setQueryParams(params: $query);
+        $resource->setQueryParams(params: \Jield\Stdlib\Value::nullableInstance($query, \Laminas\Stdlib\Parameters::class));
         $resource->setRouteMatch(matches: $matches);
     }
 }

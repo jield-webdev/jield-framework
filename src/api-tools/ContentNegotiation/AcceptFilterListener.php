@@ -30,6 +30,7 @@ class AcceptFilterListener extends ContentTypeFilterListener
             return null;
         }
 
+        /** @mago-var mixed $controllerName */
         $controllerName = Assert::notNull($e->getRouteMatch())->getParam(name: 'controller');
         if (!isset($this->config[$controllerName])) {
             return null;
@@ -41,14 +42,16 @@ class AcceptFilterListener extends ContentTypeFilterListener
             return null;
         }
 
+        /** @mago-var mixed $headers */
         $headers = $request->getHeaders();
 
         $matched = false;
         if (is_string(value: $this->config[$controllerName])) {
-            $matched = $this->validateMediaType(match: $this->config[$controllerName], headers: $headers);
+            $matched = $this->validateMediaType(match: $this->config[$controllerName], headers: Assert::isInstanceOf($headers, \Laminas\Http\Headers::class));
         } elseif (is_array(value: $this->config[$controllerName])) {
+            /** @mago-var mixed $whitelistType */
             foreach ($this->config[$controllerName] as $whitelistType) {
-                $matched = $this->validateMediaType(match: $whitelistType, headers: $headers);
+                $matched = $this->validateMediaType(match: Assert::string($whitelistType), headers: Assert::isInstanceOf($headers, \Laminas\Http\Headers::class));
                 if ($matched) {
                     break;
                 }
@@ -82,6 +85,7 @@ class AcceptFilterListener extends ContentTypeFilterListener
         }
 
         if ($accept instanceof ArrayIterator) {
+            /** @mago-var mixed $header */
             foreach ($accept as $header) {
                 if ($header instanceof AcceptHeader && $header->match($match)) {
                     return true;

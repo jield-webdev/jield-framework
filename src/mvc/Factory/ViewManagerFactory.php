@@ -23,6 +23,6 @@ class ViewManagerFactory implements FactoryInterface
         string $requestedName,
         ?array $options = null,
     ): HttpViewManager {
-        return $container->get('HttpViewManager');
+        return \Webmozart\Assert\Assert::isInstanceOf($container->get('HttpViewManager'), \Jield\Mvc\View\Http\ViewManager::class);
     }
 }

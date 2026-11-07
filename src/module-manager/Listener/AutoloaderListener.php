@@ -18,10 +18,11 @@ class AutoloaderListener extends AbstractListener
         $module = $e->getModule();
         if (
             !$module instanceof AutoloaderProviderInterface
-            && !method_exists(object_or_class: $module, method: 'getAutoloaderConfig')
+            && !method_exists(object_or_class: Value::objectOrString($module), method: 'getAutoloaderConfig')
         ) {
             return;
         }
+        /** @mago-var mixed $autoloaderConfig */
         $autoloaderConfig = Value::call($module, 'getAutoloaderConfig');
         AutoloaderFactory::factory($autoloaderConfig);
     }

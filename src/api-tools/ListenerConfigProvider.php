@@ -120,7 +120,7 @@ final class ListenerConfigProvider
 
     private function getReflectionClassFromClassName(string $className): ReflectionClass
     {
-        return new ReflectionClass(objectOrClass: $className);
+        return new ReflectionClass(objectOrClass: Value::classString($className));
     }
 
     public function registerListener(ListenerValueObject $listenerValueObject): void
@@ -130,7 +130,7 @@ final class ListenerConfigProvider
 
     private function getConstructorArguments(string $className): array
     {
-        $constructor = new ReflectionClass($className)->getConstructor();
+        $constructor = new ReflectionClass(Value::classString($className))->getConstructor();
         if ($constructor === null) {
             return [];
         }
@@ -159,6 +159,7 @@ final class ListenerConfigProvider
         //Return a merged array of all the listeners (with the toArray method called an all objects)
         $configuration = [];
 
+        /** @mago-var mixed $listener */
         foreach ($this->listeners as $listener) {
             $configuration = array_merge_recursive($configuration, Assert::isArray(Value::call($listener, 'toArray')));
         }

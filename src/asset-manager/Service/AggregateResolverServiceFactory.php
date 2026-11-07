@@ -29,7 +29,9 @@ class AggregateResolverServiceFactory implements FactoryInterface
     #[Override]
     public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): AggregateResolver
     {
+        /** @mago-var mixed $config */
         $config = $container->get('config');
+        /** @mago-var mixed $config */
         $config = $config['asset_manager'] ?? [];
 
         $resolver = new AggregateResolver();
@@ -38,8 +40,13 @@ class AggregateResolverServiceFactory implements FactoryInterface
             return $resolver;
         }
 
+        /**
+         * @mago-var mixed $resolverService
+         * @mago-var mixed $priority
+         */
         foreach (Assert::isIterable($config['resolvers']) as $resolverService => $priority) {
-            $resolverService = $container->get($resolverService);
+            /** @mago-var mixed $resolverService */
+            $resolverService = $container->get(Assert::string($resolverService));
 
             if (!$resolverService instanceof ResolverInterface) {
                 throw new Exception\RuntimeException(

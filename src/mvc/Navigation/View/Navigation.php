@@ -164,6 +164,7 @@ class Navigation extends AbstractNavigationHelper
             return false;
         }
 
+        /** @mago-var mixed $helper */
         $helper = $plugins->get($proxy);
         assert($helper instanceof NavigationHelper);
         $container = $this->getContainer();

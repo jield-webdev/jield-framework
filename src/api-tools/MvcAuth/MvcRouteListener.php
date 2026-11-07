@@ -72,7 +72,8 @@ class MvcRouteListener extends AbstractListenerAggregate
      */
     public function authentication(MvcEvent $mvcEvent): ?Response
     {
-        if (!$mvcEvent->getRequest() instanceof HttpRequest || $mvcEvent->getRequest()->isOptions()) {
+        $request = $mvcEvent->getRequest();
+        if (!$request instanceof HttpRequest || $request->isOptions()) {
             return null;
         }
 
@@ -88,6 +89,7 @@ class MvcRouteListener extends AbstractListenerAggregate
             event: $mvcAuthEvent,
         );
 
+        /** @mago-var mixed $result */
         $result = $responses->last();
         $storage = $this->authentication->getStorage();
 
@@ -108,6 +110,7 @@ class MvcRouteListener extends AbstractListenerAggregate
             return null;
         }
 
+        /** @mago-var mixed $identity */
         $identity = $this->authentication->getIdentity();
         if ($identity === null && !$mvcAuthEvent->hasAuthenticationResult()) {
             // if there is no Authentication identity or result, safe to assume we have a guest
@@ -147,7 +150,8 @@ class MvcRouteListener extends AbstractListenerAggregate
      */
     public function authenticationPost(MvcEvent $mvcEvent): mixed
     {
-        if (!$mvcEvent->getRequest() instanceof HttpRequest || $mvcEvent->getRequest()->isOptions()) {
+        $request = $mvcEvent->getRequest();
+        if (!$request instanceof HttpRequest || $request->isOptions()) {
             return null;
         }
 
@@ -168,7 +172,8 @@ class MvcRouteListener extends AbstractListenerAggregate
      */
     public function authorization(MvcEvent $mvcEvent): ?Response
     {
-        if (!$mvcEvent->getRequest() instanceof HttpRequest || $mvcEvent->getRequest()->isOptions()) {
+        $request = $mvcEvent->getRequest();
+        if (!$request instanceof HttpRequest || $request->isOptions()) {
             return null;
         }
 
@@ -180,6 +185,7 @@ class MvcRouteListener extends AbstractListenerAggregate
             event: $mvcAuthEvent,
         );
 
+        /** @mago-var mixed $result */
         $result = $responses->last();
 
         if (is_bool(value: $result)) {
@@ -200,7 +206,8 @@ class MvcRouteListener extends AbstractListenerAggregate
      */
     public function authorizationPost(MvcEvent $mvcEvent): ?Response
     {
-        if (!$mvcEvent->getRequest() instanceof HttpRequest || $mvcEvent->getRequest()->isOptions()) {
+        $request = $mvcEvent->getRequest();
+        if (!$request instanceof HttpRequest || $request->isOptions()) {
             return null;
         }
 
@@ -212,6 +219,6 @@ class MvcRouteListener extends AbstractListenerAggregate
             event: $mvcAuthEvent,
         );
 
-        return $responses->last();
+        return \Jield\Stdlib\Value::nullableInstance($responses->last(), \Laminas\Stdlib\ResponseInterface::class);
     }
 }

@@ -34,11 +34,11 @@ abstract class AbstractResponseSender implements ResponseSenderInterface
                 header($header->toString(), false);
                 continue;
             }
-            header(Value::call($header, 'toString'));
+            header(Assert::string(Value::call($header, 'toString')));
         }
 
         $status = $response->renderStatusLine();
-        header((string) $status);
+        header($status);
 
         $event->setHeadersSent();
         return $this;

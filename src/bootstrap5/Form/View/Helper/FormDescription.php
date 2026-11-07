@@ -40,20 +40,22 @@ final class FormDescription extends AbstractHelper
         $inlineWrapper = $inlineWrapper ?: $this->inlineWrapper;
 
         $html = '';
+        /** @mago-var mixed $inline */
         if ($inline = $element->getOption(option: 'help-inline')) {
             if (null !== ($translator = $this->getTranslator())) {
-                $inline = $translator->translate($inline, $this->getTranslatorTextDomain());
+                $inline = $translator->translate(\Webmozart\Assert\Assert::string($inline), $this->getTranslatorTextDomain());
             }
 
-            $html .= sprintf($inlineWrapper, $inline);
+            $html .= sprintf($inlineWrapper, \Jield\Stdlib\Value::scalar($inline));
         }
 
+        /** @mago-var mixed $block */
         if ($block = $element->getOption(option: 'help-block')) {
             if (null !== ($translator = $this->getTranslator())) {
-                $block = $translator->translate($block, $this->getTranslatorTextDomain());
+                $block = $translator->translate(\Webmozart\Assert\Assert::string($block), $this->getTranslatorTextDomain());
             }
 
-            $html .= sprintf($blockWrapper, $block);
+            $html .= sprintf($blockWrapper, \Jield\Stdlib\Value::scalar($block));
         }
 
         return $html;

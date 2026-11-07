@@ -37,26 +37,34 @@ final class Menu
      */
     public function __invoke(AbstractContainer $container, array $options = []): string
     {
+        /** @mago-var mixed $ulClass */
         $ulClass = $options['ulClass'] ?? $this->ulClass;
+        /** @mago-var mixed $indent */
         $indent = $options['indent'] ?? '';
+        /** @mago-var mixed $minDepth */
         $minDepth = $options['minDepth'] ?? 0;
+        /** @mago-var mixed $maxDepth */
         $maxDepth = $options['maxDepth'] ?? null;
+        /** @mago-var mixed $onlyActive */
         $onlyActive = $options['onlyActive'] ?? false;
+        /** @mago-var mixed $escapeLabels */
         $escapeLabels = $options['escapeLabels'] ?? true;
+        /** @mago-var mixed $addClassToListItem */
         $addClassToListItem = $options['addClassToListItem'] ?? false;
+        /** @mago-var mixed $liActiveClass */
         $liActiveClass = $options['liActiveClass'] ?? 'active';
         $this->renderInvisible = Value::truthy($options['renderInvisible'] ?? $this->renderInvisible);
 
         return $this->renderNormalMenu(
             container: $container,
-            ulClass: $ulClass,
-            indent: $indent,
-            minDepth: $minDepth,
-            maxDepth: $maxDepth,
-            onlyActive: $onlyActive,
-            escapeLabels: $escapeLabels,
-            addClassToListItem: $addClassToListItem,
-            liActiveClass: $liActiveClass,
+            ulClass: Assert::string($ulClass),
+            indent: Assert::string($indent),
+            minDepth: Assert::integer($minDepth),
+            maxDepth: Assert::nullOrInteger($maxDepth),
+            onlyActive: Assert::boolean($onlyActive),
+            escapeLabels: Assert::boolean($escapeLabels),
+            addClassToListItem: Assert::boolean($addClassToListItem),
+            liActiveClass: Assert::string($liActiveClass),
         );
     }
 
@@ -219,7 +227,7 @@ final class Menu
             $element = 'span';
         }
 
-        $html = '<' . $element . $this->htmlAttribs($attribs) . '>';
+        $html = '<' . $element . $this->htmlAttribs(Value::scalarMap($attribs)) . '>';
         $label = $this->translate($page->getLabel(), $page->getTextDomain());
 
         if ($escapeLabel) {

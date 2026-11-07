@@ -173,7 +173,7 @@ class FormCollection extends AbstractHelper
             $templateMarkup .= Value::stringify($elementHelper($elementOrFieldset));
         }
 
-        return sprintf($this->getTemplateWrapper(), $escapeHtmlAttribHelper(value: $templateMarkup));
+        return sprintf($this->getTemplateWrapper(), Value::scalar($escapeHtmlAttribHelper(value: $templateMarkup)));
     }
 
     /**
@@ -239,7 +239,7 @@ class FormCollection extends AbstractHelper
         }
 
         if ($this->view !== null) {
-            $this->elementHelper = $this->getView()->plugin($this->getDefaultElementHelper());
+            $this->elementHelper = Value::nullableInstance($this->getView()->plugin($this->getDefaultElementHelper(), HelperInterface::class), \Laminas\View\Helper\HelperInterface::class);
         }
 
         if (!$this->elementHelper instanceof HelperInterface) {

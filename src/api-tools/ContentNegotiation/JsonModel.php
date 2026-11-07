@@ -33,10 +33,11 @@ class JsonModel extends BaseJsonModel
     public function setVariables($variables, $overwrite = false): static
     {
         if ($variables instanceof JsonSerializable) {
+            /** @mago-var mixed $variables */
             $variables = $variables->jsonSerialize();
         }
 
-        return parent::setVariables(variables: $variables, overwrite: $overwrite);
+        return parent::setVariables(variables: \Jield\Stdlib\Value::namedIterable($variables), overwrite: $overwrite);
     }
 
     /**
@@ -74,6 +75,7 @@ class JsonModel extends BaseJsonModel
 
         // 'payload' == payload for HAL representations
         if (isset($variables['payload'])) {
+            /** @mago-var mixed $variables */
             $variables = $variables['payload'];
         }
 

@@ -32,6 +32,7 @@ final class ReservedWordsCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
+        /** @mago-var mixed $name */
         $name = $input->getOption('connection');
         $connection = is_string($name)
             ? $this->connections->getConnection($name)

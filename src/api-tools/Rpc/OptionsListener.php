@@ -52,20 +52,22 @@ class OptionsListener implements ListenerAggregateInterface
             return null;
         }
 
+        /** @mago-var mixed $controller */
         $controller = $matches->getParam(name: 'controller', default: false);
         if (!$controller) {
             // No controller in the matches, nothing to do
             return null;
         }
 
-        if (!array_key_exists(key: $controller, array: $this->config)) {
+        if (!array_key_exists(key: Assert::scalar($controller), array: $this->config)) {
             // No matching controller in our configuration, nothing to do
             return null;
         }
 
+        /** @mago-var mixed $config */
         $config = $this->config[$controller];
 
-        if (!array_key_exists(key: 'http_methods', array: $config) || empty($config['http_methods'])) {
+        if (!array_key_exists(key: 'http_methods', array: Assert::isArray($config)) || empty($config['http_methods'])) {
             // No HTTP methods set for controller, nothing to do
             return null;
         }
@@ -77,9 +79,9 @@ class OptionsListener implements ListenerAggregateInterface
         }
 
         $methods = $this->normalizeMethods(
-            methods: is_array($config['http_methods'])
+            methods: \Jield\Stdlib\Value::stringsOrString(is_array($config['http_methods'])
                 ? $config['http_methods']
-                : Assert::string($config['http_methods']),
+                : Assert::string($config['http_methods'])),
         );
 
         $method = $request->getMethod();

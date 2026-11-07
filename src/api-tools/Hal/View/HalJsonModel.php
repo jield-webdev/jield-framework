@@ -27,6 +27,7 @@ class HalJsonModel extends JsonModel
      */
     public function isCollection(): bool
     {
+        /** @mago-var mixed $payload */
         $payload = $this->getPayload();
         return $payload instanceof Collection;
     }
@@ -56,6 +57,7 @@ class HalJsonModel extends JsonModel
      */
     public function isEntity(): bool
     {
+        /** @mago-var mixed $payload */
         $payload = $this->getPayload();
         return $payload instanceof Entity;
     }

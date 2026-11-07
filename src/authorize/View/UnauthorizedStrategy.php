@@ -82,6 +82,7 @@ class UnauthorizedStrategy implements ListenerAggregateInterface
     public function onDispatchError(MvcEvent $event): \Laminas\Http\PhpEnvironment\Response
     {
         // Do nothing if the result is a response object
+        /** @mago-var mixed $result */
         $result = $event->getResult();
 
         /** @var \Laminas\Http\PhpEnvironment\Response $response */
@@ -113,7 +114,7 @@ class UnauthorizedStrategy implements ListenerAggregateInterface
                     /** @var TreeRouteStack $router */
                     $router = $event->getRouter();
 
-                    $redirect = $router->assemble(params: $event->getRouteMatch()?->getParams(), options: [
+                    $redirect = $router->assemble(params: Value::routeParams($event->getRouteMatch()?->getParams()), options: [
                         'name' => $event->getParam(name: 'route'),
                     ])->toString();
 

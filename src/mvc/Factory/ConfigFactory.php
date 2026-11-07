@@ -25,6 +25,6 @@ class ConfigFactory implements FactoryInterface
         $moduleManager = Service::get($container, ModuleManager::class, 'ModuleManager');
         $moduleManager->loadModules();
         $moduleParams = $moduleManager->getEvent()->getParams();
-        return Value::call($moduleParams['configListener'], 'getMergedConfig', [false]);
+        return \Webmozart\Assert\Assert::isArray(Value::call($moduleParams['configListener'], 'getMergedConfig', [false]));
     }
 }

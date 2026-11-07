@@ -75,8 +75,9 @@ class HelperConfig
     public function configureServiceManager(HelperPluginManager $viewHelpers, ContainerInterface $appContainer): void
     {
         if ($appContainer->has('config')) {
+            /** @mago-var mixed $config */
             $config = $appContainer->get('config');
-            $this->mergeHelpersFromConfiguration($config instanceof Traversable ? $config : $config);
+            $this->mergeHelpersFromConfiguration(Value::stringKeyedArray($config instanceof Traversable ? iterator_to_array($config) : $config));
         }
 
         $this->injectNavigationDelegatorFactory();
@@ -96,9 +97,10 @@ class HelperConfig
     private function mergeConfig(array $config): void
     {
         if (isset($config['invokables'])) {
-            $config = $this->processInvokables($config['invokables'], $config);
+            $config = $this->processInvokables(Value::stringMap($config['invokables']), $config);
         }
 
+        /** @mago-var mixed $services */
         foreach ($config as $type => $services) {
             if (!is_array($services)) {
                 continue;
@@ -133,7 +135,7 @@ class HelperConfig
             $navigationHelpers = iterator_to_array($navigationHelpers);
         }
 
-        $this->mergeConfig($navigationHelpers);
+        $this->mergeConfig(Value::stringKeyedArray($navigationHelpers));
     }
 
     /**
@@ -158,7 +160,7 @@ class HelperConfig
 
         unset($config['invokables']);
 
-        return $config;
+        return Value::stringKeyedArray($config);
     }
 
     /**
@@ -170,7 +172,7 @@ class HelperConfig
 
         if (
             isset($this->config['delegators'][NavigationHelper::class])
-            && in_array($factory, $this->config['delegators'][NavigationHelper::class], true)
+            && in_array($factory, Assert::isArray($this->config['delegators'][NavigationHelper::class]), true)
         ) {
             // Already present.
             return;
@@ -202,6 +204,7 @@ class HelperConfig
             callable $callback,
             ?array $options = null,
         ) use ($config): object {
+            /** @mago-var mixed $helper */
             $helper = $callback();
 
             // Seed the proxy helper's sub-helper plugin manager with the same

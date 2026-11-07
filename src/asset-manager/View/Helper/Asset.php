@@ -71,19 +71,21 @@ class Asset extends AbstractHelper
     private function getFilePathFromCache(string $filename, string $queryString): mixed
     {
         // return if cache not found
-        if ($this->cache === null) {
+        $cache = $this->cache;
+        if ($cache === null) {
             return null;
         }
 
         // cache key based on the filename
         $cacheKey = md5(string: $filename);
         $itemIsFoundInCache = false;
-        $filePath = $this->cache->getItem($cacheKey, $itemIsFoundInCache);
+        /** @mago-var mixed $filePath */
+        $filePath = $cache->getItem($cacheKey, $itemIsFoundInCache);
 
         // if there is no element in the cache, elaborate and cache it
         if ($itemIsFoundInCache === false || $filePath === null) {
             $filePath = $this->elaborateFilePath(filename: $filename, queryString: $queryString);
-            $this->cache->setItem($cacheKey, $filePath);
+            $cache->setItem($cacheKey, $filePath);
         }
 
         return $filePath;
@@ -104,26 +106,30 @@ class Asset extends AbstractHelper
 
         // search the cache config for the specific file requested (if none, use the default one)
         if (isset($this->config['caching'][$filename])) {
+            /** @mago-var mixed $cacheConfig */
             $cacheConfig = $this->config['caching'][$filename];
         } elseif (isset($this->config['caching']['default'])) {
+            /** @mago-var mixed $cacheConfig */
             $cacheConfig = $this->config['caching']['default'];
         }
 
         // query string params
+        /** @mago-var mixed $queryString */
         $queryString = $this->config['view_helper']['query_string'] ?? '_';
 
         // no cache dir is defined
         if (!isset($cacheConfig['options']['dir'])) {
             // append current timestamp to the filepath and use a custom query string
-            return $this->appendTimestamp(filename: $filename, queryString: $queryString);
+            return $this->appendTimestamp(filename: $filename, queryString: \Webmozart\Assert\Assert::string($queryString));
         }
 
         // get the filePath from the cache (if available)
-        $filePath = $this->getFilePathFromCache(filename: $filename, queryString: $queryString);
+        /** @mago-var mixed $filePath */
+        $filePath = $this->getFilePathFromCache(filename: $filename, queryString: \Webmozart\Assert\Assert::string($queryString));
         if ($filePath !== null) {
-            return $filePath;
+            return \Webmozart\Assert\Assert::string($filePath);
         }
 
-        return $this->elaborateFilePath(filename: $filename, queryString: $queryString);
+        return $this->elaborateFilePath(filename: $filename, queryString: \Webmozart\Assert\Assert::string($queryString));
     }
 }

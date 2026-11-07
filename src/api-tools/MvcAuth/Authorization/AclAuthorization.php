@@ -25,14 +25,14 @@ class AclAuthorization extends Acl implements AuthorizationInterface
     #[Override]
     public function isAuthorized(IdentityInterface $identity, mixed $resource, mixed $privilege): bool
     {
-        if (null !== $resource && !$this->hasResource($resource)) {
-            $this->addResource($resource);
+        if (null !== $resource && !$this->hasResource(\Jield\Stdlib\Value::instanceOrString($resource, \Laminas\Permissions\Acl\Resource\ResourceInterface::class))) {
+            $this->addResource(\Jield\Stdlib\Value::instanceOrString($resource, \Laminas\Permissions\Acl\Resource\ResourceInterface::class));
         }
 
         if (!$this->hasRole($identity)) {
             $this->addRole($identity);
         }
 
-        return $this->isAllowed($identity, $resource, Assert::nullOrString($privilege));
+        return $this->isAllowed($identity, \Jield\Stdlib\Value::nullableInstanceOrString($resource, \Laminas\Permissions\Acl\Resource\ResourceInterface::class), Assert::nullOrString($privilege));
     }
 }

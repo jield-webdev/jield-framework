@@ -76,8 +76,9 @@ class PathStackResolver implements ResolverInterface, MimeResolverAwareInterface
      */
     public function addPaths(iterable $paths): void
     {
+        /** @mago-var mixed $path */
         foreach ($paths as $path) {
-            $this->addPath(path: $path);
+            $this->addPath(path: Assert::string($path));
         }
     }
 
@@ -171,6 +172,7 @@ class PathStackResolver implements ResolverInterface, MimeResolverAwareInterface
             return null;
         }
 
+        /** @mago-var mixed $path */
         foreach ($this->getPaths() as $path) {
             $file = new SplFileInfo(filename: Value::stringify($path) . $fileName);
 
@@ -191,9 +193,10 @@ class PathStackResolver implements ResolverInterface, MimeResolverAwareInterface
     public function collect(): array
     {
         $collection = [];
+        /** @mago-var mixed $path */
         foreach ($this->getPaths() as $path) {
             $locations = new SplStack();
-            $pathInfo = new SplFileInfo(filename: $path);
+            $pathInfo = new SplFileInfo(filename: Assert::string($path));
             $locations->push(value: $pathInfo);
             $basePath = $this->normalizePath(path: Assert::string($pathInfo->getRealPath()));
 
@@ -206,8 +209,9 @@ class PathStackResolver implements ResolverInterface, MimeResolverAwareInterface
 
                 if ($pathInfo->isDir()) {
                     $dir = new DirectoryResource(path: Assert::string($pathInfo->getRealPath()));
+                    /** @mago-var mixed $resource */
                     foreach ($dir as $resource) {
-                        $locations->push(value: new SplFileInfo(filename: $resource));
+                        $locations->push(value: new SplFileInfo(filename: Assert::string($resource)));
                     }
                 } else {
                     $relativePath = substr(

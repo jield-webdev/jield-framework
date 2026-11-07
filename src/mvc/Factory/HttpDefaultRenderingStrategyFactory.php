@@ -43,6 +43,7 @@ class HttpDefaultRenderingStrategyFactory implements FactoryInterface
      */
     private function injectLayoutTemplate(DefaultRenderingStrategy $strategy, array|ArrayAccess $config): void
     {
+        /** @mago-var mixed $layout */
         $layout = $config['layout'] ?? 'layout/layout';
         $strategy->setLayoutTemplate(Assert::string($layout));
     }

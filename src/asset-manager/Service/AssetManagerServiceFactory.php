@@ -24,16 +24,18 @@ class AssetManagerServiceFactory implements FactoryInterface
     #[Override]
     public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): AssetManager
     {
+        /** @mago-var mixed $config */
         $config = $container->get('config');
         $assetManagerConfig = [];
 
         if (!empty($config['asset_manager'])) {
+            /** @mago-var mixed $assetManagerConfig */
             $assetManagerConfig = $config['asset_manager'];
         }
 
         $assetManager = new AssetManager(
             resolver: Service::get($container, AggregateResolver::class),
-            config: $assetManagerConfig,
+            config: \Webmozart\Assert\Assert::isArray($assetManagerConfig),
         );
 
         $assetManager->setAssetFilterManager(filterManager: Service::get($container, AssetFilterManager::class));

@@ -30,9 +30,11 @@ final class Controller extends AbstractGuard
         $results = [];
         $rule['action'] = isset($rule['action']) ? Value::toArray($rule['action']) : [null];
 
+        /** @mago-var mixed $controller */
         foreach (Value::toArray($rule['controller']) as $controller) {
+            /** @mago-var mixed $action */
             foreach ($rule['action'] as $action) {
-                $results[] = $this->getResourceName(controller: $controller, action: $action);
+                $results[] = $this->getResourceName(controller: Assert::string($controller), action: Assert::nullOrString($action));
             }
         }
 
@@ -61,17 +63,19 @@ final class Controller extends AbstractGuard
     {
         $service = Service::get($this->container, AuthorizeService::class);
         $match = $event->getRouteMatch();
+        /** @mago-var mixed $controller */
         $controller = Assert::notNull($match)->getParam(name: 'controller');
+        /** @mago-var mixed $action */
         $action = Assert::notNull($match)->getParam(name: 'action');
         $request = $event->getRequest();
         $method = $request instanceof HttpRequest ? strtolower(string: $request->getMethod()) : null;
 
         $authorized =
             PHP_SAPI === 'cli'
-            || $service->isAllowed(resource: $this->getResourceName(controller: $controller))
-            || $service->isAllowed(resource: $this->getResourceName(controller: $controller, action: $action))
+            || $service->isAllowed(resource: $this->getResourceName(controller: Assert::string($controller)))
+            || $service->isAllowed(resource: $this->getResourceName(controller: Assert::string($controller), action: Assert::nullOrString($action)))
             || $method
-            && $service->isAllowed(resource: $this->getResourceName(controller: $controller, action: $method));
+            && $service->isAllowed(resource: $this->getResourceName(controller: Assert::string($controller), action: $method));
 
         if ($authorized) {
             return $request;
@@ -82,7 +86,7 @@ final class Controller extends AbstractGuard
         $event->setParam(name: 'controller', value: $controller);
         $event->setParam(name: 'action', value: $action);
 
-        $errorMessage = sprintf('You are not authorized to access %s:%s', $controller, $action);
+        $errorMessage = sprintf('You are not authorized to access %s:%s', Value::scalar($controller), Value::scalar($action));
         $event->setParam(name: 'exception', value: new UnAuthorizedException(message: $errorMessage));
 
         /** @var ApplicationInterface $app */
@@ -92,6 +96,7 @@ final class Controller extends AbstractGuard
         $event->setName(name: MvcEvent::EVENT_DISPATCH_ERROR);
         $results = $eventManager->triggerEvent(event: $event);
 
+        /** @mago-var mixed $return */
         $return = $results->last();
         if (!$return) {
             return $event->getResult();

@@ -47,6 +47,7 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
     {
         $result = $this->getResponseHeader($header);
         if ($result instanceof ArrayIterator) {
+            /** @mago-var mixed $result */
             $result = $result->valid() ? $result->current() : false;
         }
         return $result === false ? false : Assert::isInstanceOf($result, HeaderInterface::class);
@@ -171,6 +172,7 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
             throw new ExpectationFailedException(sprintf('Response header "%s" does not exist.', $header));
         }
         $values = [];
+        /** @mago-var mixed $currentHeader */
         foreach ($responseHeader instanceof ArrayIterator ? $responseHeader : [$responseHeader] as $currentHeader) {
             $values[] = Assert::isInstanceOf($currentHeader, HeaderInterface::class)->getFieldValue();
         }
@@ -200,6 +202,7 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
 
         $headerMatched = false;
 
+        /** @mago-var mixed $currentHeader */
         foreach ($responseHeader as $currentHeader) {
             $headerMatched = (bool) preg_match(
                 $pattern,

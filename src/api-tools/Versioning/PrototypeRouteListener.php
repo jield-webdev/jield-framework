@@ -74,6 +74,7 @@ class PrototypeRouteListener implements ListenerAggregateInterface
             return;
         }
 
+        /** @mago-var mixed $config */
         $config = $configListener->getMergedConfig(returnConfigAsObject: false);
 
         // Check for config keys
@@ -84,7 +85,7 @@ class PrototypeRouteListener implements ListenerAggregateInterface
         // Do we need to inject a prototype?
         if (
             !isset($config['api-tools-versioning']['uri'])
-            || !is_array(value: $config['api-tools-versioning']['uri'])
+            || !is_array(value: Value::accessible($config['api-tools-versioning'])['uri'])
             || empty($config['api-tools-versioning']['uri'])
         ) {
             return;
@@ -104,11 +105,11 @@ class PrototypeRouteListener implements ListenerAggregateInterface
 
         // Pre-process route list to strip out duplicates (often a result of
         // specifying nested routes)
-        $routes = $config['api-tools-versioning']['uri'];
+        $routes = Value::strings($config['api-tools-versioning']['uri']);
         $filtered = [];
         foreach ($routes as $route) {
-            if (strstr(haystack: (string) $route, needle: '/')) {
-                $temp = explode(separator: '/', string: (string) $route, limit: 2);
+            if (strstr(haystack: $route, needle: '/')) {
+                $temp = explode(separator: '/', string: $route, limit: 2);
                 $route = array_shift(array: $temp);
             }
 
@@ -164,11 +165,11 @@ class PrototypeRouteListener implements ListenerAggregateInterface
                 $config,
                 ['router', 'routes', $routeName, 'options'],
                 ArrayUtils::merge(
-                    a: Value::path($config, [
+                    a: \Webmozart\Assert\Assert::isArray(Value::accessible(Value::path($config, [
                         'router',
                         'routes',
                         $routeName,
-                    ])['options'],
+                    ]))['options']),
                     b: $routeVersion,
                 ),
             );

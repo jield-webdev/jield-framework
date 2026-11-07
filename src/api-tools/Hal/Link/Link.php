@@ -100,6 +100,7 @@ class Link implements LinkInterface
         }
 
         if (isset($spec['route'])) {
+            /** @mago-var mixed $routeInfo */
             $routeInfo = $spec['route'];
             if (is_string(value: $routeInfo)) {
                 $link->setRoute(route: $routeInfo);

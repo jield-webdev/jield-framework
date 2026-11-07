@@ -103,27 +103,27 @@ class MonthSelect extends Element implements InputProviderInterface, ElementPrep
         parent::setOptions(options: $options);
 
         if (isset($this->options['month_attributes'])) {
-            $this->setMonthAttributes(monthAttributes: $this->options['month_attributes']);
+            $this->setMonthAttributes(monthAttributes: \Jield\Stdlib\Value::scalarMap($this->options['month_attributes']));
         }
 
         if (isset($this->options['year_attributes'])) {
-            $this->setYearAttributes(yearAttributes: $this->options['year_attributes']);
+            $this->setYearAttributes(yearAttributes: \Jield\Stdlib\Value::scalarMap($this->options['year_attributes']));
         }
 
         if (isset($this->options['min_year'])) {
-            $this->setMinYear(minYear: $this->options['min_year']);
+            $this->setMinYear(minYear: \Webmozart\Assert\Assert::integer($this->options['min_year']));
         }
 
         if (isset($this->options['max_year'])) {
-            $this->setMaxYear(maxYear: $this->options['max_year']);
+            $this->setMaxYear(maxYear: \Webmozart\Assert\Assert::integer($this->options['max_year']));
         }
 
         if (isset($this->options['create_empty_option'])) {
-            $this->setShouldCreateEmptyOption(createEmptyOption: $this->options['create_empty_option']);
+            $this->setShouldCreateEmptyOption(createEmptyOption: \Webmozart\Assert\Assert::boolean($this->options['create_empty_option']));
         }
 
         if (isset($this->options['render_delimiters'])) {
-            $this->setShouldRenderDelimiters(renderDelimiters: $this->options['render_delimiters']);
+            $this->setShouldRenderDelimiters(renderDelimiters: \Webmozart\Assert\Assert::boolean($this->options['render_delimiters']));
         }
 
         return $this;
@@ -291,14 +291,16 @@ class MonthSelect extends Element implements InputProviderInterface, ElementPrep
 
     public function getValue(): ?string
     {
+        /** @mago-var mixed $year */
         $year = $this->getYearElement()->getValue();
+        /** @mago-var mixed $month */
         $month = $this->getMonthElement()->getValue();
 
         if ($this->shouldCreateEmptyOption() && null === $year && null === $month) {
             return null;
         }
 
-        return sprintf('%04d-%02d', $year, $month);
+        return sprintf('%04d-%02d', \Jield\Stdlib\Value::scalar($year), \Jield\Stdlib\Value::scalar($month));
     }
 
     /**

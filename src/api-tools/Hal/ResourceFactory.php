@@ -48,6 +48,7 @@ class ResourceFactory
             ));
         }
 
+        /** @mago-var mixed $id */
         $id = $entityIdentifierName !== '' && $entityIdentifierName !== '0' ? $data[$entityIdentifierName] : null;
 
         if (!$renderEmbeddedEntities) {
@@ -87,7 +88,7 @@ class ResourceFactory
 
         $forceSelfLink = $metadata->getForceSelfLink();
         if ($forceSelfLink && !$links->has(relation: 'self') && ($metadata->hasUrl() || $metadata->hasRoute())) {
-            $link = $this->marshalLinkFromMetadata(metadata: $metadata, object: $object);
+            $link = $this->marshalLinkFromMetadata(metadata: $metadata, object: \Jield\Stdlib\Value::arrayOrObject($object));
             $links->idempotentAdd(link: $link);
         }
 
@@ -120,6 +121,7 @@ class ResourceFactory
         $params = $metadata->getRouteParams();
 
         // process any callbacks
+        /** @mago-var mixed $param */
         foreach ($params as $key => $param) {
             // bind to the object
             if ($param instanceof Closure && is_object($object)) {
@@ -128,6 +130,7 @@ class ResourceFactory
 
             // invoke callables with the object
             if (is_callable(value: $param)) {
+                /** @mago-var mixed $value */
                 $value = $param($object);
                 $params[$key] = $value;
             }

@@ -89,8 +89,9 @@ class HttpMethodListener extends AbstractListenerAggregate
 
     public function setAllowedMethods(array $allowedMethods): void
     {
+        /** @mago-var mixed $value */
         foreach ($allowedMethods as &$value) {
-            $value = strtoupper($value);
+            $value = strtoupper(\Webmozart\Assert\Assert::string($value));
         }
         $this->allowedMethods = $allowedMethods;
     }

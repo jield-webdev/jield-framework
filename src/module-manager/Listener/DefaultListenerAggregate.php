@@ -79,6 +79,7 @@ class DefaultListenerAggregate extends AbstractListener implements ListenerAggre
     #[Override]
     public function detach(EventManagerInterface $events): void
     {
+        /** @mago-var mixed $listener */
         foreach ($this->listeners as $key => $listener) {
             if ($listener instanceof ListenerAggregateInterface) {
                 $listener->detach(events: $events);
@@ -86,7 +87,7 @@ class DefaultListenerAggregate extends AbstractListener implements ListenerAggre
                 continue;
             }
 
-            $events->detach(listener: $listener);
+            $events->detach(listener: \Webmozart\Assert\Assert::isCallable($listener));
             unset($this->listeners[$key]);
         }
     }

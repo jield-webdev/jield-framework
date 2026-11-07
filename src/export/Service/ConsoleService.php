@@ -47,6 +47,7 @@ class ConsoleService
         private readonly ModuleOptions $moduleOptions,
     ) {
         //Do an init check
+        /** @mago-var mixed $entityColumnsName */
         foreach ($this->moduleOptions->getEntities() as $key => $entityColumnsName) {
             $this->entities[$key] = $entityColumnsName;
         }
@@ -58,12 +59,13 @@ class ConsoleService
         $handle = fopen(filename: $tempImageFile, mode: 'wb');
         $entities = [];
 
+        /** @mago-var mixed $entityInformation */
         foreach ($this->moduleOptions->getEntities() as $entityInformation) {
-            if (!array_key_exists('columns', $entityInformation)) {
+            if (!array_key_exists('columns', Assert::isArray($entityInformation))) {
                 continue;
             }
 
-            $this->collectDocumentationEntities(entityColumnsName: $entityInformation['columns'], entities: $entities);
+            $this->collectDocumentationEntities(entityColumnsName: Assert::string($entityInformation['columns']), entities: $entities);
         }
 
         uasort($entities, static fn(AbstractEntityColumns $left, AbstractEntityColumns $right): int => strcasecmp(
@@ -71,13 +73,14 @@ class ConsoleService
             $right->getName(),
         ));
 
+        /** @mago-var mixed $entity */
         foreach ($entities as $entity) {
-            $output->writeln(messages: sprintf('<info>Writing MarkDown file for %s</info>', Value::call(
+            $output->writeln(messages: sprintf('<info>Writing MarkDown file for %s</info>', Value::scalar(Value::call(
                 $entity,
                 'getName',
-            )));
+            ))));
 
-            $this->writeMarkdownContent(createColumnsClass: $entity, handle: $handle);
+            $this->writeMarkdownContent(createColumnsClass: Assert::isInstanceOf($entity, \Jield\Export\Columns\AbstractEntityColumns::class), handle: $handle);
         }
 
         fclose(stream: $handle);
@@ -92,8 +95,9 @@ class ConsoleService
         $createColumnsClass = $this->getEntityColumnsClass(entityColumnsName: $entityColumnsName);
         $entities[$entityColumnsName] = $createColumnsClass;
 
+        /** @mago-var mixed $dependency */
         foreach ($createColumnsClass->getDependencies() as $dependency) {
-            $this->collectDocumentationEntities(entityColumnsName: $dependency, entities: $entities);
+            $this->collectDocumentationEntities(entityColumnsName: Assert::string($dependency), entities: $entities);
         }
     }
 
@@ -132,7 +136,7 @@ class ConsoleService
                 MARKDOWN;
         }
 
-        fwrite(stream: $handle, data: $markDown);
+        fwrite(stream: Value::resource($handle), data: $markDown);
     }
 
     /**
@@ -144,14 +148,15 @@ class ConsoleService
     public function sendEntity(OutputInterface $output, string $entity, array $storageLocations): void
     {
         if ($entity === 'all') {
+            /** @mago-var mixed $entityInformation */
             foreach ($this->entities as $entityInformation) {
                 foreach ($storageLocations as $storageLocation) {
                     $columnKey = $storageLocation->getExportFileType()->getColumnKey();
 
-                    if (array_key_exists($columnKey, $entityInformation)) {
+                    if (array_key_exists($columnKey, Assert::isArray($entityInformation))) {
                         $this->handleEntity(
                             storageLocation: $storageLocation,
-                            columnOrJsonClass: $entityInformation[$columnKey],
+                            columnOrJsonClass: Assert::string($entityInformation[$columnKey]),
                             output: $output,
                         );
                     }
@@ -174,7 +179,7 @@ class ConsoleService
 
             $this->handleEntity(
                 storageLocation: $storageLocation,
-                columnOrJsonClass: $this->entities[$entity][$columnKey],
+                columnOrJsonClass: Assert::string(Value::accessible($this->entities[$entity])[$columnKey]),
                 output: $output,
             );
         }
@@ -254,8 +259,9 @@ class ConsoleService
         ));
 
         //Check if the entity has dependencies
+        /** @mago-var mixed $dependency */
         foreach ($createColumnsOrJsonClass->getDependencies() as $dependency) {
-            $this->handleEntity(storageLocation: $storageLocation, columnOrJsonClass: $dependency, output: $output);
+            $this->handleEntity(storageLocation: $storageLocation, columnOrJsonClass: Assert::string($dependency), output: $output);
         }
     }
 
@@ -337,6 +343,7 @@ class ConsoleService
             $excelColumn = Coordinate::stringFromColumnIndex($excelColumnIndex++);
             $worksheet->setCellValue(coordinate: $excelColumn . 1, value: $column->toParquetColumn()->getField()->name);
 
+            /** @mago-var mixed $data */
             foreach ($column->toParquetColumn()->getData() as $row => $data) {
                 //When we accept a string, we explicitly set the type to string to avoid issues with formulas
                 if ($column->getType() === Column::TYPE_STRING) {

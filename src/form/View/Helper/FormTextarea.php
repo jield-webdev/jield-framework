@@ -76,7 +76,7 @@ class FormTextarea extends AbstractHelper
         return sprintf(
             '<textarea %s>%s</textarea>',
             $this->createAttributesString(attributes: $attributes),
-            $escapeHtml(value: $content),
+            \Jield\Stdlib\Value::scalar($escapeHtml(value: $content)),
         );
     }
 }

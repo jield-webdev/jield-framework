@@ -46,8 +46,8 @@ abstract class AbstractActionController extends AbstractController
         $routeMatch = $event->getRouteMatch();
         Assert::notNull($routeMatch)->setParam('action', 'not-found');
 
-        $helper = $this->plugin('createHttpNotFoundModel');
-        return $helper($event->getResponse());
+        $helper = Assert::isCallable($this->plugin('createHttpNotFoundModel'));
+        return Assert::isInstanceOf($helper($event->getResponse()), ViewModel::class);
     }
 
     /**
@@ -67,6 +67,7 @@ abstract class AbstractActionController extends AbstractController
             throw new DomainException('Missing route matches; unsure how to retrieve action');
         }
 
+        /** @mago-var mixed $action */
         $action = $routeMatch->getParam('action', 'not-found');
         $method = static::getMethodFromAction(Assert::string($action));
 
@@ -74,6 +75,7 @@ abstract class AbstractActionController extends AbstractController
             $method = 'notFoundAction';
         }
 
+        /** @mago-var mixed $actionResponse */
         $actionResponse = Value::call($this, $method, [], scope: self::class);
 
         $e->setResult($actionResponse);

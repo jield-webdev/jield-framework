@@ -40,7 +40,9 @@ final class WarmupCommand extends Command
     #[Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
+        /** @mago-var mixed $purge */
         $purge = $input->getOption(name: 'purge');
+        /** @mago-var mixed $verbose */
         $verbose = $input->getOption(name: 'verbose');
 
         if ($verbose) {
@@ -52,7 +54,7 @@ final class WarmupCommand extends Command
                 $output->writeln(messages: '<comment>Purge requested, starting purge</comment>');
             }
 
-            $this->purgeCache(output: $output, verbose: $verbose);
+            $this->purgeCache(output: $output, verbose: Assert::boolean($verbose));
         }
 
         if ($verbose) {
@@ -73,16 +75,17 @@ final class WarmupCommand extends Command
                 ));
             }
 
+            /** @mago-var mixed $path */
             foreach ($collection as $path) {
-                $asset = $this->assetManager->getResolver()->resolve(fileName: $path);
+                $asset = $this->assetManager->getResolver()->resolve(fileName: Assert::string($path));
 
-                $this->assetManager->getAssetFilterManager()->setFilters(path: $path, asset: Assert::isInstanceOf(
+                $this->assetManager->getAssetFilterManager()->setFilters(path: Assert::string($path), asset: Assert::isInstanceOf(
                     $asset,
                     AssetInterface::class,
                 ));
                 $this->assetManager
                     ->getAssetCacheManager()
-                    ->setCache(path: $path, asset: Assert::isInstanceOf($asset, AssetInterface::class))
+                    ->setCache(path: Assert::string($path), asset: Assert::isInstanceOf($asset, AssetInterface::class))
                     ->dump();
             }
         }
@@ -103,22 +106,27 @@ final class WarmupCommand extends Command
             return;
         }
 
+        /**
+         * @mago-var mixed $configName
+         * @mago-var mixed $config
+         */
         foreach (Assert::isIterable($this->appConfig['asset_manager']['caching']) as $configName => $config) {
             if (empty($config['options']['dir'])) {
                 continue;
             }
 
             if ($verbose) {
-                $output->writeln(messages: sprintf('Purging %s on "%s"', $configName, $config['options']['dir']));
+                $output->writeln(messages: sprintf('Purging %s on "%s"', Value::scalar($configName), Value::scalar($config['options']['dir'])));
             }
 
+            /** @mago-var mixed $node */
             $node = $config['options']['dir'];
 
             if ($configName !== 'default') {
                 $node = Value::stringify($node) . ('/' . Value::stringify($configName));
             }
 
-            $this->recursiveRemove(node: $node, output: $output, verbose: $verbose);
+            $this->recursiveRemove(node: Assert::string($node), output: $output, verbose: $verbose);
         }
     }
 

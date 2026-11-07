@@ -217,26 +217,26 @@ class Menu extends AbstractHelper
         if (Value::truthy($options['onlyActiveBranch']) && !$options['renderParents']) {
             return $this->renderDeepestMenu(
                 $container,
-                $options['ulClass'],
-                $options['indent'],
-                $options['minDepth'],
-                $options['maxDepth'],
-                $options['escapeLabels'],
-                $options['addClassToListItem'],
-                $options['liActiveClass'],
+                Assert::string($options['ulClass']),
+                Assert::string($options['indent']),
+                Assert::nullOrInteger($options['minDepth']),
+                Assert::nullOrInteger($options['maxDepth']),
+                Assert::boolean($options['escapeLabels']),
+                Assert::boolean($options['addClassToListItem']),
+                Assert::string($options['liActiveClass']),
             );
         }
 
         return $this->renderNormalMenu(
             $container,
-            $options['ulClass'],
-            $options['indent'],
-            $options['minDepth'],
-            $options['maxDepth'],
-            $options['onlyActiveBranch'],
-            $options['escapeLabels'],
-            $options['addClassToListItem'],
-            $options['liActiveClass'],
+            Assert::string($options['ulClass']),
+            Assert::string($options['indent']),
+            Assert::nullOrInteger($options['minDepth']),
+            Assert::nullOrInteger($options['maxDepth']),
+            Assert::boolean($options['onlyActiveBranch']),
+            Assert::boolean($options['escapeLabels']),
+            Assert::boolean($options['addClassToListItem']),
+            Assert::string($options['liActiveClass']),
         );
     }
 
@@ -537,7 +537,7 @@ class Menu extends AbstractHelper
     protected function normalizeOptions(array $options = [])
     {
         if (isset($options['indent'])) {
-            $options['indent'] = $this->getWhitespace($options['indent']);
+            $options['indent'] = $this->getWhitespace(Value::key($options['indent']));
         } else {
             $options['indent'] = $this->getIndent();
         }

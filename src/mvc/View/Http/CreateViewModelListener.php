@@ -28,12 +28,13 @@ class CreateViewModelListener extends AbstractListenerAggregate
      */
     public function createViewModelFromArray(MvcEvent $e): void
     {
+        /** @mago-var mixed $result */
         $result = $e->getResult();
         if (!ArrayUtils::hasStringKeys($result, true)) {
             return;
         }
 
-        $model = new ViewModel($result);
+        $model = new ViewModel(\Jield\Stdlib\Value::namedIterable($result));
         $e->setResult($model);
     }
 
@@ -44,6 +45,7 @@ class CreateViewModelListener extends AbstractListenerAggregate
      */
     public function createViewModelFromNull(MvcEvent $e): void
     {
+        /** @mago-var mixed $result */
         $result = $e->getResult();
         if (null !== $result) {
             return;

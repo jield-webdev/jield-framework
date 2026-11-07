@@ -71,11 +71,10 @@ class LinkCollection implements Countable, IteratorAggregate
             return $this;
         }
 
-        if ($this->links[$relation] instanceof LinkInterface) {
-            $this->links[$relation] = [$this->links[$relation]];
-        }
-
-        $this->links[$relation][] = $link;
+        $existing = $this->links[$relation];
+        $links = $existing instanceof LinkInterface ? [$existing] : $existing;
+        $links[] = $link;
+        $this->links[$relation] = $links;
         return $this;
     }
 

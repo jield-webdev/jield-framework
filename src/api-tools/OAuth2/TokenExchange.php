@@ -59,7 +59,7 @@ final readonly class TokenExchange
             throw new EntraException('invalid_grant', 'Entra access token has expired');
         }
         $id = bin2hex(random_bytes(32));
-        $scope = implode(' ', $scopes);
+        $scope = implode(' ', \Jield\Stdlib\Value::scalars($scopes));
         $token = new Jwt()->encode(
             payload: [
                 'id' => $id,

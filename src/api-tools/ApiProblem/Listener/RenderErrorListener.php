@@ -71,6 +71,7 @@ class RenderErrorListener extends AbstractListenerAggregate
         $detail = 'Your request could not be resolved to an acceptable representation.';
         $details = false;
 
+        /** @mago-var mixed $exception */
         $exception = $e->getParam(name: 'exception');
         if ($exception instanceof Throwable && !$exception instanceof ViewExceptionInterface) {
             $code = $exception->getCode();

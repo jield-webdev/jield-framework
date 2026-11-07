@@ -47,7 +47,7 @@ class DBALConfigurationFactory implements FactoryInterface
     public function setupDBALConfiguration(ContainerInterface $container, Configuration $config): void
     {
         $options = $this->getOptions(container: $container);
-        $config->setResultCache($container->get($options->getResultCache()));
+        $config->setResultCache(Assert::isInstanceOf($container->get($options->getResultCache()), \Psr\Cache\CacheItemPoolInterface::class));
 
         $middlewares = [];
         foreach ($options->getMiddlewares() as $middlewareName) {
@@ -55,6 +55,7 @@ class DBALConfigurationFactory implements FactoryInterface
                 throw new InvalidArgumentException(message: 'Middleware not exists');
             }
 
+            /** @mago-var mixed $middleware */
             $middleware = $container->get($middlewareName);
             if (!$middleware instanceof Middleware) {
                 throw new UnexpectedValueException(message: sprintf(
@@ -69,15 +70,16 @@ class DBALConfigurationFactory implements FactoryInterface
 
         $config->setMiddlewares(middlewares: $middlewares);
 
+        /** @mago-var mixed $class */
         foreach (Assert::isArray($options->getTypes()) as $name => $class) {
             if (!$class instanceof Type) {
                 Assert::string($class);
                 Assert::isAOf($class, Type::class);
             }
-            if (Type::hasType(name: $name)) {
-                Type::overrideType(name: $name, type: $class);
+            if (Type::hasType(name: Assert::string($name))) {
+                Type::overrideType(name: Assert::string($name), type: $class);
             } else {
-                Type::addType(name: $name, type: $class);
+                Type::addType(name: Assert::string($name), type: $class);
             }
         }
     }
@@ -85,8 +87,11 @@ class DBALConfigurationFactory implements FactoryInterface
     /** @throws \RuntimeException */
     public function getOptions(ContainerInterface $container): DoctrineORMModuleConfiguration
     {
+        /** @mago-var mixed $options */
         $options = $container->get('config');
-        $options = $options['doctrine'];
+        /** @mago-var mixed $options */
+        $options = \Jield\Stdlib\Value::accessible($options)['doctrine'];
+        /** @mago-var mixed $options */
         $options = $options['configuration'][$this->name] ?? null;
 
         if ($options === null) {
@@ -98,7 +103,7 @@ class DBALConfigurationFactory implements FactoryInterface
 
         $optionsClass = $this->getOptionsClass();
 
-        return new $optionsClass($options);
+        return new $optionsClass(\Jield\Stdlib\Value::options($options));
     }
 
     /** @return class-string<DoctrineORMModuleConfiguration> */

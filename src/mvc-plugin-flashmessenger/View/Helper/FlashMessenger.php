@@ -209,6 +209,7 @@ class FlashMessenger extends AbstractTranslatorHelper
             $translatorTextDomain,
         ): void {
             if ($translator !== null) {
+                /** @mago-var mixed $item */
                 $item = Value::call($translator, 'translate', [$item, $translatorTextDomain]);
             }
 
@@ -228,7 +229,7 @@ class FlashMessenger extends AbstractTranslatorHelper
         $markup = sprintf($this->getMessageOpenFormat($namespace), ' class="' . implode(' ', $classes) . '"');
         $markup .= implode(
             sprintf($this->getMessageSeparatorString($namespace), ' class="' . implode(' ', $classes) . '"'),
-            $messagesToPrint,
+            Value::scalars($messagesToPrint),
         );
         $markup .= $this->getMessageCloseString($namespace);
         return $markup;
@@ -256,7 +257,7 @@ class FlashMessenger extends AbstractTranslatorHelper
      */
     protected function getEscapeHtmlHelper()
     {
-        $this->escapeHtmlHelper ??= $this->getView()->plugin('escapehtml');
+        $this->escapeHtmlHelper ??= $this->getView()->plugin('escapehtml', EscapeHtml::class);
 
         return $this->escapeHtmlHelper;
     }
@@ -383,7 +384,7 @@ class FlashMessenger extends AbstractTranslatorHelper
     {
         $flashMessenger = $this->getPluginFlashMessenger();
         $messages = $flashMessenger->getCurrentMessagesFromNamespace($namespace);
-        return $this->renderMessages($namespace, $messages, $classes, $autoEscape);
+        return $this->renderMessages($namespace, $messages, Value::strings($classes), $autoEscape);
     }
 
     /**

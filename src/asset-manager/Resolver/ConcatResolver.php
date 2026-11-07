@@ -132,6 +132,7 @@ class ConcatResolver implements
 
         $resolvedAssets = [];
 
+        /** @mago-var mixed $assetName */
         foreach (Value::toArray($this->concats[$fileName]) as $assetName) {
             $resolvedAsset = $this->getAggregateResolver()->resolve(fileName: (string) $assetName);
 
@@ -139,7 +140,7 @@ class ConcatResolver implements
                 throw new Exception\RuntimeException(message: sprintf(
                     'Asset "%s" from collection "%s" can\'t be resolved '
                     . 'to an Asset implementing \Jield\AssetManager\Asset\AssetInterface.',
-                    $assetName,
+                    Value::scalar($assetName),
                     $fileName,
                 ));
             }
@@ -148,7 +149,7 @@ class ConcatResolver implements
                 filename: (string) $resolvedAsset->getSourceRoot() . (string) $resolvedAsset->getSourcePath(),
             ));
 
-            $this->getAssetFilterManager()->setFilters(path: $assetName, asset: $resolvedAsset);
+            $this->getAssetFilterManager()->setFilters(path: Assert::string($assetName), asset: $resolvedAsset);
 
             $resolvedAssets[] = $resolvedAsset;
         }

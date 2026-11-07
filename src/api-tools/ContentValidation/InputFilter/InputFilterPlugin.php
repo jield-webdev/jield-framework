@@ -19,6 +19,7 @@ class InputFilterPlugin extends AbstractPlugin
         }
 
         $event = $controller->getEvent();
+        /** @mago-var mixed $inputFilter */
         $inputFilter = $event->getParam(name: __NAMESPACE__);
 
         if (!$inputFilter instanceof InputFilterInterface) {

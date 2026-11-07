@@ -95,12 +95,12 @@ class Fieldset extends Element implements FieldsetInterface
         parent::setOptions(options: $options);
 
         if (isset($this->options['use_as_base_fieldset'])) {
-            $this->setUseAsBaseFieldset(useAsBaseFieldset: $this->options['use_as_base_fieldset']);
+            $this->setUseAsBaseFieldset(useAsBaseFieldset: Assert::boolean($this->options['use_as_base_fieldset']));
         }
 
         if (isset($this->options['allowed_object_binding_class'])) {
             $this->setAllowedObjectBindingClass(
-                allowObjectBindingClass: $this->options['allowed_object_binding_class'],
+                allowObjectBindingClass: \Jield\Stdlib\Value::classString($this->options['allowed_object_binding_class']),
             );
         }
 
@@ -225,14 +225,18 @@ class Fieldset extends Element implements FieldsetInterface
     /** @inheritDoc */
     public function setMessages(iterable $messages): static
     {
+        /**
+         * @mago-var mixed $key
+         * @mago-var mixed $messageSet
+         */
         foreach ($messages as $key => $messageSet) {
             if (!$this->has(elementOrFieldset: (string) $key)) {
-                $this->messages[$key] = $messageSet;
+                $this->messages[\Jield\Stdlib\Value::key($key)] = $messageSet;
                 continue;
             }
 
             $element = $this->get(elementOrFieldset: (string) $key);
-            $element->setMessages(messages: $messageSet);
+            $element->setMessages(messages: Assert::isIterable($messageSet));
         }
 
         return $this;
@@ -303,7 +307,7 @@ class Fieldset extends Element implements FieldsetInterface
         }
 
         foreach ($this->iterator as $name => $elementOrFieldset) {
-            $valueExists = array_key_exists(key: $name, array: $data);
+            $valueExists = array_key_exists(key: $name, array: Assert::isArray($data));
 
             if ($elementOrFieldset instanceof FieldsetInterface) {
                 if ($valueExists && is_iterable(value: $data[$name])) {
@@ -313,7 +317,7 @@ class Fieldset extends Element implements FieldsetInterface
 
                 if ($elementOrFieldset instanceof Element\CollectionInterface) {
                     if ($valueExists && null !== $data[$name]) {
-                        $elementOrFieldset->populateValues(data: $data[$name]);
+                        $elementOrFieldset->populateValues(data: Assert::isIterable($data[$name]));
                         continue;
                     }
 
@@ -439,10 +443,10 @@ class Fieldset extends Element implements FieldsetInterface
     public function setHydratorByName(string $hydratorName): void
     {
         $this->setHydrator(
-            hydrator: $this
+            hydrator: Assert::isInstanceOf($this
                 ->getFormFactory()
                 ->getFormElementManager()
-                ->getHydratorFromName(hydratorName: $hydratorName),
+                ->getHydratorFromName(hydratorName: $hydratorName), \Laminas\Hydrator\HydratorInterface::class),
         );
     }
 
@@ -507,10 +511,12 @@ class Fieldset extends Element implements FieldsetInterface
                 $values[$name] = [];
             }
 
+            /** @mago-var mixed $value */
             $value = $values[$name];
 
             if ($element instanceof FieldsetInterface && $element->allowValueBinding()) {
-                $value = $element->bindValues($value, empty($validationGroup[$name]) ? null : $validationGroup[$name]);
+                /** @mago-var mixed $value */
+                $value = $element->bindValues(Assert::isArray($value), \Jield\Stdlib\Value::nullableArray(empty($validationGroup[$name]) ? null : $validationGroup[$name]));
             }
 
             // skip post values for disabled elements, get old value from object
@@ -556,16 +562,17 @@ class Fieldset extends Element implements FieldsetInterface
             return [];
         }
 
-        $values = $this->getHydrator()->extract(object: $this->object);
+        $values = $this->getHydrator()->extract(object: Assert::object($this->object));
 
         // Recursively extract and populate values for nested fieldsets
         foreach ($this->fieldsets as $fieldset) {
             $name = (string) $fieldset->getName();
 
             if (isset($values[$name])) {
+                /** @mago-var mixed $object */
                 $object = $values[$name];
 
-                if ($fieldset instanceof Fieldset && $fieldset->allowObjectBinding(object: $object)) {
+                if ($fieldset instanceof Fieldset && $fieldset->allowObjectBinding(object: \Jield\Stdlib\Value::arrayOrObject($object))) {
                     $fieldset->setObject(object: $object);
                     $values[$name] = $fieldset->extract();
                 }
@@ -589,14 +596,16 @@ class Fieldset extends Element implements FieldsetInterface
         $this->iterator = new PriorityList();
         $this->iterator->isLIFO(flag: false);
 
+        /** @mago-var mixed $item */
         foreach ($items as $name => $item) {
-            $elementOrFieldset = clone Assert::isInstanceOf($item['data'], ElementInterface::class);
+            $item = Assert::isArray($item);
+            $elementOrFieldset = clone Assert::isInstanceOf(\Jield\Stdlib\Value::accessible($item)['data'], ElementInterface::class);
 
-            $this->iterator->insert(name: (string) $name, value: $elementOrFieldset, priority: $item['priority']);
+            $this->iterator->insert(name: (string) $name, value: $elementOrFieldset, priority: Assert::integer($item['priority']));
 
             if ($elementOrFieldset instanceof FieldsetInterface) {
                 $this->fieldsets[$name] = $elementOrFieldset;
-            } elseif ($elementOrFieldset instanceof ElementInterface) {
+            } else {
                 $this->elements[$name] = $elementOrFieldset;
             }
         }

@@ -71,9 +71,10 @@ class HttpMethodOverrideListener extends AbstractListenerAggregate
 
         $header = $request->getHeader(name: 'X-HTTP-Method-Override');
         $overrideMethod = Assert::isInstanceOf($header, HeaderInterface::class)->getFieldValue();
+        /** @mago-var mixed $allowedMethods */
         $allowedMethods = $this->httpMethodOverride[$method];
 
-        if (!in_array(needle: $overrideMethod, haystack: $allowedMethods, strict: true)) {
+        if (!in_array(needle: $overrideMethod, haystack: Assert::isArray($allowedMethods), strict: true)) {
             return new ApiProblemResponse(apiProblem: new ApiProblem(status: 400, detail: sprintf(
                 'Illegal override method %s in X-HTTP-Method-Override header',
                 $overrideMethod,

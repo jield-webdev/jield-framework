@@ -35,11 +35,11 @@ class AssertionService
      */
     public function addResource($entity, string $assertion): void
     {
-        if (!$this->acl->hasResource($entity)) {
-            $this->acl->addResource($entity);
+        if (!$this->acl->hasResource(\Jield\Stdlib\Value::instanceOrString($entity, \Laminas\Permissions\Acl\Resource\ResourceInterface::class))) {
+            $this->acl->addResource(\Jield\Stdlib\Value::instanceOrString($entity, \Laminas\Permissions\Acl\Resource\ResourceInterface::class));
             $this->acl->allow(
                 [],
-                $entity,
+                \Jield\Stdlib\Value::instanceOrArrayOrString($entity, \Laminas\Permissions\Acl\Resource\ResourceInterface::class),
                 [],
                 Assert::isInstanceOf($this->container->build(name: $assertion), AssertionInterface::class),
             );
@@ -48,6 +48,6 @@ class AssertionService
 
     public function isUserAllowed($entity, string $privilege): bool
     {
-        return $this->authorizeService->isAllowed(resource: $entity, privilege: $privilege);
+        return $this->authorizeService->isAllowed(resource: \Jield\Stdlib\Value::instanceOrString($entity, \Laminas\Permissions\Acl\Resource\ResourceInterface::class), privilege: $privilege);
     }
 }

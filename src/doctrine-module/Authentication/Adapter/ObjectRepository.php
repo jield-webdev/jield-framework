@@ -49,7 +49,7 @@ class ObjectRepository extends AbstractAdapter
     public function setOptions(array|AuthenticationOptions $options): self
     {
         if (!$options instanceof AuthenticationOptions) {
-            $options = new AuthenticationOptions(options: $options);
+            $options = new AuthenticationOptions(options: Value::options($options));
         }
 
         $this->options = $options;
@@ -96,8 +96,10 @@ class ObjectRepository extends AbstractAdapter
         $getter = 'get' . $this->inflector->classify(word: $credentialProperty);
 
         if (method_exists(object_or_class: $identity, method: $getter)) {
+            /** @mago-var mixed $documentCredential */
             $documentCredential = Value::call($identity, $getter);
         } elseif (property_exists(object_or_class: $identity, property: $credentialProperty)) {
+            /** @mago-var mixed $documentCredential */
             $documentCredential = Value::property($identity, $credentialProperty);
         } else {
             throw new Exception\UnexpectedValueException(message: sprintf(
@@ -109,11 +111,14 @@ class ObjectRepository extends AbstractAdapter
             ));
         }
 
+        /** @mago-var mixed $credentialValue */
         $credentialValue = $this->credential;
+        /** @mago-var mixed $callable */
         $callable = $this->options->getCredentialCallable();
 
         if ($callable) {
-            $credentialValue = call_user_func($callable, $identity, $credentialValue);
+            /** @mago-var mixed $credentialValue */
+            $credentialValue = call_user_func(Assert::isCallable($callable), $identity, $credentialValue);
         }
 
         if ($credentialValue !== true && $credentialValue !== $documentCredential) {
@@ -166,7 +171,7 @@ class ObjectRepository extends AbstractAdapter
         return new AuthenticationResult(
             code: Assert::integer($info['code']),
             identity: $info['identity'],
-            messages: $info['messages'],
+            messages: Assert::isArray($info['messages']),
         );
     }
 }

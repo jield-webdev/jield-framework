@@ -79,7 +79,7 @@ abstract class BaseLoggingCommand extends Command
         if (
             isset($this->errorHeroModuleConfig[self::DISPLAY_SETTINGS]['exclude-exceptions'])
             && isExcludedException(
-                excludeExceptionsConfig: $this->errorHeroModuleConfig[self::DISPLAY_SETTINGS]['exclude-exceptions'],
+                excludeExceptionsConfig: \Webmozart\Assert\Assert::isArray($this->errorHeroModuleConfig[self::DISPLAY_SETTINGS]['exclude-exceptions']),
                 throwable: $throwable,
             )
         ) {
@@ -88,7 +88,7 @@ abstract class BaseLoggingCommand extends Command
 
         $this->logging->handleErrorException(throwable: $throwable);
 
-        if ($this->errorHeroModuleConfig[self::DISPLAY_SETTINGS]['display_errors']) {
+        if (Value::accessible($this->errorHeroModuleConfig[self::DISPLAY_SETTINGS])['display_errors']) {
             throw $throwable;
         }
     }

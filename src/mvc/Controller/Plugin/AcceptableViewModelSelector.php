@@ -133,7 +133,9 @@ class AcceptableViewModelSelector extends AbstractPlugin
         }
 
         $matchAgainstString = '';
+        /** @mago-var mixed $modelStrings */
         foreach ($matchAgainst as $modelName => $modelStrings) {
+            /** @mago-var mixed $modelString */
             foreach (Value::toArray($modelStrings) as $modelString) {
                 $matchAgainstString .= $this->injectViewModelName(
                     Assert::string($modelString),
@@ -207,7 +209,7 @@ class AcceptableViewModelSelector extends AbstractPlugin
     {
         $modelName = str_replace('\\', '|', $modelName);
 
-        $modelAcceptString = is_array($modelAcceptString) ? implode(', ', $modelAcceptString) : $modelAcceptString;
+        $modelAcceptString = is_array($modelAcceptString) ? implode(', ', Value::scalars($modelAcceptString)) : $modelAcceptString;
 
         return $modelAcceptString . '; ' . self::INJECT_VIEWMODEL_NAME . '="' . $modelName . '", ';
     }

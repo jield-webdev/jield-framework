@@ -57,6 +57,7 @@ abstract class AbstractEntraBearerAuthenticationListener
             return null;
         }
         try {
+            /** @mago-var mixed $unverified */
             $unverified = json_decode(JWT::urlsafeB64Decode($parts[1]), true, 16, JSON_THROW_ON_ERROR);
         } catch (Throwable) {
             return null;
@@ -69,7 +70,9 @@ abstract class AbstractEntraBearerAuthenticationListener
             return null;
         }
 
+        /** @mago-var mixed $tenantId */
         $tenantId = $unverified['tid'] ?? null;
+        /** @mago-var mixed $audience */
         $audience = $unverified['aud'] ?? null;
         if (
             !is_string($tenantId)

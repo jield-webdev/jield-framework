@@ -70,6 +70,7 @@ class DefaultRenderingStrategy extends AbstractListenerAggregate
      */
     public function render(MvcEvent $e): ?Response
     {
+        /** @mago-var mixed $result */
         $result = $e->getResult();
         if ($result instanceof Response) {
             return $result;

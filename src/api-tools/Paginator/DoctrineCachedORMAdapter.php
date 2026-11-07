@@ -46,6 +46,6 @@ class DoctrineCachedORMAdapter extends AbstractDoctrinePaginator implements Adap
             $this->cache->setItem($cacheKey, $results);
         }
 
-        return $this->cache->getItem($cacheKey);
+        return \Webmozart\Assert\Assert::isArray($this->cache->getItem($cacheKey));
     }
 }

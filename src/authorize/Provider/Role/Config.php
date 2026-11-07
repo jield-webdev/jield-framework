@@ -26,11 +26,12 @@ class Config implements ProviderInterface
     {
         $roles = [];
 
+        /** @mago-var mixed $value */
         foreach ($config as $key => $value) {
             if (is_numeric(value: $key)) {
-                $roles = array_merge($roles, $this->loadRole(name: $value));
+                $roles = array_merge($roles, $this->loadRole(name: Assert::string($value)));
             } else {
-                $roles = array_merge($roles, $this->loadRole(name: $key, options: $value));
+                $roles = array_merge($roles, $this->loadRole(name: $key, options: Assert::isArray($value)));
             }
         }
 
@@ -46,11 +47,12 @@ class Config implements ProviderInterface
         $role = new Role(roleId: $name, parent: $parent);
         $roles[] = $role;
 
+        /** @mago-var mixed $value */
         foreach ($children as $key => $value) {
             if (is_numeric(value: $key)) {
-                $roles = array_merge($roles, $this->loadRole(name: $value, options: [], parent: $role));
+                $roles = array_merge($roles, $this->loadRole(name: Assert::string($value), options: [], parent: $role));
             } else {
-                $roles = array_merge($roles, $this->loadRole(name: $key, options: $value, parent: $role));
+                $roles = array_merge($roles, $this->loadRole(name: $key, options: Assert::isArray($value), parent: $role));
             }
         }
 

@@ -45,6 +45,7 @@ class LocatorRegistrationListener extends AbstractListener implements ListenerAg
     public function onLoadModules(ModuleEvent $e): void
     {
         $moduleManager = $e->getTarget();
+        /** @mago-var mixed $events */
         $events = Value::call(Value::call(Assert::object($moduleManager), 'getEventManager'), 'getSharedManager');
 
         if (!$events) {
@@ -96,10 +97,12 @@ class LocatorRegistrationListener extends AbstractListener implements ListenerAg
         /** @var ServiceManager $services */
         $services = Assert::notNull($application)->getServiceManager();
 
+        /** @mago-var mixed $module */
         foreach ($this->modules as $module) {
+            /** @mago-var mixed $moduleClassName */
             $moduleClassName = $module::class;
-            if (!$services->has($moduleClassName)) {
-                $services->setService(name: $moduleClassName, service: $module);
+            if (!$services->has(Value::classString($moduleClassName))) {
+                $services->setService(name: Assert::string($moduleClassName), service: $module);
             }
         }
     }

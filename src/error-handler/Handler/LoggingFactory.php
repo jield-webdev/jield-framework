@@ -13,13 +13,15 @@ final class LoggingFactory
 {
     public function __invoke(ContainerInterface $container): Logging
     {
-        $config = $container->get('config')['error-hero-module'];
-        $mail = $config['email-notification-settings'];
+        /** @mago-var mixed $config */
+        $config = \Jield\Stdlib\Value::accessible($container->get('config'))['error-hero-module'];
+        /** @mago-var mixed $mail */
+        $mail = \Jield\Stdlib\Value::accessible($config)['email-notification-settings'];
         return new Logging(
             Service::get($container, LoggerInterface::class),
-            $config,
+            \Webmozart\Assert\Assert::isArray($config),
             $mail['enable'] ?? false ? Service::get($container, MailerInterface::class) : null,
-            $mail['include-files-to-attachments'] ?? true,
+            \Webmozart\Assert\Assert::boolean($mail['include-files-to-attachments'] ?? true),
         );
     }
 }

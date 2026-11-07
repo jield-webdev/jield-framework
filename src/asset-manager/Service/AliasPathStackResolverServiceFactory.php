@@ -20,13 +20,15 @@ class AliasPathStackResolverServiceFactory implements FactoryInterface
         $requestedName,
         ?array $options = null,
     ): AliasPathStackResolver {
+        /** @mago-var mixed $config */
         $config = $container->get('config');
         $aliases = [];
 
         if (isset($config['asset_manager']['resolver_configs']['aliases'])) {
+            /** @mago-var mixed $aliases */
             $aliases = $config['asset_manager']['resolver_configs']['aliases'];
         }
 
-        return new AliasPathStackResolver(aliases: $aliases);
+        return new AliasPathStackResolver(aliases: \Webmozart\Assert\Assert::isArray($aliases));
     }
 }

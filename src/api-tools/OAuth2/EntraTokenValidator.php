@@ -62,6 +62,7 @@ class EntraTokenValidator
         }
 
         try {
+            /** @mago-var mixed $header */
             $header = json_decode(
                 json: JWT::urlsafeB64Decode($segments[0]),
                 associative: true,

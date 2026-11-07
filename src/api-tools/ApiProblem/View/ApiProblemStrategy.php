@@ -25,6 +25,7 @@ class ApiProblemStrategy extends AbstractListenerAggregate
 
     public function render(MvcEvent $event): void
     {
+        /** @mago-var mixed $model */
         $model = $event->getResult();
         if (!$model instanceof ApiProblemModel) {
             $model = $event->getViewModel();

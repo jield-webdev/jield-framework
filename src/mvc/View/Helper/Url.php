@@ -111,7 +111,7 @@ class Url extends AbstractHelper
         $options = Assert::isArray($options);
         $options['name'] = $name;
 
-        return $this->router->assemble($params, $options)->toString();
+        return $this->router->assemble(\Jield\Stdlib\Value::routeParams($params), $options)->toString();
     }
 
     /**

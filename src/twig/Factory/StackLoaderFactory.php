@@ -16,7 +16,7 @@ class StackLoaderFactory implements FactoryInterface
     {
         $moduleOptions = $options === null
             ? Service::get($container, ModuleOptions::class)
-            : new ModuleOptions($options);
+            : new ModuleOptions(\Jield\Stdlib\Value::options($options));
 
         $zfTemplateStack = Service::get(
             $container,

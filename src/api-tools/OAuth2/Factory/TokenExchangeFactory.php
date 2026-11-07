@@ -11,6 +11,6 @@ final class TokenExchangeFactory
 {
     public function __invoke(ContainerInterface $container): TokenExchange
     {
-        return new TokenExchange($container->get('config')['api-tools-oauth2'] ?? []);
+        return new TokenExchange(\Webmozart\Assert\Assert::isArray($container->get('config')['api-tools-oauth2'] ?? []));
     }
 }

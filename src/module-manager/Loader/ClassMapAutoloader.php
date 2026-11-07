@@ -95,6 +95,7 @@ class ClassMapAutoloader implements SplAutoloader
         $location = null;
         if (is_string($map)) {
             $location = $map;
+            /** @mago-var mixed $map */
             if ($this === ($map = $this->loadMapFromFile($location))) {
                 return $this;
             }
@@ -130,8 +131,9 @@ class ClassMapAutoloader implements SplAutoloader
             require_once __DIR__ . '/Exception/InvalidArgumentException.php';
             throw new Exception\InvalidArgumentException('Map list must be an array or implement Traversable');
         }
+        /** @mago-var mixed $location */
         foreach ($locations as $location) {
-            $this->registerAutoloadMap($location);
+            $this->registerAutoloadMap(\Jield\Stdlib\Value::arrayOrString($location));
         }
         return $this;
     }
@@ -232,7 +234,7 @@ class ClassMapAutoloader implements SplAutoloader
             }
         });
 
-        if (file_exists($realPath = str_pad('phar:', $prefixLength, '/') . implode('/', $parts))) {
+        if (file_exists($realPath = str_pad('phar:', $prefixLength, '/') . implode('/', \Jield\Stdlib\Value::scalars($parts)))) {
             return $realPath;
         }
         return null;

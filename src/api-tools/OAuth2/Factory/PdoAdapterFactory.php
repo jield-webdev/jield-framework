@@ -18,31 +18,36 @@ final class PdoAdapterFactory implements FactoryInterface
     #[Override]
     public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): PdoAdapter
     {
+        /** @mago-var mixed $config */
         $config = $container->get('config');
 
-        $oauthConfig = $config['api-tools-oauth2'];
+        /** @mago-var mixed $oauthConfig */
+        $oauthConfig = Value::accessible($config)['api-tools-oauth2'];
 
         //Grab the params directly from the Doctrine Params
+        /** @mago-var mixed $username */
         $username = $config['doctrine']['connection']['orm_default']['params']['user'] ?? null;
+        /** @mago-var mixed $password */
         $password = $config['doctrine']['connection']['orm_default']['params']['password'] ?? null;
+        /** @mago-var mixed $options */
         $options = $config['doctrine']['connection']['orm_default']['params']['driverOptions'] ?? [];
 
         $dsn = sprintf(
             'mysql:dbname=%s;host=%s',
-            Value::path($config, [
+            Value::scalar(Value::path($config, [
                 'doctrine',
                 'connection',
                 'orm_default',
                 'params',
                 'dbname',
-            ]),
-            Value::path($config, [
+            ])),
+            Value::scalar(Value::path($config, [
                 'doctrine',
                 'connection',
                 'orm_default',
                 'params',
                 'host',
-            ]),
+            ])),
         );
 
         $oauth2ServerConfig = [];

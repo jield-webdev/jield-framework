@@ -72,6 +72,7 @@ class DefaultResourceResolverListener
     {
         // Considerations:
         // - We want the controller service name
+        /** @mago-var mixed $controller */
         $controller = $routeMatch->getParam(name: 'controller', default: false);
         if (!$controller) {
             return false;
@@ -79,16 +80,19 @@ class DefaultResourceResolverListener
 
         // - Is this an RPC or a REST call?
         //   - Basically, if it's not in the api-tools-rest configuration, we assume RPC
-        if (!array_key_exists(key: $controller, array: $this->restControllers)) {
+        if (!array_key_exists(key: Assert::scalar($controller), array: $this->restControllers)) {
+            /** @mago-var mixed $action */
             $action = $routeMatch->getParam(name: 'action', default: 'index');
-            return sprintf('%s::%s', $controller, $action);
+            return sprintf('%s::%s', \Jield\Stdlib\Value::scalar($controller), \Jield\Stdlib\Value::scalar($action));
         }
 
         //   - If it is a REST controller, we need to know if we have a
         //     resource or a controller. The way to determine that is if we have
         //     an identifier. We find that info from the route parameters.
+        /** @mago-var mixed $identifierName */
         $identifierName = $this->restControllers[$controller];
-        $id = $this->getIdentifier(identifierName: $identifierName, routeMatch: $routeMatch, request: $request);
+        /** @mago-var mixed $id */
+        $id = $this->getIdentifier(identifierName: Assert::string($identifierName), routeMatch: $routeMatch, request: $request);
         if ($id !== false) {
             return sprintf('%s::entity', $controller);
         }
@@ -109,6 +113,7 @@ class DefaultResourceResolverListener
      */
     protected function getIdentifier(string $identifierName, RouteMatch $routeMatch, RequestInterface $request): mixed
     {
+        /** @mago-var mixed $id */
         $id = $routeMatch->getParam(name: $identifierName, default: false);
         if ($id !== false) {
             return $id;

@@ -220,7 +220,7 @@ class FormSelect extends AbstractHelper
             $optionStrings[] = sprintf(
                 $template,
                 $this->createAttributesString(attributes: $attributes),
-                $escapeHtml(value: $label),
+                \Jield\Stdlib\Value::scalar($escapeHtml(value: $label)),
             );
         }
 

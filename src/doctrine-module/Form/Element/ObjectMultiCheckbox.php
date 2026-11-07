@@ -56,7 +56,7 @@ class ObjectMultiCheckbox extends MultiCheckbox
             $value = Value::toArray($value);
         }
 
-        return parent::setValue(value: array_map(callback: [$this->getProxy(), 'getValue'], array: $value));
+        return parent::setValue(value: array_map(callback: [$this->getProxy(), 'getValue'], array: Assert::isArray($value)));
     }
 
     /**

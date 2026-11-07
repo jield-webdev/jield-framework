@@ -57,6 +57,7 @@ final readonly class PhpRenderer implements RendererInterface
 
     public function __call(string $name, array $arguments): mixed
     {
+        /** @mago-var mixed $helper */
         $helper = $this->plugin($name);
         return is_callable($helper) ? $helper(...$arguments) : $helper;
     }

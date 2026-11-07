@@ -35,7 +35,6 @@ use function strlen;
 use function strrpos;
 use function strtolower;
 use function substr;
-use function trigger_error;
 use function trim;
 
 use const E_USER_ERROR;
@@ -154,12 +153,7 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
      */
     public function __toString(): string
     {
-        try {
-            return $this->render();
-        } catch (\Exception $e) {
-            $msg = $e::class . ': ' . $e->getMessage();
-            trigger_error($msg, E_USER_ERROR);
-        }
+        return $this->render();
     }
 
     /**
@@ -337,7 +331,7 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
     {
         $events = $this->getEventManager();
         $results = $events->trigger(__FUNCTION__, $this, $params);
-        return $results->last();
+        return Assert::boolean($results->last());
     }
 
     // Util methods:
@@ -369,13 +363,14 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
     protected function htmlAttribs(array $attribs): string
     {
         // filter out null values and empty string values
+        /** @mago-var mixed $value */
         foreach ($attribs as $key => $value) {
             if ($value === null || is_string($value) && !strlen($value)) {
                 unset($attribs[$key]);
             }
         }
 
-        $attributes = $this->getView()->plugin('htmlAttributes');
+        $attributes = Assert::isCallable($this->getView()->plugin('htmlAttributes'));
         $rendered = (string) $attributes($attribs);
         return $rendered === '' ? '' : ' ' . ltrim($rendered);
     }
@@ -405,6 +400,7 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
         }
 
         $escaper = $this->getView()->plugin('escapeHtml', EscapeHtml::class);
+        /** @mago-var mixed $label */
         $label = $escaper($label);
 
         return '<a' . $this->htmlAttribs($attribs) . '>' . Value::stringify($label) . '</a>';
@@ -837,11 +833,12 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
 
         $events = $this->getEventManager();
 
-        if (!$events->getSharedManager()) {
+        $sharedEvents = $events->getSharedManager();
+        if ($sharedEvents === null) {
             return;
         }
 
-        $events->getSharedManager()->attach(self::class, 'isAllowed', AclListener::accept(...));
+        $sharedEvents->attach(self::class, 'isAllowed', AclListener::accept(...));
     }
 
     /**

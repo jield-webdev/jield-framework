@@ -85,7 +85,7 @@ class RoleCollector implements Serializable
      */
     public function unserialize($data): void
     {
-        $this->collectedRoles = unserialize(data: $data);
+        $this->collectedRoles = \Jield\Stdlib\Value::array(unserialize(data: $data));
     }
 
     /**
@@ -103,6 +103,6 @@ class RoleCollector implements Serializable
      */
     public function __unserialize(array $serialized)
     {
-        $this->collectedRoles = $serialized['collectedRoles'];
+        $this->collectedRoles = \Jield\Stdlib\Value::array($serialized['collectedRoles']);
     }
 }

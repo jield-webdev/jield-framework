@@ -18,7 +18,7 @@ class JsonRenderer implements RendererInterface
     public function render($templateNameOrModel, $variables = null): string
     {
         if (is_object($templateNameOrModel) && method_exists($templateNameOrModel, 'serialize')) {
-            return $templateNameOrModel->serialize();
+            return \Webmozart\Assert\Assert::string($templateNameOrModel->serialize());
         }
         return json_encode(
             $templateNameOrModel instanceof ModelInterface

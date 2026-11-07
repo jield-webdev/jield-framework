@@ -63,10 +63,11 @@ class AclAuthorizationFactory implements FactoryInterface
             unset($config['deny_by_default']);
         }
 
+        /** @mago-var mixed $privileges */
         foreach ($config as $controllerService => $privileges) {
             $this->createAclConfigFromPrivileges(
                 controllerService: Assert::string($controllerService),
-                privileges: $privileges,
+                privileges: Assert::isArray($privileges),
                 aclConfig: $aclConfig,
                 denyByDefault: $denyByDefault,
             );
@@ -97,12 +98,16 @@ class AclAuthorizationFactory implements FactoryInterface
         // the admin may write the name using dash seprators.
         $controllerService = strtr($controllerService, '-', '\\');
         if (isset($privileges['actions'])) {
+            /**
+             * @mago-var mixed $action
+             * @mago-var mixed $methods
+             */
             foreach (Assert::isIterable($privileges['actions']) as $action => $methods) {
                 $action = lcfirst(string: (string) $action);
                 $aclConfig[] = [
                     'resource' => sprintf('%s::%s', $controllerService, $action),
                     'privileges' => $this->createPrivilegesFromMethods(
-                        methods: $methods,
+                        methods: Assert::isArray($methods),
                         denyByDefault: $denyByDefault,
                     ),
                 ];
@@ -113,7 +118,7 @@ class AclAuthorizationFactory implements FactoryInterface
             $aclConfig[] = [
                 'resource' => sprintf('%s::collection', $controllerService),
                 'privileges' => $this->createPrivilegesFromMethods(
-                    methods: $privileges['collection'],
+                    methods: Assert::isArray($privileges['collection']),
                     denyByDefault: $denyByDefault,
                 ),
             ];
@@ -123,7 +128,7 @@ class AclAuthorizationFactory implements FactoryInterface
             $aclConfig[] = [
                 'resource' => sprintf('%s::entity', $controllerService),
                 'privileges' => $this->createPrivilegesFromMethods(
-                    methods: $privileges['entity'],
+                    methods: Assert::isArray($privileges['entity']),
                     denyByDefault: $denyByDefault,
                 ),
             ];
@@ -146,6 +151,7 @@ class AclAuthorizationFactory implements FactoryInterface
             unset($methods['default']);
         }
 
+        /** @mago-var mixed $flag */
         foreach ($methods as $method => $flag) {
             // If the flag evaluates true and we're denying by default, OR
             // if the flag evaluates false and we're allowing by default,
@@ -182,12 +188,13 @@ class AclAuthorizationFactory implements FactoryInterface
             return [];
         }
 
+        /** @mago-var mixed $config */
         $config = $container->get('config');
 
         if (!isset($config['api-tools-mvc-auth']['authorization'])) {
             return [];
         }
 
-        return $config['api-tools-mvc-auth']['authorization'];
+        return Assert::isArray($config['api-tools-mvc-auth']['authorization']);
     }
 }

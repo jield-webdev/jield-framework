@@ -32,7 +32,7 @@ class UnauthorizedStrategyServiceFactory implements FactoryInterface
             authenticationService: Service::get($container, AuthenticationService::class),
             config: $config,
         );
-        $strategy->setTemplate($config['template']);
+        $strategy->setTemplate(Assert::string($config['template']));
         return $strategy;
     }
 }

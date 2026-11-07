@@ -33,7 +33,7 @@ final class AuthenticationOAuth2AdapterFactory
 
         return new OAuth2Adapter(
             oauth2Server: OAuth2ServerFactory::factory(config: $config['storage'], container: $container),
-            types: is_array($type) ? $type : $type,
+            types: \Jield\Stdlib\Value::stringsOrString(is_array($type) ? $type : $type),
         );
     }
 }

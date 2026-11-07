@@ -49,8 +49,9 @@ class SolariumPaginatorAdapter implements AdapterInterface
         $this->count = $result->getNumFound() ?? 0;
 
         $results = [];
+        /** @mago-var mixed $result */
         foreach ($result->getIterator() as $result) {
-            $results[] = $this->provider->generateArrayFromSearchDocument(document: $result);
+            $results[] = $this->provider->generateArrayFromSearchDocument(document: \Webmozart\Assert\Assert::isInstanceOf($result, \Solarium\QueryType\Select\Result\Document::class));
         }
 
         return $results;

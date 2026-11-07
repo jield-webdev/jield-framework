@@ -48,7 +48,7 @@ final class InputFilterProviderFieldset extends Fieldset implements InputFilterP
         parent::setOptions(options: $options);
 
         if (isset($this->options['input_filter_spec'])) {
-            $this->setInputFilterSpecification(filterSpec: $this->options['input_filter_spec']);
+            $this->setInputFilterSpecification(filterSpec: \Webmozart\Assert\Assert::isIterable($this->options['input_filter_spec']));
         }
 
         return $this;

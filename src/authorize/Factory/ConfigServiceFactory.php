@@ -16,13 +16,15 @@ class ConfigServiceFactory implements FactoryInterface
 {
     public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): mixed
     {
+        /** @mago-var mixed $config */
         $config = $container->get('config');
 
-        $bjyAuthorizeConfig = $config['bjyauthorize'];
-        $jieldAuthorizeConfig = $config['jield_authorize'];
+        /** @mago-var mixed $bjyAuthorizeConfig */
+        $bjyAuthorizeConfig = Value::accessible($config)['bjyauthorize'];
+        $jieldAuthorizeConfig = Assert::isArray(Value::accessible($config)['jield_authorize']);
 
         //Check if the role entity class implements the RoleInterface
-        Assert::implementsInterface(value: $jieldAuthorizeConfig['role_entity_class'], interface: RoleInterface::class);
+        Assert::implementsInterface(value: Value::accessible($jieldAuthorizeConfig)['role_entity_class'], interface: RoleInterface::class);
 
         //Inject the role_provider
         Value::setPath(

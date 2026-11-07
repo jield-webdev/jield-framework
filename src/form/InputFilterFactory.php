@@ -34,6 +34,7 @@ final class InputFilterFactory
 
     public static function normalizeSpecification(array $specification): array
     {
+        /** @mago-var mixed $input */
         foreach ($specification as $name => &$input) {
             if (
                 !(is_string($name) && is_array($input) && !in_array($name, ['options', 'validators', 'filters'], true))

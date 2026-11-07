@@ -41,8 +41,9 @@ class CorsOptionsFactory implements FactoryInterface
     {
         /** @var array $config */
         $config = $container->has('config') ? $container->get('config') : [];
+        /** @mago-var mixed $config */
         $config = $config['lmc_cors'] ?? [];
 
-        return new CorsOptions($config);
+        return new CorsOptions(\Jield\Stdlib\Value::options($config));
     }
 }

@@ -31,19 +31,21 @@ abstract class AbstractGuard extends AbstractListenerAggregate implements
     public function __construct(array $rules, ContainerInterface $container)
     {
         $this->container = $container;
+        /** @mago-var mixed $rule */
         foreach ($rules as $rule) {
-            \Jield\Stdlib\Value::setPath($rule, ['roles'], \Jield\Stdlib\Value::toArray($rule['roles']));
+            \Jield\Stdlib\Value::setPath($rule, ['roles'], \Jield\Stdlib\Value::toArray(\Jield\Stdlib\Value::accessible($rule)['roles']));
             \Jield\Stdlib\Value::setPath(
                 $rule,
                 ['action'],
                 isset($rule['action']) ? \Jield\Stdlib\Value::toArray($rule['action']) : [null],
             );
+            /** @mago-var mixed $resource */
             foreach (Assert::isIterable($this->extractResourcesFromRule(Assert::isArray($rule))) as $resource) {
-                $this->rules[$resource] = [
+                $this->rules[\Jield\Stdlib\Value::key($resource)] = [
                     'roles' => \Jield\Stdlib\Value::toArray($rule['roles']),
                 ];
                 if (isset($rule['assertion'])) {
-                    $this->rules[$resource]['assertion'] = $rule['assertion'];
+                    $this->rules[\Jield\Stdlib\Value::key($resource)]['assertion'] = $rule['assertion'];
                 }
             }
         }

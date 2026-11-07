@@ -219,7 +219,7 @@ class MvcEvent extends Event
      */
     public function getError(): string
     {
-        return $this->getParam('error', '');
+        return \Webmozart\Assert\Assert::string($this->getParam('error', ''));
     }
 
     /**
@@ -229,7 +229,7 @@ class MvcEvent extends Event
      */
     public function getController(): ?string
     {
-        return $this->getParam('controller');
+        return Value::nullableString($this->getParam('controller'));
     }
 
     /**
@@ -251,7 +251,7 @@ class MvcEvent extends Event
      */
     public function getControllerClass(): ?string
     {
-        return $this->getParam('controller-class');
+        return Value::nullableString($this->getParam('controller-class'));
     }
 
     /**

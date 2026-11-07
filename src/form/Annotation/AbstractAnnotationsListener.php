@@ -30,6 +30,7 @@ abstract class AbstractAnnotationsListener extends AbstractListenerAggregate
      */
     public function handleNameAnnotation(EventInterface $e)
     {
+        /** @mago-var mixed $annotations */
         $annotations = $e->getParam('annotations');
         assert($annotations instanceof AnnotationCollection);
 
@@ -52,11 +53,12 @@ abstract class AbstractAnnotationsListener extends AbstractListenerAggregate
      */
     public function discoverFallbackName(EventInterface $e): string
     {
+        /** @mago-var mixed $reflection */
         $reflection = $e->getParam('reflection');
         if ($reflection instanceof ReflectionClass) {
             return $reflection->getShortName();
         }
 
-        return Value::call($reflection, 'getName');
+        return \Webmozart\Assert\Assert::string(Value::call($reflection, 'getName'));
     }
 }

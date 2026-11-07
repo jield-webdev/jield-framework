@@ -50,6 +50,7 @@ class VersionListener implements ListenerAggregateInterface
             return null;
         }
 
+        /** @mago-var mixed $controller */
         $controller = $routeMatches->getParam(name: 'controller', default: false);
         if (!$controller) {
             // no controller; we have bigger problems!
@@ -87,6 +88,7 @@ class VersionListener implements ListenerAggregateInterface
      */
     protected function getVersionFromRouteMatch(RouteMatch $routeMatches): false|int
     {
+        /** @mago-var mixed $version */
         $version = $routeMatches->getParam(name: 'laminas_ver_version', default: false);
         if ($version) {
             return filter_var($version, FILTER_VALIDATE_INT);

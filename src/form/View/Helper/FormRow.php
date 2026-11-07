@@ -210,6 +210,7 @@ class FormRow extends AbstractHelper
         }
 
         if ($element instanceof LabelAwareInterface && Value::truthy($element->getLabelOption(key: 'label_position'))) {
+            /** @mago-var mixed $labelPosition */
             $labelPosition = $element->getLabelOption(key: 'label_position');
         }
 

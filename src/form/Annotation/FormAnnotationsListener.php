@@ -55,11 +55,13 @@ final class FormAnnotationsListener extends AbstractAnnotationsListener
      */
     public function handleAttributesAnnotation(EventInterface $e): void
     {
+        /** @mago-var mixed $annotation */
         $annotation = $e->getParam('annotation');
         if (!$annotation instanceof Attributes) {
             return;
         }
 
+        /** @mago-var mixed $formSpec */
         $formSpec = $e->getParam('formSpec');
         Value::setPath($formSpec, ['attributes'], $annotation->getAttributes());
     }
@@ -71,11 +73,13 @@ final class FormAnnotationsListener extends AbstractAnnotationsListener
      */
     public function handleFlagsAnnotation(EventInterface $e): void
     {
+        /** @mago-var mixed $annotation */
         $annotation = $e->getParam('annotation');
         if (!$annotation instanceof Flags) {
             return;
         }
 
+        /** @mago-var mixed $formSpec */
         $formSpec = $e->getParam('formSpec');
         Value::setPath($formSpec, ['flags'], $annotation->getFlags());
     }
@@ -87,11 +91,13 @@ final class FormAnnotationsListener extends AbstractAnnotationsListener
      */
     public function handleHydratorAnnotation(EventInterface $e): void
     {
+        /** @mago-var mixed $annotation */
         $annotation = $e->getParam('annotation');
         if (!$annotation instanceof Hydrator) {
             return;
         }
 
+        /** @mago-var mixed $formSpec */
         $formSpec = $e->getParam('formSpec');
         Value::setPath($formSpec, ['hydrator'], $annotation->getHydratorSpecification());
     }
@@ -103,11 +109,13 @@ final class FormAnnotationsListener extends AbstractAnnotationsListener
      */
     public function handleInputFilterAnnotation(EventInterface $e): void
     {
+        /** @mago-var mixed $annotation */
         $annotation = $e->getParam('annotation');
         if (!$annotation instanceof InputFilter) {
             return;
         }
 
+        /** @mago-var mixed $formSpec */
         $formSpec = $e->getParam('formSpec');
         Value::setPath($formSpec, ['input_filter'], $annotation->getInputFilter());
     }
@@ -119,11 +127,13 @@ final class FormAnnotationsListener extends AbstractAnnotationsListener
      */
     public function handleInstanceAnnotation(EventInterface $e): void
     {
+        /** @mago-var mixed $annotation */
         $annotation = $e->getParam('annotation');
         if (!$annotation instanceof Instance) {
             return;
         }
 
+        /** @mago-var mixed $formSpec */
         $formSpec = $e->getParam('formSpec');
         Value::setPath($formSpec, ['object'], $annotation->getInstance());
     }
@@ -135,11 +145,13 @@ final class FormAnnotationsListener extends AbstractAnnotationsListener
      */
     public function handleOptionsAnnotation(EventInterface $e): void
     {
+        /** @mago-var mixed $annotation */
         $annotation = $e->getParam('annotation');
         if (!$annotation instanceof Options) {
             return;
         }
 
+        /** @mago-var mixed $formSpec */
         $formSpec = $e->getParam('formSpec');
         Value::setPath($formSpec, ['options'], $annotation->getOptions());
     }
@@ -151,11 +163,13 @@ final class FormAnnotationsListener extends AbstractAnnotationsListener
      */
     public function handleTypeAnnotation(EventInterface $e): void
     {
+        /** @mago-var mixed $annotation */
         $annotation = $e->getParam('annotation');
         if (!$annotation instanceof Type) {
             return;
         }
 
+        /** @mago-var mixed $formSpec */
         $formSpec = $e->getParam('formSpec');
         Value::setPath($formSpec, ['type'], $annotation->getType());
     }
@@ -167,11 +181,13 @@ final class FormAnnotationsListener extends AbstractAnnotationsListener
      */
     public function handleValidationGroupAnnotation(EventInterface $e): void
     {
+        /** @mago-var mixed $annotation */
         $annotation = $e->getParam('annotation');
         if (!$annotation instanceof ValidationGroup) {
             return;
         }
 
+        /** @mago-var mixed $formSpec */
         $formSpec = $e->getParam('formSpec');
         Value::setPath($formSpec, ['validation_group'], $annotation->getValidationGroup());
     }

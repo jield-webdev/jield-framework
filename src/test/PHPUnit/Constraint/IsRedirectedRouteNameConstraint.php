@@ -52,6 +52,7 @@ final class IsRedirectedRouteNameConstraint extends Constraint
         }
 
         $controllerClass = $this->getControllerFullClass();
+        /** @mago-var mixed $urlPlugin */
         $urlPlugin = $controllerClass->plugin('url');
 
         if (!$urlPlugin instanceof Url) {
@@ -75,16 +76,19 @@ final class IsRedirectedRouteNameConstraint extends Constraint
             );
         }
 
+        /** @mago-var mixed $controllerIdentifier */
         $controllerIdentifier = $routeMatch->getParam('controller');
         if (!is_string($controllerIdentifier)) {
             throw new RuntimeException('Invalid controller identifier found in route match params');
         }
 
+        /** @mago-var mixed $controllerManager */
         $controllerManager = $this->activeTestCase->getApplicationServiceLocator()->get('ControllerManager');
         if (!$controllerManager instanceof ControllerManager) {
             throw new RuntimeException('Invalid ControllerManager found in ServiceManager');
         }
 
+        /** @mago-var mixed $controller */
         $controller = $controllerManager->get($controllerIdentifier);
         if (!$controller instanceof AbstractController) {
             throw new RuntimeException(sprintf(

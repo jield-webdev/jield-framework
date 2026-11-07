@@ -90,15 +90,15 @@ class Element implements ElementAttributeRemovalInterface, ElementInterface, Ini
         }
 
         if (isset($options['label'])) {
-            $this->setLabel(label: $options['label']);
+            $this->setLabel(label: \Webmozart\Assert\Assert::nullOrString($options['label']));
         }
 
         if (isset($options['label_attributes'])) {
-            $this->setLabelAttributes(labelAttributes: $options['label_attributes']);
+            $this->setLabelAttributes(labelAttributes: \Webmozart\Assert\Assert::isArray($options['label_attributes']));
         }
 
         if (isset($options['label_options'])) {
-            $this->setLabelOptions(arrayOrTraversable: $options['label_options']);
+            $this->setLabelOptions(arrayOrTraversable: \Webmozart\Assert\Assert::isIterable($options['label_options']));
         }
 
         $this->options = $options;

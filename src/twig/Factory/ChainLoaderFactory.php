@@ -20,7 +20,7 @@ class ChainLoaderFactory implements FactoryInterface
     ): Loader\ChainLoader {
         $moduleOptions = $options === null
             ? Service::get($container, ModuleOptions::class)
-            : new ModuleOptions($options);
+            : new ModuleOptions(\Jield\Stdlib\Value::options($options));
 
         // Setup loader
         $chain = new Loader\ChainLoader();
@@ -29,7 +29,7 @@ class ChainLoaderFactory implements FactoryInterface
             if (!$container->has($loader)) {
                 throw new InvalidArgumentException(message: 'Loaders should be a service manager alias.');
             }
-            $chain->addLoader(loader: $container->get($loader));
+            $chain->addLoader(loader: \Webmozart\Assert\Assert::isInstanceOf($container->get($loader), \Twig\Loader\LoaderInterface::class));
         }
 
         return $chain;

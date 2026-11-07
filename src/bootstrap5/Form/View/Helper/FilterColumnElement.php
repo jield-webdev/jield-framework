@@ -131,9 +131,10 @@ class FilterColumnElement extends FormElement
                 $sortedValueOptions = [];
                 $currentValueOptions = Assert::isInstanceOf($element, MultiCheckbox::class)->getValueOptions();
 
+                /** @mago-var mixed $value */
                 foreach (Value::toArray($element->getValue()) as $value) {
                     //We can only unset the value if it is in the value options
-                    if (!array_key_exists(key: $value, array: $currentValueOptions)) {
+                    if (!array_key_exists(key: Value::key($value), array: $currentValueOptions)) {
                         continue;
                     }
 

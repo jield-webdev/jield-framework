@@ -36,6 +36,7 @@ final class AbstractDoctrineServiceFactory implements AbstractFactoryInterface
             throw new ServiceNotFoundException();
         }
 
+        /** @mago-var mixed $factoryClass */
         $factoryClass = $mappings['factoryClass'];
         return Value::call(
             Value::instantiate($factoryClass, [$mappings['serviceName']]),
@@ -57,6 +58,7 @@ final class AbstractDoctrineServiceFactory implements AbstractFactoryInterface
             return false;
         }
 
+        /** @mago-var mixed $config */
         $config = $serviceLocator->get('config');
         $mappingType = $matches['mappingType'];
         $serviceType = $matches['serviceType'];

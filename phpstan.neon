@@ -5,6 +5,8 @@ parameters:
         - src
     scanFiles:
         - resources/pdf/tcpdf_autoconfig.php
+    stubFiles:
+        - analysis/phpstan/InputFilterTypes.stub
     # Applications can define these before the PDF defaults are loaded.
     # Array settings are untyped input and are validated by the facade.
     dynamicConstantNames:

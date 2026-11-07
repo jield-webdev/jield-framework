@@ -12,6 +12,7 @@ class ApiProblemRendererFactory
 {
     public function __invoke(ContainerInterface $container): ApiProblemRenderer
     {
+        /** @mago-var mixed $config */
         $config = $container->get('config');
         $displayExceptions =
             isset($config['view_manager']['display_exceptions'])

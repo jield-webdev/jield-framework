@@ -134,19 +134,20 @@ class OAuth2Adapter extends AbstractAdapter
         MvcAuthEvent $mvcAuthEvent,
     ): Identity\IdentityInterface|Response {
         $oauth2request = new OAuth2Request(
-            query: Value::call($request->getQuery(), 'toArray'),
-            request: Value::call($request->getPost(), 'toArray'),
+            query: Assert::isArray(Value::call($request->getQuery(), 'toArray')),
+            request: Assert::isArray(Value::call($request->getPost(), 'toArray')),
             attributes: [],
             cookies: ($cookie = $request->getCookie()) instanceof Cookie ? $cookie->getArrayCopy() : [],
-            files: $request->getFiles()->toArray(),
-            server: method_exists(object_or_class: $request, method: 'getServer')
+            files: Assert::isArray($request->getFiles()->toArray()),
+            server: Assert::isArray(method_exists(object_or_class: $request, method: 'getServer')
                 ? Value::call($request->getServer(), 'toArray')
-                : $_SERVER,
+                : $_SERVER),
             content: Assert::nullOrString($request->getContent()),
             headers: Assert::isInstanceOf($request->getHeaders(), Headers::class)->toArray(),
         );
 
         try {
+            /** @mago-var mixed $token */
             $token = $this->oauth2Server->getAccessTokenData(request: $oauth2request);
         } catch (Throwable $exception) {
             // The OAuth2 JWT decoder can raise an OpenSSL error for a missing or malformed public key.
@@ -183,7 +184,9 @@ class OAuth2Adapter extends AbstractAdapter
      */
     private function processInvalidToken(Response $response): Response|Identity\GuestIdentity
     {
+        /** @mago-var mixed $oauth2Response */
         $oauth2Response = $this->oauth2Server->getResponse();
+        /** @mago-var mixed $status */
         $status = Value::call($oauth2Response, 'getStatusCode');
 
         // 401 or 403 mean invalid credentials or unauthorized scopes; report those.
@@ -191,14 +194,14 @@ class OAuth2Adapter extends AbstractAdapter
             in_array(needle: $status, haystack: [401, 403], strict: true)
             && null !== Value::call($oauth2Response, 'getParameter', ['name' => 'error'])
         ) {
-            return $this->mergeOAuth2Response(status: $status, response: $response, oauth2Response: $oauth2Response);
+            return $this->mergeOAuth2Response(status: $status, response: $response, oauth2Response: Assert::isInstanceOf($oauth2Response, \OAuth2\Response::class));
         }
 
         // Merge in any headers; typically sets a WWW-Authenticate header.
-        $this->mergeOAuth2ResponseHeaders(response: $response, oauth2Headers: Value::call(
+        $this->mergeOAuth2ResponseHeaders(response: $response, oauth2Headers: Assert::isArray(Value::call(
             $oauth2Response,
             'getHttpHeaders',
-        ));
+        )));
 
         // Otherwise, no credentials were present at all, so we just return a guest identity.
         return new Identity\GuestIdentity();
@@ -226,6 +229,7 @@ class OAuth2Adapter extends AbstractAdapter
         }
 
         $headers = $response->getHeaders();
+        /** @mago-var mixed $value */
         foreach ($oauth2Headers as $header => $value) {
             $headers->addHeaderLine(
                 headerFieldNameOrLine: Assert::string($header),

@@ -38,8 +38,9 @@ class AcceptListener extends ContentTypeListener
             $params = explode(separator: ';', string: $mediaRange);
             $mediaType = array_shift(array: $params);
 
+            /** @mago-var mixed $regex */
             foreach (array_reverse(array: $this->regexes) as $regex) {
-                if (!preg_match(pattern: $regex, subject: $mediaType, matches: $matches)) {
+                if (!preg_match(pattern: \Webmozart\Assert\Assert::string($regex), subject: $mediaType, matches: $matches)) {
                     continue;
                 }
 

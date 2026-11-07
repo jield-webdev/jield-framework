@@ -65,12 +65,13 @@ final class Module implements ConfigProviderInterface, BootstrapListenerInterfac
 
     public function init($moduleManager): void
     {
-        $this->getPrototypeRouteListener()->attach(events: Value::call($moduleManager, 'getEventManager'));
+        $this->getPrototypeRouteListener()->attach(events: Assert::isInstanceOf(Value::call($moduleManager, 'getEventManager'), \Laminas\EventManager\EventManagerInterface::class));
     }
 
     #[Override]
     public function onBootstrap(EventInterface|MvcEvent $e): void
     {
+        /** @mago-var mixed $app */
         $app = $e->getParam(name: 'application');
 
         /** @var ServiceManager $serviceManager */
@@ -175,7 +176,7 @@ final class Module implements ConfigProviderInterface, BootstrapListenerInterfac
 
         // Attach OptionsListener
         $optionsListener = Service::get($serviceManager, OptionsListener::class);
-        $optionsListener->attach(Value::call($app, 'getEventManager'));
+        $optionsListener->attach(Assert::isInstanceOf(Value::call($app, 'getEventManager'), \Laminas\EventManager\EventManagerInterface::class));
 
         // Setup json strategy
         $strategy = Service::get($serviceManager, JsonStrategy::class, 'ViewJsonStrategy');
@@ -184,6 +185,7 @@ final class Module implements ConfigProviderInterface, BootstrapListenerInterfac
 
     public function onRenderMain(MvcEvent $e): void
     {
+        /** @mago-var mixed $result */
         $result = $e->getResult();
         if (!$result instanceof JsonModel) {
             return;
@@ -212,6 +214,7 @@ final class Module implements ConfigProviderInterface, BootstrapListenerInterfac
 
     public function onRenderHal(MvcEvent $e): void
     {
+        /** @mago-var mixed $result */
         $result = $e->getResult();
         if (!$result instanceof HalJsonModel) {
             return;

@@ -25,7 +25,7 @@ final class ConfigCannotBeCachedException extends RuntimeException
                 'Cannot export config into a cache file. Config contains uncacheable entries: %s',
                 $exportException->getMessage(),
             ),
-            code: $exportException->getCode(),
+            code: \Webmozart\Assert\Assert::integer($exportException->getCode()),
             previous: $exportException,
         );
     }

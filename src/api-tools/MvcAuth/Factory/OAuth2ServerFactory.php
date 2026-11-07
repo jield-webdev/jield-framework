@@ -40,18 +40,20 @@ final class OAuth2ServerFactory
      */
     public static function factory(array $config, ContainerInterface $container): OAuth2Server
     {
+        /** @mago-var mixed $allConfig */
         $allConfig = $container->get('config');
+        /** @mago-var mixed $oauth2Config */
         $oauth2Config = $allConfig['api-tools-oauth2'] ?? [];
-        $options = self::marshalOptions(config: $oauth2Config);
+        $options = self::marshalOptions(config: Assert::isArray($oauth2Config));
 
         $oauth2Server = new OAuth2Server(
-            storage: self::createStorage(config: array_merge($oauth2Config, $config), container: $container),
+            storage: self::createStorage(config: array_merge(Assert::isArray($oauth2Config), $config), container: $container),
             config: $options,
         );
 
         return self::injectGrantTypes(
             server: $oauth2Server,
-            availableGrantTypes: $oauth2Config['grant_types'],
+            availableGrantTypes: Assert::isArray($oauth2Config['grant_types']),
             options: $options,
         );
     }
@@ -72,7 +74,7 @@ final class OAuth2ServerFactory
             && (is_string(value: $config['storage']) || is_array(value: $config['storage']))
         ) {
             return self::createStorageFromServices(
-                storage: is_array($config['storage']) ? $config['storage'] : $config['storage'],
+                storage: \Jield\Stdlib\Value::stringsOrString(is_array($config['storage']) ? $config['storage'] : $config['storage']),
                 container: $container,
             );
         }
@@ -144,8 +146,11 @@ final class OAuth2ServerFactory
             throw new ServiceNotCreatedException(message: 'Missing DSN for OAuth2 PDO adapter creation');
         }
 
+        /** @mago-var mixed $username */
         $username = $config['username'] ?? null;
+        /** @mago-var mixed $password */
         $password = $config['password'] ?? null;
+        /** @mago-var mixed $options */
         $options = $config['options'] ?? [];
 
         return [
@@ -177,10 +182,15 @@ final class OAuth2ServerFactory
      */
     private static function marshalOptions(array $config): array
     {
+        /** @mago-var mixed $enforceState */
         $enforceState = array_key_exists(key: 'enforce_state', array: $config) ? $config['enforce_state'] : true;
+        /** @mago-var mixed $allowImplicit */
         $allowImplicit = $config['allow_implicit'] ?? false;
+        /** @mago-var mixed $accessLifetime */
         $accessLifetime = $config['access_lifetime'] ?? 3600;
+        /** @mago-var mixed $audience */
         $audience = $config['audience'] ?? '';
+        /** @mago-var mixed $options */
         $options = $config['options'] ?? [];
 
         return array_merge([

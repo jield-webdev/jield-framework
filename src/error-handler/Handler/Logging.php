@@ -56,8 +56,8 @@ final class Logging
         private readonly ?MailerInterface $mailer = null,
         private readonly bool $includeFilesToAttachments = true,
     ) {
-        $this->emailReceivers = $errorHeroModuleLocalConfig['email-notification-settings']['email-to-send'];
-        $this->emailSender = $errorHeroModuleLocalConfig['email-notification-settings']['email-from'];
+        $this->emailReceivers = \Jield\Stdlib\Value::strings(\Jield\Stdlib\Value::accessible($errorHeroModuleLocalConfig['email-notification-settings'])['email-to-send']);
+        $this->emailSender = Assert::string(\Jield\Stdlib\Value::accessible($errorHeroModuleLocalConfig['email-notification-settings'])['email-from']);
     }
 
     /**

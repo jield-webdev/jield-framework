@@ -565,7 +565,7 @@ class MimeResolver
     {
         $extension = strtolower(string: pathinfo(path: $filename, flags: PATHINFO_EXTENSION));
 
-        return $this->mimeTypes[$extension] ?? 'text/plain';
+        return \Webmozart\Assert\Assert::string($this->mimeTypes[$extension] ?? 'text/plain');
     }
 
     /**

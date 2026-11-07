@@ -18,6 +18,6 @@ class IdentityProviderServiceFactory implements FactoryInterface
      */
     public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): mixed
     {
-        return $container->get(Assert::isArray($container->get(Config::class))['identity_provider']);
+        return $container->get(Assert::string(Assert::isArray($container->get(Config::class))['identity_provider']));
     }
 }

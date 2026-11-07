@@ -153,6 +153,7 @@ class Metadata
         /** @var string|bool $legacyIdentifierName */
         $legacyIdentifierName = false;
 
+        /** @mago-var mixed $value */
         foreach ($options as $key => $value) {
             $filteredKey = strtolower(str_replace('_', '', (string) $key));
 
@@ -177,6 +178,7 @@ class Metadata
 
             // Fix BC issue: s/identifier_name/route_identifier_name/
             if ($filteredKey === 'identifiername') {
+                /** @mago-var mixed $legacyIdentifierName */
                 $legacyIdentifierName = $value;
                 continue;
             }
@@ -403,6 +405,7 @@ class Metadata
     {
         if (is_string(value: $hydrator)) {
             if ($this->hydrators->has($hydrator)) {
+                /** @mago-var mixed $hydrator */
                 $hydrator = $this->hydrators->get($hydrator);
             } elseif (class_exists(class: $hydrator)) {
                 $hydrator = Value::instantiate($hydrator);
@@ -410,11 +413,12 @@ class Metadata
         }
 
         if (!$hydrator instanceof ExtractionInterface) {
+            /** @mago-var mixed $type */
             $type = is_object($hydrator) ? $hydrator::class : $hydrator;
 
             throw new Exception\InvalidArgumentException(message: sprintf(
                 'Hydrator class must implement Laminas\Hydrator\ExtractionInterface; received "%s"',
-                $type,
+                Value::scalar($type),
             ));
         }
 

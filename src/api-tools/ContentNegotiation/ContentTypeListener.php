@@ -81,7 +81,7 @@ class ContentTypeListener
         $parameterData->setRouteParams(routeParams: $routeParams);
 
         // query parameters:
-        $parameterData->setQueryParams(queryParams: Value::call($request->getQuery(), 'toArray'));
+        $parameterData->setQueryParams(queryParams: Assert::isArray(Value::call($request->getQuery(), 'toArray')));
 
         // body parameters:
         $bodyParams = [];
@@ -90,10 +90,12 @@ class ContentTypeListener
         switch ($request->getMethod()) {
             case $request::METHOD_POST:
                 if ($contentType && $contentType->match(matchAgainst: 'application/json')) {
+                    /** @mago-var mixed $bodyParams */
                     $bodyParams = $this->decodeJson(json: $request->getContent());
                     break;
                 }
 
+                /** @mago-var mixed $bodyParams */
                 $bodyParams = Value::call($request->getPost(), 'toArray');
                 break;
             case $request::METHOD_PATCH:
@@ -121,12 +123,14 @@ class ContentTypeListener
                 }
 
                 if ($contentType && $contentType->match(matchAgainst: 'application/json')) {
+                    /** @mago-var mixed $bodyParams */
                     $bodyParams = $this->decodeJson(json: $content);
                     break;
                 }
 
                 // Try to assume JSON if content starts like JSON and no explicit Content-Type was provided
                 if (strlen(string: $content) > 0 && in_array(needle: $content[0], haystack: ['{', '['], strict: true)) {
+                    /** @mago-var mixed $bodyParams */
                     $bodyParams = $this->decodeJson(json: $content);
                 }
 
@@ -143,7 +147,7 @@ class ContentTypeListener
             return $bodyParams;
         }
 
-        $parameterData->setBodyParams(bodyParams: $bodyParams);
+        $parameterData->setBodyParams(bodyParams: Assert::isArray($bodyParams));
         $e->setParam(name: 'LaminasContentNegotiationParameterData', value: $parameterData);
         return null;
     }
@@ -159,22 +163,24 @@ class ContentTypeListener
             return;
         }
 
+        /** @mago-var mixed $fileInfo */
         foreach ($request->getFiles() as $fileInfo) {
-            if (dirname(path: (string) $fileInfo['tmp_name']) !== $this->uploadTmpDir) {
+            $fileInfo = Assert::isArray($fileInfo);
+            if (dirname(path: (string) Value::accessible($fileInfo)['tmp_name']) !== $this->uploadTmpDir) {
                 // File was moved
                 continue;
             }
 
-            if (!preg_match(pattern: '/^laminasc/', subject: basename(path: (string) $fileInfo['tmp_name']))) {
+            if (!preg_match(pattern: '/^laminasc/', subject: basename(path: (string) Value::accessible($fileInfo)['tmp_name']))) {
                 // File was moved
                 continue;
             }
 
-            if (!file_exists(filename: $fileInfo['tmp_name'])) {
+            if (!file_exists(filename: Assert::string(Value::accessible($fileInfo)['tmp_name']))) {
                 continue;
             }
 
-            unlink(filename: $fileInfo['tmp_name']);
+            unlink(filename: Assert::string($fileInfo['tmp_name']));
         }
     }
 
@@ -197,13 +203,18 @@ class ContentTypeListener
             return [];
         }
 
+        /** @mago-var mixed $data */
         $data = json_decode(json: $json, associative: true);
         $isArray = is_array(value: $data);
 
         // Decode 'application/hal+json' to 'application/json' by merging _embedded into the array
         if ($isArray && isset($data['_embedded'])) {
+            /**
+             * @mago-var mixed $key
+             * @mago-var mixed $value
+             */
             foreach (Assert::isIterable($data['_embedded']) as $key => $value) {
-                $data[$key] = $value;
+                $data[Value::key($key)] = $value;
             }
 
             unset($data['_embedded']);
@@ -218,13 +229,14 @@ class ContentTypeListener
             return $data;
         }
 
+        /** @mago-var mixed $message */
         $message = array_key_exists(key: $error, array: $this->jsonErrors)
             ? $this->jsonErrors[$error]
             : 'Unknown error';
 
         return new ApiProblemResponse(apiProblem: new ApiProblem(status: 400, detail: sprintf(
             'JSON decoding error: %s',
-            $message,
+            Value::scalar($message),
         )));
     }
 
@@ -245,6 +257,7 @@ class ContentTypeListener
         }
 
         $this->uploadTmpDir = $uploadTmpDir;
+        /** @mago-var mixed $events */
         $events = $target->getEventManager();
         Value::call($events, 'attach', ['finish', $this->onFinish(...), 1000]);
     }

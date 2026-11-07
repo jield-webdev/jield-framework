@@ -104,7 +104,7 @@ class MultiCheckbox extends Checkbox
             $this->setValueOptions(options: $valueOptions);
         }
         if (isset($this->options['disable_inarray_validator'])) {
-            $this->setDisableInArrayValidator(disableOption: $this->options['disable_inarray_validator']);
+            $this->setDisableInArrayValidator(disableOption: \Webmozart\Assert\Assert::boolean($this->options['disable_inarray_validator']));
         }
 
         return $this;
@@ -124,7 +124,7 @@ class MultiCheckbox extends Checkbox
             $this->setValueOptions(options: $value);
             return $this;
         }
-        return parent::setAttribute(key: $key, value: $value);
+        return parent::setAttribute(key: $key, value: \Jield\Stdlib\Value::plainScalar($value));
     }
 
     /**

@@ -158,9 +158,10 @@ class FormElement extends AbstractHelper
      */
     protected function renderHelper(string $name, ElementInterface $element): string
     {
+        /** @mago-var mixed $helper */
         $helper = $this->helpers->get($name);
         assert(assertion: is_callable(value: $helper));
-        return $helper($element);
+        return \Webmozart\Assert\Assert::string($helper($element));
     }
 
     /**

@@ -46,7 +46,7 @@ final class BuilderAbstractFactory implements AbstractFactoryInterface
         $eventManager = Service::get($container, \Laminas\EventManager\EventManagerInterface::class, 'EventManager');
         Value::call($annotationBuilder, 'setEventManager', [$eventManager]);
 
-        $this->injectFactory(Value::call($annotationBuilder, 'getFormFactory'), $container);
+        $this->injectFactory(Assert::isInstanceOf(Value::call($annotationBuilder, 'getFormFactory'), \Jield\Form\Factory::class), $container);
 
         $config = $this->marshalConfig($container);
         if (isset($config['preserve_defined_order'])) {
@@ -83,7 +83,9 @@ final class BuilderAbstractFactory implements AbstractFactoryInterface
             return [];
         }
 
+        /** @mago-var mixed $config */
         $config = $container->get('config');
+        /** @mago-var mixed $config */
         $config = $config['form_annotation_builder'] ?? [];
 
         return is_array($config) ? $config : [];
@@ -106,11 +108,13 @@ final class BuilderAbstractFactory implements AbstractFactoryInterface
             return;
         }
 
+        /** @mago-var mixed $listenerName */
         foreach (Assert::isIterable($config['listeners']) as $listenerName) {
-            $listener = $container->get($listenerName);
+            /** @mago-var mixed $listener */
+            $listener = $container->get(Assert::string($listenerName));
 
             if (!$listener instanceof ListenerAggregateInterface) {
-                throw new ServiceNotCreatedException(sprintf('Invalid event listener (%s) provided', $listenerName));
+                throw new ServiceNotCreatedException(sprintf('Invalid event listener (%s) provided', Value::scalar($listenerName)));
             }
 
             $listener->attach($events);

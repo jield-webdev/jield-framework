@@ -88,7 +88,7 @@ class Forward extends AbstractPlugin
      */
     public function setListenersToDetach($listeners): static
     {
-        $this->listenersToDetach = $listeners;
+        $this->listenersToDetach = Value::maps($listeners);
 
         return $this;
     }
@@ -106,6 +106,7 @@ class Forward extends AbstractPlugin
     {
         $event = clone $this->getEvent();
 
+        /** @mago-var mixed $controller */
         $controller = $this->controllers->get($name);
         if ($controller instanceof InjectApplicationEventInterface) {
             $controller->setEvent($event);
@@ -132,6 +133,7 @@ class Forward extends AbstractPlugin
             \Laminas\EventManager\SharedEventManagerInterface::class,
         ));
 
+        /** @mago-var mixed $return */
         $return = Value::call($controller, 'dispatch', [$event->getRequest(), $event->getResponse()]);
 
         // If we detached any listeners, reattach them now:
@@ -158,12 +160,12 @@ class Forward extends AbstractPlugin
         $formattedProblems = [];
         foreach ($this->getListenersToDetach() ?? [] as $current) {
             if (!isset($formattedProblems[$current['id']])) {
-                $formattedProblems[$current['id']] = [];
+                $formattedProblems[Value::key($current['id'])] = [];
             }
             if (!isset($formattedProblems[$current['id']][$current['event']])) {
-                $formattedProblems[$current['id']][$current['event']] = [];
+                $formattedProblems[Value::key($current['id'])][Value::key($current['event'])] = [];
             }
-            $formattedProblems[$current['id']][$current['event']][] = $current['class'];
+            $formattedProblems[Value::key($current['id'])][Value::key($current['event'])][] = $current['class'];
         }
 
         // Loop through the class blacklist, detaching problem events and remembering their CallbackHandlers
@@ -172,14 +174,18 @@ class Forward extends AbstractPlugin
         foreach ($formattedProblems as $id => $eventArray) {
             $results[$id] = [];
             foreach ($eventArray as $eventName => $classArray) {
-                $results[$id][$eventName] = [];
+                $results[$id][Value::key($eventName)] = [];
                 $events = $this->getSharedListenersById($id, Assert::string($eventName), $sharedEvents);
+                /** @mago-var mixed $currentPriorityEvents */
                 foreach ($events as $priority => $currentPriorityEvents) {
+                    /** @mago-var mixed $currentEvent */
                     foreach (Assert::isIterable($currentPriorityEvents) as $currentEvent) {
+                        /** @mago-var mixed $currentCallback */
                         $currentCallback = $currentEvent;
 
                         // If we have an array, grab the object
                         if (is_array($currentCallback)) {
+                            /** @mago-var mixed $currentCallback */
                             $currentCallback = array_shift($currentCallback);
                         }
 
@@ -188,6 +194,7 @@ class Forward extends AbstractPlugin
                             continue;
                         }
 
+                        /** @mago-var mixed $class */
                         foreach ($classArray as $class) {
                             if (!$currentCallback instanceof $class) {
                                 continue;
@@ -213,15 +220,25 @@ class Forward extends AbstractPlugin
      */
     protected function reattachProblemListeners(SharedEvents $sharedEvents, array $listeners): void
     {
+        /** @mago-var mixed $eventArray */
         foreach ($listeners as $id => $eventArray) {
+            /**
+             * @mago-var mixed $eventName
+             * @mago-var mixed $callbacks
+             */
             foreach (Assert::isIterable($eventArray) as $eventName => $callbacks) {
+                /**
+                 * @mago-var mixed $priority
+                 * @mago-var mixed $current
+                 */
                 foreach (Assert::isIterable($callbacks) as $priority => $current) {
+                    /** @mago-var mixed $callback */
                     $callback = $current;
 
                     $sharedEvents->attach(
                         Assert::string($id),
                         Assert::string($eventName),
-                        $callback,
+                        Assert::isCallable($callback),
                         Assert::integer($priority),
                     );
                 }

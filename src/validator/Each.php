@@ -20,6 +20,7 @@ final class Each implements ValidatorInterface
     {
         $this->messages = [];
         $valid = true;
+        /** @mago-var mixed $item */
         foreach (is_array($value) ? $value : [$value] as $item) {
             if ($this->validator->isValid($item)) {
                 continue;

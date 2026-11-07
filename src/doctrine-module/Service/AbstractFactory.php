@@ -53,14 +53,18 @@ abstract class AbstractFactory implements FactoryInterface
     {
         $name ??= $this->getName();
 
+        /** @mago-var mixed $options */
         $options = $container->get('config');
-        $options = $options['doctrine'];
+        /** @mago-var mixed $options */
+        $options = Value::accessible($options)['doctrine'];
 
         $mappingType = $this->getMappingType();
         if ($mappingType !== '' && $mappingType !== '0') {
-            $options = $options[$mappingType];
+            /** @mago-var mixed $options */
+            $options = Value::accessible($options)[$mappingType];
         }
 
+        /** @mago-var mixed $options */
         $options = $options[$key][$name] ?? null;
 
         if ($options === null) {

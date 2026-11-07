@@ -41,10 +41,10 @@ class RestControllerFactory implements AbstractFactoryInterface
     protected array $lookupCache = [];
 
     #[Override]
-    public function canCreate(ContainerInterface $container, $requestedName): bool
+    public function canCreate(ContainerInterface $container, string $requestedName): bool
     {
-        if (array_key_exists(key: $requestedName, array: $this->lookupCache)) {
-            return $this->lookupCache[$requestedName];
+        if (array_key_exists(key: Assert::scalar($requestedName), array: $this->lookupCache)) {
+            return Assert::boolean($this->lookupCache[$requestedName]);
         }
 
         if (!$container->has('config') || !$container->has('EventManager')) {
@@ -52,6 +52,7 @@ class RestControllerFactory implements AbstractFactoryInterface
             return false;
         }
 
+        /** @mago-var mixed $config */
         $config = $container->get('config');
         if (!isset($config['api-tools-rest']) || !is_array(value: $config['api-tools-rest'])) {
             $this->lookupCache[$requestedName] = false;
@@ -72,15 +73,15 @@ class RestControllerFactory implements AbstractFactoryInterface
         }
 
         if (
-            !$container->has($config[$requestedName]['listener'])
-            && !class_exists(class: $config[$requestedName]['listener'])
+            !$container->has(Assert::string($config[$requestedName]['listener']))
+            && !class_exists(class: Assert::string($config[$requestedName]['listener']))
         ) {
             // Service referenced by listener key is required
             $this->lookupCache[$requestedName] = false;
             throw new ServiceNotFoundException(message: sprintf(
                 '%s requires that a valid "listener" service be specified for controller %s; no service found',
                 __METHOD__,
-                $requestedName,
+                Value::scalar($requestedName),
             ));
         }
 
@@ -89,14 +90,15 @@ class RestControllerFactory implements AbstractFactoryInterface
     }
 
     #[Override]
-    public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): RestController
+    public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): RestController
     {
+        /** @mago-var mixed $config */
         $config = $container->get('config');
-        $config = Value::path($config, ['api-tools-rest', $requestedName]);
+        $config = Assert::isArray(Value::path($config, ['api-tools-rest', $requestedName]));
 
         /** @var AbstractResourceListener $listener */
-        $listener = $container->has($config['listener'])
-            ? $container->get($config['listener'])
+        $listener = $container->has(Assert::string(Value::accessible($config)['listener']))
+            ? $container->get(Assert::string($config['listener']))
             : Value::instantiate($config['listener']);
 
         $resourceIdentifiers = [$listener::class];
@@ -109,7 +111,7 @@ class RestControllerFactory implements AbstractFactoryInterface
         }
 
         $events = Service::get($container, EventManagerInterface::class, 'EventManager');
-        $events->setIdentifiers($resourceIdentifiers);
+        $events->setIdentifiers(Value::strings($resourceIdentifiers));
 
         $listener->attach(events: $events);
 
@@ -118,16 +120,18 @@ class RestControllerFactory implements AbstractFactoryInterface
 
         $identifier = $requestedName;
         if (isset($config['identifier'])) {
+            /** @mago-var mixed $identifier */
             $identifier = $config['identifier'];
         }
 
+        /** @mago-var mixed $controllerClass */
         $controllerClass = $config['controller_class'] ?? RestController::class;
         $controller = Value::instantiate($controllerClass, [$identifier]);
 
         if (!$controller instanceof RestController) {
             throw new ServiceNotCreatedException(message: sprintf(
                 '"%s" must be an implementation of Jield\ApiTools\Rest\RestController',
-                $controllerClass,
+                Value::scalar($controllerClass),
             ));
         }
 
@@ -137,14 +141,14 @@ class RestControllerFactory implements AbstractFactoryInterface
             'EventManager',
         ));
         $controller->setResource(resource: $resource);
-        $this->setControllerOptions(config: $config, controller: $controller);
+        $this->setControllerOptions(config: Assert::isArray($config), controller: $controller);
 
         if (isset($config['entity_class'])) {
-            $listener->setEntityClass(className: $config['entity_class']);
+            $listener->setEntityClass(className: Assert::string($config['entity_class']));
         }
 
         if (isset($config['collection_class'])) {
-            $listener->setCollectionClass(className: $config['collection_class']);
+            $listener->setCollectionClass(className: Assert::string($config['collection_class']));
         }
 
         return $controller;
@@ -156,14 +160,15 @@ class RestControllerFactory implements AbstractFactoryInterface
      */
     protected function setControllerOptions(array $config, RestController $controller): void
     {
+        /** @mago-var mixed $value */
         foreach ($config as $option => $value) {
             switch ($option) {
                 case 'collection_http_methods':
-                    $controller->setCollectionHttpMethods(methods: $value);
+                    $controller->setCollectionHttpMethods(methods: Assert::isArray($value));
                     break;
 
                 case 'collection_name':
-                    $controller->setCollectionName(name: $value);
+                    $controller->setCollectionName(name: Assert::string($value));
                     break;
 
                 case 'collection_query_whitelist':
@@ -199,6 +204,7 @@ class RestControllerFactory implements AbstractFactoryInterface
                             return;
                         }
 
+                        /** @mago-var mixed $query */
                         $query = $request->getQuery();
                         $params = new Parameters(values: []);
 
@@ -211,12 +217,16 @@ class RestControllerFactory implements AbstractFactoryInterface
                             ));
                         }
 
+                        /**
+                         * @mago-var mixed $key
+                         * @mago-var mixed $value
+                         */
                         foreach (Assert::isIterable($query) as $key => $value) {
                             if (!in_array(needle: $key, haystack: $whitelist, strict: true)) {
                                 continue;
                             }
 
-                            $params->set(name: $key, value: $value);
+                            $params->set(name: Value::key($key), value: $value);
                         }
 
                         $resource->setQueryParams(params: $params);
@@ -235,6 +245,7 @@ class RestControllerFactory implements AbstractFactoryInterface
                             return;
                         }
 
+                        /** @mago-var mixed $collection */
                         $collection = $e->getParam(name: 'collection');
                         if (!$collection instanceof Collection) {
                             return;
@@ -280,7 +291,7 @@ class RestControllerFactory implements AbstractFactoryInterface
                     break;
 
                 case 'entity_http_methods':
-                    $controller->setEntityHttpMethods(methods: $value);
+                    $controller->setEntityHttpMethods(methods: Assert::isArray($value));
                     break;
 
                     /**
@@ -292,7 +303,7 @@ class RestControllerFactory implements AbstractFactoryInterface
                     break;
 
                 case 'min_page_size':
-                    $controller->setMinPageSize(count: $value);
+                    $controller->setMinPageSize(count: Assert::integer($value));
                     break;
 
                 case 'page_size':
@@ -304,11 +315,11 @@ class RestControllerFactory implements AbstractFactoryInterface
                     break;
 
                 case 'page_size_param':
-                    $controller->setPageSizeParam(param: $value);
+                    $controller->setPageSizeParam(param: Assert::string($value));
                     break;
 
                 case 'route_name':
-                    $controller->setRoute(route: $value);
+                    $controller->setRoute(route: Assert::string($value));
                     break;
             }
         }

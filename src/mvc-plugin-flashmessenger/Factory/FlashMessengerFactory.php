@@ -23,6 +23,7 @@ class FlashMessengerFactory implements FactoryInterface
         /** @var \Jield\Mvc\Plugin\FlashMessenger\FlashMessenger $flashMessenger */
         $flashMessenger = $controllerPluginManager->get('flashmessenger');
 
+        /** @mago-var mixed $config */
         $config = $container->get('config');
         if (isset($config['view_helper_config']['flashmessenger'])) {
             $configHelper = Value::toArray($config['view_helper_config']['flashmessenger']);

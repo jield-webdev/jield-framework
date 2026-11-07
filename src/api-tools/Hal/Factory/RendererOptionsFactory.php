@@ -19,6 +19,7 @@ class RendererOptionsFactory
      */
     public function __invoke(ContainerInterface $container): RendererOptions
     {
+        /** @mago-var mixed $config */
         $config = $container->get('Jield\ApiTools\Hal\HalConfig');
 
         $rendererConfig = isset($config['renderer']) && is_array(value: $config['renderer']) ? $config['renderer'] : [];
@@ -29,6 +30,6 @@ class RendererOptionsFactory
             $rendererConfig['render_embedded_entities'] = $rendererConfig['render_embedded_resources'];
         }
 
-        return new RendererOptions(options: $rendererConfig);
+        return new RendererOptions(options: \Jield\Stdlib\Value::options($rendererConfig));
     }
 }

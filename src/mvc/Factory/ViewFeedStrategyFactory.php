@@ -32,6 +32,7 @@ class ViewFeedStrategyFactory implements FactoryInterface
             );
         }
 
+        /** @mago-var mixed $renderer */
         $renderer = $container->get('ViewFeedRenderer');
         return Value::instantiate($strategyClass, [$renderer]);
     }

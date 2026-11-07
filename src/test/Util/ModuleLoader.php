@@ -32,6 +32,7 @@ class ModuleLoader
                     'Laminas\Validator',
                 ],
             ];
+            /** @mago-var mixed $module */
             foreach ($modules as $key => $module) {
                 if (is_numeric($key)) {
                     $configuration['modules'][] = $module;
@@ -42,9 +43,10 @@ class ModuleLoader
             }
         }
 
+        /** @mago-var mixed $smConfig */
         $smConfig = $configuration['service_manager'] ?? [];
         $this->serviceManager = new ServiceManager();
-        new Service\ServiceManagerConfig($smConfig)->configureServiceManager($this->serviceManager);
+        new Service\ServiceManagerConfig(\Webmozart\Assert\Assert::isArray($smConfig))->configureServiceManager($this->serviceManager);
         $this->serviceManager->setService('ApplicationConfig', $configuration);
         \Jield\Stdlib\Service::get(
             $this->serviceManager,

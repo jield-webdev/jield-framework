@@ -134,6 +134,7 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
         $this->events = $eventManager;
 
         $eventManager->attach(eventName: 'getIdFromEntity', listener: static function (EventInterface $e) {
+            /** @mago-var mixed $entity */
             $entity = $e->getParam(name: 'entity');
 
             // Found id in array
@@ -624,6 +625,7 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
             $entity = $this->getEntityExtractor()->extract(object: $entity);
         }
 
+        /** @mago-var mixed $value */
         foreach ($entity as $key => $value) {
             if (is_object(value: $value) && $metadataMap->has(class: $value)) {
                 /** @psalm-suppress PossiblyFalseArgument,ArgumentTypeCoercion */
@@ -697,8 +699,9 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
                 Metadata::class,
             ));
         } elseif (!$entity instanceof \Jield\ApiTools\Hal\Entity) {
-            $id = $this->getIdFromEntity($entity) ?: null;
-            $halEntity = new Entity($entity, $id);
+            /** @mago-var mixed $id */
+            $id = $this->getIdFromEntity(Value::arrayOrObject($entity)) ?: null;
+            $halEntity = new Entity(Value::arrayOrObject($entity), $id);
         } else {
             $halEntity = $entity;
         }
@@ -855,6 +858,7 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
         $entityRouteOptions = $halCollection->getEntityRouteOptions();
         $metadataMap = $this->getMetadataMap();
 
+        /** @mago-var mixed $entity */
         foreach ($halCollection->getCollection() as $entity) {
             $eventParams = new ArrayObject([
                 'collection' => $halCollection,
@@ -895,6 +899,7 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
                 $entity = $this->getEntityExtractor()->extract(object: Assert::object($entity));
             }
 
+            /** @mago-var mixed $value */
             foreach ($entity as $key => $value) {
                 if (is_object(value: $value) && $metadataMap->has(class: $value)) {
                     /** @psalm-suppress PossiblyFalseArgument,ArgumentTypeCoercion */
@@ -925,6 +930,7 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
                 }
             }
 
+            /** @mago-var mixed $id */
             $id = $this->getIdFromEntity(entity: $entity);
 
             if ($id === false) {

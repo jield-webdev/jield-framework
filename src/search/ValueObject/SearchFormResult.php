@@ -28,15 +28,15 @@ final class SearchFormResult
 
     public static function fromArray(array $params): SearchFormResult
     {
-        $query = null === ($params['query'] ?? null) ? null : trim(string: $params['query']);
+        $query = null === ($params['query'] ?? null) ? null : trim(string: Assert::string($params['query']));
 
         return new self(
-            order: $params['order'] ?? 'default',
-            direction: $params['direction'] ?? Order::Ascending->value,
+            order: Assert::string($params['order'] ?? 'default'),
+            direction: Assert::string($params['direction'] ?? Order::Ascending->value),
             query: $query,
-            filter: $params['filter'] ?? [],
-            facet: $params['facet'] ?? [],
-            dateInterval: DateInterval::fromValue(value: $params['dateInterval'] ?? ''),
+            filter: Assert::isArray($params['filter'] ?? []),
+            facet: Assert::isArray($params['facet'] ?? []),
+            dateInterval: DateInterval::fromValue(value: Assert::string($params['dateInterval'] ?? '')),
         );
     }
 
@@ -53,8 +53,8 @@ final class SearchFormResult
 
         $this->filter = Value::toArray($filter['filter'] ?? []);
         $this->facet = Value::toArray($filter['facet'] ?? []);
-        $this->dateInterval = DateInterval::fromValue(value: $filter['dateInterval'] ?? '');
-        $this->query = $filter['query'] ?? null;
+        $this->dateInterval = DateInterval::fromValue(value: Assert::string($filter['dateInterval'] ?? ''));
+        $this->query = Assert::nullOrString($filter['query'] ?? null);
 
         return $this;
     }
@@ -183,6 +183,7 @@ final class SearchFormResult
 
     public function addFilters(array $filters): SearchFormResult
     {
+        /** @mago-var mixed $value */
         foreach ($filters as $key => $value) {
             $this->addFilter(key: Assert::string($key), value: $value);
         }
@@ -193,6 +194,7 @@ final class SearchFormResult
     public function addFilter(string $key, mixed $value): SearchFormResult
     {
         if (array_key_exists(key: $key, array: $this->filter)) {
+            /** @mago-var mixed $existing */
             $existing = $this->filter[$key];
             $this->filter[$key] = is_array($existing) && is_array($value)
                 ? $existing + $value

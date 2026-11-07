@@ -91,12 +91,13 @@ final class DriverFactory extends AbstractFactory
         if ($driver instanceof MappingDriverChain && $options->getDrivers() !== []) {
             $drivers = $options->getDrivers();
 
+            /** @mago-var mixed $driverName */
             foreach ($drivers as $namespace => $driverName) {
                 if ($driverName === null) {
                     continue;
                 }
 
-                $options = $this->getOptions(container: $container, key: 'driver', name: $driverName);
+                $options = $this->getOptions(container: $container, key: 'driver', name: Assert::nullOrString($driverName));
 
                 if (!$options instanceof Driver) {
                     throw new RuntimeException(message: sprintf(

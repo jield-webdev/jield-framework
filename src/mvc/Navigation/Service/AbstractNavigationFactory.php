@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Jield\Mvc\Navigation\Service;
 
+use Jield\Stdlib\Value;
 use Jield\Mvc\Application;
 use Jield\Mvc\ApplicationInterface;
 use Jield\Mvc\Navigation\MvcPage;
@@ -57,6 +58,7 @@ abstract class AbstractNavigationFactory implements FactoryInterface
     protected function getPages(ContainerInterface $container): ?array
     {
         if (null === $this->pages) {
+            /** @mago-var mixed $configuration */
             $configuration = $container->get('config');
 
             if (!isset($configuration['navigation'])) {
@@ -69,8 +71,10 @@ abstract class AbstractNavigationFactory implements FactoryInterface
                 ));
             }
 
+            /** @mago-var mixed $configuration */
             $configuration = $configuration['navigation'];
-            $navigation = $configuration[$this->getName()];
+            /** @mago-var mixed $navigation */
+            $navigation = \Jield\Stdlib\Value::accessible($configuration)[$this->getName()];
             $pages = $this->getPagesFromConfig($navigation);
             $this->pages = $this->preparePages($container, $pages);
         }
@@ -113,7 +117,7 @@ abstract class AbstractNavigationFactory implements FactoryInterface
             throw new Exception\InvalidArgumentException('Invalid input, expected array or Traversable object');
         }
 
-        return $config;
+        return Value::maps($config);
     }
 
     /**
@@ -143,7 +147,7 @@ abstract class AbstractNavigationFactory implements FactoryInterface
             }
 
             if (isset($page['pages'])) {
-                $page['pages'] = $this->injectComponents($page['pages'], $routeMatch, $router, $request);
+                $page['pages'] = $this->injectComponents(\Jield\Stdlib\Value::maps($page['pages']), $routeMatch, $router, $request);
             }
         }
 

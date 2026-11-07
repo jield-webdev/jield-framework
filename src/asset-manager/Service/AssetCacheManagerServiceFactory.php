@@ -25,15 +25,17 @@ class AssetCacheManagerServiceFactory implements FactoryInterface
     {
         $config = [];
 
+        /** @mago-var mixed $globalConfig */
         $globalConfig = $container->get('config');
 
         if (!empty($globalConfig['asset_manager']['caching'])) {
+            /** @mago-var mixed $config */
             $config = $globalConfig['asset_manager']['caching'];
         }
 
         return new AssetCacheManager(
             container: Assert::isInstanceOf($container, ServiceLocatorInterface::class),
-            config: $config,
+            config: Assert::isArray($config),
         );
     }
 }

@@ -136,11 +136,13 @@ class DefaultAuthenticationListener
             return false;
         }
 
+        /** @mago-var mixed $controller */
         $controller = $routeMatch->getParam(name: 'controller', default: false);
         if (false === $controller) {
             return false;
         }
 
+        /** @mago-var mixed $type */
         foreach ($this->authMap as $api => $type) {
             $api = rtrim(string: Assert::string($api), characters: '\\') . '\\';
             if (strlen(string: $api) > strlen(string: (string) $controller)) {

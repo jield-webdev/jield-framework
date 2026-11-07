@@ -44,7 +44,7 @@ class Csrf extends Element implements InputProviderInterface, ElementPrepareAwar
         parent::setOptions(options: $options);
 
         if (isset($this->options['csrf_options'])) {
-            $this->setCsrfValidatorOptions(options: $this->options['csrf_options']);
+            $this->setCsrfValidatorOptions(options: Assert::isArray($this->options['csrf_options']));
         }
 
         return $this;

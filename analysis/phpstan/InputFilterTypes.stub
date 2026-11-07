@@ -1,0 +1,68 @@
+<?php
+
+// The vendor intersections require reserved metadata such as "type" to also
+// be an input specification. Describe those keys separately from the inputs.
+namespace Laminas\Filter {
+    /** @template TValue = mixed */
+    interface FilterInterface {}
+
+    /**
+     * @phpstan-type FilterSpecification = array{
+     *     name: string|class-string<FilterInterface<mixed>>,
+     *     options?: array<string, mixed>,
+     *     priority?: int,
+     * }|FilterInterface<mixed>|(callable(mixed): mixed)
+     */
+    class FilterChain {}
+}
+
+namespace Laminas\Validator {
+    interface ValidatorInterface {}
+
+    /**
+     * @phpstan-type ValidatorSpecification = array{
+     *     name: non-empty-string|class-string<ValidatorInterface>,
+     *     options?: array<string, mixed>,
+     *     break_chain_on_failure?: bool,
+     *     priority?: int,
+     * }
+     */
+    class ValidatorChain {}
+}
+
+namespace Laminas\InputFilter {
+    /** @template TValue = mixed */
+    interface InputInterface {}
+
+    /**
+     * @template TFilteredValues = mixed
+     * @phpstan-import-type FilterSpecification from \Laminas\Filter\FilterChain
+     * @phpstan-import-type ValidatorSpecification from \Laminas\Validator\ValidatorChain
+     * @phpstan-type InputSpecification = array{
+     *     type?: string|class-string<InputFilterInterface<mixed>>,
+     *     name?: array-key,
+     *     required?: bool,
+     *     allow_empty?: bool,
+     *     continue_if_empty?: bool,
+     *     error_message?: string|null,
+     *     fallback_value?: mixed,
+     *     break_on_failure?: bool,
+     *     filters?: \Laminas\Filter\FilterChain|iterable<array-key, FilterSpecification>,
+     *     validators?: \Laminas\Validator\ValidatorChain|iterable<array-key, ValidatorSpecification|\Laminas\Validator\ValidatorInterface>,
+     *     ...
+     * }
+     * @phpstan-type InputFilterSpecification = array{
+     *     type?: class-string<InputFilterInterface<mixed>>|string,
+     *     ...<array-key, InputSpecification|InputFilterInterface<mixed>|InputInterface<mixed>>
+     * }
+     * @phpstan-type CollectionSpecification = array{
+     *     type?: class-string<InputFilterInterface<mixed>>|string,
+     *     input_filter?: InputFilterSpecification|InputFilterInterface<mixed>,
+     *     count?: int,
+     *     required?: bool,
+     *     required_message?: string,
+     *     ...<array-key, InputSpecification>
+     * }
+     */
+    interface InputFilterInterface {}
+}

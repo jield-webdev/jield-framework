@@ -40,7 +40,7 @@ class ConfigListener extends AbstractListener implements ConfigMergerInterface
         parent::__construct(options: $options);
         if ($this->hasCachedConfig()) {
             $this->skipConfig = true;
-            $this->setMergedConfig(config: $this->getCachedConfig());
+            $this->setMergedConfig(config: Assert::isArray($this->getCachedConfig()));
         } else {
             $this->addConfigGlobPaths(globPaths: $this->getOptions()->getConfigGlobPaths());
             $this->addConfigStaticPaths(staticPaths: $this->getOptions()->getConfigStaticPaths());
@@ -100,12 +100,15 @@ class ConfigListener extends AbstractListener implements ConfigMergerInterface
         $config = null;
 
         if ($module instanceof ConfigProviderInterface || is_callable(value: [$module, 'getConfig'])) {
+            /** @mago-var mixed $config */
             $config = Value::call($module, 'getConfig');
         } elseif (is_callable(value: $module)) {
+            /** @mago-var mixed $config */
             $config = $this->getConfigFromProvider($module);
         } else {
             $configProvider = $this->resolveConfigProvider(moduleName: $e->getModuleName());
             if ($configProvider !== null) {
+                /** @mago-var mixed $config */
                 $config = $this->getConfigFromProvider($configProvider);
             }
         }
@@ -114,7 +117,7 @@ class ConfigListener extends AbstractListener implements ConfigMergerInterface
             return $this;
         }
 
-        $config = $this->normalizeServiceManagerConfig($config);
+        $config = $this->normalizeServiceManagerConfig(Assert::isArray($config));
         $this->addConfig(key: $e->getModuleName(), config: $config);
 
         return $this;
@@ -157,15 +160,18 @@ class ConfigListener extends AbstractListener implements ConfigMergerInterface
     public function onMergeConfig(): static
     {
         // Load the config files
+        /** @mago-var mixed $path */
         foreach ($this->paths as $path) {
-            $this->addConfigByPath(path: $path['path'], type: $path['type']);
+            $path = Assert::isArray($path);
+            $this->addConfigByPath(path: Assert::string(Value::accessible($path)['path']), type: Assert::string($path['type']));
         }
 
         // Merge all of the collected configs
         $extraConfig = $this->getOptions()->getExtraConfig();
         $this->mergedConfig = is_array($extraConfig) ? $extraConfig : iterator_to_array($extraConfig);
+        /** @mago-var mixed $config */
         foreach ($this->configs as $config) {
-            $this->mergedConfig = ArrayUtils::merge(a: $this->mergedConfig, b: $config);
+            $this->mergedConfig = ArrayUtils::merge(a: $this->mergedConfig, b: Assert::isArray($config));
         }
         $this->mergedConfig = $this->normalizeServiceManagerConfig($this->mergedConfig);
 
@@ -193,7 +199,7 @@ class ConfigListener extends AbstractListener implements ConfigMergerInterface
         // If enabled, update the config cache
         if ($this->getOptions()->getConfigCacheEnabled() && false === $this->skipConfig) {
             $configFile = $this->getOptions()->getConfigCacheFile();
-            $this->writeArrayToFile(filePath: $configFile, array: $this->getMergedConfig(returnConfigAsObject: false));
+            $this->writeArrayToFile(filePath: $configFile, array: Assert::isArray($this->getMergedConfig(returnConfigAsObject: false)));
         }
 
         return $this;
@@ -280,8 +286,9 @@ class ConfigListener extends AbstractListener implements ConfigMergerInterface
             $paths = ArrayUtils::iteratorToArray(iterator: $paths);
         }
 
+        /** @mago-var mixed $path */
         foreach ($paths as $path) {
-            $this->addConfigPath(path: $path, type: $type);
+            $this->addConfigPath(path: Assert::string($path), type: $type);
         }
     }
 
@@ -334,8 +341,9 @@ class ConfigListener extends AbstractListener implements ConfigMergerInterface
             case self::GLOB_PATH:
                 // We want to keep track of where each value came from so we don't
                 // use ConfigFactory::fromFiles() since it does merging internally.
+                /** @mago-var mixed $file */
                 foreach (Glob::glob(pattern: $path, flags: Glob::GLOB_BRACE, forceFallback: true) as $file) {
-                    $this->addConfig(key: $file, config: $this->loadConfigFile($file));
+                    $this->addConfig(key: Assert::string($file), config: $this->loadConfigFile(Assert::string($file)));
                 }
                 break;
         }
@@ -375,6 +383,7 @@ class ConfigListener extends AbstractListener implements ConfigMergerInterface
             ));
         }
 
+        /** @mago-var mixed $config */
         $config = include $path;
         if (!is_array(value: $config)) {
             throw new Exception\InvalidArgumentException(message: sprintf(
@@ -413,8 +422,8 @@ class ConfigListener extends AbstractListener implements ConfigMergerInterface
         // Factory callables are atomic pairs; recursive list merging would duplicate them.
         foreach (['factories', 'aliases', 'services'] as $key) {
             $normalized[$key] = array_replace(
-                $config['dependencies'][$key] ?? [],
-                $config['service_manager'][$key] ?? [],
+                Assert::isArray($config['dependencies'][$key] ?? []),
+                Assert::isArray($config['service_manager'][$key] ?? []),
             );
         }
 

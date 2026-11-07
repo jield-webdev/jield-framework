@@ -33,9 +33,10 @@ final class AdapterFactory extends AbstractFactory
             ));
         }
 
+        /** @mago-var mixed $objectManager */
         $objectManager = $containerOptions->getObjectManager();
         if (is_string(value: $objectManager)) {
-            $containerOptions->setObjectManager(objectManager: $container->get($objectManager));
+            $containerOptions->setObjectManager(objectManager: \Jield\Stdlib\Value::instanceOrString($container->get($objectManager), \Doctrine\Persistence\ObjectManager::class));
         }
 
         return new ObjectRepository(options: $containerOptions);

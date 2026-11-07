@@ -121,6 +121,7 @@ class Collection extends Fieldset implements CollectionInterface
         parent::setOptions(options: $options);
 
         if (isset($this->options['target_element'])) {
+            /** @mago-var mixed $target */
             $target = $this->options['target_element'];
             $this->setTargetElement(
                 elementOrFieldset: is_iterable($target)
@@ -130,27 +131,27 @@ class Collection extends Fieldset implements CollectionInterface
         }
 
         if (isset($this->options['count'])) {
-            $this->setCount(count: $this->options['count']);
+            $this->setCount(count: Assert::integer($this->options['count']));
         }
 
         if (isset($this->options['allow_add'])) {
-            $this->setAllowAdd(allowAdd: $this->options['allow_add']);
+            $this->setAllowAdd(allowAdd: Assert::boolean($this->options['allow_add']));
         }
 
         if (isset($this->options['allow_remove'])) {
-            $this->setAllowRemove(allowRemove: $this->options['allow_remove']);
+            $this->setAllowRemove(allowRemove: Assert::boolean($this->options['allow_remove']));
         }
 
         if (isset($this->options['should_create_template'])) {
-            $this->setShouldCreateTemplate(shouldCreateTemplate: $this->options['should_create_template']);
+            $this->setShouldCreateTemplate(shouldCreateTemplate: Assert::boolean($this->options['should_create_template']));
         }
 
         if (isset($this->options['template_placeholder'])) {
-            $this->setTemplatePlaceholder(templatePlaceholder: $this->options['template_placeholder']);
+            $this->setTemplatePlaceholder(templatePlaceholder: Assert::string($this->options['template_placeholder']));
         }
 
         if (isset($this->options['create_new_objects'])) {
-            $this->setCreateNewObjects(createNewObjects: $this->options['create_new_objects']);
+            $this->setCreateNewObjects(createNewObjects: Assert::boolean($this->options['create_new_objects']));
         }
 
         return $this;
@@ -230,9 +231,10 @@ class Collection extends Fieldset implements CollectionInterface
         }
 
         foreach ($toRemove as $name) {
-            $this->remove(elementOrFieldset: (string) $name);
+            $this->remove(elementOrFieldset: $name);
         }
 
+        /** @mago-var mixed $value */
         foreach ($data as $key => $value) {
             $elementOrFieldset = null;
             if ($this->has(elementOrFieldset: (string) $key)) {
@@ -246,12 +248,12 @@ class Collection extends Fieldset implements CollectionInterface
             }
 
             if ($elementOrFieldset instanceof FieldsetInterface) {
-                $elementOrFieldset->populateValues(data: $value);
+                $elementOrFieldset->populateValues(data: Assert::isIterable($value));
                 continue;
             }
 
             if ($elementOrFieldset !== null) {
-                $elementOrFieldset->setAttribute(key: 'value', value: $value);
+                $elementOrFieldset->setAttribute(key: 'value', value: Value::plainScalar($value));
             }
         }
 
@@ -276,11 +278,12 @@ class Collection extends Fieldset implements CollectionInterface
     public function bindValues(array $values = [], ?array $validationGroup = null): mixed
     {
         $collection = [];
+        /** @mago-var mixed $value */
         foreach ($values as $name => $value) {
             $element = $this->get(elementOrFieldset: (string) $name);
 
             if ($element instanceof FieldsetInterface) {
-                $collection[] = $element->bindValues($value, $validationGroup);
+                $collection[] = $element->bindValues(Assert::isArray($value), $validationGroup);
             } else {
                 $collection[] = $value;
             }
@@ -470,25 +473,28 @@ class Collection extends Fieldset implements CollectionInterface
      */
     public function extract(): array
     {
-        if ($this->object instanceof Traversable) {
-            $this->object = ArrayUtils::iteratorToArray(iterator: $this->object, recursive: false);
-        } elseif (!is_array(value: $this->object)) {
+        $objects = $this->object;
+        if ($objects instanceof Traversable) {
+            $objects = ArrayUtils::iteratorToArray(iterator: $objects, recursive: false);
+            $this->object = $objects;
+        } elseif (!is_array(value: $objects)) {
             return [];
         }
 
         $values = [];
 
-        foreach ($this->object as $key => $value) {
+        /** @mago-var mixed $value */
+        foreach ($objects as $key => $value) {
             // If a hydrator is provided, our work here is done
             if ($this->hydrator) {
-                $values[$key] = $this->hydrator->extract(object: $value);
+                $values[$key] = $this->hydrator->extract(object: Assert::object($value));
                 continue;
             }
 
             // If the target element is a fieldset that can accept the provided value
             // we should clone it, inject the value and extract the data
             if ($this->targetElement instanceof FieldsetInterface) {
-                if (!$this->targetElement->allowObjectBinding(object: $value)) {
+                if (!$this->targetElement->allowObjectBinding(object: Assert::object($value))) {
                     continue;
                 }
                 $targetElement = clone $this->targetElement;
@@ -522,6 +528,7 @@ class Collection extends Fieldset implements CollectionInterface
     protected function createNewTargetElementInstance(): ElementInterface
     {
         assert(assertion: $this->targetElement !== null);
+        /** @mago-var mixed $type */
         if (
             $this->targetElement instanceof InputFilterProviderFieldset
             && null !== ($type = $this->targetElement->getOption(option: 'target_type'))

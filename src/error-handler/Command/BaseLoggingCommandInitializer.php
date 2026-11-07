@@ -21,9 +21,10 @@ final class BaseLoggingCommandInitializer implements InitializerInterface
 
         /** @var array $config */
         $config = $container->get('config');
+        /** @mago-var mixed $errorHeroModuleConfig */
         $errorHeroModuleConfig = $config['error-hero-module'];
 
         $logging = Service::get($container, Logging::class);
-        $instance->init(errorHeroModuleConfig: $errorHeroModuleConfig, logging: $logging);
+        $instance->init(errorHeroModuleConfig: \Webmozart\Assert\Assert::isArray($errorHeroModuleConfig), logging: $logging);
     }
 }

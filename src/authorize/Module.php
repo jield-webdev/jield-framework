@@ -29,7 +29,7 @@ class Module implements BootstrapListenerInterface, ConfigProviderInterface, Dep
         $serviceManager = $app->getServiceManager();
         $config = Assert::isArray($serviceManager->get(Config::class));
         /** @var UnauthorizedStrategy $strategy */
-        $strategy = $serviceManager->get($config['unauthorized_strategy']);
+        $strategy = $serviceManager->get(Assert::string($config['unauthorized_strategy']));
         /** @var AbstractGuard[] $guards */
         $guards = Assert::isArray($serviceManager->get(Guards::class));
 

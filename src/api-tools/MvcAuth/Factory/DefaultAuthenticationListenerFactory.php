@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Jield\ApiTools\MvcAuth\Factory;
 
+use Jield\Stdlib\Value;
 use Jield\ApiTools\MvcAuth\Authentication\DefaultAuthenticationListener;
 use Jield\ApiTools\MvcAuth\Authentication\HttpAdapter;
 use Jield\ApiTools\MvcAuth\Authentication\OAuth2Adapter;
@@ -68,7 +69,7 @@ class DefaultAuthenticationListenerFactory implements FactoryInterface
         // Allow applications to provide their own AuthHttpAdapter service; if none provided,
         // or no HTTP adapter configuration provided to api-tools-mvc-auth, we can stop early.
 
-        $httpAdapter = $container->get(Http::class);
+        $httpAdapter = Service::getOrFalse($container, Http::class);
 
         if ($httpAdapter === false) {
             return false;
@@ -97,6 +98,7 @@ class DefaultAuthenticationListenerFactory implements FactoryInterface
             return false;
         }
 
+        /** @mago-var mixed $config */
         $config = $container->get('config');
         if (
             !isset($config['api-tools-oauth2']['storage'])
@@ -108,14 +110,14 @@ class DefaultAuthenticationListenerFactory implements FactoryInterface
 
         if ($container->has('Jield\ApiTools\OAuth2\Service\OAuth2Server')) {
             // If the service locator already has a pre-configured OAuth2 server, use it.
-            $factory = $container->get('Jield\ApiTools\OAuth2\Service\OAuth2Server');
+            $factory = Assert::isCallable($container->get('Jield\ApiTools\OAuth2\Service\OAuth2Server'));
 
-            $types = array_values(array_unique(array_merge(
-                ['oauth2'],
-                $config['api-tools-mvc-auth']['authentication']['map'] ?? [],
-            )));
+            $types = array_values(array_unique([
+                'oauth2',
+                ...Value::strings($config['api-tools-mvc-auth']['authentication']['map'] ?? []),
+            ]));
 
-            return new OAuth2Adapter(oauth2Server: $factory(), types: $types);
+            return new OAuth2Adapter(oauth2Server: Assert::isInstanceOf($factory(), \OAuth2\Server::class), types: $types);
         }
 
         $factory = new LaminasOAuth2ServerFactory();
@@ -146,6 +148,7 @@ class DefaultAuthenticationListenerFactory implements FactoryInterface
             return false;
         }
 
+        /** @mago-var mixed $config */
         $config = $container->get('config');
         if (
             !isset($config['api-tools-mvc-auth']['authentication']['types'])
@@ -163,6 +166,7 @@ class DefaultAuthenticationListenerFactory implements FactoryInterface
             return [];
         }
 
+        /** @mago-var mixed $config */
         $config = $container->get('config');
         if (
             !isset($config['api-tools-mvc-auth']['authentication']['map'])

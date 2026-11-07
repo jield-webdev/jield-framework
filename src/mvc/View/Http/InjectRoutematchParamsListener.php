@@ -47,6 +47,7 @@ class InjectRoutematchParamsListener extends AbstractListenerAggregate
 
         if ($this->overwrite) {
             // Overwrite existing parameters, or create new ones if not present.
+            /** @mago-var mixed $val */
             foreach ($routeMatchParams as $key => $val) {
                 $params->set($key, $val);
             }
@@ -54,8 +55,9 @@ class InjectRoutematchParamsListener extends AbstractListenerAggregate
         }
 
         // Only create new parameters.
+        /** @mago-var mixed $val */
         foreach ($routeMatchParams as $key => $val) {
-            if (array_key_exists($key, $params->toArray())) {
+            if (array_key_exists($key, Assert::isArray($params->toArray()))) {
                 continue;
             }
 

@@ -158,11 +158,13 @@ class ModuleAutoloader implements SplAutoloader
 
         $moduleName = substr($class, 0, -7);
         if (isset($this->explicitPaths[$moduleName])) {
+            /** @mago-var mixed $classLoaded */
             $classLoaded = $this->loadModuleFromDir(Assert::string($this->explicitPaths[$moduleName]), $class);
             if ($classLoaded) {
                 return $classLoaded;
             }
 
+            /** @mago-var mixed $classLoaded */
             $classLoaded = $this->loadModuleFromPhar(Assert::string($this->explicitPaths[$moduleName]), $class);
             if ($classLoaded) {
                 return $classLoaded;
@@ -170,6 +172,7 @@ class ModuleAutoloader implements SplAutoloader
         }
 
         if (count($this->namespacedPaths) >= 1) {
+            /** @mago-var mixed $path */
             foreach ($this->namespacedPaths as $namespace => $path) {
                 if (!str_contains($moduleName, Assert::string($namespace))) {
                     continue;
@@ -178,11 +181,13 @@ class ModuleAutoloader implements SplAutoloader
                 $moduleNameBuffer = str_replace($namespace . "\\", '', $moduleName);
                 $path = Value::stringify($path) . (DIRECTORY_SEPARATOR . $moduleNameBuffer . DIRECTORY_SEPARATOR);
 
+                /** @mago-var mixed $classLoaded */
                 $classLoaded = $this->loadModuleFromDir($path, $class);
                 if ($classLoaded) {
                     return $classLoaded;
                 }
 
+                /** @mago-var mixed $classLoaded */
                 $classLoaded = $this->loadModuleFromPhar($path, $class);
                 if ($classLoaded) {
                     return $classLoaded;
@@ -197,6 +202,7 @@ class ModuleAutoloader implements SplAutoloader
             $pharSuffixPattern = '(' . implode('|', array_map(preg_quote(...), $this->pharExtensions)) . ')';
         }
 
+        /** @mago-var mixed $path */
         foreach ($this->paths as $path) {
             $path = Value::stringify($path) . $moduleClassPath;
 
@@ -212,6 +218,7 @@ class ModuleAutoloader implements SplAutoloader
                 $path = rtrim(Assert::string($basePath), '\/\\') . substr($path, 1);
             }
 
+            /** @mago-var mixed $classLoaded */
             $classLoaded = $this->loadModuleFromDir($path, $class);
             if ($classLoaded) {
                 return $classLoaded;
@@ -229,6 +236,7 @@ class ModuleAutoloader implements SplAutoloader
                         continue;
                     }
 
+                    /** @mago-var mixed $classLoaded */
                     $classLoaded = $this->loadModuleFromPhar($entry->getPathname(), $class);
                     if ($classLoaded) {
                         return $classLoaded;
@@ -368,6 +376,10 @@ class ModuleAutoloader implements SplAutoloader
             );
         }
 
+        /**
+         * @mago-var mixed $module
+         * @mago-var mixed $path
+         */
         foreach ($paths as $module => $path) {
             if (is_string($module)) {
                 $this->registerPath(Assert::string($path), $module);
@@ -444,7 +456,7 @@ class ModuleAutoloader implements SplAutoloader
      */
     public static function normalizePath($path, $trailingSlash = true)
     {
-        $path = rtrim($path, '/');
+        $path = rtrim(Assert::string($path), '/');
         $path = rtrim($path, '\\');
         if ($trailingSlash) {
             $path .= DIRECTORY_SEPARATOR;

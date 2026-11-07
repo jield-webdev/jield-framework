@@ -60,7 +60,7 @@ abstract class AbstractSearchService implements SearchServiceInterface
     ) {
         $this->translator = Service::get($container, TranslatorInterface::class);
         $this->entityManager = Service::get($container, EntityManager::class);
-        $this->config = $container->get('Config');
+        $this->config = Assert::isArray($container->get('Config'));
 
         $this->query = $this->getSolrClient()->createSelect();
         $this->facetSet = $this->query->getFacetSet();
@@ -69,14 +69,16 @@ abstract class AbstractSearchService implements SearchServiceInterface
     public function getSolrClient(): Client
     {
         if (null === $this->solrClient && defined(constant_name: 'static::SOLR_CONNECTION')) {
+            /** @mago-var mixed $prefix */
             $prefix = $this->config['solr']['prefix'] ?? '';
             $connection = static::SOLR_CONNECTION;
             if (!empty($prefix)) {
-                $connection = sprintf('%s_%s', $prefix, $connection);
+                $connection = sprintf('%s_%s', Value::scalar($prefix), $connection);
             }
 
             $this->connection = $connection;
 
+            /** @mago-var mixed $params */
             $params = $this->config['solr']['connection'][$connection] ?? [];
 
             //Only change the core when this is different from the already given core
@@ -207,8 +209,9 @@ abstract class AbstractSearchService implements SearchServiceInterface
 
             $elements = $this->findSliced(entity: $entity::class, limit: $limit, offset: $i, criteria: $criteria);
 
+            /** @mago-var mixed $element */
             foreach ($elements as $element) {
-                $document = $this->getSearchDocumentFromEntity(update: $update, entity: $element);
+                $document = $this->getSearchDocumentFromEntity(update: $update, entity: Assert::isInstanceOf($element, \Jield\Search\Entity\HasSearchInterface::class));
 
                 $update->addDocument(document: $document);
                 $output->write(messages: '.');
@@ -282,7 +285,7 @@ abstract class AbstractSearchService implements SearchServiceInterface
 
         $searchIndexIds = $this->findAllIdsFromSearchIndex(entity: $entity);
 
-        $toBeDeletedItemsInSearchIndex = array_diff($searchIndexIds, $databaseIds);
+        $toBeDeletedItemsInSearchIndex = array_diff(Value::scalars($searchIndexIds), Value::scalars($databaseIds));
 
         $update = $this->getSolrClient()->createUpdate();
         foreach ($toBeDeletedItemsInSearchIndex as $remainderId) {
@@ -295,7 +298,7 @@ abstract class AbstractSearchService implements SearchServiceInterface
             $update->addDeleteById(id: $entity->getResourceId());
             $output->writeln(messages: sprintf(
                 '<comment>Id %d of %s has been deleted</comment>',
-                $remainderId,
+                Value::scalar($remainderId),
                 $entity::class,
             ));
         }
@@ -317,13 +320,14 @@ abstract class AbstractSearchService implements SearchServiceInterface
         $query = $this->getSolrClient()->createSelect();
         $query->setQuery(query: '*:*')->setRows(rows: 1_000_000);
         $ids = [];
+        /** @mago-var mixed $document */
         foreach ($this->getSolrClient()->select($query)->getIterator() as $document) {
             /**
              * The document->id is the resource id in SOLR (sprintf('%s-%s', $this->get('underscore_entity_name'), $this->getId());)
              *
              * For this function we are only interested in the "real" id, so we will remove the first part
              */
-            $id = explode(separator: '-', string: Assert::isInstanceOf($document, Document::class)->offsetGet('id'));
+            $id = explode(separator: '-', string: Assert::string(Assert::isInstanceOf($document, Document::class)->offsetGet('id')));
             if (isset($id[1])) {
                 $ids[] = (int) $id[1];
             }
@@ -338,6 +342,7 @@ abstract class AbstractSearchService implements SearchServiceInterface
         $queryBuilder->select('e.id');
         $queryBuilder->from(from: $entity::class, alias: 'e');
         if (!empty($criteria)) {
+            /** @mago-var mixed $value */
             foreach ($criteria as $key => $value) {
                 $queryBuilder->andWhere(sprintf('e.%s = :%s', $key, $key));
                 $queryBuilder->setParameter(key: ':' . $key, value: $value);
@@ -357,6 +362,7 @@ abstract class AbstractSearchService implements SearchServiceInterface
         $queryBuilder->from(from: $entity, alias: 'e');
 
         if (!empty($criteria)) {
+            /** @mago-var mixed $value */
             foreach ($criteria as $key => $value) {
                 $queryBuilder->andWhere(sprintf('e.%s = :%s', $key, $key));
                 $queryBuilder->setParameter(key: ':' . $key, value: $value);
@@ -370,7 +376,7 @@ abstract class AbstractSearchService implements SearchServiceInterface
     protected function findSliced(string $entity, int $limit, int $offset, array $criteria = []): array
     {
         return $this->entityManager->getRepository(className: $entity)->findBy(
-            criteria: $criteria,
+            criteria: Value::stringKeyedArray($criteria),
             orderBy: ['id' => Order::Descending->value],
             limit: $limit,
             offset: $offset,
@@ -385,23 +391,24 @@ abstract class AbstractSearchService implements SearchServiceInterface
             $responseBody = $e->getBody();
 
             if (!empty($responseBody)) {
+                /** @mago-var mixed $response */
                 $response = json_decode(json: $responseBody);
                 if (isset($response->responseHeader)) {
                     $output->writeln(messages: sprintf(
                         '<error>Solr HTTP response code: %s</error>',
-                        Assert::isInstanceOf(
+                        Value::scalar(Assert::isInstanceOf(
                             Assert::isInstanceOf($response, stdClass::class)->responseHeader,
                             stdClass::class,
-                        )->status,
+                        )->status),
                     ));
                 }
                 if (isset($response->error)) {
                     $output->writeln(messages: sprintf(
                         '<error>Solr error message: %s</error>',
-                        Assert::isInstanceOf(
+                        Value::scalar(Assert::isInstanceOf(
                             Assert::isInstanceOf($response, stdClass::class)->error,
                             stdClass::class,
-                        )->msg,
+                        )->msg),
                     ));
                 }
             }
@@ -436,7 +443,7 @@ abstract class AbstractSearchService implements SearchServiceInterface
 
         $searchIndexIds = $this->findAllIdsFromSearchIndex(entity: $entity);
 
-        $toBeAddedItemsInSearchIndex = array_diff($databaseIds, $searchIndexIds);
+        $toBeAddedItemsInSearchIndex = array_diff(Value::scalars($databaseIds), Value::scalars($searchIndexIds));
 
         if (count(value: $toBeAddedItemsInSearchIndex) > 200) {
             $output->writeln(messages: sprintf(
@@ -521,19 +528,21 @@ abstract class AbstractSearchService implements SearchServiceInterface
     {
         $key = 0;
 
+        /** @mago-var mixed $facet */
         foreach ($facets as $field => $facet) {
             //Skip when we have no values
-            if (!array_key_exists(key: 'values', array: $facet) || empty($facet['values'])) {
+            if (!array_key_exists(key: 'values', array: Assert::isArray($facet)) || empty($facet['values'])) {
                 continue;
             }
 
             //When we have an AND we need all values
             if (isset($facet['andOr']) && $facet['andOr'] === 'and') {
+                /** @mago-var mixed $value */
                 foreach (Assert::isIterable($facet['values']) as $value) {
                     $this->addFilterQueryFromFacet(
                         key: $key++,
                         field: Assert::string($field),
-                        value: $value,
+                        value: Value::arrayOrIntOrString($value),
                         exclude: isset($facet['yesNo']) && $facet['yesNo'] === 'no',
                         and: true,
                     );
@@ -545,7 +554,7 @@ abstract class AbstractSearchService implements SearchServiceInterface
                 $this->addFilterQueryFromFacet(
                     key: $key++,
                     field: Assert::string($field),
-                    value: $facet['values'],
+                    value: Value::arrayOrIntOrString($facet['values']),
                     exclude: isset($facet['yesNo']) && $facet['yesNo'] === 'no',
                 );
             }
@@ -568,8 +577,9 @@ abstract class AbstractSearchService implements SearchServiceInterface
         switch (true) {
             case $facetField->isCheckboxMin():
                 //Take the last element of the array
+                /** @mago-var mixed $value */
                 $value = $value[0] ?? '';
-                $query = sprintf('%s%s:[%d TO *]', $exclude ? '-' : '', $field, $value);
+                $query = sprintf('%s%s:[%d TO *]', $exclude ? '-' : '', $field, Value::scalar($value));
                 break;
             case !$facetField->isSlider():
                 if (is_string(value: $value)) {
@@ -666,10 +676,11 @@ abstract class AbstractSearchService implements SearchServiceInterface
 
             $requireDelete = true;
         } else {
+            /** @mago-var mixed $entity */
             $entity = $result[0];
         }
 
-        $document = $this->getSearchDocumentFromEntity(update: $update, entity: $entity);
+        $document = $this->getSearchDocumentFromEntity(update: $update, entity: Assert::isInstanceOf($entity, \Jield\Search\Entity\HasSearchInterface::class));
         $update->addDocument(document: $document);
         $update->addCommit();
 
@@ -678,17 +689,18 @@ abstract class AbstractSearchService implements SearchServiceInterface
             $output->writeln(messages: '<comment>Test successful</comment>');
 
             if ($requireDelete) {
-                $this->deleteDocument(entity: $entity);
+                $this->deleteDocument(entity: Assert::isInstanceOf($entity, \Jield\Search\Entity\HasSearchInterface::class));
                 $output->writeln(messages: '<comment>Test document deleted</comment>');
             }
         } catch (HttpException $e) {
             $responseBody = $e->getBody();
+            /** @mago-var mixed $response */
             $response = json_decode(json: Assert::string($responseBody));
 
             $output->writeln(messages: sprintf(
                 '<error>Error updating %s: %s</error>',
-                $entity::class,
-                Assert::isInstanceOf(Assert::isInstanceOf($response, stdClass::class)->error, stdClass::class)->msg,
+                Value::scalar($entity::class),
+                Value::scalar(Assert::isInstanceOf(Assert::isInstanceOf($response, stdClass::class)->error, stdClass::class)->msg),
             ));
         }
     }

@@ -30,6 +30,7 @@ class ViewHelperManagerDelegatorFactory implements DelegatorFactoryInterface
         callable $callback,
         ?array $options = null,
     ): HelperPluginManager {
+        /** @mago-var mixed $viewHelpers */
         $viewHelpers = $callback();
         assert($viewHelpers instanceof HelperPluginManager);
 

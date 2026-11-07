@@ -189,11 +189,11 @@ abstract class AbstractController implements Dispatchable, EventManagerAwareInte
             $identifiers[] = substr($className, 0, $rightmostNsPos); // full namespace
         }
 
-        $eventManager->setIdentifiers(array_merge(
+        $eventManager->setIdentifiers(Value::strings(array_merge(
             $identifiers,
             array_values(class_implements($className) ?: []),
             Value::toArray($this->eventIdentifier),
-        ));
+        )));
 
         $this->events = $eventManager;
         $this->attachDefaultListeners();
@@ -250,6 +250,7 @@ abstract class AbstractController implements Dispatchable, EventManagerAwareInte
      */
     public function __call($method, $params)
     {
+        /** @mago-var mixed $plugin */
         $plugin = $this->plugin($method);
         if (is_callable($plugin)) {
             return call_user_func_array($plugin, $params);

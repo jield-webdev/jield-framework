@@ -48,11 +48,13 @@ abstract class LaminasConstraint extends Constraint
     final public function getControllerFullClassName(): string
     {
         $routeMatch = $this->activeTestCase->getApplication()->getMvcEvent()->getRouteMatch();
+        /** @mago-var mixed $controllerIdentifier */
         $controllerIdentifier = Assert::notNull($routeMatch)->getParam('controller');
 
+        /** @mago-var mixed $controllerManager */
         $controllerManager = $this->activeTestCase->getApplicationServiceLocator()->get('ControllerManager');
 
-        return Value::call($controllerManager, 'get', [$controllerIdentifier])::class;
+        return Assert::string(Value::call($controllerManager, 'get', [$controllerIdentifier])::class);
     }
 
     /**

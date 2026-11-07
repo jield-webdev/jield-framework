@@ -69,6 +69,7 @@ class DispatchListener extends AbstractListenerAggregate
         }
 
         $routeMatch = $e->getRouteMatch();
+        /** @mago-var mixed $controllerName */
         $controllerName = $routeMatch instanceof RouteMatch
             ? $routeMatch->getParam(name: 'controller', default: 'not-found')
             : 'not-found';
@@ -76,10 +77,11 @@ class DispatchListener extends AbstractListenerAggregate
         $controllerManager = $this->controllerManager;
 
         // Query abstract controllers, too!
-        if (!$controllerManager->has($controllerName)) {
+        if (!$controllerManager->has(Assert::string($controllerName))) {
+            /** @mago-var mixed $return */
             $return = $this->marshalControllerNotFoundEvent(
                 type: Application::ERROR_CONTROLLER_NOT_FOUND,
-                controllerName: $controllerName,
+                controllerName: Assert::string($controllerName),
                 event: $e,
                 application: Assert::isInstanceOf($application, \Jield\Mvc\Application::class),
             );
@@ -87,19 +89,22 @@ class DispatchListener extends AbstractListenerAggregate
         }
 
         try {
-            $controller = $controllerManager->get($controllerName);
+            /** @mago-var mixed $controller */
+            $controller = $controllerManager->get(Assert::string($controllerName));
         } catch (InvalidServiceException $exception) {
+            /** @mago-var mixed $return */
             $return = $this->marshalControllerNotFoundEvent(
                 type: Application::ERROR_CONTROLLER_INVALID,
-                controllerName: $controllerName,
+                controllerName: Assert::string($controllerName),
                 event: $e,
                 application: Assert::isInstanceOf($application, \Jield\Mvc\Application::class),
                 exception: $exception,
             );
             return $this->complete(return: $return, event: $e);
         } catch (Throwable $exception) {
+            /** @mago-var mixed $return */
             $return = $this->marshalBadControllerEvent(
-                controllerName: $controllerName,
+                controllerName: Assert::string($controllerName),
                 event: $e,
                 application: Assert::isInstanceOf($application, \Jield\Mvc\Application::class),
                 exception: $exception,
@@ -117,6 +122,7 @@ class DispatchListener extends AbstractListenerAggregate
         $return = null;
 
         try {
+            /** @mago-var mixed $return */
             $return = Value::call($controller, 'dispatch', [
                 'request' => $request,
                 'response' => $response,
@@ -128,12 +134,14 @@ class DispatchListener extends AbstractListenerAggregate
         if ($caughtException !== null) {
             $e->setName(MvcEvent::EVENT_DISPATCH_ERROR);
             $e->setError(Application::ERROR_EXCEPTION);
-            $e->setController($controllerName);
-            $e->setControllerClass($controller::class);
+            $e->setController(Assert::string($controllerName));
+            $e->setControllerClass(Assert::string($controller::class));
             $e->setParam(name: 'exception', value: $caughtException);
 
+            /** @mago-var mixed $return */
             $return = Assert::notNull($application)->getEventManager()->triggerEvent($e)->last();
             if (!$return) {
+                /** @mago-var mixed $return */
                 $return = $e->getResult();
             }
         }
@@ -180,8 +188,10 @@ class DispatchListener extends AbstractListenerAggregate
 
         $events = $application->getEventManager();
         $results = $events->triggerEvent($event);
+        /** @mago-var mixed $return */
         $return = $results->last();
         if (!$return) {
+            /** @mago-var mixed $return */
             $return = $event->getResult();
         }
         return $return;
@@ -207,6 +217,7 @@ class DispatchListener extends AbstractListenerAggregate
 
         $events = $application->getEventManager();
         $results = $events->triggerEvent($event);
+        /** @mago-var mixed $return */
         $return = $results->last();
         if (!$return) {
             return $event->getResult();

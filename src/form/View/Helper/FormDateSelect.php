@@ -71,8 +71,8 @@ class FormDateSelect extends AbstractFormDateSelect
         $selectHelper = $this->getSelectElementHelper();
         $pattern = $this->parsePattern(renderDelimiters: $element->shouldRenderDelimiters());
 
-        $daysOptions = $this->getDaysOptions(pattern: $pattern['day']);
-        $monthsOptions = $this->getMonthsOptions(pattern: $pattern['month']);
+        $daysOptions = $this->getDaysOptions(pattern: \Webmozart\Assert\Assert::string($pattern['day']));
+        $monthsOptions = $this->getMonthsOptions(pattern: \Webmozart\Assert\Assert::string($pattern['month']));
         $yearOptions = $this->getYearsOptions(minYear: $element->getMinYear(), maxYear: $element->getMaxYear());
 
         $dayElement = $element->getDayElement()->setValueOptions(options: $daysOptions);
@@ -88,9 +88,10 @@ class FormDateSelect extends AbstractFormDateSelect
         $data = [];
         $data[$pattern['day']] = $selectHelper->render(element: $dayElement);
         $data[$pattern['month']] = $selectHelper->render(element: $monthElement);
-        $data[$pattern['year']] = $selectHelper->render(element: $yearElement);
+        $data[Value::key($pattern['year'])] = $selectHelper->render(element: $yearElement);
 
         $markup = '';
+        /** @mago-var mixed $value */
         foreach ($pattern as $key => $value) {
             // Delimiter
             if (is_numeric(value: $key)) {

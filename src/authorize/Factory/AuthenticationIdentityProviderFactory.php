@@ -22,6 +22,7 @@ final class AuthenticationIdentityProviderFactory implements FactoryInterface
         $requestedName,
         ?array $options = null,
     ): AuthenticationIdentityProvider {
+        /** @mago-var mixed $config */
         $config = $container->get('config')['jield_authorize'] ?? [];
 
         if (!isset($config['access_service'])) {
@@ -50,7 +51,7 @@ final class AuthenticationIdentityProviderFactory implements FactoryInterface
                 HasPermitInterface::class,
                 Assert::string($config['permit_service']),
             ),
-            authorizeConfig: $container->get(Config::class),
+            authorizeConfig: Service::config($container, Config::class),
         );
     }
 }

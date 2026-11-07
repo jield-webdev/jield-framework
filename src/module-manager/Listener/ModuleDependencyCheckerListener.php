@@ -25,16 +25,18 @@ class ModuleDependencyCheckerListener
 
         if (
             $module instanceof DependencyIndicatorInterface
-            || method_exists(object_or_class: $module, method: 'getModuleDependencies')
+            || method_exists(object_or_class: Value::objectOrString($module), method: 'getModuleDependencies')
         ) {
+            /** @mago-var mixed $dependencies */
             $dependencies = Value::call($module, 'getModuleDependencies');
 
+            /** @mago-var mixed $dependencyModule */
             foreach (Assert::isIterable($dependencies) as $dependencyModule) {
                 if (!isset($this->loaded[$dependencyModule])) {
                     throw new Exception\MissingDependencyModuleException(message: sprintf(
                         'Module "%s" depends on module "%s", which was not initialized before it',
                         $e->getModuleName(),
-                        $dependencyModule,
+                        Value::scalar($dependencyModule),
                     ));
                 }
             }

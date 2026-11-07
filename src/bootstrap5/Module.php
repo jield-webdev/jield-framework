@@ -22,12 +22,13 @@ final class Module implements ConfigProviderInterface, BootstrapListenerInterfac
 
     public function onBootstrap(EventInterface $e): void
     {
+        /** @mago-var mixed $app */
         $app = $e->getParam(name: 'application');
         /** @var ServiceManager $sm */
         $sm = Value::call($app, 'getServiceManager');
 
         $setTitle = Service::get($sm, InjectJavascriptAndCss::class);
-        $setTitle->attach(events: Value::call($app, 'getEventManager'));
+        $setTitle->attach(events: \Webmozart\Assert\Assert::isInstanceOf(Value::call($app, 'getEventManager'), \Laminas\EventManager\EventManagerInterface::class));
     }
 
     public function getModuleDependencies(): array

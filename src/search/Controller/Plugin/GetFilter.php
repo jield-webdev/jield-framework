@@ -50,8 +50,8 @@ class GetFilter extends AbstractPlugin
 
         //Initiate the filter
         $this->filter = new SearchFormResult(
-            order: $request->getQuery(name: 'order', default: 'default'),
-            direction: $request->getQuery(name: 'direction', default: Order::Ascending->value),
+            order: Assert::string($request->getQuery(name: 'order', default: 'default')),
+            direction: Assert::string($request->getQuery(name: 'direction', default: Order::Ascending->value)),
         );
 
         if (!empty($encodedFilter)) {
@@ -60,43 +60,43 @@ class GetFilter extends AbstractPlugin
 
         // If the form is submitted, refresh the URL
         if ($request->getQuery(name: 'query') !== null) {
-            $this->filter->setQuery(query: $request->getQuery(name: 'query'));
+            $this->filter->setQuery(query: Assert::nullOrString($request->getQuery(name: 'query')));
             $this->filter->setFilter(filter: Value::toArray($request->getQuery(name: 'filter', default: [])));
         }
 
         if (null !== $request->getQuery(name: 'facet')) {
-            $this->filter->setFacet(facet: $request->getQuery(name: 'facet'));
+            $this->filter->setFacet(facet: Assert::isArray($request->getQuery(name: 'facet')));
         }
 
         if (!empty($request->getQuery(name: 'dateInterval'))) {
-            $dateInterval = DateInterval::fromValue(value: $request->getQuery(name: 'dateInterval'));
+            $dateInterval = DateInterval::fromValue(value: Assert::string($request->getQuery(name: 'dateInterval')));
             $this->filter->setDateInterval(dateInterval: $dateInterval);
         }
 
         if (null !== $request->getQuery(name: 'order')) {
-            $this->filter->setOrder(order: $request->getQuery(name: 'order'));
+            $this->filter->setOrder(order: Assert::string($request->getQuery(name: 'order')));
         }
 
         if (null !== $request->getQuery(name: 'direction')) {
-            $this->filter->setDirection(direction: $request->getQuery(name: 'direction'));
+            $this->filter->setDirection(direction: Assert::string($request->getQuery(name: 'direction')));
         }
 
         // If the form is submitted, refresh the URL
         if ($request->getQuery(name: 'reset') !== null) {
             $this->filter = new SearchFormResult(
-                order: $request->getQuery(name: 'order', default: 'default'),
-                direction: $request->getQuery(name: 'direction', default: Order::Ascending->value),
+                order: Assert::string($request->getQuery(name: 'order', default: 'default')),
+                direction: Assert::string($request->getQuery(name: 'direction', default: Order::Ascending->value)),
             );
         }
 
         if ($this->request->isPost()) {
             $this->filter = new SearchFormResult(
-                order: $this->request->getQuery(name: 'order', default: 'default'),
-                direction: $this->request->getQuery(name: 'direction', default: Order::Ascending->value),
-                query: $this->request->getPost(name: 'query'),
-                filter: $this->request->getPost(name: 'filter', default: []),
-                facet: $this->request->getPost(name: 'facet', default: []),
-                dateInterval: $this->request->getPost(name: 'dateInterval', default: new DateInterval()),
+                order: Assert::string($this->request->getQuery(name: 'order', default: 'default')),
+                direction: Assert::string($this->request->getQuery(name: 'direction', default: Order::Ascending->value)),
+                query: Assert::nullOrString($this->request->getPost(name: 'query')),
+                filter: Assert::isArray($this->request->getPost(name: 'filter', default: [])),
+                facet: Assert::isArray($this->request->getPost(name: 'facet', default: [])),
+                dateInterval: Assert::isInstanceOf($this->request->getPost(name: 'dateInterval', default: new DateInterval()), \Jield\Search\ValueObject\DateInterval::class),
             );
         }
 
@@ -159,6 +159,7 @@ class GetFilter extends AbstractPlugin
     public function parseFilteredSortQuery(array $removeParams = []): string
     {
         $filterCopy = $this->getFilterFormData();
+        /** @mago-var mixed $param */
         foreach ($removeParams as $param) {
             unset($filterCopy[$param]);
         }

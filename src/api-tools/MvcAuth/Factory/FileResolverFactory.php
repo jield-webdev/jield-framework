@@ -24,12 +24,14 @@ class FileResolverFactory implements FactoryInterface
             return false;
         }
 
+        /** @mago-var mixed $config */
         $config = $container->get('config');
 
         if (!isset($config['api-tools-mvc-auth']['authentication']['http']['htdigest'])) {
             return false;
         }
 
+        /** @mago-var mixed $htdigest */
         $htdigest = $config['api-tools-mvc-auth']['authentication']['http']['htdigest'];
 
         return new FileResolver(path: Assert::string($htdigest));

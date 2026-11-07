@@ -84,6 +84,7 @@ class ExpressionBuilder
     public function prx(ExpressionInterface|string|null $word = null, mixed $proximity = null): ?ExpressionInterface
     {
         $arguments = func_get_args();
+        /** @mago-var mixed $proximityElement */
         $proximityElement = array_pop(array: $arguments);
 
         $arguments = $this->flatten(collection: $arguments);
@@ -111,9 +112,11 @@ class ExpressionBuilder
         $result = [];
 
         while (!empty($stack)) {
+            /** @mago-var mixed $item */
             $item = array_shift(array: $stack);
 
             if (is_iterable(value: $item)) {
+                /** @mago-var mixed $element */
                 foreach ($item as $element) {
                     array_unshift($stack, $element);
                 }
@@ -276,6 +279,7 @@ class ExpressionBuilder
         $args = $this->flatten(collection: $args);
         $type = CompositeExpression::TYPE_SPACE;
 
+        /** @mago-var mixed $last */
         $last = end(array: $args);
         if ((is_string($last) || $last === null) && CompositeExpression::isValidType(type: $last)) {
             array_pop(array: $args);
@@ -547,9 +551,11 @@ class ExpressionBuilder
         $additional = null;
 
         if (!is_bool(value: $shortForm)) {
+            /** @mago-var mixed $additional */
             $additional = $shortForm;
             $shortForm = true;
         } elseif (!is_array(value: $params)) {
+            /** @mago-var mixed $additional */
             $additional = $params;
             $params = [];
         }
@@ -560,12 +566,12 @@ class ExpressionBuilder
 
         if ($additional !== null) {
             return $this->comp(expr: [
-                new LocalParamsExpression(type: $type, params: $params, shortForm: $shortForm),
+                new LocalParamsExpression(type: $type, params: $params, shortForm: \Webmozart\Assert\Assert::boolean($shortForm)),
                 $additional,
             ], type: null);
         }
 
-        return new LocalParamsExpression(type: $type, params: $params, shortForm: $shortForm);
+        return new LocalParamsExpression(type: $type, params: $params, shortForm: \Webmozart\Assert\Assert::boolean($shortForm));
     }
 
     /**
@@ -742,7 +748,7 @@ class ExpressionBuilder
         array $boostFields = [],
     ): ?ExpressionInterface {
         if ($searchQuery === null || in_array(trim($searchQuery), ['', '*', '*:*'], true)) {
-            return $this->all();
+            return \Jield\Stdlib\Value::nullableInstance($this->all(), \Jield\Search\Solr\ExpressionInterface::class);
         }
 
         // First, get the base search query expression

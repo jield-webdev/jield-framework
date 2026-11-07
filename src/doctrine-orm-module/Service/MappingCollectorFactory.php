@@ -31,6 +31,7 @@ final class MappingCollectorFactory extends AbstractFactory
             );
         }
         $name = $this->getName();
+        /** @mago-var mixed $objectManager */
         $objectManager = $container->get('doctrine.entitymanager.' . $name);
 
         return Value::instantiate($collectorClass, [

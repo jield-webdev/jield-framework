@@ -32,8 +32,8 @@ class AuthenticationIdentityProvider implements ProviderInterface
         private readonly HasPermitInterface $permitService,
         array $authorizeConfig,
     ) {
-        $this->defaultRole = $authorizeConfig['default_role'] ?? self::ACCESS_PUBLIC;
-        $this->authenticatedRole = $authorizeConfig['authenticated_role'] ?? self::ACCESS_AUTHENTICATED;
+        $this->defaultRole = \Jield\Stdlib\Value::instanceOrString($authorizeConfig['default_role'] ?? self::ACCESS_PUBLIC, \Laminas\Permissions\Acl\Role\RoleInterface::class);
+        $this->authenticatedRole = \Jield\Stdlib\Value::instanceOrString($authorizeConfig['authenticated_role'] ?? self::ACCESS_AUTHENTICATED, \Laminas\Permissions\Acl\Role\RoleInterface::class);
     }
 
     public function getIdentityAsRole(): UserAsRole
@@ -65,7 +65,7 @@ class AuthenticationIdentityProvider implements ProviderInterface
             return [$this->defaultRole];
         }
 
-        return $this->accessOrUserService->getAccessRolesByUser(user: $this->authService->getIdentity());
+        return $this->accessOrUserService->getAccessRolesByUser(user: Assert::isInstanceOf($this->authService->getIdentity(), \Jield\Authorize\Role\UserAsRoleInterface::class));
     }
 
     public function hasPermit(object $resource, string|array $privilege): bool
@@ -83,7 +83,7 @@ class AuthenticationIdentityProvider implements ProviderInterface
             return null;
         }
 
-        return $this->authService->getIdentity();
+        return \Jield\Stdlib\Value::nullableInstance($this->authService->getIdentity(), \Jield\Authorize\Role\UserAsRoleInterface::class);
     }
 
     public function hasGeneralPermit(string $className, string $privilege): bool

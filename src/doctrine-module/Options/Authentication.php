@@ -139,7 +139,7 @@ final class Authentication extends AbstractOptions
 
     public function setIdentityClass(string $identityClass): Authentication
     {
-        $this->identityClass = $identityClass;
+        $this->identityClass = \Jield\Stdlib\Value::classString($identityClass);
 
         return $this;
     }

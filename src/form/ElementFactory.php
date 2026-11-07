@@ -28,6 +28,7 @@ final class ElementFactory implements FactoryInterface
         $options ??= [];
 
         if (isset($options['name'])) {
+            /** @mago-var mixed $name */
             $name = $options['name'];
         } else {
             // 'Jield\Form\Element' -> 'element'
@@ -36,6 +37,7 @@ final class ElementFactory implements FactoryInterface
         }
 
         if (isset($options['options'])) {
+            /** @mago-var mixed $options */
             $options = $options['options'];
         }
 

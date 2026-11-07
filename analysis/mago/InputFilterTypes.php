@@ -5,6 +5,7 @@
 namespace Laminas\InputFilter;
 
 /**
+ * @template TFilteredValues of array<array-key, mixed>
  * @psalm-import-type FilterSpecification from \Laminas\Filter\FilterChain
  * @psalm-import-type ValidatorSpecification from \Laminas\Validator\ValidatorChain
  * @psalm-type InputSpecification = array{
@@ -27,5 +28,13 @@ namespace Laminas\InputFilter;
  * }
  */
 interface InputFilterInterface
+{
+}
+
+/**
+ * Each collection entry is the array of values returned by its composed input filter.
+ * @template TFilteredValues of array<array-key, mixed>
+ */
+class CollectionInputFilter
 {
 }

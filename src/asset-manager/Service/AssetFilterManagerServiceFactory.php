@@ -18,13 +18,15 @@ class AssetFilterManagerServiceFactory implements FactoryInterface
     public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): AssetFilterManager
     {
         $filters = [];
+        /** @mago-var mixed $config */
         $config = $container->get('config');
 
         if (!empty($config['asset_manager']['filters'])) {
+            /** @mago-var mixed $filters */
             $filters = $config['asset_manager']['filters'];
         }
 
-        $assetFilterManager = new AssetFilterManager(config: $filters);
+        $assetFilterManager = new AssetFilterManager(config: \Webmozart\Assert\Assert::isArray($filters));
 
         $assetFilterManager->setContainer(container: $container);
         $assetFilterManager->setMimeResolver(mimeResolver: Service::get($container, MimeResolver::class));

@@ -18,6 +18,7 @@ trait HttpViewManagerConfigTrait
      */
     private function getConfig(ContainerInterface $container): array|ArrayAccess
     {
+        /** @mago-var mixed $config */
         $config = $container->has('config') ? $container->get('config') : [];
 
         if (

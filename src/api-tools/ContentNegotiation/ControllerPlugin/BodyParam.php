@@ -23,18 +23,20 @@ class BodyParam extends AbstractPlugin
     {
         $controller = $this->getController();
         if ($controller instanceof AbstractController) {
+            /** @mago-var mixed $parameterData */
             $parameterData = $controller->getEvent()->getParam(name: 'LaminasContentNegotiationParameterData');
             if ($parameterData instanceof ParameterDataContainer) {
                 return $parameterData->getBodyParam(name: Assert::string($param), default: $default);
             }
         }
 
-        if (!method_exists(object_or_class: $controller, method: 'getRequest')) {
+        if (!method_exists(object_or_class: Value::objectOrString($controller), method: 'getRequest')) {
             return $default;
         }
 
+        /** @mago-var mixed $request */
         $request = Value::call($controller, 'getRequest');
-        if (!method_exists(object_or_class: $request, method: 'getPost')) {
+        if (!method_exists(object_or_class: Value::objectOrString($request), method: 'getPost')) {
             return $default;
         }
 

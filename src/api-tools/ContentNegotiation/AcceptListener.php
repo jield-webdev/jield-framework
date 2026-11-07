@@ -47,6 +47,7 @@ class AcceptListener
             return null;
         }
 
+        /** @mago-var mixed $result */
         $result = $e->getResult();
         if (!is_array(value: $result) && !$result instanceof ViewModel) {
             // We will only attempt to re-cast ContentNegotiation\ViewModel
@@ -66,6 +67,7 @@ class AcceptListener
         $selector = $this->selector;
         $selector->setController(controller: Assert::isInstanceOf($controller, DispatchableInterface::class));
 
+        /** @mago-var mixed $criteria */
         $criteria = $e->getParam(name: 'LaminasContentNegotiation');
 
         // If the criteria from the LaminasContentNegotiation parameter is a string,
@@ -76,10 +78,12 @@ class AcceptListener
 
         // If we have no criteria, derive it from configuration and/or any set fallbacks
         if (!$criteria) {
+            /** @mago-var mixed $fallbackConfig */
             $fallbackConfig = $e->getParam(name: 'LaminasContentNegotiationFallback');
+            /** @mago-var mixed $controllerName */
             $controllerName = Assert::notNull($e->getRouteMatch())->getParam(name: 'controller');
 
-            $criteria = $this->getSelectorCriteria(fallbackConfig: $fallbackConfig, controllerName: $controllerName);
+            $criteria = $this->getSelectorCriteria(fallbackConfig: Assert::nullOrString($fallbackConfig), controllerName: Assert::nullOrString($controllerName));
         }
 
         // Retrieve a view model based on the criteria
@@ -123,9 +127,10 @@ class AcceptListener
         }
 
         // Retrieve the criteria; if none found, or invalid, use the fallback.
+        /** @mago-var mixed $criteria */
         $criteria = $controllers[$controllerName];
 
-        return $this->getCriteria(criteria: $criteria) ?: $this->getCriteria(criteria: $fallbackConfig);
+        return $this->getCriteria(criteria: \Jield\Stdlib\Value::nullableArrayOrString($criteria)) ?: $this->getCriteria(criteria: $fallbackConfig);
     }
 
     /**
@@ -161,7 +166,7 @@ class AcceptListener
 
         // At this point, the result is an array; use it to populate the view
         // model variables
-        $viewModel->setVariables(variables: $result);
+        $viewModel->setVariables(variables: \Jield\Stdlib\Value::namedIterable($result));
         $e->setResult(result: $viewModel);
     }
 
@@ -187,6 +192,7 @@ class AcceptListener
 
         // if it's a string, we should try to resolve that key to a reusable selector set
         if (is_string(value: $criteria) && isset($this->selectorsConfig[$criteria])) {
+            /** @mago-var mixed $criteria */
             $criteria = $this->selectorsConfig[$criteria];
             if (!empty($criteria)) {
                 return Assert::isArray($criteria);

@@ -52,6 +52,7 @@ class SolrSearchFilter extends SearchFilter implements InputFilterProviderInterf
 
         // Add the field selection
         if (!empty($fields)) {
+            /** @mago-var mixed $values */
             foreach ($fields as $key => $values) {
                 $filter->add(elementOrFieldset: [
                     'type' => MultiCheckbox::class,
@@ -76,6 +77,7 @@ class SolrSearchFilter extends SearchFilter implements InputFilterProviderInterf
             $facetElementFieldset = new Fieldset(name: $facetField->getField());
             $facetElementFieldset->setOption(key: 'visibility', value: $facetField->getvisibility());
 
+            /** @mago-var mixed $field */
             $field = $this->getFacetByFacetField(fieldName: $facetField->getField());
 
             if ($facetField->getHasYesNo()) {
@@ -83,7 +85,7 @@ class SolrSearchFilter extends SearchFilter implements InputFilterProviderInterf
             }
 
             $facetElementFieldset->add(elementOrFieldset: $this->createFacetFieldFormElement(
-                field: $field,
+                field: Assert::isInstanceOf($field, \Solarium\Component\Result\Facet\Field::class),
                 facetField: $facetField,
             ));
 
@@ -126,8 +128,9 @@ class SolrSearchFilter extends SearchFilter implements InputFilterProviderInterf
     private function createFacetFieldFormElement(Field $field, FacetField $facetField): MultiCheckbox
     {
         $multiOptions = [];
+        /** @mago-var mixed $value */
         foreach ($field as $key => $value) {
-            $multiOptions[$key] = sprintf('%s <small class="text-muted">(%s)</small>', $key, $value);
+            $multiOptions[$key] = sprintf('%s <small class="text-muted">(%s)</small>', $key, Value::scalar($value));
         }
 
         if ($facetField->getReverse()) {
@@ -201,9 +204,11 @@ class SolrSearchFilter extends SearchFilter implements InputFilterProviderInterf
         }
 
         if (!empty($submittedData['filter']['general'])) {
+            /** @mago-var mixed $selectedValues */
             $selectedValues = $submittedData['filter']['general'];
+            /** @mago-var mixed $value */
             foreach (Assert::isIterable($selectedValues) as $value) {
-                $remainingValues = array_diff($selectedValues, [$value]);
+                $remainingValues = array_diff(Value::scalars($selectedValues), Value::scalars([$value]));
 
                 $data = [
                     'facet' => $submittedData['facet'],
@@ -226,27 +231,32 @@ class SolrSearchFilter extends SearchFilter implements InputFilterProviderInterf
             }
         }
 
+        /**
+         * @mago-var mixed $facetName
+         * @mago-var mixed $facetData
+         */
         foreach (Assert::isIterable($submittedData['facet'] ?? []) as $facetName => $facetData) {
             //We need to check if the facet is actually a facet field
-            if (!$this->searchService->hasFacet(fieldName: $facetName)) {
+            if (!$this->searchService->hasFacet(fieldName: Assert::string($facetName))) {
                 continue;
             }
 
-            $facetField = $this->searchService->getFacet(fieldName: $facetName);
+            $facetField = $this->searchService->getFacet(fieldName: Assert::string($facetName));
 
+            /** @mago-var mixed $values */
             $values = $facetData['values'] ?? [];
 
             if (is_string(value: $values) && $facetField->isSlider()) {
                 $values = array_map(callback: intval(...), array: explode(separator: ',', string: $values));
                 $valueText = sprintf('BETWEEN %s and %s', $values[0], $values[1] ?? '');
             } elseif ($facetField->isCheckboxMin()) {
-                $valueText = sprintf('AT LEAST %d', $values[0] ?? '');
+                $valueText = sprintf('AT LEAST %d', Value::scalar($values[0] ?? ''));
             } else {
-                $valueText = implode(separator: $facetData['andOr'] ?? false ? ' and ' : ' or ', array: $values);
+                $valueText = implode(separator: $facetData['andOr'] ?? false ? ' and ' : ' or ', array: Value::scalars($values));
             }
 
             //Remaining facets are all facets where the current facet value is filtered out
-            $remainingFacets = $submittedData['facet'];
+            $remainingFacets = Assert::isArray($submittedData['facet']);
 
             unset($remainingFacets[$facetName]);
 

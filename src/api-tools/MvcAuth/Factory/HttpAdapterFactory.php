@@ -55,7 +55,7 @@ final class HttpAdapterFactory
         }
 
         $httpAdapter = new HttpAuth(config: array_merge($config, [
-            'accept_schemes' => implode(separator: ' ', array: $config['accept_schemes']),
+            'accept_schemes' => implode(separator: ' ', array: \Jield\Stdlib\Value::scalars($config['accept_schemes'])),
         ]));
 
         if (in_array(needle: 'basic', haystack: $config['accept_schemes'], strict: true)) {
@@ -63,9 +63,9 @@ final class HttpAdapterFactory
                 isset($config['basic_resolver_factory'])
                 && self::containerHasKey(container: $container, key: $config['basic_resolver_factory'])
             ) {
-                $httpAdapter->setBasicResolver(resolver: Assert::notNull($container)->get(
-                    $config['basic_resolver_factory'],
-                ));
+                $httpAdapter->setBasicResolver(resolver: Assert::isInstanceOf(Assert::notNull($container)->get(
+                    Assert::string($config['basic_resolver_factory']),
+                ), \Laminas\Authentication\Adapter\Http\ResolverInterface::class));
             } elseif (isset($config['htpasswd'])) {
                 $httpAdapter->setBasicResolver(resolver: new ApacheResolver(path: Assert::string($config['htpasswd'])));
             }
@@ -76,9 +76,9 @@ final class HttpAdapterFactory
                 isset($config['digest_resolver_factory'])
                 && self::containerHasKey(container: $container, key: $config['digest_resolver_factory'])
             ) {
-                $httpAdapter->setDigestResolver(resolver: Assert::notNull($container)->get(
-                    $config['digest_resolver_factory'],
-                ));
+                $httpAdapter->setDigestResolver(resolver: Assert::isInstanceOf(Assert::notNull($container)->get(
+                    Assert::string($config['digest_resolver_factory']),
+                ), \Laminas\Authentication\Adapter\Http\ResolverInterface::class));
             } elseif (isset($config['htdigest'])) {
                 $httpAdapter->setDigestResolver(resolver: new FileResolver(path: Assert::string($config['htdigest'])));
             }

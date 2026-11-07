@@ -69,11 +69,11 @@ final class Navigation
         }
 
         if (is_string($container)) {
-            return $this->services->get($container);
+            return Value::nullableInstance($this->services->get($container), \Laminas\Navigation\AbstractContainer::class);
         }
 
         if ($this->services->has('navigation')) {
-            return $this->services->get('navigation');
+            return Value::nullableInstance($this->services->get('navigation'), \Laminas\Navigation\AbstractContainer::class);
         }
 
         if ($this->services->has(NavigationContainer::class)) {
@@ -81,7 +81,7 @@ final class Navigation
         }
 
         if ($this->services->has('Navigation')) {
-            return $this->services->get('Navigation');
+            return Value::nullableInstance($this->services->get('Navigation'), \Laminas\Navigation\AbstractContainer::class);
         }
 
         return null;

@@ -44,8 +44,9 @@ class AliasPathStackResolver implements ResolverInterface, MimeResolverAwareInte
      */
     public function __construct(array $aliases)
     {
+        /** @mago-var mixed $path */
         foreach ($aliases as $alias => $path) {
-            $this->addAlias(alias: Assert::string($alias), path: $path);
+            $this->addAlias(alias: Assert::string($alias), path: Assert::string($path));
         }
     }
 
@@ -123,6 +124,7 @@ class AliasPathStackResolver implements ResolverInterface, MimeResolverAwareInte
             return null;
         }
 
+        /** @mago-var mixed $path */
         foreach ($this->aliases as $alias => $path) {
             if (!str_contains(haystack: $fileName, needle: Assert::string($alias))) {
                 continue;
@@ -155,9 +157,10 @@ class AliasPathStackResolver implements ResolverInterface, MimeResolverAwareInte
     {
         $collection = [];
 
+        /** @mago-var mixed $path */
         foreach ($this->aliases as $alias => $path) {
             $locations = new SplStack();
-            $pathInfo = new SplFileInfo(filename: $path);
+            $pathInfo = new SplFileInfo(filename: Assert::string($path));
             $locations->push(value: $pathInfo);
             $basePath = $this->normalizePath(path: Assert::string($pathInfo->getRealPath()));
 
@@ -169,8 +172,9 @@ class AliasPathStackResolver implements ResolverInterface, MimeResolverAwareInte
                 }
 
                 if ($pathInfo->isDir()) {
+                    /** @mago-var mixed $resource */
                     foreach (new DirectoryResource(path: Assert::string($pathInfo->getRealPath())) as $resource) {
-                        $locations->push(value: new SplFileInfo(filename: $resource));
+                        $locations->push(value: new SplFileInfo(filename: Assert::string($resource)));
                     }
                 } else {
                     $collection[] =

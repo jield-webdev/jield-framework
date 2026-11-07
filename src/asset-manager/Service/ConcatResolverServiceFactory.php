@@ -17,13 +17,15 @@ class ConcatResolverServiceFactory implements FactoryInterface
     #[Override]
     public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): ConcatResolver
     {
+        /** @mago-var mixed $config */
         $config = $container->get('config');
         $files = [];
 
         if (isset($config['asset_manager']['resolver_configs']['concat'])) {
+            /** @mago-var mixed $files */
             $files = $config['asset_manager']['resolver_configs']['concat'];
         }
 
-        return new ConcatResolver(concats: $files);
+        return new ConcatResolver(concats: \Webmozart\Assert\Assert::isIterable($files));
     }
 }

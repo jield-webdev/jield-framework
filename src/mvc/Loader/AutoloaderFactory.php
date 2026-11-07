@@ -69,22 +69,27 @@ abstract class AutoloaderFactory
             return;
         }
 
+        /**
+         * @mago-var mixed $class
+         * @mago-var mixed $autoloaderOptions
+         */
         foreach ($options as $class => $autoloaderOptions) {
+            $class = Assert::string($class);
             if (!isset(static::$loaders[$class])) {
                 $autoloader = static::getModuleAutoloader();
-                if (!class_exists($class) && !$autoloader->autoload($class)) {
-                    throw new InvalidArgumentException(sprintf('Autoloader class "%s" not loaded', $class));
+                if (!class_exists(Assert::string($class)) && !$autoloader->autoload(Assert::string($class))) {
+                    throw new InvalidArgumentException(sprintf('Autoloader class "%s" not loaded', Value::scalar($class)));
                 }
 
-                if (!is_subclass_of(object_or_class: $class, class: SplAutoloader::class)) {
+                if (!is_subclass_of(object_or_class: Assert::string($class), class: SplAutoloader::class)) {
                     throw new InvalidArgumentException(sprintf(
                         'Autoloader class %s must implement Jield\\ModuleManager\\Loader\\SplAutoloader',
-                        $class,
+                        Value::scalar($class),
                     ));
                 }
 
                 if ($class === static::STANDARD_AUTOLOADER) {
-                    $autoloader->setOptions($autoloaderOptions);
+                    $autoloader->setOptions(Assert::isIterable($autoloaderOptions));
                 } else {
                     $autoloader = Assert::isInstanceOf(
                         Value::instantiate($class, [$autoloaderOptions]),
@@ -134,6 +139,7 @@ abstract class AutoloaderFactory
      */
     public static function unregisterAutoloaders()
     {
+        /** @mago-var mixed $autoloader */
         foreach (static::getRegisteredAutoloaders() as $class => $autoloader) {
             spl_autoload_unregister(Assert::isCallable([$autoloader, 'autoload']));
             unset(static::$loaders[$class]);

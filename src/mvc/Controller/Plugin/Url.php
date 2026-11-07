@@ -59,7 +59,9 @@ class Url extends AbstractPlugin
             $router = $event->getRouter();
             $matches = $event->getRouteMatch();
         } else {
+            /** @mago-var mixed $router */
             $router = $event->getParam('router', false);
+            /** @mago-var mixed $matches */
             $matches = $event->getParam('route-match', false);
         }
         if (!$router instanceof RouteStackInterface) {
@@ -76,6 +78,7 @@ class Url extends AbstractPlugin
                 throw new RuntimeException('No RouteMatch instance present');
             }
 
+            /** @mago-var mixed $route */
             $route = Value::call($matches, 'getMatchedRouteName');
 
             if ($route === null) {
@@ -84,6 +87,7 @@ class Url extends AbstractPlugin
         }
 
         if ($reuseMatchedParams && Value::truthy($matches)) {
+            /** @mago-var mixed $routeMatchParams */
             $routeMatchParams = Value::call($matches, 'getParams');
 
             if (isset($routeMatchParams[ModuleRouteListener::ORIGINAL_CONTROLLER])) {
@@ -95,11 +99,11 @@ class Url extends AbstractPlugin
                 unset($routeMatchParams[ModuleRouteListener::MODULE_NAMESPACE]);
             }
 
-            $params = array_merge($routeMatchParams, $params);
+            $params = array_merge(Assert::isArray($routeMatchParams), $params);
         }
 
         $options = Assert::isArray($options);
         $options['name'] = $route;
-        return $router->assemble($params, $options)->toString();
+        return $router->assemble(Value::routeParams($params), $options)->toString();
     }
 }

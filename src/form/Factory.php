@@ -105,9 +105,10 @@ class Factory
     public function create(Traversable|ArrayAccess|array $spec): ElementInterface
     {
         $spec = $this->validateSpecification(spec: $spec, method: __METHOD__);
+        /** @mago-var mixed $type */
         $type = $spec['type'] ?? Element::class;
 
-        $element = $this->getFormElementManager()->get($type);
+        $element = $this->getFormElementManager()->get(Assert::string($type));
 
         if ($element instanceof FormInterface) {
             return $this->configureForm(form: $element, spec: $spec);
@@ -166,12 +167,15 @@ class Factory
     {
         $spec = $this->validateSpecification(spec: $spec, method: __METHOD__);
 
+        /** @mago-var mixed $name */
         $name = $spec['name'] ?? null;
+        /** @mago-var mixed $options */
         $options = $spec['options'] ?? null;
+        /** @mago-var mixed $attributes */
         $attributes = $spec['attributes'] ?? null;
 
         if ($name !== null && $name !== '') {
-            $element->setName(name: $name);
+            $element->setName(name: Assert::string($name));
         }
 
         if (is_iterable(value: $options)) {
@@ -180,7 +184,7 @@ class Factory
 
         if (is_iterable(value: $attributes)) {
             $element->setAttributes(
-                arrayOrTraversable: is_array($attributes) ? $attributes : iterator_to_array($attributes),
+                arrayOrTraversable: Value::scalarMap(is_array($attributes) ? $attributes : iterator_to_array($attributes)),
             );
         }
 
@@ -213,13 +217,14 @@ class Factory
         assert(assertion: $fieldset instanceof FieldsetInterface);
 
         if (isset($spec['object'])) {
-            $this->prepareAndInjectObject(objectName: $spec['object'], fieldset: $fieldset, method: __METHOD__);
+            $this->prepareAndInjectObject(objectName: Assert::string($spec['object']), fieldset: $fieldset, method: __METHOD__);
         }
 
         if (isset($spec['hydrator'])) {
+            /** @mago-var mixed $hydrator */
             $hydrator = $spec['hydrator'];
             $this->prepareAndInjectHydrator(
-                hydratorOrName: is_array($hydrator) ? $hydrator : $hydrator,
+                hydratorOrName: Assert::notNull(Value::instanceOrArrayOrString($hydrator, HydratorInterface::class)),
                 fieldset: $fieldset,
                 method: __METHOD__,
             );
@@ -241,9 +246,10 @@ class Factory
             );
         }
 
+        /** @mago-var mixed $factory */
         $factory = $spec['factory'] ?? $this;
         $this->prepareAndInjectFactory(
-            factoryOrName: is_array($factory) ? $factory : $factory,
+            factoryOrName: Assert::notNull(Value::instanceOrArrayOrString($factory, self::class)),
             fieldset: $fieldset,
             method: __METHOD__,
         );
@@ -271,16 +277,16 @@ class Factory
 
         if (isset($spec['input_filter'])) {
             $this->prepareAndInjectInputFilter(
-                spec: is_string($spec['input_filter'])
+                spec: Assert::isIterable(is_string($spec['input_filter'])
                     ? $spec['input_filter']
-                    : Assert::isIterable($spec['input_filter']),
+                    : Assert::isIterable($spec['input_filter'])),
                 form: $form,
                 method: __METHOD__,
             );
         }
 
         if (isset($spec['validation_group'])) {
-            $form->setValidationGroup(group: $spec['validation_group']);
+            $form->setValidationGroup(group: Assert::isArray($spec['validation_group']));
         }
 
         return $form;
@@ -322,12 +328,15 @@ class Factory
     ): void {
         $elements = $this->validateSpecification(spec: $elements, method: $method);
 
+        /** @mago-var mixed $elementSpecification */
         foreach (Assert::isIterable($elements) as $elementSpecification) {
             if (null === $elementSpecification) {
                 continue;
             }
 
+            /** @mago-var mixed $flags */
             $flags = $elementSpecification['flags'] ?? [];
+            /** @mago-var mixed $spec */
             $spec = $elementSpecification['spec'] ?? [];
 
             if (!isset($spec['type'])) {
@@ -335,7 +344,7 @@ class Factory
             }
 
             $element = $this->create(spec: $spec);
-            $fieldset->add(elementOrFieldset: $element, flags: $flags);
+            $fieldset->add(elementOrFieldset: $element, flags: Assert::isArray($flags));
         }
     }
 
@@ -352,12 +361,15 @@ class Factory
     ): void {
         $fieldsets = $this->validateSpecification(spec: $fieldsets, method: $method);
 
+        /** @mago-var mixed $fieldsetSpecification */
         foreach (Assert::isIterable($fieldsets) as $fieldsetSpecification) {
+            /** @mago-var mixed $flags */
             $flags = $fieldsetSpecification['flags'] ?? [];
+            /** @mago-var mixed $spec */
             $spec = $fieldsetSpecification['spec'] ?? [];
 
-            $fieldset = $this->createFieldset(spec: $spec);
-            $masterFieldset->add(elementOrFieldset: $fieldset, flags: $flags);
+            $fieldset = $this->createFieldset(spec: Assert::isArray($spec));
+            $masterFieldset->add(elementOrFieldset: $fieldset, flags: Assert::isArray($flags));
         }
     }
 
@@ -409,13 +421,16 @@ class Factory
                     $method,
                 ));
             }
+            /** @mago-var mixed $hydratorOptions */
             $hydratorOptions = $hydratorOrName['options'] ?? [];
+            /** @mago-var mixed $hydratorOrName */
             $hydratorOrName = $hydratorOrName['type'];
         } else {
             $hydratorOptions = [];
         }
 
         if (is_string(value: $hydratorOrName)) {
+            /** @mago-var mixed $hydrator */
             $hydrator = $this->getFormElementManager()->getHydratorFromName(hydratorName: $hydratorOrName);
         }
 
@@ -423,7 +438,7 @@ class Factory
             throw new Exception\DomainException(message: sprintf(
                 '%s expects a valid implementation of Laminas\Hydrator\HydratorInterface; received "%s"',
                 $method,
-                $hydratorOrName,
+                Value::scalar($hydratorOrName),
             ));
         }
 
@@ -456,10 +471,12 @@ class Factory
                     $method,
                 ));
             }
+            /** @mago-var mixed $factoryOrName */
             $factoryOrName = $factoryOrName['type'];
         }
 
         if (is_string(value: $factoryOrName)) {
+            /** @mago-var mixed $factoryOrName */
             $factoryOrName = $this->getFormElementManager()->getFactoryFromName(factoryName: $factoryOrName);
         }
 
@@ -467,7 +484,7 @@ class Factory
             throw new Exception\DomainException(message: sprintf(
                 '%s expects a valid extension of Jield\Form\Factory; received "%s"',
                 $method,
-                $factoryOrName,
+                Value::scalar($factoryOrName),
             ));
         }
 

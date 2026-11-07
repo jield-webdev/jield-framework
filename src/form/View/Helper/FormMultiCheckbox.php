@@ -158,6 +158,7 @@ class FormMultiCheckbox extends FormInput
         $combinedMarkup = [];
         $count = 0;
 
+        /** @mago-var mixed $optionSpec */
         foreach ($options as $key => $optionSpec) {
             $count++;
             if ($count > 1 && array_key_exists(key: 'id', array: $attributes)) {
@@ -182,18 +183,23 @@ class FormMultiCheckbox extends FormInput
             }
 
             if (isset($optionSpec['value'])) {
+                /** @mago-var mixed $value */
                 $value = $optionSpec['value'];
             }
             if (isset($optionSpec['label'])) {
+                /** @mago-var mixed $label */
                 $label = $optionSpec['label'];
             }
             if (isset($optionSpec['selected'])) {
+                /** @mago-var mixed $selected */
                 $selected = $optionSpec['selected'];
             }
             if (isset($optionSpec['disabled'])) {
+                /** @mago-var mixed $disabled */
                 $disabled = $optionSpec['disabled'];
             }
             if (isset($optionSpec['label_attributes'])) {
+                /** @mago-var mixed $labelAttributes */
                 $labelAttributes = isset($labelAttributes)
                     ? array_merge($labelAttributes, Assert::isArray($optionSpec['label_attributes']))
                     : $optionSpec['label_attributes'];
@@ -416,7 +422,7 @@ class FormMultiCheckbox extends FormInput
             return $this->labelHelper;
         }
 
-        if (method_exists(object_or_class: $this->view, method: 'plugin')) {
+        if (method_exists(object_or_class: Value::objectOrString($this->view), method: 'plugin')) {
             $this->labelHelper = $this->getView()->plugin('form_label', \Jield\Form\View\Helper\FormLabel::class);
         }
 

@@ -35,14 +35,15 @@ final class TokenExchangeController extends AbstractActionController
         }
 
         try {
-            if (strlen($request->getContent()) > 65_536) {
+            if (strlen(Assert::string($request->getContent())) > 65_536) {
                 throw new EntraException(error: 'invalid_request', description: 'Request is too large');
             }
             $type = Assert::isInstanceOf($request->getHeaders(), Headers::class)->get('Content-Type');
 
             if ($type instanceof ContentType && $type->match('application/json')) {
+                /** @mago-var mixed $data */
                 $data = json_decode(
-                    json: $request->getContent(),
+                    json: Assert::string($request->getContent()),
                     associative: true,
                     depth: 16,
                     flags: JSON_THROW_ON_ERROR,
@@ -51,6 +52,7 @@ final class TokenExchangeController extends AbstractActionController
                     throw new EntraException(error: 'invalid_request', description: 'Expected a JSON object');
                 }
             } elseif ($type instanceof ContentType && $type->match('application/x-www-form-urlencoded')) {
+                /** @mago-var mixed $data */
                 $data = Value::call($request->getPost(), 'toArray');
             } else {
                 throw new EntraException(
@@ -60,7 +62,7 @@ final class TokenExchangeController extends AbstractActionController
                 );
             }
 
-            return $this->json(status: 200, data: $this->exchange->exchange($data));
+            return $this->json(status: 200, data: $this->exchange->exchange(Assert::isArray($data)));
         } catch (JsonException) {
             return $this->json(status: 400, data: [
                 'error' => 'invalid_request',

@@ -151,11 +151,11 @@ class Form extends Fieldset implements FormInterface
         parent::setOptions(options: $options);
 
         if (isset($this->options['prefer_form_input_filter'])) {
-            $this->setPreferFormInputFilter(preferFormInputFilter: $this->options['prefer_form_input_filter']);
+            $this->setPreferFormInputFilter(preferFormInputFilter: Assert::boolean($this->options['prefer_form_input_filter']));
         }
 
         if (isset($this->options['use_input_filter_defaults'])) {
-            $this->setUseInputFilterDefaults(useInputFilterDefaults: $this->options['use_input_filter_defaults']);
+            $this->setUseInputFilterDefaults(useInputFilterDefaults: Assert::boolean($this->options['use_input_filter_defaults']));
         }
 
         return $this;
@@ -343,9 +343,9 @@ class Form extends Fieldset implements FormInterface
         // If there is a base fieldset, only hydrate beginning from the base fieldset
         if ($this->baseFieldset !== null) {
             $name = Assert::string($this->baseFieldset->getName());
-            $this->object = $this->baseFieldset->bindValues($data[$name] ?? [], $validationGroup[$name] ?? []);
+            $this->object = \Jield\Stdlib\Value::nullableArrayOrObject($this->baseFieldset->bindValues(Assert::isArray($data[$name] ?? []), \Jield\Stdlib\Value::nullableArray($validationGroup[$name] ?? [])));
         } else {
-            $this->object = parent::bindValues(values: $data, validationGroup: $validationGroup);
+            $this->object = \Jield\Stdlib\Value::nullableArrayOrObject(parent::bindValues(values: $data, validationGroup: $validationGroup));
         }
         return null;
     }
@@ -356,6 +356,7 @@ class Form extends Fieldset implements FormInterface
     protected function prepareBindData(array $values, array $match): array
     {
         $data = [];
+        /** @mago-var mixed $value */
         foreach ($values as $name => $value) {
             if (!array_key_exists(key: $name, array: $match)) {
                 continue;
@@ -464,7 +465,7 @@ class Form extends Fieldset implements FormInterface
 
         $validationGroup = $this->getValidationGroup();
         if ($validationGroup !== null) {
-            $this->prepareValidationGroup(formOrFieldset: $this, data: $this->data, validationGroup: $validationGroup);
+            $this->prepareValidationGroup(formOrFieldset: $this, data: Assert::isArray($this->data), validationGroup: $validationGroup);
         }
 
         $this->validationResult = InputFilterValidator::validate(
@@ -572,6 +573,7 @@ class Form extends Fieldset implements FormInterface
         array &$validationGroup,
     ): void {
         $elements = iterator_to_array(iterator: $formOrFieldset->getIterator());
+        /** @mago-var mixed $value */
         foreach ($validationGroup as $key => &$value) {
             if (!isset($elements[$key])) {
                 continue;
@@ -587,7 +589,7 @@ class Form extends Fieldset implements FormInterface
                 $values = [];
 
                 if (isset($data[$key])) {
-                    foreach (array_keys(array: $data[$key]) as $cKey) {
+                    foreach (array_keys(array: Assert::isArray($data[$key])) as $cKey) {
                         $values[$cKey] = $value;
                     }
                 }
@@ -599,7 +601,7 @@ class Form extends Fieldset implements FormInterface
             $childGroup = Assert::isArray($validationGroup[$key]);
             $this->prepareFieldsetValidationGroup(
                 formOrFieldset: Assert::isInstanceOf($fieldset, \Jield\Form\FieldsetInterface::class),
-                data: $data[$key],
+                data: Assert::isArray($data[$key]),
                 validationGroup: $childGroup,
             );
             $validationGroup[$key] = $childGroup;
@@ -754,10 +756,9 @@ class Form extends Fieldset implements FormInterface
                     if (
                         $input instanceof MutableInputInterface
                         && $inputFilter instanceof CollectionInputFilter
-                        && $inputFilter->getInputFilter()->has($name)
-                        && $inputFilter->getInputFilter() instanceof ReplaceableInputInterface
+                        && ($collectionInputFilter = $inputFilter->getInputFilter()) instanceof ReplaceableInputInterface
+                        && $collectionInputFilter->has($name)
                     ) {
-                        $collectionInputFilter = $inputFilter->getInputFilter();
                         $input->merge(input: Assert::isInstanceOf(
                             $collectionInputFilter->get($name),
                             InputInterface::class,
@@ -776,9 +777,7 @@ class Form extends Fieldset implements FormInterface
             }
 
             if ($fieldset === $this && $fieldset instanceof InputFilterProviderInterface) {
-                $specification = InputFilterFactory::normalizeSpecification(
-                    $fieldset->getInputFilterSpecification(),
-                );
+                $specification = $fieldset->getInputFilterSpecification();
                 foreach ($specification as $name => $spec) {
                     if ($spec instanceof InputFilterInterface || $spec instanceof InputInterface) {
                         $inputFilter->add($spec, $name);
@@ -787,7 +786,7 @@ class Form extends Fieldset implements FormInterface
                     if (!is_array($spec)) {
                         continue;
                     }
-                    $spec['name'] ??= $name;
+                    $spec['name'] = \Jield\Stdlib\Value::key($spec['name'] ?? $name);
                     $input = $inputFactory->createInput(inputSpecification: $spec);
                     $inputFilter->add(input: $input, name: $name);
                 }
@@ -799,8 +798,9 @@ class Form extends Fieldset implements FormInterface
                 if (!$inputFilter->has($name)) {
                     // Add a new empty input filter if it does not exist (or the fieldset's object input filter),
                     // so that elements of nested fieldsets can be recursively added
-                    if ($childFieldset->getObject() instanceof InputFilterAwareInterface) {
-                        $inputFilter->add(input: $childFieldset->getObject()->getInputFilter(), name: $name);
+                    /** @mago-var mixed $boundObject */
+                    if (($boundObject = $childFieldset->getObject()) instanceof InputFilterAwareInterface) {
+                        $inputFilter->add(input: $boundObject->getInputFilter(), name: $name);
                     } else if (
                         $childFieldset instanceof CollectionInterface
                         && null !== ($targetElement = $childFieldset->getTargetElement())
@@ -920,8 +920,8 @@ class Form extends Fieldset implements FormInterface
 
         if ($onlyBase && $this->baseFieldset !== null) {
             $name = (string) $this->baseFieldset->getName();
-            if (array_key_exists(key: $name, array: $data)) {
-                $this->baseFieldset->populateValues(data: $data[$name]);
+            if (array_key_exists(key: $name, array: Assert::isArray($data))) {
+                $this->baseFieldset->populateValues(data: Assert::isIterable($data[$name]));
             }
         } else {
             parent::populateValues(data: $data);

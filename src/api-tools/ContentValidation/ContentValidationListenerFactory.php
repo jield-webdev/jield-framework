@@ -23,12 +23,14 @@ class ContentValidationListenerFactory implements FactoryInterface
         $requestedName,
         ?array $options = null,
     ): ContentValidationListener {
+        /** @mago-var mixed $config */
         $config = $container->has('config') ? $container->get('config') : [];
+        /** @mago-var mixed $contentValidationConfig */
         $contentValidationConfig = $config['api-tools-content-validation'] ?? [];
-        $restServices = $this->getRestServicesFromConfig(config: $config);
+        $restServices = $this->getRestServicesFromConfig(config: Assert::isArray($config));
 
         return new ContentValidationListener(
-            config: $contentValidationConfig,
+            config: Assert::isArray($contentValidationConfig),
             inputFilterManager: Assert::isInstanceOf(
                 $container->get('InputFilterManager'),
                 ServiceLocatorInterface::class,
@@ -53,12 +55,16 @@ class ContentValidationListenerFactory implements FactoryInterface
             return $restServices;
         }
 
+        /**
+         * @mago-var mixed $controllerService
+         * @mago-var mixed $restConfig
+         */
         foreach (Assert::isIterable($config['api-tools-rest']) as $controllerService => $restConfig) {
             if (!isset($restConfig['route_identifier_name'])) {
                 continue;
             }
 
-            $restServices[$controllerService] = $restConfig['route_identifier_name'];
+            $restServices[\Jield\Stdlib\Value::key($controllerService)] = $restConfig['route_identifier_name'];
         }
 
         return $restServices;

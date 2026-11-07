@@ -53,7 +53,7 @@ class ContentNegotiationOptions extends AbstractOptions
     #[Override]
     public function setFromArray($options): AbstractOptions|ContentNegotiationOptions
     {
-        return parent::setFromArray(options: $this->normalizeOptions(config: Assert::isArray($options)));
+        return parent::setFromArray(options: \Jield\Stdlib\Value::stringKeyedArray($this->normalizeOptions(config: Assert::isArray($options))));
     }
 
     /**
@@ -69,12 +69,13 @@ class ContentNegotiationOptions extends AbstractOptions
     {
         $mergedConfig = $config;
 
+        /** @mago-var mixed $key */
         foreach ($this->keysToNormalize as $key) {
             $normalizedKey = str_replace('-', '_', Assert::string($key));
 
             if (isset($config[$key], $config[$normalizedKey])) {
                 $mergedConfig[$normalizedKey] = array_merge_recursive(
-                    $config[$key],
+                    Assert::isArray($config[$key]),
                     Assert::isArray($config[$normalizedKey]),
                 );
                 unset($mergedConfig[$key]);

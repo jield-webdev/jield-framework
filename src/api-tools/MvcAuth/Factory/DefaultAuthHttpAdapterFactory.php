@@ -27,6 +27,7 @@ class DefaultAuthHttpAdapterFactory implements FactoryInterface
             return false;
         }
 
+        /** @mago-var mixed $config */
         $config = $container->get('config');
 
         // If no HTTP adapter configuration present, nothing to create
@@ -35,7 +36,7 @@ class DefaultAuthHttpAdapterFactory implements FactoryInterface
         }
 
         return HttpAdapterFactory::factory(
-            config: $config['api-tools-mvc-auth']['authentication']['http'],
+            config: \Webmozart\Assert\Assert::isArray($config['api-tools-mvc-auth']['authentication']['http']),
             container: $container,
         );
     }

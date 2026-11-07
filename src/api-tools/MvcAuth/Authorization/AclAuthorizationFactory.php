@@ -52,6 +52,7 @@ abstract class AclAuthorizationFactory
      */
     private static function injectGrants(AclAuthorization $acl, string $grantType, array $rules): AclAuthorization
     {
+        /** @mago-var mixed $set */
         foreach ($rules as $set) {
             if (!is_array(value: $set) || !isset($set['resource'])) {
                 continue;
@@ -71,10 +72,12 @@ abstract class AclAuthorizationFactory
     private static function injectGrant(AclAuthorization $acl, string $grantType, array $ruleSet): void
     {
         // Add new resource to ACL
+        /** @mago-var mixed $resource */
         $resource = $ruleSet['resource'];
-        $acl->addResource($ruleSet['resource']);
+        $acl->addResource(Value::instanceOrString($ruleSet['resource'], \Laminas\Permissions\Acl\Resource\ResourceInterface::class));
 
         // Deny guest specified privileges to resource
+        /** @mago-var mixed $privileges */
         $privileges = $ruleSet['privileges'] ?? null;
 
         // null privileges means no permissions were setup; nothing to do

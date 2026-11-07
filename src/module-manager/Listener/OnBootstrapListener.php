@@ -21,13 +21,15 @@ class OnBootstrapListener extends AbstractListener
         $module = $e->getModule();
         if (
             !$module instanceof BootstrapListenerInterface
-            && !method_exists(object_or_class: $module, method: 'onBootstrap')
+            && !method_exists(object_or_class: Value::objectOrString($module), method: 'onBootstrap')
         ) {
             return;
         }
 
         $moduleManager = $e->getTarget();
+        /** @mago-var mixed $events */
         $events = Value::call(Assert::object($moduleManager), 'getEventManager');
+        /** @mago-var mixed $sharedEvents */
         $sharedEvents = Value::call($events, 'getSharedManager');
         Value::call($sharedEvents, 'attach', [
             Application::class,

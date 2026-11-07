@@ -50,25 +50,28 @@ abstract class AbstractValidatorFactory implements FactoryInterface
         }
 
         $objectManager = $this->getObjectManager(container: $container, options: $options);
+        /** @mago-var mixed $targetClassName */
         $targetClassName = $options['target_class'];
 
-        if (!class_exists(class: $targetClassName)) {
-            throw new BadMethodCallException(message: sprintf('Class %s could not be found.', $targetClassName));
+        if (!class_exists(class: \Webmozart\Assert\Assert::string($targetClassName))) {
+            throw new BadMethodCallException(message: sprintf('Class %s could not be found.', Value::scalar($targetClassName)));
         }
 
-        return $objectManager->getRepository(className: $targetClassName);
+        return $objectManager->getRepository(className: Value::classString($targetClassName));
     }
 
     /** @param array $options */
     protected function getObjectManager(ContainerInterface $container, ?array $options = null): ObjectManager
     {
+        /** @mago-var mixed $objectManager */
         $objectManager = $options['object_manager'] ?? self::DEFAULT_OBJECTMANAGER_KEY;
 
         if (is_string(value: $objectManager)) {
+            /** @mago-var mixed $objectManager */
             $objectManager = $container->get($objectManager);
         }
 
-        return $objectManager;
+        return \Webmozart\Assert\Assert::isInstanceOf($objectManager, \Doctrine\Persistence\ObjectManager::class);
     }
 
     /**

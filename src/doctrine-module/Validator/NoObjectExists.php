@@ -28,7 +28,7 @@ class NoObjectExists extends ObjectExists
     public function isValid($value): bool
     {
         $cleanedValue = $this->cleanSearchValue(value: $value);
-        $match = $this->objectRepository->findOneBy(criteria: $cleanedValue);
+        $match = $this->objectRepository->findOneBy(criteria: \Jield\Stdlib\Value::stringKeyedArray($cleanedValue));
 
         if (is_object(value: $match)) {
             $this->error(messageKey: self::ERROR_OBJECT_FOUND, value: $value);

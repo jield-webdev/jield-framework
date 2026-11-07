@@ -19,7 +19,7 @@ class ObjectRepository implements StorageInterface
     public function setOptions(array|AuthenticationOptions $options): ObjectRepository
     {
         if (!$options instanceof AuthenticationOptions) {
-            $options = new AuthenticationOptions(options: $options);
+            $options = new AuthenticationOptions(options: \Jield\Stdlib\Value::options($options));
         }
 
         $this->options = $options;
@@ -48,6 +48,7 @@ class ObjectRepository implements StorageInterface
      */
     public function read(): ?object
     {
+        /** @mago-var mixed $identity */
         $identity = Assert::isInstanceOf($this->options->getStorage(), StorageInterface::class)->read();
         if ($identity) {
             return $this->options->getObjectRepository()->find(id: $identity);
@@ -62,13 +63,14 @@ class ObjectRepository implements StorageInterface
      */
     public function readKeyOnly(): mixed
     {
+        /** @mago-var mixed $identity */
         return $identity = Assert::isInstanceOf($this->options->getStorage(), StorageInterface::class)->read();
     }
 
     public function write(mixed $contents): void
     {
         $metadataInfo = $this->options->getClassMetadata();
-        $identifierValues = $metadataInfo->getIdentifierValues($contents);
+        $identifierValues = $metadataInfo->getIdentifierValues(Assert::object($contents));
 
         Assert::isInstanceOf($this->options->getStorage(), StorageInterface::class)->write(contents: $identifierValues);
     }

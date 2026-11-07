@@ -17,9 +17,11 @@ final class EntraTokenValidatorFactory
     {
         $keys = Service::get($container, EntraJwksProvider::class);
 
+        /** @mago-var mixed $config */
         $config = $container->get('config')['api-tools-oauth2']['entra'] ?? [];
+        /** @mago-var mixed $roles */
         $roles = $config['application_roles'] ?? [];
-        $roles = array_values($roles);
+        $roles = array_values(Assert::isArray($roles));
         Assert::allString($roles);
 
         return ($config['diagnostics'] ?? false) === true

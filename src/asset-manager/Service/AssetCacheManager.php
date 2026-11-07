@@ -39,6 +39,7 @@ class AssetCacheManager
      */
     public function setCache(string $path, AssetInterface $asset): AssetInterface|AssetCache
     {
+        /** @mago-var mixed $provider */
         $provider = $this->getProvider(path: $path);
 
         if (!$provider instanceof CacheInterface) {
@@ -74,13 +75,15 @@ class AssetCacheManager
         }
 
         $dir = '';
+        /** @mago-var mixed $class */
         $class = $cacheProvider['cache'];
 
         if (!empty($cacheProvider['options']['dir'])) {
+            /** @mago-var mixed $dir */
             $dir = $cacheProvider['options']['dir'];
         }
 
-        $class = $this->classMapper(class: $class);
+        $class = $this->classMapper(class: \Webmozart\Assert\Assert::string($class));
         return Value::instantiate($class, [$dir, $path]);
     }
 

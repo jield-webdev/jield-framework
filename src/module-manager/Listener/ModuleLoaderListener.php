@@ -59,8 +59,9 @@ class ModuleLoaderListener extends AbstractListener implements ListenerAggregate
     #[Override]
     public function detach(EventManagerInterface $events): void
     {
+        /** @mago-var mixed $callback */
         foreach ($this->callbacks as $index => $callback) {
-            $events->detach(listener: $callback);
+            $events->detach(listener: \Webmozart\Assert\Assert::isCallable($callback));
 
             unset($this->callbacks[$index]);
         }
@@ -77,7 +78,7 @@ class ModuleLoaderListener extends AbstractListener implements ListenerAggregate
     /** @return array */
     protected function getCachedConfig(): array
     {
-        return include $this->options->getModuleMapCacheFile();
+        return \Webmozart\Assert\Assert::isArray(include $this->options->getModuleMapCacheFile());
     }
 
     /**

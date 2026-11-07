@@ -59,7 +59,7 @@ class ObjectSelect extends SelectElement
                 $value = Value::toArray($value);
             }
 
-            return parent::setValue(value: array_map(callback: [$this->getProxy(), 'getValue'], array: $value));
+            return parent::setValue(value: array_map(callback: [$this->getProxy(), 'getValue'], array: Assert::isArray($value)));
         }
 
         return parent::setValue(value: $this->getProxy()->getValue(value: $value));

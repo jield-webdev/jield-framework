@@ -27,7 +27,7 @@ class UserAsRole implements RoleInterface, Stringable
             );
         }
 
-        return $this->userAsRole;
+        return \Webmozart\Assert\Assert::isInstanceOf($this->userAsRole, \Jield\Authorize\Role\UserAsRoleInterface::class);
     }
 
     public function __toString(): string

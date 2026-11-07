@@ -57,14 +57,20 @@ class OAuth2ServerInstanceFactory
 
         $storage = [];
 
+        /** @mago-var mixed $storagesService */
         foreach ($storagesServices as $storageKey => $storagesService) {
-            $storage[$storageKey] = $this->services->get($storagesService);
+            $storage[$storageKey] = $this->services->get(Assert::string($storagesService));
         }
 
+        /** @mago-var mixed $enforceState */
         $enforceState = $config['enforce_state'] ?? true;
+        /** @mago-var mixed $allowImplicit */
         $allowImplicit = $config['allow_implicit'] ?? false;
+        /** @mago-var mixed $accessLifetime */
         $accessLifetime = $config['access_lifetime'] ?? 3600;
+        /** @mago-var mixed $audience */
         $audience = $config['audience'] ?? '';
+        /** @mago-var mixed $options */
         $options = $config['options'] ?? [];
         $options = array_merge([
             'enforce_state' => $enforceState,
@@ -74,6 +80,7 @@ class OAuth2ServerInstanceFactory
 
         // Pass a storage object or array of storage objects to the OAuth2 server class
         $server = new OAuth2Server(storage: $storage, config: $options);
+        /** @mago-var mixed $availableGrantTypes */
         $availableGrantTypes = $config['grant_types'];
 
         if (isset($availableGrantTypes['client_credentials']) && $availableGrantTypes['client_credentials'] === true) {

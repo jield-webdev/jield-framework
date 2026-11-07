@@ -21,9 +21,12 @@ class NamedOAuth2ServerFactory
 {
     public function __invoke(ContainerInterface $container): callable
     {
+        /** @mago-var mixed $config */
         $config = $container->get('config');
 
+        /** @mago-var mixed $oauth2Config */
         $oauth2Config = $config['api-tools-oauth2'] ?? [];
+        /** @mago-var mixed $mvcAuthConfig */
         $mvcAuthConfig = $config['api-tools-mvc-auth']['authentication']['adapters'] ?? [];
 
         $servers = new class {
@@ -38,7 +41,7 @@ class NamedOAuth2ServerFactory
                     return $servers->application;
                 }
 
-                $factory = new OAuth2ServerInstanceFactory(config: $oauth2Config, services: $container);
+                $factory = new OAuth2ServerInstanceFactory(config: Assert::isArray($oauth2Config), services: $container);
                 return $servers->application = $factory();
             }
 
@@ -46,6 +49,7 @@ class NamedOAuth2ServerFactory
                 return $servers->api[$type];
             }
 
+            /** @mago-var mixed $adapterConfig */
             foreach (Assert::isIterable($mvcAuthConfig) as $adapterConfig) {
                 if (!isset($adapterConfig['storage']['route'])) {
                     // Not a api-tools-oauth2 config
@@ -57,7 +61,7 @@ class NamedOAuth2ServerFactory
                 }
 
                 // Found!
-                return $servers->api[$type] = OAuth2ServerFactory::factory(
+                return $servers->api[\Jield\Stdlib\Value::key($type)] = OAuth2ServerFactory::factory(
                     config: $adapterConfig['storage'],
                     container: $container,
                 );
@@ -70,7 +74,7 @@ class NamedOAuth2ServerFactory
                 return $servers->application;
             }
 
-            $factory = new OAuth2ServerInstanceFactory(config: $oauth2Config, services: $container);
+            $factory = new OAuth2ServerInstanceFactory(config: Assert::isArray($oauth2Config), services: $container);
             return $servers->application = $factory();
         };
     }

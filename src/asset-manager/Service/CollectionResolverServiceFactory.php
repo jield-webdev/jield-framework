@@ -17,13 +17,15 @@ class CollectionResolverServiceFactory implements FactoryInterface
     #[Override]
     public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): CollectionResolver
     {
+        /** @mago-var mixed $config */
         $config = $container->get('config');
         $collections = [];
 
         if (isset($config['asset_manager']['resolver_configs']['collections'])) {
+            /** @mago-var mixed $collections */
             $collections = $config['asset_manager']['resolver_configs']['collections'];
         }
 
-        return new CollectionResolver(collections: $collections);
+        return new CollectionResolver(collections: \Webmozart\Assert\Assert::isIterable($collections));
     }
 }

@@ -142,18 +142,21 @@ class ModuleAutoloader implements SplAutoloader
 
         $moduleName = substr(string: $class, offset: 0, length: -7);
         if (isset($this->explicitPaths[$moduleName])) {
-            $classLoaded = $this->loadModuleFromDir(dirPath: $this->explicitPaths[$moduleName], class: $class);
+            /** @mago-var mixed $classLoaded */
+            $classLoaded = $this->loadModuleFromDir(dirPath: Assert::string($this->explicitPaths[$moduleName]), class: $class);
             if ($classLoaded) {
                 return $classLoaded;
             }
 
-            $classLoaded = $this->loadModuleFromPhar(pharPath: $this->explicitPaths[$moduleName], class: $class);
+            /** @mago-var mixed $classLoaded */
+            $classLoaded = $this->loadModuleFromPhar(pharPath: Assert::string($this->explicitPaths[$moduleName]), class: $class);
             if ($classLoaded) {
                 return $classLoaded;
             }
         }
 
         if (count(value: $this->namespacedPaths) >= 1) {
+            /** @mago-var mixed $path */
             foreach ($this->namespacedPaths as $namespace => $path) {
                 if (!str_contains(haystack: $moduleName, needle: Assert::string($namespace))) {
                     continue;
@@ -162,11 +165,13 @@ class ModuleAutoloader implements SplAutoloader
                 $moduleNameBuffer = str_replace(search: $namespace . "\\", replace: '', subject: $moduleName);
                 $path = Value::stringify($path) . (DIRECTORY_SEPARATOR . $moduleNameBuffer . DIRECTORY_SEPARATOR);
 
+                /** @mago-var mixed $classLoaded */
                 $classLoaded = $this->loadModuleFromDir(dirPath: $path, class: $class);
                 if ($classLoaded) {
                     return $classLoaded;
                 }
 
+                /** @mago-var mixed $classLoaded */
                 $classLoaded = $this->loadModuleFromPhar(pharPath: $path, class: $class);
                 if ($classLoaded) {
                     return $classLoaded;
@@ -184,6 +189,7 @@ class ModuleAutoloader implements SplAutoloader
                 . ')';
         }
 
+        /** @mago-var mixed $path */
         foreach ($this->paths as $path) {
             $path = Value::stringify($path) . $moduleClassPath;
 
@@ -199,6 +205,7 @@ class ModuleAutoloader implements SplAutoloader
                 $path = rtrim(string: Assert::string($basePath), characters: '\/\\') . substr(string: $path, offset: 1);
             }
 
+            /** @mago-var mixed $classLoaded */
             $classLoaded = $this->loadModuleFromDir(dirPath: $path, class: $class);
             if ($classLoaded) {
                 return $classLoaded;
@@ -216,6 +223,7 @@ class ModuleAutoloader implements SplAutoloader
                         continue;
                     }
 
+                    /** @mago-var mixed $classLoaded */
                     $classLoaded = $this->loadModuleFromPhar(pharPath: $entry->getPathname(), class: $class);
                     if ($classLoaded) {
                         return $classLoaded;
@@ -346,11 +354,15 @@ class ModuleAutoloader implements SplAutoloader
      */
     public function registerPaths(Traversable|array $paths): static
     {
+        /**
+         * @mago-var mixed $module
+         * @mago-var mixed $path
+         */
         foreach ($paths as $module => $path) {
             if (is_string(value: $module)) {
-                $this->registerPath(path: $path, moduleName: $module);
+                $this->registerPath(path: Assert::string($path), moduleName: $module);
             } else {
-                $this->registerPath(path: $path);
+                $this->registerPath(path: Assert::string($path));
             }
         }
 

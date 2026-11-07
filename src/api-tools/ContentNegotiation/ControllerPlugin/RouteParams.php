@@ -24,6 +24,7 @@ class RouteParams extends AbstractPlugin
         }
 
         if ($controller instanceof AbstractController) {
+            /** @mago-var mixed $parameterData */
             $parameterData = $controller->getEvent()->getParam(name: 'LaminasContentNegotiationParameterData');
             if ($parameterData instanceof ParameterDataContainer) {
                 return $parameterData->getRouteParams();
@@ -35,6 +36,6 @@ class RouteParams extends AbstractPlugin
             return [];
         }
 
-        return $event->getRouteMatch()->getParams();
+        return \Webmozart\Assert\Assert::notNull($event->getRouteMatch())->getParams();
     }
 }

@@ -31,17 +31,17 @@ final class FacetField
     public static function fromArray(array $params): FacetField
     {
         return new self(
-            field: $params['field'] ?? '',
-            name: $params['name'] ?? '',
-            type: $params['name'] ?? self::TYPE_CHECKBOX,
-            minCount: $params['minCount'] ?? 0,
-            sort: $params['sort'] ?? 'index',
-            reverse: $params['reverse'] ?? false,
-            hasYesNo: $params['hasYesNo'] ?? false,
-            hasAndOr: $params['hasAndOr'] ?? false,
-            defaultValue: $params['defaultValue'] ?? false,
-            limit: $params['limit'] ?? 100,
-            visibility: $params['visibility'] ?? FacetFieldVisibilityEnum::FILTER_COLUMN,
+            field: \Webmozart\Assert\Assert::string($params['field'] ?? ''),
+            name: \Webmozart\Assert\Assert::string($params['name'] ?? ''),
+            type: \Webmozart\Assert\Assert::integer($params['name'] ?? self::TYPE_CHECKBOX),
+            minCount: \Webmozart\Assert\Assert::integer($params['minCount'] ?? 0),
+            sort: \Webmozart\Assert\Assert::string($params['sort'] ?? 'index'),
+            reverse: \Webmozart\Assert\Assert::boolean($params['reverse'] ?? false),
+            hasYesNo: \Webmozart\Assert\Assert::boolean($params['hasYesNo'] ?? false),
+            hasAndOr: \Webmozart\Assert\Assert::boolean($params['hasAndOr'] ?? false),
+            defaultValue: \Webmozart\Assert\Assert::nullOrString($params['defaultValue'] ?? false),
+            limit: \Webmozart\Assert\Assert::integer($params['limit'] ?? 100),
+            visibility: \Webmozart\Assert\Assert::isInstanceOf($params['visibility'] ?? FacetFieldVisibilityEnum::FILTER_COLUMN, \Jield\Search\Enum\FacetFieldVisibilityEnum::class),
         );
     }
 

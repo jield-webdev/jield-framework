@@ -82,11 +82,13 @@ final class ElementAnnotationsListener extends AbstractAnnotationsListener
      */
     public function handleAllowEmptyAnnotation(EventInterface $e): void
     {
+        /** @mago-var mixed $annotation */
         $annotation = $e->getParam('annotation');
         if (!$annotation instanceof AllowEmpty) {
             return;
         }
 
+        /** @mago-var mixed $inputSpec */
         $inputSpec = $e->getParam('inputSpec');
         Value::setPath($inputSpec, ['allow_empty'], true);
     }
@@ -98,15 +100,17 @@ final class ElementAnnotationsListener extends AbstractAnnotationsListener
      */
     public function handleAttributesAnnotation(EventInterface $e): void
     {
+        /** @mago-var mixed $annotation */
         $annotation = $e->getParam('annotation');
         if (!$annotation instanceof Attributes) {
             return;
         }
 
+        /** @mago-var mixed $elementSpec */
         $elementSpec = $e->getParam('elementSpec');
         if (isset($elementSpec['spec']['attributes'])) {
             $elementSpec['spec']['attributes'] = array_merge(
-                $elementSpec['spec']['attributes'],
+                Assert::isArray($elementSpec['spec']['attributes']),
                 $annotation->getAttributes(),
             );
             return;
@@ -120,6 +124,7 @@ final class ElementAnnotationsListener extends AbstractAnnotationsListener
      */
     public function handleComposedObjectAnnotation(EventInterface $e): void
     {
+        /** @mago-var mixed $annotation */
         $annotation = $e->getParam('annotation');
         if (!$annotation instanceof ComposedObject) {
             return;
@@ -127,9 +132,12 @@ final class ElementAnnotationsListener extends AbstractAnnotationsListener
 
         $class = $annotation->getComposedObject();
         $annotationManager = $e->getTarget();
+        /** @mago-var mixed $specification */
         $specification = Value::call(Assert::object($annotationManager), 'getFormSpecification', [$class]);
 
+        /** @mago-var mixed $name */
         $name = $e->getParam('name');
+        /** @mago-var mixed $elementSpec */
         $elementSpec = $e->getParam('elementSpec');
 
         if ($annotation->isCollection()) {
@@ -141,6 +149,7 @@ final class ElementAnnotationsListener extends AbstractAnnotationsListener
                 Value::setPath($specification, ['type'], InputFilterProviderFieldset::class);
             }
 
+            /** @mago-var mixed $inputFilter */
             $inputFilter = $specification['input_filter'];
             if (!isset($inputFilter['type'])) {
                 Value::setPath($inputFilter, ['type'], InputFilter::class);
@@ -150,6 +159,7 @@ final class ElementAnnotationsListener extends AbstractAnnotationsListener
             Value::setPath($elementSpec, ['spec', 'type'], Collection::class);
             Value::setPath($elementSpec, ['spec', 'name'], $name);
 
+            /** @mago-var mixed $targetElementOptions */
             $targetElementOptions = $specification['options'] ?? [];
             assert(is_array($targetElementOptions));
             $targetElementOptions['input_filter_spec'] = $inputFilter;
@@ -169,10 +179,13 @@ final class ElementAnnotationsListener extends AbstractAnnotationsListener
             }
         } else {
             // Compose input filter into parent input filter
+            $specification = Assert::isArray($specification);
+            /** @mago-var mixed $inputFilter */
             $inputFilter = $specification['input_filter'];
             if (!isset($inputFilter['type'])) {
                 Value::setPath($inputFilter, ['type'], InputFilter::class);
             }
+            /** @mago-var mixed $inputSpec */
             $inputSpec = $e->getParam('inputSpec');
             Value::call($inputSpec, 'exchangeArray', [
                 $inputFilter instanceof \ArrayObject ? $inputFilter->getArrayCopy() : Value::toArray($inputFilter),
@@ -189,7 +202,7 @@ final class ElementAnnotationsListener extends AbstractAnnotationsListener
                 Value::setPath(
                     $specification,
                     ['options'],
-                    array_merge($elementSpec['spec']['options'], Assert::isArray($specification['options'])),
+                    array_merge(Assert::isArray($elementSpec['spec']['options']), Assert::isArray($specification['options'])),
                 );
             }
 
@@ -211,11 +224,13 @@ final class ElementAnnotationsListener extends AbstractAnnotationsListener
      */
     public function handleContinueIfEmptyAnnotation(EventInterface $e): void
     {
+        /** @mago-var mixed $annotation */
         $annotation = $e->getParam('annotation');
         if (!$annotation instanceof ContinueIfEmpty) {
             return;
         }
 
+        /** @mago-var mixed $inputSpec */
         $inputSpec = $e->getParam('inputSpec');
         Value::setPath($inputSpec, ['continue_if_empty'], true);
     }
@@ -227,11 +242,13 @@ final class ElementAnnotationsListener extends AbstractAnnotationsListener
      */
     public function handleErrorMessageAnnotation(EventInterface $e): void
     {
+        /** @mago-var mixed $annotation */
         $annotation = $e->getParam('annotation');
         if (!$annotation instanceof ErrorMessage) {
             return;
         }
 
+        /** @mago-var mixed $inputSpec */
         $inputSpec = $e->getParam('inputSpec');
         Value::setPath($inputSpec, ['error_message'], $annotation->getMessage());
     }
@@ -241,6 +258,7 @@ final class ElementAnnotationsListener extends AbstractAnnotationsListener
      */
     public function handleExcludeAnnotation(EventInterface $e): bool
     {
+        /** @mago-var mixed $annotations */
         $annotations = $e->getParam('annotations');
         assert($annotations instanceof AnnotationCollection);
 
@@ -257,11 +275,13 @@ final class ElementAnnotationsListener extends AbstractAnnotationsListener
      */
     public function handleFilterAnnotation(EventInterface $e): void
     {
+        /** @mago-var mixed $annotation */
         $annotation = $e->getParam('annotation');
         if (!$annotation instanceof Filter) {
             return;
         }
 
+        /** @mago-var mixed $inputSpec */
         $inputSpec = $e->getParam('inputSpec');
         if (!isset($inputSpec['filters'])) {
             Value::setPath($inputSpec, ['filters'], []);
@@ -277,11 +297,13 @@ final class ElementAnnotationsListener extends AbstractAnnotationsListener
      */
     public function handleFlagsAnnotation(EventInterface $e): void
     {
+        /** @mago-var mixed $annotation */
         $annotation = $e->getParam('annotation');
         if (!$annotation instanceof Flags) {
             return;
         }
 
+        /** @mago-var mixed $elementSpec */
         $elementSpec = $e->getParam('elementSpec');
         Value::setPath($elementSpec, ['flags'], $annotation->getFlags());
     }
@@ -293,11 +315,13 @@ final class ElementAnnotationsListener extends AbstractAnnotationsListener
      */
     public function handleHydratorAnnotation(EventInterface $e): void
     {
+        /** @mago-var mixed $annotation */
         $annotation = $e->getParam('annotation');
         if (!$annotation instanceof Hydrator) {
             return;
         }
 
+        /** @mago-var mixed $elementSpec */
         $elementSpec = $e->getParam('elementSpec');
         Value::setPath($elementSpec, ['spec', 'hydrator'], $annotation->getHydratorSpecification());
     }
@@ -310,11 +334,13 @@ final class ElementAnnotationsListener extends AbstractAnnotationsListener
      */
     public function handleInputAnnotation(EventInterface $e): void
     {
+        /** @mago-var mixed $annotation */
         $annotation = $e->getParam('annotation');
         if (!$annotation instanceof Input) {
             return;
         }
 
+        /** @mago-var mixed $inputSpec */
         $inputSpec = $e->getParam('inputSpec');
         Value::setPath($inputSpec, ['type'], $annotation->getInput());
     }
@@ -326,11 +352,13 @@ final class ElementAnnotationsListener extends AbstractAnnotationsListener
      */
     public function handleInstanceAnnotation(EventInterface $e): void
     {
+        /** @mago-var mixed $annotation */
         $annotation = $e->getParam('annotation');
         if (!$annotation instanceof Instance) {
             return;
         }
 
+        /** @mago-var mixed $elementSpec */
         $elementSpec = $e->getParam('elementSpec');
         Value::setPath($elementSpec, ['spec', 'object'], $annotation->getInstance());
     }
@@ -342,13 +370,15 @@ final class ElementAnnotationsListener extends AbstractAnnotationsListener
      */
     public function handleOptionsAnnotation(EventInterface $e): void
     {
+        /** @mago-var mixed $annotation */
         $annotation = $e->getParam('annotation');
         if (!$annotation instanceof Options) {
             return;
         }
 
+        /** @mago-var mixed $elementSpec */
         $elementSpec = $e->getParam('elementSpec');
-        Value::setPath($elementSpec, ['spec', 'options'], $this->mergeOptions($elementSpec, $annotation));
+        Value::setPath($elementSpec, ['spec', 'options'], $this->mergeOptions(Value::accessible($elementSpec), $annotation));
     }
 
     /**
@@ -358,16 +388,19 @@ final class ElementAnnotationsListener extends AbstractAnnotationsListener
      */
     public function handleRequiredAnnotation(EventInterface $e): void
     {
+        /** @mago-var mixed $annotation */
         $annotation = $e->getParam('annotation');
         if (!$annotation instanceof Required) {
             return;
         }
 
         $required = $annotation->getRequired();
+        /** @mago-var mixed $inputSpec */
         $inputSpec = $e->getParam('inputSpec');
         Value::setPath($inputSpec, ['required'], $required);
 
         if ($required) {
+            /** @mago-var mixed $elementSpec */
             $elementSpec = $e->getParam('elementSpec');
             if (!isset($elementSpec['spec']['attributes'])) {
                 Value::setPath($elementSpec, ['spec', 'attributes'], []);
@@ -384,11 +417,13 @@ final class ElementAnnotationsListener extends AbstractAnnotationsListener
      */
     public function handleTypeAnnotation(EventInterface $e): void
     {
+        /** @mago-var mixed $annotation */
         $annotation = $e->getParam('annotation');
         if (!$annotation instanceof Type) {
             return;
         }
 
+        /** @mago-var mixed $elementSpec */
         $elementSpec = $e->getParam('elementSpec');
         Value::setPath($elementSpec, ['spec', 'type'], $annotation->getType());
     }
@@ -400,11 +435,13 @@ final class ElementAnnotationsListener extends AbstractAnnotationsListener
      */
     public function handleValidatorAnnotation(EventInterface $e): void
     {
+        /** @mago-var mixed $annotation */
         $annotation = $e->getParam('annotation');
         if (!$annotation instanceof Validator) {
             return;
         }
 
+        /** @mago-var mixed $inputSpec */
         $inputSpec = $e->getParam('inputSpec');
         if (!isset($inputSpec['validators'])) {
             Value::setPath($inputSpec, ['validators'], []);

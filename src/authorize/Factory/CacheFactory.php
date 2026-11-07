@@ -29,10 +29,12 @@ class CacheFactory implements FactoryInterface
     {
         $storageFactory = Service::get($container, StorageAdapterFactoryInterface::class);
 
+        /** @mago-var mixed $cacheOptions */
         $cacheOptions = Assert::isArray($container->get(Config::class))['cache_options'];
 
         $plugins = [];
-        foreach (Assert::isIterable($cacheOptions['plugins']) as $plugin) {
+        /** @mago-var mixed $plugin */
+        foreach (Assert::isIterable(Value::accessible($cacheOptions)['plugins']) as $plugin) {
             $plugins[] = is_array(value: $plugin)
                 ? $plugin
                 : [

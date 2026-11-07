@@ -33,6 +33,7 @@ class InjectViewModelListener extends AbstractListenerAggregate
      */
     public function injectViewModel(MvcEvent $e): void
     {
+        /** @mago-var mixed $result */
         $result = $e->getResult();
         if (!$result instanceof ViewModel) {
             return;

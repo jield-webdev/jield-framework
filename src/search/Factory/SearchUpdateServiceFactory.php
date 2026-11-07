@@ -14,8 +14,8 @@ final class SearchUpdateServiceFactory implements FactoryInterface
     {
         return new SearchUpdateService(
             container: $container,
-            bus: $container->get('Jield\Search\Command\Bus'),
-            cores: $container->get('config')['search']['cores'] ?? [],
+            bus: \Webmozart\Assert\Assert::isInstanceOf($container->get('Jield\Search\Command\Bus'), \Symfony\Component\Messenger\MessageBusInterface::class),
+            cores: \Webmozart\Assert\Assert::isArray($container->get('config')['search']['cores'] ?? []),
         );
     }
 }

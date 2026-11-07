@@ -24,7 +24,7 @@ class EnvironmentFactory implements FactoryInterface
     {
         $moduleOptions = $options === null
             ? Service::get($container, ModuleOptions::class)
-            : new ModuleOptions($options);
+            : new ModuleOptions(Value::options($options));
 
         $envClass = $moduleOptions->getEnvironmentClass() ?: Environment::class;
 
@@ -52,6 +52,7 @@ class EnvironmentFactory implements FactoryInterface
             });
         }
 
+        /** @mago-var mixed $value */
         foreach ($moduleOptions->getGlobals() as $name => $value) {
             $env->addGlobal(Assert::string($name), $value);
         }

@@ -15,8 +15,9 @@ class ModuleOptionsFactory implements FactoryInterface
         string $requestedName,
         ?array $options = null,
     ): ModuleOptions {
+        /** @mago-var mixed $config */
         $config = $container->get('config');
 
-        return new ModuleOptions($config['jield_twig'] ?? []);
+        return new ModuleOptions(\Jield\Stdlib\Value::options($config['jield_twig'] ?? []));
     }
 }

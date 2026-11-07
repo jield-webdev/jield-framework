@@ -92,6 +92,10 @@ class StandardAutoloader implements SplAutoloader
             throw new Exception\InvalidArgumentException('Options must be either an array or Traversable');
         }
 
+        /**
+         * @mago-var mixed $type
+         * @mago-var mixed $pairs
+         */
         foreach ($options as $type => $pairs) {
             switch ($type) {
                 case self::AUTOREGISTER_LAMINAS:
@@ -169,6 +173,10 @@ class StandardAutoloader implements SplAutoloader
             throw new Exception\InvalidArgumentException('Namespace pairs must be either an array or Traversable');
         }
 
+        /**
+         * @mago-var mixed $namespace
+         * @mago-var mixed $directory
+         */
         foreach ($namespaces as $namespace => $directory) {
             $this->registerNamespace(Assert::string($namespace), Assert::string($directory));
         }
@@ -203,6 +211,10 @@ class StandardAutoloader implements SplAutoloader
             throw new Exception\InvalidArgumentException('Prefix pairs must be either an array or Traversable');
         }
 
+        /**
+         * @mago-var mixed $prefix
+         * @mago-var mixed $directory
+         */
         foreach ($prefixes as $prefix => $directory) {
             $this->registerPrefix(Assert::string($prefix), Assert::string($directory));
         }
@@ -305,6 +317,7 @@ class StandardAutoloader implements SplAutoloader
         }
 
         // Namespace and/or prefix autoloading
+        /** @mago-var mixed $path */
         foreach ($this->$type as $leader => $path) {
             if (!str_starts_with($class, Assert::string($leader))) {
                 continue;

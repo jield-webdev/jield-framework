@@ -21,16 +21,19 @@ abstract class AbstractListenerScopeGuard
             return null;
         }
 
+        /** @mago-var mixed $controller */
         $controller = $event->getRouteMatch()?->getParam('controller');
         $listener = is_string($controller) && is_subclass_of($controller, AbstractRoutedListener::class)
             ? $controller
             : null;
+        /** @mago-var mixed $identity */
         $identity = $event->getParam(AuthenticatedIdentity::class);
 
         // Existing session/guest authorization remains the application's responsibility.
         if (!$identity instanceof AuthenticatedIdentity && ($listener === null || !$listener::requiresAccessToken())) {
             return null;
         }
+        /** @mago-var mixed $rawIdentity */
         $rawIdentity = $identity instanceof AuthenticatedIdentity ? $identity->getAuthenticationIdentity() : [];
         $data = is_array($rawIdentity) ? $rawIdentity : [];
         $expires = filter_var($data['expires'] ?? 0, FILTER_VALIDATE_INT);
@@ -39,7 +42,7 @@ abstract class AbstractListenerScopeGuard
         }
 
         $required = $listener === null ? [] : $listener::getScopesForMethod($request->getMethod());
-        $scopes = Scope::split($data['scope'] ?? null);
+        $scopes = Scope::split(Assert::nullOrString($data['scope'] ?? null));
         if ($required === [] || array_intersect($scopes, $required) === []) {
             return $this->deny(
                 $event,
@@ -49,9 +52,10 @@ abstract class AbstractListenerScopeGuard
                 $required,
             );
         }
+        $listener = Assert::notNull($listener);
         if (
             $this->isApplicationIdentity($data)
-            && array_intersect($scopes, $required, $listener::getApplicationScopes()) === []
+            && array_intersect($scopes, $required, Assert::isArray($listener::getApplicationScopes())) === []
         ) {
             return $this->deny(
                 $event,

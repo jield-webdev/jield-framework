@@ -31,26 +31,29 @@ class AuthenticationAdapterDelegatorFactory implements DelegatorFactoryInterface
         callable $callback,
         ?array $options = null,
     ): DefaultAuthenticationListener {
+        /** @mago-var mixed $listener */
         $listener = $callback();
 
+        /** @mago-var mixed $config */
         $config = $container->get('config');
         if (
             !isset($config['api-tools-mvc-auth']['authentication']['adapters'])
             || !is_array(value: $config['api-tools-mvc-auth']['authentication']['adapters'])
         ) {
-            return $listener;
+            return Assert::isInstanceOf($listener, \Jield\ApiTools\MvcAuth\Authentication\DefaultAuthenticationListener::class);
         }
 
+        /** @mago-var mixed $data */
         foreach ($config['api-tools-mvc-auth']['authentication']['adapters'] as $type => $data) {
             $this->attachAdapterOfType(
                 type: Assert::string($type),
-                adapterConfig: $data,
+                adapterConfig: Assert::isArray($data),
                 container: $container,
-                listener: $listener,
+                listener: Assert::isInstanceOf($listener, \Jield\ApiTools\MvcAuth\Authentication\DefaultAuthenticationListener::class),
             );
         }
 
-        return $listener;
+        return Assert::isInstanceOf($listener, \Jield\ApiTools\MvcAuth\Authentication\DefaultAuthenticationListener::class);
     }
 
     /**

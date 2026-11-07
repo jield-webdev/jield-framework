@@ -30,6 +30,7 @@ class ObjectRepositoryRoleProviderFactory implements FactoryInterface
             );
         }
 
+        /** @mago-var mixed $providerConfig */
         $providerConfig = $config['role_providers'][ObjectRepositoryProvider::class];
 
         if (!isset($providerConfig['role_entity_class'])) {
@@ -45,10 +46,10 @@ class ObjectRepositoryRoleProviderFactory implements FactoryInterface
         }
 
         /** @var ObjectManager $objectManager */
-        $objectManager = $container->get($providerConfig['object_manager']);
+        $objectManager = $container->get(Assert::string($providerConfig['object_manager']));
 
         return new ObjectRepositoryProvider(objectRepository: $objectManager->getRepository(
-            className: $providerConfig['role_entity_class'],
+            className: \Jield\Stdlib\Value::classString($providerConfig['role_entity_class']),
         ));
     }
 }

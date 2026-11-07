@@ -21,8 +21,9 @@ class CliConfigurator
     public function configure(Application $cli): void
     {
         $arguments = new ArgvInput();
+        /** @mago-var mixed $managerName */
         $managerName = $arguments->getParameterOption('--object-manager', 'doctrine.entitymanager.orm_default');
-        $provider = new SingleManagerProvider($this->container->get($managerName), $managerName);
+        $provider = new SingleManagerProvider(\Webmozart\Assert\Assert::isInstanceOf($this->container->get(\Webmozart\Assert\Assert::string($managerName)), \Doctrine\ORM\EntityManagerInterface::class), \Webmozart\Assert\Assert::string($managerName));
         ConsoleRunner::addCommands($cli, $provider);
         foreach ($cli->all() as $command) {
             $command

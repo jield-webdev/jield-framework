@@ -13,7 +13,7 @@ class ContentNegotiationOptionsFactory
 {
     public function __invoke(ContainerInterface $container): ContentNegotiationOptions
     {
-        return new ContentNegotiationOptions(options: $this->getConfig(container: $container));
+        return new ContentNegotiationOptions(options: \Jield\Stdlib\Value::options($this->getConfig(container: $container)));
     }
 
     /**
@@ -31,6 +31,7 @@ class ContentNegotiationOptionsFactory
             return [];
         }
 
+        /** @mago-var mixed $config */
         $config = $container->get('config');
 
         if (

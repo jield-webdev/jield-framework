@@ -95,6 +95,7 @@ class ApiProblemListener extends AbstractListenerAggregate
 
         // Next, do we have a view model in the result?
         // If not, nothing more to do.
+        /** @mago-var mixed $model */
         $model = $e->getResult();
         if (!$model instanceof ModelInterface || $model instanceof ApiProblemModel) {
             return;
@@ -103,6 +104,7 @@ class ApiProblemListener extends AbstractListenerAggregate
         // Marshal the information we need for the API-Problem response
         $response = $e->getResponse();
         $status = $response instanceof HttpResponse ? $response->getStatusCode() : 500;
+        /** @mago-var mixed $exception */
         $exception = $model->getVariable(name: 'exception');
 
         if ($exception instanceof Throwable) {
@@ -131,15 +133,18 @@ class ApiProblemListener extends AbstractListenerAggregate
     {
         $app = $e->getApplication();
         $services = Assert::notNull($app)->getServiceManager();
+        /** @mago-var mixed $config */
         $config = $services->get('config');
 
         if (!isset($config['api-tools-api-problem']['render_error_controllers'])) {
             return;
         }
 
+        /** @mago-var mixed $controller */
         $controller = Assert::notNull($e->getRouteMatch())->getParam(name: 'controller');
+        /** @mago-var mixed $controllers */
         $controllers = $config['api-tools-api-problem']['render_error_controllers'];
-        if (!in_array(needle: $controller, haystack: $controllers, strict: true)) {
+        if (!in_array(needle: $controller, haystack: Assert::isArray($controllers), strict: true)) {
             // The current controller is not in our list of controllers to handle
             return;
         }
@@ -163,6 +168,7 @@ class ApiProblemListener extends AbstractListenerAggregate
         }
 
         // Marshall an ApiProblem and view model based on the exception
+        /** @mago-var mixed $exception */
         $exception = $e->getParam(name: 'exception');
         if (!$exception instanceof Throwable) {
             // If it's not an exception, do not know what to do.
@@ -216,8 +222,9 @@ class ApiProblemListener extends AbstractListenerAggregate
      */
     protected function matchAcceptCriteria(AcceptHeader $accept): bool
     {
+        /** @mago-var mixed $type */
         foreach ($this->acceptFilters as $type) {
-            $match = $accept->match(matchAgainst: $type);
+            $match = $accept->match(matchAgainst: Value::arrayOrString($type));
             if ($match instanceof AcceptFieldValuePart && $match->getTypeString() !== '*/*') {
                 return true;
             }

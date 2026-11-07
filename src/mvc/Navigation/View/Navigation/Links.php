@@ -148,7 +148,7 @@ class Links extends AbstractHelper
         $result = preg_match('/find(Rel|Rev)(.+)/', $method, $match);
         ErrorHandler::stop();
         if ($result) {
-            return $this->findRelation($arguments[0], strtolower($match[1]), strtolower($match[2]));
+            return $this->findRelation(Assert::isInstanceOf($arguments[0], \Laminas\Navigation\Page\AbstractPage::class), strtolower($match[1]), strtolower($match[2]));
         }
 
         return parent::__call($method, $arguments);
@@ -185,8 +185,9 @@ class Links extends AbstractHelper
         $result = $this->findAllRelations($active, $this->getRenderFlag());
         foreach ($result as $attrib => $types) {
             foreach ($types as $relation => $pages) {
+                /** @mago-var mixed $page */
                 foreach ($pages as $page) {
-                    $r = $this->renderLink($page, $attrib, Assert::string($relation));
+                    $r = $this->renderLink(Assert::isInstanceOf($page, \Laminas\Navigation\Page\AbstractPage::class), $attrib, Assert::string($relation));
                     if ($r) {
                         $output .= $indent . $r . PHP_EOL;
                     }
@@ -282,7 +283,7 @@ class Links extends AbstractHelper
 
         foreach (array_keys($result) as $rel) {
             $meth = 'getDefined' . ucfirst($rel);
-            $types = array_merge($native, array_diff(Value::call($page, $meth), $native));
+            $types = array_merge($native, array_diff(Value::strings(Assert::isArray(Value::call($page, $meth))), $native));
 
             foreach ($types as $type) {
                 if (!($relFlag = array_search($type, static::$RELATIONS))) {
@@ -345,6 +346,7 @@ class Links extends AbstractHelper
     protected function findFromProperty(AbstractPage $page, string $rel, string $type)
     {
         $method = 'get' . ucfirst($rel);
+        /** @mago-var mixed $result */
         $result = Value::call($page, $method, [$type]);
         if ($result) {
             $result = $this->convertToPages($result);
@@ -353,8 +355,9 @@ class Links extends AbstractHelper
                     $result = [$result];
                 }
 
+                /** @mago-var mixed $page */
                 foreach ($result as $key => $page) {
-                    if (!$this->accept($page)) {
+                    if (!$this->accept(Assert::isInstanceOf($page, \Laminas\Navigation\Page\AbstractPage::class))) {
                         unset($result[$key]);
                     }
                 }
@@ -380,6 +383,7 @@ class Links extends AbstractHelper
 
         $method = 'search' . ucfirst($rel) . ucfirst($type);
         if (method_exists($this, $method)) {
+            /** @mago-var mixed $found */
             $found = Value::call($this, $method, [$page], scope: self::class);
         }
 
@@ -702,6 +706,7 @@ class Links extends AbstractHelper
             if ($recursive && is_numeric(key($mixed))) {
                 // first key is numeric; assume several pages
                 $pages = [];
+                /** @mago-var mixed $value */
                 foreach ($mixed as $value) {
                     $value = $this->convertToPages($value, false);
                     if ($value) {
@@ -712,7 +717,7 @@ class Links extends AbstractHelper
             } else {
                 // pass array to factory directly
                 try {
-                    return AbstractPage::factory(new ArrayIterator($mixed));
+                    return AbstractPage::factory(new ArrayIterator(Value::stringKeyedArray($mixed)));
                 } catch (\Exception) {
                 }
             }

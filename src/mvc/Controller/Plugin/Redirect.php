@@ -40,11 +40,14 @@ class Redirect extends AbstractPlugin
             throw new DomainException('Redirect plugin requires a controller that defines the plugin() method');
         }
 
+        /** @mago-var mixed $urlPlugin */
         $urlPlugin = $controller->plugin('url');
 
         if (is_scalar($options)) {
+            /** @mago-var mixed $url */
             $url = Value::call($urlPlugin, 'fromRoute', [$route, $params, $options]);
         } else {
+            /** @mago-var mixed $url */
             $url = Value::call($urlPlugin, 'fromRoute', [$route, $params, $options, $reuseMatchedParams]);
         }
 

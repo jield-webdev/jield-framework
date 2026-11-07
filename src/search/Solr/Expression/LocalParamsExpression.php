@@ -40,6 +40,7 @@ class LocalParamsExpression extends Expression implements Stringable
 
         $paramsString = '';
 
+        /** @mago-var mixed $value */
         foreach ($this->params as $key => $value) {
             $paramsString .= ' ' . $key . '=' . Util::sanitize(value: $value);
         }

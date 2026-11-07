@@ -39,15 +39,17 @@ class DefaultAuthorizationListener
             return null;
         }
 
+        /** @mago-var mixed $identity */
         $identity = $mvcAuthEvent->getIdentity();
         if (!$identity instanceof IdentityInterface) {
             return null;
         }
 
         $resource = $mvcAuthEvent->getResource();
+        /** @mago-var mixed $identity */
         $identity = $mvcAuthEvent->getIdentity();
         return $this->authorization->isAuthorized(
-            identity: $identity,
+            identity: \Webmozart\Assert\Assert::isInstanceOf($identity, \Jield\ApiTools\MvcAuth\Identity\IdentityInterface::class),
             resource: $resource,
             privilege: $request->getMethod(),
         );

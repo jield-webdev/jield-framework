@@ -6,6 +6,7 @@ namespace Jield\Log\Handler;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
+use Jield\Stdlib\Value;
 use Monolog\Handler\AbstractProcessingHandler;
 use Monolog\Level;
 use Monolog\LogRecord;
@@ -23,7 +24,7 @@ final class DoctrineDbalHandler extends AbstractProcessingHandler
             : (
                 is_int($level)
                     ? Level::from($level)
-                    : Level::fromName($level)
+                    : Level::fromName(Value::oneOf(strtoupper($level), Level::NAMES))
             );
         parent::__construct($level, $bubble);
     }

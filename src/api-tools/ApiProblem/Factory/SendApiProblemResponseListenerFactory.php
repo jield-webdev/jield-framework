@@ -15,6 +15,7 @@ class SendApiProblemResponseListenerFactory
 {
     public function __invoke(ContainerInterface $container): SendApiProblemResponseListener
     {
+        /** @mago-var mixed $config */
         $config = $container->get('config');
         $displayExceptions =
             isset($config['view_manager']['display_exceptions'])

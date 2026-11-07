@@ -38,6 +38,7 @@ final class DBALConnectionFactory extends AbstractFactory
         $pdo = $options->getPdo();
 
         if (is_string(value: $pdo)) {
+            /** @mago-var mixed $pdo */
             $pdo = $container->get($pdo);
             assert(assertion: $pdo instanceof PDO);
         }
@@ -57,6 +58,7 @@ final class DBALConnectionFactory extends AbstractFactory
             $params['platform'] = $container->get($params['platform']);
         }
 
+        /** @mago-var mixed $configuration */
         $configuration = $container->get($options->getConfiguration());
         /** @var Params $managerConfiguration */
         $managerConfiguration = $params;
@@ -64,10 +66,11 @@ final class DBALConnectionFactory extends AbstractFactory
             $configuration,
             Configuration::class,
         ));
+        /** @mago-var mixed $doctrineType */
         foreach ($options->getDoctrineTypeMappings() as $dbType => $doctrineType) {
             $connection->getDatabasePlatform()->registerDoctrineTypeMapping(
                 dbType: Assert::string($dbType),
-                doctrineType: $doctrineType,
+                doctrineType: Assert::string($doctrineType),
             );
         }
 

@@ -77,13 +77,13 @@ class UniqueObject extends ObjectExists implements ObjectManagerAwareInterface
         }
 
         $cleanedValue = $this->cleanSearchValue(value: $value);
-        $match = $this->objectRepository->findOneBy(criteria: $cleanedValue);
+        $match = $this->objectRepository->findOneBy(criteria: Value::stringKeyedArray($cleanedValue));
 
         if (!is_object(value: $match)) {
             return true;
         }
 
-        $expectedIdentifiers = $this->getExpectedIdentifiers(context: $context);
+        $expectedIdentifiers = $this->getExpectedIdentifiers(context: Value::nullableArrayOrObject($context));
         $foundIdentifiers = $this->getFoundIdentifiers(match: $match);
 
         if (array_diff_assoc($expectedIdentifiers, $foundIdentifiers) === []) {
@@ -131,15 +131,16 @@ class UniqueObject extends ObjectExists implements ObjectManagerAwareInterface
         }
 
         $result = [];
+        /** @mago-var mixed $identifierField */
         foreach ($this->getIdentifiers() as $identifierField) {
-            if (!array_key_exists(key: $identifierField, array: Assert::isArray($context))) {
+            if (!array_key_exists(key: Assert::scalar($identifierField), array: Assert::isArray($context))) {
                 throw new Exception\RuntimeException(message: sprintf(
                     'Expected context to contain %s',
-                    $identifierField,
+                    Value::scalar($identifierField),
                 ));
             }
 
-            $result[$identifierField] = $context[$identifierField];
+            $result[\Jield\Stdlib\Value::key($identifierField)] = $context[$identifierField];
         }
 
         return $result;

@@ -118,6 +118,7 @@ class Breadcrumbs extends AbstractHelper
             $html = $this->htmlify($active);
         } else {
             $escaper = $this->getView()->plugin('escapeHtml', EscapeHtml::class);
+            /** @mago-var mixed $label */
             $label = $escaper($this->translate($active->getLabel(), $active->getTextDomain()));
             $attribs = [
                 'aria-current' => 'page',
@@ -126,6 +127,7 @@ class Breadcrumbs extends AbstractHelper
         }
 
         // walk back to root
+        /** @mago-var mixed $parent */
         while ($parent = Value::call(Assert::object($active), 'getParent')) {
             if ($parent instanceof AbstractPage) {
                 // prepend crumb to html
@@ -137,6 +139,7 @@ class Breadcrumbs extends AbstractHelper
                 break;
             }
 
+            /** @mago-var mixed $active */
             $active = $parent;
         }
 

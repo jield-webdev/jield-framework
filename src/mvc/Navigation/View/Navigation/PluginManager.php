@@ -41,7 +41,7 @@ final class PluginManager extends AbstractPluginManager
     /**
      * Default aliases.
      *
-     * @var array<string, class-string<AbstractHelper>>
+     * @var string[]
      */
     protected array $aliases = [
         'breadcrumbs' => Breadcrumbs::class,

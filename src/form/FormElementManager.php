@@ -187,6 +187,7 @@ class FormElementManager extends AbstractPluginManager
             return;
         }
 
+        /** @mago-var mixed $factory */
         $factory = $instance->getFormFactory();
         Value::call($factory, 'setFormElementManager', [$this]);
 

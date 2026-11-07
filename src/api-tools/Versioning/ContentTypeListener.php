@@ -113,8 +113,9 @@ class ContentTypeListener implements ListenerAggregateInterface
         $contentType = array_shift(array: $parts);
         $contentType = trim(string: $contentType);
 
+        /** @mago-var mixed $regex */
         foreach (array_reverse(array: $this->regexes) as $regex) {
-            if (!preg_match(pattern: $regex, subject: $contentType, matches: $matches)) {
+            if (!preg_match(pattern: Assert::string($regex), subject: $contentType, matches: $matches)) {
                 continue;
             }
 
@@ -132,6 +133,7 @@ class ContentTypeListener implements ListenerAggregateInterface
      */
     protected function injectRouteMatches(RouteMatch $routeMatches, array $matches): void
     {
+        /** @mago-var mixed $value */
         foreach ($matches as $key => $value) {
             if (is_numeric(value: $key) || $value === '') {
                 continue;

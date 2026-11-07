@@ -20,10 +20,12 @@ class PrioritizedPathsResolverServiceFactory implements FactoryInterface
         $requestedName,
         ?array $options = null,
     ): PrioritizedPathsResolver {
+        /** @mago-var mixed $config */
         $config = $container->get('config');
         $prioritizedPathsResolver = new PrioritizedPathsResolver();
+        /** @mago-var mixed $paths */
         $paths = $config['asset_manager']['resolver_configs']['prioritized_paths'] ?? [];
-        $prioritizedPathsResolver->addPaths(paths: $paths);
+        $prioritizedPathsResolver->addPaths(paths: \Webmozart\Assert\Assert::isIterable($paths));
 
         return $prioritizedPathsResolver;
     }

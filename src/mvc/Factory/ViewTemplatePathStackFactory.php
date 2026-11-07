@@ -31,6 +31,7 @@ class ViewTemplatePathStackFactory implements FactoryInterface
         ?array $options = null,
     ): ViewResolver\TemplatePathStack {
         $config = Configuration::get($container);
+        /** @mago-var mixed $paths */
         $paths = $config['view_manager']['template_path_stack'] ?? [];
 
         $paths = is_array($paths) ? array_values(array_map(Assert::stringNotEmpty(...), $paths)) : [];

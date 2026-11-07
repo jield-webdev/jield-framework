@@ -22,15 +22,17 @@ final class EntityResolverFactory extends AbstractFactory
     {
         $options = $this->getOptions(container: $container, key: 'entity_resolver');
         assert(assertion: $options instanceof EntityResolver);
+        /** @mago-var mixed $eventManager */
         $eventManager = $container->get($options->getEventManager());
         $resolvers = $options->getResolvers();
 
         $targetEntityListener = new ResolveTargetEntityListener();
 
+        /** @mago-var mixed $newEntity */
         foreach ($resolvers as $oldEntity => $newEntity) {
             $targetEntityListener->addResolveTargetEntity(
                 originalEntity: Assert::string($oldEntity),
-                newEntity: $newEntity,
+                newEntity: Assert::string($newEntity),
                 mapping: [],
             );
         }

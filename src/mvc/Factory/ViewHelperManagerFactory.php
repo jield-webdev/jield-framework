@@ -61,10 +61,10 @@ class ViewHelperManagerFactory extends AbstractPluginManagerFactory
             ContainerInterface $pluginContainer,
             mixed $helper,
         ) use ($container): void {
-            if (method_exists($helper, 'setView')) {
+            if (method_exists(Value::objectOrString($helper), 'setView')) {
                 Value::call($helper, 'setView', [Service::get($container, PhpRenderer::class)]);
             }
-            if (method_exists($helper, 'setTranslator')) {
+            if (method_exists(Value::objectOrString($helper), 'setTranslator')) {
                 Value::call($helper, 'setTranslator', [Service::get($container, TranslatorInterface::class)]);
             }
         });
@@ -157,17 +157,19 @@ class ViewHelperManagerFactory extends AbstractPluginManagerFactory
     {
         return static function () use ($services): BasePath {
             $config = Configuration::get($services);
+            /** @mago-var mixed $basePath */
             $basePath = $config['view_manager']['base_path'] ?? null;
+            /** @mago-var mixed $basePath */
             $basePath = $config['view_helper_config']['base_path'] ?? $basePath;
 
-            $helper = new ViewHelper\BasePath($basePath);
+            $helper = new ViewHelper\BasePath(Assert::nullOrString($basePath));
             if ($basePath !== null) {
                 return $helper;
             }
 
             $request = Service::get($services, RequestInterface::class, 'Request');
             if (is_callable([$request, 'getBasePath'])) {
-                $helper->setBasePath(Value::call($request, 'getBasePath'));
+                $helper->setBasePath(Assert::string(Value::call($request, 'getBasePath')));
             }
             return $helper;
         };
@@ -185,10 +187,12 @@ class ViewHelperManagerFactory extends AbstractPluginManagerFactory
     {
         return static function () use ($services): Doctype {
             $config = Configuration::get($services);
+            /** @mago-var mixed $doctype */
             $doctype = $config['view_manager']['doctype'] ?? Doctype::DEFAULT_DOCTYPE;
+            /** @mago-var mixed $doctype */
             $doctype = $config['view_helper_config']['doctype'] ?? $doctype;
 
-            return new ViewHelper\Doctype($doctype);
+            return new ViewHelper\Doctype(Value::key($doctype));
         };
     }
 }

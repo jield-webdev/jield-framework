@@ -464,7 +464,7 @@ final class Configuration extends DBALConfiguration
     /** @param  mixed[] $secondLevelCache */
     public function setSecondLevelCache(array $secondLevelCache): self
     {
-        $this->secondLevelCache = new SecondLevelCacheConfiguration(options: $secondLevelCache);
+        $this->secondLevelCache = new SecondLevelCacheConfiguration(options: \Jield\Stdlib\Value::options($secondLevelCache));
 
         return $this;
     }

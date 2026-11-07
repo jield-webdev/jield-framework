@@ -12,16 +12,17 @@ class AuthenticationServiceFactory
 {
     public function __invoke(ContainerInterface $container): AuthenticationService
     {
+        /** @mago-var mixed $config */
         $config = $container->get('config');
 
         if ($container->has(\Laminas\Authentication\AuthenticationService::class)) {
             return new AuthenticationService(
                 authenticationService: Service::get($container, \Laminas\Authentication\AuthenticationService::class),
-                config: $config,
+                config: \Webmozart\Assert\Assert::isArray($config),
             );
         }
 
-        return new AuthenticationService(authenticationService: null, config: $config);
+        return new AuthenticationService(authenticationService: null, config: \Webmozart\Assert\Assert::isArray($config));
     }
 
     /**

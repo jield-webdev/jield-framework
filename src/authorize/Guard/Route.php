@@ -74,6 +74,7 @@ class Route extends AbstractGuard
         $event->setName(name: MvcEvent::EVENT_DISPATCH_ERROR);
         $results = $eventManager->triggerEvent(event: $event);
 
+        /** @mago-var mixed $return */
         $return = $results->last();
 
         if (!$return) {

@@ -86,7 +86,7 @@ class FormElementErrors extends AbstractHelper
 
         // Generate markup
         $markup = sprintf($this->getMessageOpenFormat(), $attributes);
-        $markup .= implode(separator: $this->getMessageSeparatorString(), array: $messages);
+        $markup .= implode(separator: $this->getMessageSeparatorString(), array: \Jield\Stdlib\Value::scalars($messages));
         $markup .= $this->getMessageCloseString();
 
         return $markup;
@@ -202,7 +202,7 @@ class FormElementErrors extends AbstractHelper
         $textDomain = $this->getTranslatorTextDomain();
         $messagesToPrint = [];
         $messageCallback = static function ($item) use (&$messagesToPrint, $translator, $textDomain): void {
-            $messagesToPrint[] = Assert::notNull($translator)->translate($item, $textDomain);
+            $messagesToPrint[] = Assert::notNull($translator)->translate(Assert::string($item), $textDomain);
         };
         array_walk_recursive(array: $messages, callback: $messageCallback);
         return $messagesToPrint;

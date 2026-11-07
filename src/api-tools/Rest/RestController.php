@@ -299,10 +299,12 @@ final class RestController extends AbstractRestfulController
         }
 
         // Check for an API-Problem in the event
+        /** @mago-var mixed $return */
         $return = $e->getParam(name: 'api-problem', default: false);
 
         // If no return value dispatch the parent event
         if (!$return) {
+            /** @mago-var mixed $return */
             $return = parent::onDispatch(e: $e);
         }
 
@@ -334,7 +336,8 @@ final class RestController extends AbstractRestfulController
         $events->trigger(eventName: 'create.pre', target: $this, argv: ['data' => $data]);
 
         try {
-            $value = $this->getResource()->create(data: $data);
+            /** @mago-var mixed $value */
+            $value = $this->getResource()->create(data: Value::arrayOrObject($data));
         } catch (Throwable $throwable) {
             return $this->createApiProblemFromException(e: $throwable);
         }
@@ -359,10 +362,13 @@ final class RestController extends AbstractRestfulController
         $halEntity = $this->createHalEntity(entity: $value);
 
         if ($halEntity->getLinks()->has(relation: 'self')) {
+            /** @mago-var mixed $plugin */
             $plugin = $this->plugin(name: 'Hal');
             $link = $halEntity->getLinks()->get(relation: 'self');
+            /** @mago-var mixed $self */
             $self = Value::call($plugin, 'fromLink', [$link]);
-            $url = $self['href'];
+            /** @mago-var mixed $url */
+            $url = Value::accessible($self)['href'];
 
             /** @var Response $response */
             $response = $this->getResponse();
@@ -396,11 +402,13 @@ final class RestController extends AbstractRestfulController
         $events->trigger(eventName: 'delete.pre', target: $this, argv: ['id' => $id]);
 
         try {
-            $result = $this->getResource()->delete(id: $id);
+            /** @mago-var mixed $result */
+            $result = $this->getResource()->delete(id: Value::key($id));
         } catch (Throwable $throwable) {
             return $this->createApiProblemFromException(e: $throwable);
         }
 
+        /** @mago-var mixed $result */
         $result = $result ?: new ApiProblem(status: 422, detail: 'Unable to delete entity.');
 
         if ($this->isPreparedResponse(object: $result)) {
@@ -429,11 +437,13 @@ final class RestController extends AbstractRestfulController
         $events->trigger(eventName: 'deleteList.pre', target: $this, argv: []);
 
         try {
-            $result = $this->getResource()->deleteList(data: $data);
+            /** @mago-var mixed $result */
+            $result = $this->getResource()->deleteList(data: Assert::isArray($data));
         } catch (Throwable $throwable) {
             return $this->createApiProblemFromException(e: $throwable);
         }
 
+        /** @mago-var mixed $result */
         $result = $result ?: new ApiProblem(status: 422, detail: 'Unable to delete collection.');
 
         if ($this->isPreparedResponse(object: $result)) {
@@ -462,11 +472,13 @@ final class RestController extends AbstractRestfulController
         $events->trigger(eventName: 'get.pre', target: $this, argv: ['id' => $id]);
 
         try {
-            $entity = $this->getResource()->fetch(id: $id);
+            /** @mago-var mixed $entity */
+            $entity = $this->getResource()->fetch(id: Value::key($id));
         } catch (Throwable $throwable) {
             return $this->createApiProblemFromException(e: $throwable);
         }
 
+        /** @mago-var mixed $entity */
         $entity = $entity ?: new ApiProblem(status: 404, detail: 'Entity not found.');
 
         if ($this->isPreparedResponse(object: $entity)) {
@@ -495,6 +507,7 @@ final class RestController extends AbstractRestfulController
         $events->trigger(eventName: 'getList.pre', target: $this, argv: []);
 
         try {
+            /** @mago-var mixed $collection */
             $collection = $this->getResource()->fetchAll();
         } catch (Throwable $throwable) {
             return $this->createApiProblemFromException(e: $throwable);
@@ -518,6 +531,7 @@ final class RestController extends AbstractRestfulController
         /** @var Request $request */
         $request = $this->getRequest();
 
+        /** @mago-var mixed $pageSize */
         $pageSize = $this->pageSizeParam
             ? $request->getQuery(name: $this->pageSizeParam, default: $this->pageSize)
             : $this->pageSize;
@@ -578,6 +592,7 @@ final class RestController extends AbstractRestfulController
     public function options(): Response
     {
         $e = $this->getEvent();
+        /** @mago-var mixed $id */
         $id = $this->getIdentifier(
             routeMatch: Assert::isInstanceOf($e->getRouteMatch(), \Jield\Mvc\Router\RouteMatch::class),
             request: $e->getRequest(),
@@ -610,7 +625,8 @@ final class RestController extends AbstractRestfulController
         $events->trigger(eventName: 'patch.pre', target: $this, argv: ['id' => $id, 'data' => $data]);
 
         try {
-            $entity = $this->getResource()->patch(id: (int) $id, data: empty($data) ? [] : $data);
+            /** @mago-var mixed $entity */
+            $entity = $this->getResource()->patch(id: (int) $id, data: Value::arrayOrObject(empty($data) ? [] : $data));
         } catch (Throwable $throwable) {
             return $this->createApiProblemFromException(e: $throwable);
         }
@@ -645,7 +661,8 @@ final class RestController extends AbstractRestfulController
         $events->trigger(eventName: 'update.pre', target: $this, argv: ['id' => $id, 'data' => $data]);
 
         try {
-            $entity = $this->getResource()->update(id: $id, data: $data);
+            /** @mago-var mixed $entity */
+            $entity = $this->getResource()->update(id: Value::key($id), data: Value::arrayOrObject($data));
         } catch (Throwable $throwable) {
             return $this->createApiProblemFromException(e: $throwable);
         }
@@ -676,7 +693,7 @@ final class RestController extends AbstractRestfulController
         $events->trigger(eventName: 'patchList.pre', target: $this, argv: ['data' => $data]);
 
         try {
-            $collection = $this->getResource()->patchList(data: $data);
+            $collection = $this->getResource()->patchList(data: Assert::isArray($data));
         } catch (Throwable $throwable) {
             return $this->createApiProblemFromException(e: $throwable);
         }
@@ -708,7 +725,8 @@ final class RestController extends AbstractRestfulController
         $events->trigger(eventName: 'replaceList.pre', target: $this, argv: ['data' => $data]);
 
         try {
-            $collection = $this->getResource()->replaceList(data: $data);
+            /** @mago-var mixed $collection */
+            $collection = $this->getResource()->replaceList(data: Assert::isArray($data));
         } catch (InvalidArgumentException $e) {
             return new ApiProblem(status: 400, detail: $e->getMessage());
         } catch (Throwable $e) {
@@ -743,6 +761,7 @@ final class RestController extends AbstractRestfulController
     protected function getIdentifier($routeMatch, $request): mixed
     {
         $identifier = $this->getIdentifierName();
+        /** @mago-var mixed $id */
         $id = $routeMatch->getParam(name: $identifier, default: false);
         if ($id !== null) {
             return $id;
@@ -805,6 +824,7 @@ final class RestController extends AbstractRestfulController
 
         $event = $this->getEvent();
 
+        /** @mago-var mixed $identity */
         $identity = $event->getParam(name: AuthenticatedIdentity::class);
         if (!$identity) {
             return;
@@ -827,12 +847,13 @@ final class RestController extends AbstractRestfulController
 
         $event = $this->getEvent();
 
+        /** @mago-var mixed $inputFilter */
         $inputFilter = $event->getParam(name: 'Jield\ApiTools\ContentValidation\InputFilter');
         if (!$inputFilter) {
             return;
         }
 
-        Assert::notNull($this->resource)->setInputFilter(inputFilter: $inputFilter);
+        Assert::notNull($this->resource)->setInputFilter(inputFilter: Value::nullableInstance($inputFilter, \Laminas\InputFilter\InputFilterInterface::class));
     }
 
     protected function injectRequestIntoResourceEventParams(): void
@@ -854,11 +875,13 @@ final class RestController extends AbstractRestfulController
     protected function createHalCollection(mixed $collection): HalCollection|ApiProblem
     {
         if (!$collection instanceof HalCollection) {
+            /** @mago-var mixed $halPlugin */
             $halPlugin = $this->plugin(name: 'Hal');
+            /** @mago-var mixed $collection */
             $collection = Value::call($halPlugin, 'createCollection', [$collection, $this->route]);
         }
 
-        return $this->prepareHalCollection(collection: $collection);
+        return $this->prepareHalCollection(collection: Assert::isInstanceOf($collection, \Jield\ApiTools\Hal\Collection::class));
     }
 
     /**
@@ -867,6 +890,7 @@ final class RestController extends AbstractRestfulController
     protected function prepareHalCollection(HalCollection $collection): HalCollection|ApiProblem
     {
         if (!$collection->getLinks()->has(relation: 'self')) {
+            /** @mago-var mixed $plugin */
             $plugin = $this->plugin(name: 'Hal');
             Value::call($plugin, 'injectSelfLink', [$collection, $this->route]);
         }
@@ -899,12 +923,13 @@ final class RestController extends AbstractRestfulController
             return $entity;
         }
 
+        /** @mago-var mixed $plugin */
         $plugin = $this->plugin(name: 'Hal');
 
-        return Value::call($plugin, 'createEntity', [
+        return Assert::isInstanceOf(Value::call($plugin, 'createEntity', [
             $entity,
             $this->route,
             $this->getRouteIdentifierName(),
-        ]);
+        ]), \Jield\ApiTools\Hal\Entity::class);
     }
 }

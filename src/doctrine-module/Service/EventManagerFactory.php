@@ -40,11 +40,14 @@ final class EventManagerFactory extends AbstractFactory
 
         $eventManager = new EventManager();
 
+        /** @mago-var mixed $subscriberName */
         foreach ($options->getSubscribers() as $subscriberName) {
+            /** @mago-var mixed $subscriber */
             $subscriber = $subscriberName;
 
             if (is_string(value: $subscriber)) {
                 if ($container->has($subscriber)) {
+                    /** @mago-var mixed $subscriber */
                     $subscriber = $container->get($subscriber);
                 } elseif (class_exists(class: $subscriber)) {
                     $subscriber = Value::instantiate($subscriber);
@@ -56,6 +59,7 @@ final class EventManagerFactory extends AbstractFactory
                 continue;
             }
 
+            /** @mago-var mixed $subscriberType */
             $subscriberType = is_object(value: $subscriberName) ? $subscriberName::class : $subscriberName;
 
             throw new InvalidArgumentException(message: sprintf(

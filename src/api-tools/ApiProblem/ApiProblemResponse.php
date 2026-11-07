@@ -31,7 +31,7 @@ class ApiProblemResponse extends Response
         $this->setCustomStatusCode(code: $this->apiProblem->getStatus());
 
         if ($this->apiProblem->getTitle() !== null) {
-            $this->setReasonPhrase(reasonPhrase: $this->apiProblem->getTitle());
+            $this->setReasonPhrase(reasonPhrase: \Webmozart\Assert\Assert::string($this->apiProblem->getTitle()));
         }
 
         $this->jsonFlags = JSON_UNESCAPED_SLASHES | JSON_PARTIAL_OUTPUT_ON_ERROR;
@@ -92,6 +92,6 @@ class ApiProblemResponse extends Response
             return $this->reasonPhrase;
         }
 
-        return $this->recommendedReasonPhrases[$this->statusCode] ?? 'Unknown Error';
+        return \Webmozart\Assert\Assert::string($this->recommendedReasonPhrases[$this->statusCode] ?? 'Unknown Error');
     }
 }

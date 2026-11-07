@@ -143,32 +143,39 @@ abstract class AbstractResourceListener implements ListenerAggregateInterface
         $this->event = $event;
         switch ($event->getName()) {
             case 'create':
+                /** @mago-var mixed $data */
                 $data = $event->getParam(name: 'data', default: []);
                 return $this->create(data: new Parameters(Value::toArray($data)));
             case 'delete':
                 $id = (int) $event->getParam(name: 'id');
                 return $this->delete(id: $id);
             case 'deleteList':
+                /** @mago-var mixed $data */
                 $data = $event->getParam(name: 'data', default: []);
                 return $this->deleteList(data: new Parameters(Value::toArray($data)));
             case 'fetch':
+                /** @mago-var mixed $id */
                 $id = $event->getParam(name: 'id');
-                return $this->fetch(id: $id);
+                return $this->fetch(id: Assert::string($id));
             case 'fetchAll':
                 $queryParams = $event->getQueryParams() ?: [];
                 return $this->fetchAll(params: Assert::isInstanceOf($queryParams, \Laminas\Stdlib\Parameters::class));
             case 'patch':
                 $id = (int) $event->getParam(name: 'id');
+                /** @mago-var mixed $data */
                 $data = $event->getParam(name: 'data', default: []);
                 return $this->patch(id: $id, data: new Parameters(Value::toArray($data)));
             case 'patchList':
+                /** @mago-var mixed $data */
                 $data = $event->getParam(name: 'data', default: []);
                 return $this->patchList(data: new Parameters(Value::toArray($data)));
             case 'replaceList':
+                /** @mago-var mixed $data */
                 $data = $event->getParam(name: 'data', default: []);
                 return $this->replaceList(data: new Parameters(Value::toArray($data)));
             case 'update':
                 $id = (int) $event->getParam(name: 'id');
+                /** @mago-var mixed $data */
                 $data = $event->getParam(name: 'data', default: []);
                 return $this->update(id: $id, data: new Parameters(Value::toArray($data)));
             default:

@@ -91,7 +91,7 @@ final class AuthController extends AbstractActionController
         }
 
         $oauth2request = $this->getOAuth2Request();
-        $oauth2server = $this->getOAuth2Server(type: $this->params('oauth'));
+        $oauth2server = $this->getOAuth2Server(type: Assert::nullOrString($this->params('oauth')));
         try {
             $response = $oauth2server->handleTokenRequest(request: $oauth2request);
         } catch (ProblemExceptionInterface $problemException) {
@@ -135,7 +135,7 @@ final class AuthController extends AbstractActionController
         }
 
         $oauth2request = $this->getOAuth2Request();
-        $response = $this->getOAuth2Server(type: $this->params('oauth'))->handleRevokeRequest(request: $oauth2request);
+        $response = $this->getOAuth2Server(type: Assert::nullOrString($this->params('oauth')))->handleRevokeRequest(request: $oauth2request);
         Assert::isInstanceOf(
             value: $response,
             class: OAuth2Response::class,
@@ -157,10 +157,11 @@ final class AuthController extends AbstractActionController
      */
     public function resourceAction(): Response
     {
-        $server = $this->getOAuth2Server(type: $this->params('oauth'));
+        $server = $this->getOAuth2Server(type: Assert::nullOrString($this->params('oauth')));
 
         // Handle a request for an OAuth2.0 Access Token and send the response to the client
         if (!$server->verifyResourceRequest(request: $this->getOAuth2Request())) {
+            /** @mago-var mixed $response */
             $response = $server->getResponse();
             Assert::isInstanceOf(
                 value: $response,
@@ -187,6 +188,7 @@ final class AuthController extends AbstractActionController
      */
     public function authorizeAction(): Response|ViewModel|ResponseInterface|ApiProblemResponse
     {
+        /** @mago-var mixed $serverType */
         $serverType = $this->params('oauth');
         Assert::nullOrStringNotEmpty(value: $serverType);
 
@@ -201,8 +203,10 @@ final class AuthController extends AbstractActionController
             return $this->getErrorResponse(response: $response);
         }
 
+        /** @mago-var mixed $authorized */
         $authorized = $request->request(name: 'authorized', default: false);
         if (empty($authorized)) {
+            /** @mago-var mixed $clientId */
             $clientId = $request->query(name: 'client_id', default: false);
             $view = new ViewModel(variables: ['clientId' => $clientId]);
             $view->setTemplate(template: 'oauth/authorize');
@@ -219,6 +223,7 @@ final class AuthController extends AbstractActionController
             user_id: $userIdProvider(request: $this->getRequest()),
         );
 
+        /** @mago-var mixed $redirect */
         $redirect = $response->getHttpHeader(name: 'Location');
         if (!empty($redirect)) {
             return $this->redirect()->toUrl(url: Assert::string($redirect));
@@ -232,6 +237,7 @@ final class AuthController extends AbstractActionController
      */
     public function receiveCodeAction(): ViewModel
     {
+        /** @mago-var mixed $code */
         $code = Value::call($this->params(), 'fromQuery', ['param' => 'code', 'default' => false]);
         $view = new ViewModel(variables: [
             'code' => $code,
@@ -256,15 +262,18 @@ final class AuthController extends AbstractActionController
     protected function getApiProblemResponse(OAuth2Response $response): ApiProblemResponse
     {
         $parameters = $response->getParameters();
+        /** @mago-var mixed $errorUri */
         $errorUri = $parameters['error_uri'] ?? null;
+        /** @mago-var mixed $error */
         $error = $parameters['error'] ?? null;
+        /** @mago-var mixed $errorDescription */
         $errorDescription = $parameters['error_description'] ?? null;
 
         return new ApiProblemResponse(apiProblem: new ApiProblem(
             status: $response->getStatusCode(),
             detail: Value::stringify($errorDescription),
-            type: $errorUri,
-            title: $error,
+            type: Assert::nullOrString($errorUri),
+            title: Assert::nullOrString($error),
         ));
     }
 
@@ -305,6 +314,7 @@ final class AuthController extends AbstractActionController
         // Get $_SERVER superglobal
         $server = [];
         if ($laminasRequest instanceof PhpEnvironmentRequest) {
+            /** @mago-var mixed $server */
             $server = Value::call($laminasRequest->getServer(), 'toArray');
         } elseif ($_SERVER !== []) {
             $server = $_SERVER;
@@ -326,7 +336,7 @@ final class AuthController extends AbstractActionController
         $bodyParams = $this->bodyParams();
 
         return new OAuth2Request(
-            query: Value::call($laminasRequest->getQuery(), 'toArray'),
+            query: Assert::isArray(Value::call($laminasRequest->getQuery(), 'toArray')),
             request: $bodyParams,
             attributes: [], // attributes
             cookies: [], // cookies
@@ -376,6 +386,7 @@ final class AuthController extends AbstractActionController
             return $this->server;
         }
 
+        /** @mago-var mixed $server */
         $server = ($this->serverFactory)($type);
         if (!$server instanceof OAuth2Server) {
             throw new RuntimeException(message: sprintf(

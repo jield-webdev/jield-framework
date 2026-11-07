@@ -172,6 +172,7 @@ class ApiProblem
     {
         $normalized = strtolower(string: $name);
         if (isset($this->normalizedProperties[$normalized])) {
+            /** @mago-var mixed $prop */
             $prop = $this->normalizedProperties[$normalized];
 
             return match ($prop) {
@@ -280,7 +281,7 @@ class ApiProblem
             $this->type === 'https://datatracker.ietf.org/doc/html/rfc7231#section-6'
             && array_key_exists(key: $this->getStatus(), array: $this->problemStatusTitles)
         ) {
-            return $this->problemStatusTitles[$this->status];
+            return \Jield\Stdlib\Value::nullableString($this->problemStatusTitles[$this->status]);
         }
 
         if ($this->detail instanceof Throwable) {

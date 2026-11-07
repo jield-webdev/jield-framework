@@ -85,16 +85,17 @@ final class NavigationAbstractServiceFactory implements AbstractFactoryInterface
             return $this->config;
         }
 
+        /** @mago-var mixed $config */
         $config = $container->get('config');
         if (!isset($config[self::CONFIG_KEY]) || !is_array($config[self::CONFIG_KEY])) {
             $this->config = [];
             return $this->config;
         }
 
-        $config = $config[self::CONFIG_KEY];
+        $config = \Jield\Stdlib\Value::stringKeyedArray($config[self::CONFIG_KEY]);
         $this->config = $config;
 
-        return $this->config;
+        return $config;
     }
 
     /**
@@ -139,11 +140,11 @@ final class NavigationAbstractServiceFactory implements AbstractFactoryInterface
         $withoutPrefix = $this->getConfigName($name);
 
         if (isset($config[$withoutPrefix])) {
-            return $config[$withoutPrefix];
+            return \Jield\Stdlib\Value::maps($config[$withoutPrefix]);
         }
 
         if (isset($config[strtolower($withoutPrefix)])) {
-            return $config[strtolower($withoutPrefix)];
+            return \Jield\Stdlib\Value::maps($config[strtolower($withoutPrefix)]);
         }
 
         return [];

@@ -134,15 +134,15 @@ class Select extends Element implements InputProviderInterface
         }
 
         if (isset($this->options['disable_inarray_validator'])) {
-            $this->setDisableInArrayValidator(disableOption: $this->options['disable_inarray_validator']);
+            $this->setDisableInArrayValidator(disableOption: \Webmozart\Assert\Assert::boolean($this->options['disable_inarray_validator']));
         }
 
         if (isset($this->options['use_hidden_element'])) {
-            $this->setUseHiddenElement(useHiddenElement: $this->options['use_hidden_element']);
+            $this->setUseHiddenElement(useHiddenElement: \Webmozart\Assert\Assert::boolean($this->options['use_hidden_element']));
         }
 
         if (isset($this->options['unselected_value'])) {
-            $this->setUnselectedValue(unselectedValue: $this->options['unselected_value']);
+            $this->setUnselectedValue(unselectedValue: \Webmozart\Assert\Assert::string($this->options['unselected_value']));
         }
 
         return $this;
@@ -162,7 +162,7 @@ class Select extends Element implements InputProviderInterface
             $this->setValueOptions(options: $value);
             return $this;
         }
-        return parent::setAttribute(key: $key, value: $value);
+        return parent::setAttribute(key: $key, value: \Jield\Stdlib\Value::plainScalar($value));
     }
 
     /**

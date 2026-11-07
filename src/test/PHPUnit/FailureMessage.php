@@ -16,6 +16,7 @@ final class FailureMessage
             return $message;
         }
 
+        /** @mago-var mixed $exception */
         $exception = $test->getApplication()->getMvcEvent()->getParam('exception');
         if (!$exception instanceof Throwable) {
             return $message;

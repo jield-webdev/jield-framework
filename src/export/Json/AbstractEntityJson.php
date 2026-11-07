@@ -31,13 +31,13 @@ abstract class AbstractEntityJson
 
     protected function findCount(array $criteria): int
     {
-        return $this->entityManager->getRepository($this->entity)->count(criteria: $criteria);
+        return $this->entityManager->getRepository(Value::classString($this->entity))->count(criteria: Value::stringKeyedArray($criteria));
     }
 
     protected function findSliced(int $offset, array $criteria = []): array
     {
-        return $this->entityManager->getRepository($this->entity)->findBy(
-            criteria: $criteria,
+        return $this->entityManager->getRepository(Value::classString($this->entity))->findBy(
+            criteria: Value::stringKeyedArray($criteria),
             orderBy: [],
             limit: $this->chunkSize,
             offset: $offset,
@@ -61,6 +61,7 @@ abstract class AbstractEntityJson
         while ($i < $this->findCount(criteria: [])) {
             $elements = $this->findSliced(offset: $i);
 
+            /** @mago-var mixed $element */
             foreach ($elements as $element) {
                 $jsonData[] = Value::call($this->providerInstance, 'generateArray', [$element]);
             }

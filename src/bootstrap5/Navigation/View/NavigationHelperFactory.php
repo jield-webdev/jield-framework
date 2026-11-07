@@ -38,6 +38,7 @@ final class NavigationHelperFactory implements FactoryInterface
     {
         try {
             $r = new ReflectionProperty($container, 'creationContext');
+            /** @mago-var mixed $services */
             $services = $r->getValue($container);
         } catch (ReflectionException) {
             return $container;

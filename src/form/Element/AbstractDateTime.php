@@ -42,7 +42,7 @@ abstract class AbstractDateTime extends Element implements InputProviderInterfac
         parent::setOptions(options: $options);
 
         if (isset($this->options['format'])) {
-            $this->setFormat(format: $this->options['format']);
+            $this->setFormat(format: \Webmozart\Assert\Assert::string($this->options['format']));
         }
 
         return $this;
@@ -62,6 +62,7 @@ abstract class AbstractDateTime extends Element implements InputProviderInterfac
      */
     public function getValue(bool $returnFormattedValue = true): mixed
     {
+        /** @mago-var mixed $value */
         $value = parent::getValue();
         if (!$value instanceof DateTimeInterface || !$returnFormattedValue) {
             return $value;

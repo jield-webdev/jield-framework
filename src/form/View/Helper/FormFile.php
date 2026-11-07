@@ -52,6 +52,7 @@ class FormFile extends FormInput
             $attributes['name'] .= '[]';
         }
 
+        /** @mago-var mixed $value */
         $value = $element->getValue();
         if (is_array(value: $value) && isset($value['name']) && !is_array(value: $value['name'])) {
             $attributes['value'] = $value['name'];

@@ -140,8 +140,9 @@ class MvcPage extends AbstractPage
     {
         if (!$this->active) {
             $reqParams = [];
-            if ($this->routeMatch instanceof RouteMatch) {
-                $reqParams = $this->routeMatch->getParams();
+            $routeMatch = $this->routeMatch;
+            if ($routeMatch instanceof RouteMatch) {
+                $reqParams = $routeMatch->getParams();
 
                 if (isset($reqParams[self::ORIGINAL_CONTROLLER])) {
                     /** @psalm-suppress MixedAssignment */
@@ -158,7 +159,7 @@ class MvcPage extends AbstractPage
 
                 if (null !== $this->getRoute()) {
                     if (
-                        $this->routeMatch->getMatchedRouteName() === $this->getRoute()
+                        $routeMatch->getMatchedRouteName() === $this->getRoute()
                         && count(array_intersect_assoc($reqParams, $pageParams)) === count($pageParams)
                     ) {
                         $this->active = true;
@@ -223,8 +224,9 @@ class MvcPage extends AbstractPage
             . ' cannot execute as no Laminas\Router\RouteStackInterface instance is composed');
         }
 
-        if ($this->useRouteMatch() && $this->getRouteMatch()) {
-            $rmParams = $this->getRouteMatch()->getParams();
+        $routeMatch = $this->getRouteMatch();
+        if ($this->useRouteMatch() && $routeMatch !== null) {
+            $rmParams = $routeMatch->getParams();
 
             if (isset($rmParams[self::ORIGINAL_CONTROLLER])) {
                 /** @psalm-suppress MixedAssignment */
@@ -252,7 +254,7 @@ class MvcPage extends AbstractPage
         $name = match (true) {
             $this->getRoute() !== null || static::getDefaultRoute() !== null
                 => $this->getRoute() ?? static::getDefaultRoute(),
-            $this->getRouteMatch() !== null => $this->getRouteMatch()->getMatchedRouteName(),
+            $routeMatch !== null => $routeMatch->getMatchedRouteName(),
             default => throw new Exception\DomainException('No route name could be found'),
         };
 
@@ -268,7 +270,7 @@ class MvcPage extends AbstractPage
             $options['query'] = $query;
         }
 
-        $url = $router->assemble($params, $options)->toString();
+        $url = $router->assemble(\Jield\Stdlib\Value::routeParams($params), $options)->toString();
 
         return $this->hrefCache = $url;
     }

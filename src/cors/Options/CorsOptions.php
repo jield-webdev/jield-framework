@@ -77,8 +77,9 @@ class CorsOptions extends AbstractOptions
 
     public function setAllowedMethods(array $allowedMethods): void
     {
+        /** @mago-var mixed $allowedMethod */
         foreach ($allowedMethods as &$allowedMethod) {
-            $allowedMethod = strtoupper($allowedMethod);
+            $allowedMethod = strtoupper(\Webmozart\Assert\Assert::string($allowedMethod));
         }
 
         $this->allowedMethods = $allowedMethods;

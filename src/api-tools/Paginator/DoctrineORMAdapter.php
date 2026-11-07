@@ -34,8 +34,8 @@ class DoctrineORMAdapter extends AbstractDoctrinePaginator implements AdapterInt
     #[Override]
     public function getItems($offset, $itemCountPerPage): array
     {
-        if (array_key_exists($offset, $this->cache) && array_key_exists($itemCountPerPage, $this->cache[$offset])) {
-            return $this->cache[$offset][$itemCountPerPage];
+        if (array_key_exists($offset, $this->cache) && array_key_exists($itemCountPerPage, \Webmozart\Assert\Assert::isArray($this->cache[$offset]))) {
+            return \Webmozart\Assert\Assert::isArray($this->cache[$offset][$itemCountPerPage]);
         }
 
         $this->getQuery()->setFirstResult($offset);
@@ -52,6 +52,6 @@ class DoctrineORMAdapter extends AbstractDoctrinePaginator implements AdapterInt
 
         Value::setPath($this->cache, [$offset, $itemCountPerPage], $results);
 
-        return $this->cache[$offset][$itemCountPerPage];
+        return \Webmozart\Assert\Assert::isArray(Value::accessible($this->cache[$offset])[$itemCountPerPage]);
     }
 }

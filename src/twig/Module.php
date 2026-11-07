@@ -31,6 +31,7 @@ class Module implements BootstrapListenerInterface, ConfigProviderInterface
         $options = Service::get($serviceManager, ModuleOptions::class);
 
         // Setup extensions
+        /** @mago-var mixed $extension */
         foreach ($options->getExtensions() as $extension) {
             // Allows modules to override/remove extensions.
             if (empty($extension)) {
@@ -39,6 +40,7 @@ class Module implements BootstrapListenerInterface, ConfigProviderInterface
 
             if (is_string($extension)) {
                 if ($serviceManager->has($extension)) {
+                    /** @mago-var mixed $extension */
                     $extension = $serviceManager->get($extension);
                 } else {
                     $extension = Value::instantiate($extension);
@@ -47,7 +49,7 @@ class Module implements BootstrapListenerInterface, ConfigProviderInterface
                 throw new InvalidArgumentException('Extensions should be a string or object.');
             }
 
-            $environment->addExtension($extension);
+            $environment->addExtension(Assert::isInstanceOf($extension, \Twig\Extension\ExtensionInterface::class));
         }
     }
 

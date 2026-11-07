@@ -87,6 +87,8 @@ class SplPriorityQueue extends \SplPriorityQueue implements Serializable
         $clone->setExtractFlags(\SplPriorityQueue::EXTR_BOTH);
 
         $data = [];
+        // EXTR_BOTH changes the iterator's item type along with its extraction mode.
+        /** @mago-var array{data: TValue, priority: InternalPriority} $item */
         foreach ($clone as $item) {
             $data[] = $item;
         }
@@ -95,6 +97,7 @@ class SplPriorityQueue extends \SplPriorityQueue implements Serializable
 
     public function unserialize(string $data): void
     {
+        /** @mago-var mixed $toUnserialize */
         $toUnserialize = unserialize($data);
         if (!is_array($toUnserialize)) {
             throw new UnexpectedValueException(sprintf(
@@ -118,6 +121,7 @@ class SplPriorityQueue extends \SplPriorityQueue implements Serializable
             PHP_INT_MAX,
         ];
 
+        /** @mago-var mixed $item */
         foreach ($data as $item) {
             if (!is_array($item)) {
                 throw new UnexpectedValueException(sprintf(

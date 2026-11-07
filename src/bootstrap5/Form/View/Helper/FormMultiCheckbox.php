@@ -87,6 +87,7 @@ class FormMultiCheckbox extends Helper\FormMultiCheckbox
         $combinedMarkup = [];
         $count = 0;
 
+        /** @mago-var mixed $optionSpec */
         foreach ($options as $key => $optionSpec) {
             $count++;
             if ($count > 1 && array_key_exists(key: 'id', array: $attributes)) {
@@ -111,15 +112,19 @@ class FormMultiCheckbox extends Helper\FormMultiCheckbox
             }
 
             if (isset($optionSpec['value'])) {
+                /** @mago-var mixed $value */
                 $value = $optionSpec['value'];
             }
             if (isset($optionSpec['label'])) {
+                /** @mago-var mixed $label */
                 $label = $optionSpec['label'];
             }
             if (isset($optionSpec['selected'])) {
+                /** @mago-var mixed $selected */
                 $selected = $optionSpec['selected'];
             }
             if (isset($optionSpec['disabled'])) {
+                /** @mago-var mixed $disabled */
                 $disabled = $optionSpec['disabled'];
             }
             if (isset($optionSpec['label_attributes'])) {
@@ -158,10 +163,11 @@ class FormMultiCheckbox extends Helper\FormMultiCheckbox
             );
 
             if (null !== ($translator = $this->getTranslator())) {
-                $label = $translator->translate($label, $this->getTranslatorTextDomain());
+                $label = $translator->translate(Assert::string($label), $this->getTranslatorTextDomain());
             }
 
             if (!$element instanceof LabelAwareInterface || !$element->getLabelOption(key: 'disable_html_escape')) {
+                /** @mago-var mixed $label */
                 $label = $escapeHtmlHelper(value: $label);
             }
 
@@ -173,8 +179,8 @@ class FormMultiCheckbox extends Helper\FormMultiCheckbox
             $inlineClass = '';
 
             $markup = match ($labelPosition) {
-                self::LABEL_PREPEND => sprintf($this->template, $inlineClass, $label, $labelOpen, $input, $labelClose),
-                default => sprintf($this->template, $inlineClass, $input, $labelOpen, $label, $labelClose),
+                self::LABEL_PREPEND => sprintf($this->template, $inlineClass, Value::scalar($label), $labelOpen, $input, $labelClose),
+                default => sprintf($this->template, $inlineClass, $input, $labelOpen, Value::scalar($label), $labelClose),
             };
 
             $combinedMarkup[] = $markup;

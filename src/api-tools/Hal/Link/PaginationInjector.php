@@ -129,7 +129,7 @@ class PaginationInjector implements PaginationInjectorInterface
     private function countCollection(mixed $collection): int
     {
         if ($collection instanceof Countable) {
-            return $collection->count();
+            return Assert::integer($collection->count());
         }
         return is_array($collection) ? count($collection) : 1;
     }

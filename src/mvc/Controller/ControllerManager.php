@@ -14,6 +14,7 @@ use Laminas\ServiceManager\Exception\InvalidServiceException;
 use Laminas\ServiceManager\ServiceManager;
 use Laminas\Stdlib\DispatchableInterface;
 use Psr\Container\ContainerInterface;
+use Webmozart\Assert\Assert;
 
 use function get_debug_type;
 use function method_exists;
@@ -42,7 +43,7 @@ class ControllerManager extends AbstractPluginManager
         ];
 
         if (isset($config['initializers'])) {
-            $config['initializers'] = array_merge($config['initializers'], $initializers);
+            $config['initializers'] = [...Assert::isArray($config['initializers']), ...$initializers];
         } else {
             $config['initializers'] = $initializers;
         }

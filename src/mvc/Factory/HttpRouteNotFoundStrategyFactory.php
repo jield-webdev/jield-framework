@@ -41,6 +41,7 @@ class HttpRouteNotFoundStrategyFactory implements FactoryInterface
      */
     private function injectDisplayExceptions(RouteNotFoundStrategy $strategy, array|ArrayAccess $config): void
     {
+        /** @mago-var mixed $flag */
         $flag = $config['display_exceptions'] ?? false;
         $strategy->setDisplayExceptions(Assert::boolean($flag));
     }
@@ -50,6 +51,7 @@ class HttpRouteNotFoundStrategyFactory implements FactoryInterface
      */
     private function injectDisplayNotFoundReason(RouteNotFoundStrategy $strategy, array|ArrayAccess $config): void
     {
+        /** @mago-var mixed $flag */
         $flag = $config['display_not_found_reason'] ?? false;
         $strategy->setDisplayNotFoundReason(Assert::boolean($flag));
     }
@@ -59,6 +61,7 @@ class HttpRouteNotFoundStrategyFactory implements FactoryInterface
      */
     private function injectNotFoundTemplate(RouteNotFoundStrategy $strategy, array|ArrayAccess $config): void
     {
+        /** @mago-var mixed $template */
         $template = $config['not_found_template'] ?? '404';
         $strategy->setNotFoundTemplate(Assert::string($template));
     }

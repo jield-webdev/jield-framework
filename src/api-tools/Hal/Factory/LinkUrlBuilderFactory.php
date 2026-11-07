@@ -21,6 +21,7 @@ class LinkUrlBuilderFactory
      */
     public function __invoke(ServiceLocatorInterface|ContainerInterface $container): LinkUrlBuilder
     {
+        /** @mago-var mixed $halConfig */
         $halConfig = $container->get('Jield\ApiTools\Hal\HalConfig');
 
         $viewHelperManager = Service::get($container, HelperPluginManager::class, 'ViewHelperManager');

@@ -10,8 +10,10 @@ class OAuth2ServerFactory
 {
     public function __invoke(ContainerInterface $container): OAuth2ServerInstanceFactory
     {
+        /** @mago-var mixed $config */
         $config = $container->get('config');
+        /** @mago-var mixed $config */
         $config = $config['api-tools-oauth2'] ?? [];
-        return new OAuth2ServerInstanceFactory(config: $config, services: $container);
+        return new OAuth2ServerInstanceFactory(config: \Webmozart\Assert\Assert::isArray($config), services: $container);
     }
 }

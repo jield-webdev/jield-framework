@@ -19,12 +19,14 @@ final class HttpRouterFactory implements FactoryInterface
         string $requestedName,
         ?array $options = null,
     ): RouteStackInterface {
+        /** @mago-var mixed $config */
         $config = $container->get('config')['router'] ?? [];
+        /** @mago-var mixed $class */
         $class = $config['router_class'] ?? TreeRouteStack::class;
         Value::setPath(
             $config,
             ['route_plugins'],
-            $container->get($config['route_plugins'] ?? RoutePluginManager::class),
+            $container->get(Assert::string($config['route_plugins'] ?? RoutePluginManager::class)),
         );
         return Assert::isInstanceOf($class::factory($config), \Laminas\Router\RouteStackInterface::class);
     }

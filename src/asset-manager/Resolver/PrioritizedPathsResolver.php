@@ -90,7 +90,7 @@ class PrioritizedPathsResolver implements ResolverInterface, MimeResolverAwareIn
         }
 
         if (isset($path['priority'], $path['path'])) {
-            $this->paths->insert(data: $this->normalizePath(path: $path['path']), priority: $path['priority']);
+            $this->paths->insert(data: $this->normalizePath(path: Assert::string($path['path'])), priority: Assert::integer($path['priority']));
 
             return;
         }
@@ -124,6 +124,7 @@ class PrioritizedPathsResolver implements ResolverInterface, MimeResolverAwareIn
      */
     public function addPaths(iterable $paths): PrioritizedPathsResolver
     {
+        /** @mago-var mixed $path */
         foreach ($paths as $path) {
             $this->addPath(path: $path);
         }
@@ -190,6 +191,7 @@ class PrioritizedPathsResolver implements ResolverInterface, MimeResolverAwareIn
             return null;
         }
 
+        /** @mago-var mixed $fileName */
         foreach ($this->getPaths() as $fileName) {
             $file = new SplFileInfo(filename: Value::stringify($fileName) . Value::stringify($fileName));
 
@@ -210,9 +212,10 @@ class PrioritizedPathsResolver implements ResolverInterface, MimeResolverAwareIn
     {
         $collection = [];
 
+        /** @mago-var mixed $path */
         foreach ($this->getPaths() as $path) {
             $locations = new SplStack();
-            $pathInfo = new SplFileInfo(filename: $path);
+            $pathInfo = new SplFileInfo(filename: Assert::string($path));
             $locations->push(value: $pathInfo);
             $basePath = $this->normalizePath(path: Assert::string($pathInfo->getRealPath()));
 
@@ -224,8 +227,9 @@ class PrioritizedPathsResolver implements ResolverInterface, MimeResolverAwareIn
                 }
 
                 if ($pathInfo->isDir()) {
+                    /** @mago-var mixed $resource */
                     foreach (new DirectoryResource(path: Assert::string($pathInfo->getRealPath())) as $resource) {
-                        $locations->push(value: new SplFileInfo(filename: $resource));
+                        $locations->push(value: new SplFileInfo(filename: Assert::string($resource)));
                     }
                 } else {
                     $collection[] = substr(

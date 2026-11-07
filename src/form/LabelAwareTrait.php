@@ -29,7 +29,7 @@ trait LabelAwareTrait
      */
     public function setLabelAttributes(array $labelAttributes): static
     {
-        $this->labelAttributes = $labelAttributes;
+        $this->labelAttributes = \Jield\Stdlib\Value::scalarMap($labelAttributes);
         return $this;
     }
 
@@ -51,8 +51,12 @@ trait LabelAwareTrait
      */
     public function setLabelOptions(iterable $arrayOrTraversable): static
     {
+        /**
+         * @mago-var mixed $key
+         * @mago-var mixed $value
+         */
         foreach ($arrayOrTraversable as $key => $value) {
-            $this->setLabelOption(key: $key, value: $value);
+            $this->setLabelOption(key: \Webmozart\Assert\Assert::string($key), value: $value);
         }
         return $this;
     }
@@ -83,6 +87,7 @@ trait LabelAwareTrait
      */
     public function removeLabelOptions(array $keys): static
     {
+        /** @mago-var mixed $key */
         foreach ($keys as $key) {
             unset($this->labelOptions[$key]);
         }

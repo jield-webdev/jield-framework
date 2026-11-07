@@ -30,9 +30,12 @@ class AclListener
     public static function accept(Event $event)
     {
         $accepted = true;
-        $params = $event->getParams();
+        $params = Value::accessible($event->getParams());
+        /** @mago-var mixed $acl */
         $acl = $params['acl'];
+        /** @mago-var mixed $page */
         $page = $params['page'];
+        /** @mago-var mixed $role */
         $role = $params['role'];
 
         if (!$acl) {

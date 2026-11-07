@@ -116,7 +116,7 @@ class FilterBarElement extends FormElement
                 }
                 $yesNo =
                     '<div class="dropdown-item"><div class="form-check">'
-                    . (string) $this->renderRaw(element: $facet->get(elementOrFieldset: 'yesNo'))
+                    . $this->renderRaw(element: $facet->get(elementOrFieldset: 'yesNo'))
                     . '</div></div>';
             }
 
@@ -132,7 +132,7 @@ class FilterBarElement extends FormElement
                 }
                 $andOr =
                     '<div class="dropdown-item"><div class="form-check">'
-                    . (string) $this->renderRaw(element: $facet->get(elementOrFieldset: 'andOr'))
+                    . $this->renderRaw(element: $facet->get(elementOrFieldset: 'andOr'))
                     . '</div></div>';
             }
 

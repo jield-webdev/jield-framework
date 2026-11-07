@@ -28,7 +28,8 @@ final class SerializedType extends Type
         if (is_resource($value)) {
             $value = stream_get_contents($value);
         }
-        $result = unserialize($value);
+        /** @mago-var mixed $result */
+        $result = unserialize(\Webmozart\Assert\Assert::string($value));
         if ($result === false && $value !== 'b:0;') {
             throw new ConversionException('Invalid serialized database value.');
         }

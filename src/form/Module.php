@@ -31,10 +31,11 @@ final class Module implements InitProviderInterface
     public function init(ModuleManagerInterface $manager): void
     {
         $event = $manager->getEvent();
+        /** @mago-var mixed $container */
         $container = Value::call($event, 'getParam', ['name' => 'ServiceManager']);
 
         $serviceListener = Service::get(
-            $container,
+            \Webmozart\Assert\Assert::isInstanceOf($container, \Psr\Container\ContainerInterface::class),
             \Jield\ModuleManager\Listener\ServiceListener::class,
             'ServiceListener',
         );

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Jield\ApiTools\Hal\Metadata;
 
+use Jield\Stdlib\Value;
 use Jield\ApiTools\Hal\Exception;
 use Laminas\Hydrator\HydratorPluginManager;
 use Laminas\Hydrator\HydratorPluginManagerInterface;
@@ -71,7 +72,9 @@ class MetadataMap
      */
     public function setMap(array $map): static
     {
+        /** @mago-var mixed $options */
         foreach ($map as $class => $options) {
+            /** @mago-var mixed $metadata */
             $metadata = $options;
             if (!is_array(value: $metadata) && !$metadata instanceof Metadata) {
                 throw new Exception\InvalidArgumentException(message: sprintf(
@@ -81,7 +84,9 @@ class MetadataMap
                 ));
             }
 
-            $this->map[$class] = $metadata instanceof Metadata ? $metadata : $metadata;
+            $this->map[Value::classString($class)] = $metadata instanceof Metadata
+                ? $metadata
+                : Value::stringKeyedArray($metadata);
         }
 
         return $this;

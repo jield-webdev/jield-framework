@@ -22,9 +22,9 @@ class ConfigRuleProviderServiceFactory implements FactoryInterface
      */
     public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): Config
     {
-        return new Config(rules: Value::path(
+        return new Config(rules: \Webmozart\Assert\Assert::isArray(Value::path(
             $container->get(AuthorizeConfig::class),
             ['rule_providers', Config::class],
-        ));
+        )));
     }
 }

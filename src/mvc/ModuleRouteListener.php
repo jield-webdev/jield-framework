@@ -43,12 +43,14 @@ class ModuleRouteListener extends AbstractListenerAggregate
             return;
         }
 
+        /** @mago-var mixed $module */
         $module = $matches->getParam(self::MODULE_NAMESPACE, false);
         if (!$module) {
             // No module namespace found; nothing to do
             return;
         }
 
+        /** @mago-var mixed $controller */
         $controller = $matches->getParam('controller', false);
         if (!$controller) {
             // no controller matched, nothing to do
@@ -56,7 +58,7 @@ class ModuleRouteListener extends AbstractListenerAggregate
         }
 
         // Ensure the module namespace has not already been applied
-        if (str_starts_with($controller, $module)) {
+        if (str_starts_with(\Webmozart\Assert\Assert::string($controller), \Webmozart\Assert\Assert::string($module))) {
             return;
         }
 
@@ -65,7 +67,7 @@ class ModuleRouteListener extends AbstractListenerAggregate
 
         // Prepend the controllername with the module, and replace it in the
         // matches
-        $controller = $module . '\\' . str_replace(' ', '', ucwords(str_replace('-', ' ', $controller)));
+        $controller = $module . '\\' . str_replace(' ', '', ucwords(\Webmozart\Assert\Assert::string(str_replace('-', ' ', \Jield\Stdlib\Value::stringsOrString(\Jield\Stdlib\Value::arrayOrString($controller))))));
         $matches->setParam('controller', $controller);
     }
 }

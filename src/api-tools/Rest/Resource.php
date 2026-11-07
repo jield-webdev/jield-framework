@@ -170,6 +170,7 @@ class Resource implements ResourceInterface
         }
 
         $results = $this->triggerEvent(name: __FUNCTION__, args: ['data' => $data]);
+        /** @mago-var mixed $last */
         $last = $results->last();
         if (!is_array(value: $last) && !is_object(value: $last)) {
             return $data;
@@ -206,6 +207,7 @@ class Resource implements ResourceInterface
             'id' => $id,
             'data' => $data,
         ]);
+        /** @mago-var mixed $last */
         $last = $results->last();
         if (!is_array(value: $last) && !is_object(value: $last)) {
             return $data;
@@ -251,6 +253,7 @@ class Resource implements ResourceInterface
         });
 
         $results = $this->triggerEvent(name: __FUNCTION__, args: ['data' => $data]);
+        /** @mago-var mixed $last */
         $last = $results->last();
         if (!is_array(value: $last) && !is_object(value: $last)) {
             return $data;
@@ -288,6 +291,7 @@ class Resource implements ResourceInterface
             'id' => $id,
             'data' => $data,
         ]);
+        /** @mago-var mixed $last */
         $last = $results->last();
         if (!is_array(value: $last) && !is_object(value: $last)) {
             return $data;
@@ -336,6 +340,7 @@ class Resource implements ResourceInterface
 
         $data = new ArrayObject($data);
         $results = $this->triggerEvent(name: __FUNCTION__, args: ['data' => $data]);
+        /** @mago-var mixed $last */
         $last = $results->last();
         if (!is_array(value: $last) && !is_object(value: $last)) {
             return $original;
@@ -355,6 +360,7 @@ class Resource implements ResourceInterface
     public function delete(int|string $id): Response|bool|ApiProblem|ApiProblemResponse
     {
         $results = $this->triggerEvent(name: __FUNCTION__, args: ['id' => $id]);
+        /** @mago-var mixed $last */
         $last = $results->last();
         if (
             !is_bool(value: $last)
@@ -378,6 +384,7 @@ class Resource implements ResourceInterface
     public function deleteList(array $data): mixed
     {
         $results = $this->triggerEvent(name: __FUNCTION__, args: ['data' => $data]);
+        /** @mago-var mixed $last */
         $last = $results->last();
         if (!is_bool(value: $last) && !$last instanceof Response) {
             return false;
@@ -401,6 +408,7 @@ class Resource implements ResourceInterface
     public function fetch(int|string $id): object|false|array
     {
         $results = $this->triggerEvent(name: __FUNCTION__, args: ['id' => $id]);
+        /** @mago-var mixed $last */
         $last = $results->last();
         if (!is_array(value: $last) && !is_object(value: $last)) {
             return false;
@@ -426,6 +434,7 @@ class Resource implements ResourceInterface
     public function fetchAll(...$params): object|false|array
     {
         $results = $this->triggerEvent(name: __FUNCTION__, args: $params);
+        /** @mago-var mixed $last */
         $last = $results->last();
         if (
             !is_array(value: $last)

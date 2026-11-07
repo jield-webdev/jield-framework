@@ -29,7 +29,7 @@ class AuthenticationService implements UserIdProviderInterface
         array $config = [],
     ) {
         if (isset($config['api-tools-oauth2']['user_id'])) {
-            $this->userId = $config['api-tools-oauth2']['user_id'];
+            $this->userId = \Webmozart\Assert\Assert::string($config['api-tools-oauth2']['user_id']);
         }
     }
 
@@ -44,6 +44,7 @@ class AuthenticationService implements UserIdProviderInterface
             return null;
         }
 
+        /** @mago-var mixed $identity */
         $identity = $this->authenticationService->getIdentity();
 
         if (is_object(value: $identity)) {

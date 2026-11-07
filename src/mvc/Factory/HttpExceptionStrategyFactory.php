@@ -40,6 +40,7 @@ class HttpExceptionStrategyFactory implements FactoryInterface
      */
     private function injectDisplayExceptions(ExceptionStrategy $strategy, array|ArrayAccess $config): void
     {
+        /** @mago-var mixed $flag */
         $flag = $config['display_exceptions'] ?? false;
         $strategy->setDisplayExceptions(Assert::boolean($flag));
     }
@@ -49,6 +50,7 @@ class HttpExceptionStrategyFactory implements FactoryInterface
      */
     private function injectExceptionTemplate(ExceptionStrategy $strategy, array|ArrayAccess $config): void
     {
+        /** @mago-var mixed $template */
         $template = $config['exception_template'] ?? 'error';
         $strategy->setExceptionTemplate(Assert::string($template));
     }

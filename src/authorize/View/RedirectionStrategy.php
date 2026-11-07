@@ -58,6 +58,7 @@ class RedirectionStrategy implements ListenerAggregateInterface
     public function onDispatchError(MvcEvent $event): void
     {
         // Do nothing if the result is a response object
+        /** @mago-var mixed $result */
         $result = $event->getResult();
         $routeMatch = $event->getRouteMatch();
         $response = $event->getResponse();

@@ -57,7 +57,7 @@ class EntityExtractor implements ExtractionInterface
         }
 
         if ($entity instanceof JsonSerializable) {
-            return $entity->jsonSerialize();
+            return \Webmozart\Assert\Assert::isArray($entity->jsonSerialize());
         }
 
         if ($entity instanceof ArrayObject) {

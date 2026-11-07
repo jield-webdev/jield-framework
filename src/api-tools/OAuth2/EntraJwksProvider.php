@@ -22,9 +22,10 @@ readonly class EntraJwksProvider
     {
         // The URL is derived exclusively from a validated database tenant ID, never from JWT headers.
         $item = $this->cache->getItem('entra_jwks_' . $tenantId);
+        /** @mago-var mixed $data */
         $data = $item->isHit() ? $item->get() : null;
 
-        $key = is_array($data) ? $this->findKey(keys: $data['keys'] ?? [], tenantId: $tenantId, kid: $kid) : null;
+        $key = is_array($data) ? $this->findKey(keys: \Webmozart\Assert\Assert::isArray($data['keys'] ?? []), tenantId: $tenantId, kid: $kid) : null;
         if ($key instanceof Key) {
             return $key;
         }
@@ -47,6 +48,7 @@ readonly class EntraJwksProvider
             if ($response->getStatusCode() !== 200 || ($response->getBody()->getSize() ?? 0) > 1_048_576) {
                 throw new RuntimeException('Invalid JWKS response');
             }
+            /** @mago-var mixed $document */
             $document = json_decode(
                 json: (string) $response->getBody(),
                 associative: true,
@@ -77,10 +79,12 @@ readonly class EntraJwksProvider
     private function findKey(array $keys, string $tenantId, string $kid): ?Key
     {
         $issuer = 'https://login.microsoftonline.com/' . $tenantId . '/v2.0';
+        /** @mago-var mixed $key */
         foreach ($keys as $key) {
             if (!is_array($key) || ($key['kid'] ?? null) !== $kid) {
                 continue;
             }
+            /** @mago-var mixed $keyIssuer */
             $keyIssuer = $key['issuer'] ?? '';
             if (
                 !is_string($keyIssuer)

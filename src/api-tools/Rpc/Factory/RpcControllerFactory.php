@@ -47,11 +47,13 @@ class RpcControllerFactory implements AbstractFactoryInterface
             return false;
         }
 
+        /** @mago-var mixed $config */
         $config = $container->get('config');
         if (!isset($config['api-tools-rpc'][$requestedName])) {
             return false;
         }
 
+        /** @mago-var mixed $config */
         $config = $config['api-tools-rpc'][$requestedName];
         return isset($config['callable']);
     }
@@ -66,7 +68,9 @@ class RpcControllerFactory implements AbstractFactoryInterface
     #[Override]
     public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): RpcController
     {
+        /** @mago-var mixed $config */
         $config = $container->get('config');
+        /** @mago-var mixed $callable */
         $callable = Value::path($config, ['api-tools-rpc', $requestedName, 'callable']);
 
         if (!is_string(value: $callable) && !is_callable(value: $callable)) {
@@ -117,7 +121,7 @@ class RpcControllerFactory implements AbstractFactoryInterface
         if (!class_exists(class: $class)) {
             throw new ServiceNotCreatedException(message: sprintf(
                 'Cannot create callback %s as class %s does not exist',
-                $string,
+                Value::scalar($string),
                 $class,
             ));
         }

@@ -32,10 +32,11 @@ final readonly class UpdateSearchIndexHandler
 
         $output = new BufferedOutput();
 
+        /** @mago-var mixed $searchService */
         foreach ($searchServices as $searchService) {
             //I have to tell the system which search service we have to take (to have the correct connection)
             /** @var AbstractSearchService $searchServiceInstance */
-            $searchServiceInstance = $this->container->get($searchService);
+            $searchServiceInstance = $this->container->get(Assert::string($searchService));
             $searchServiceInstance->updateCollection(output: $output, entity: Assert::isInstanceOf(
                 Value::instantiate($entityClassName),
                 HasSearchInterface::class,
