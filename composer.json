@@ -1,7 +1,6 @@
 {
   "name": "jield/framework",
   "description": "A modular PHP framework built on top of Laminas, Doctrine, and other powerful libraries, designed to provide a flexible and scalable foundation for web applications.",
-  "version": "0.1",
   "type": "library",
   "keywords": [
     "bootstrap",
@@ -146,11 +145,18 @@
   },
   "extra": {
     "branch-alias": {
-      "dev-master": "0.1.0-dev",
-      "dev-develop": "0.1.0-dev"
+      "dev-main": "0.1.x-dev"
     }
   },
   "scripts": {
+    "package:validate": "@composer validate --strict --no-check-all",
+    "release:check": [
+      "@package:validate",
+      "@php-lint",
+      "@phpstan",
+      "@test"
+    ],
+    "release": "@php bin/release.php",
     "check": [
       "@php-lint",
       "@phpstan",
@@ -170,7 +176,8 @@
     "cbf": "./vendor/bin/phpcbf src --standard=PSR2",
     "cbf-test": "./vendor/bin/phpcbf --standard=PSR12 --extensions=php test",
     "cs-fix": "./vendor/bin/php-cs-fixer fix -v src",
-    "test": "./vendor/bin/phpunit",
+    "test": "./vendor/bin/phpunit --no-coverage",
+    "test:consumer": "@php .github/scripts/test-consumer.php",
     "pdf-fonts": "@php bin/build-pdf-fonts.php",
     "post-install-cmd": [
       "@pdf-fonts"
@@ -178,5 +185,11 @@
     "post-update-cmd": [
       "@pdf-fonts"
     ]
+  },
+  "scripts-descriptions": {
+    "package:validate": "Validate publishable Composer metadata (the alpha's exact stdlib alias is intentional).",
+    "release:check": "Validate the package, lint PHP, run static analysis and execute the test suite.",
+    "release": "Check and tag a release on main: composer release -- 0.1.0-alpha.1 [--dry-run].",
+    "test:consumer": "Install the committed distribution archive in a separate Composer application."
   }
 }

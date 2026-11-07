@@ -2,7 +2,12 @@
 
 declare(strict_types=1);
 
-$loader = require __DIR__ . '/vendor/autoload.php';
+$autoload = __DIR__ . '/vendor/autoload.php';
+if (!is_file($autoload)) {
+    // When installed as vendor/jield/framework, use the application's dependencies.
+    $autoload = dirname(__DIR__, 2) . '/autoload.php';
+}
+$loader = require $autoload;
 // The framework's dependency versions take precedence over application transitive dependencies.
 $loader->unregister();
 $loader->register(prepend: true);

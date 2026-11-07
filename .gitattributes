@@ -1,0 +1,17 @@
+/.github export-ignore
+/.claude export-ignore
+/.idea export-ignore
+/.phpunit.cache export-ignore
+/analysis export-ignore
+/docs export-ignore
+/test export-ignore
+/vendor export-ignore
+/composer.phar export-ignore
+/bin/release.php export-ignore
+/.gitattributes export-ignore
+/.gitignore export-ignore
+/composer.lock export-ignore
+/mago.toml export-ignore
+/phpstan.neon export-ignore
+/phpunit.xml export-ignore
+/rector.php export-ignore
