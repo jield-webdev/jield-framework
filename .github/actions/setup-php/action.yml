@@ -1,0 +1,41 @@
+name: Set up project dependencies
+description: Install PHP, cache Composer downloads, and install locked dependencies.
+
+inputs:
+  php-version:
+    description: PHP version to install.
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Set up PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: ${{ inputs.php-version }}
+        extensions: bcmath, curl, dom, fileinfo, gd, gmp, igbinary, intl, mbstring, pdo_sqlite, redis-6.3.0, xml, xmlreader, xmlwriter, xsl, zip, zlib
+        coverage: none
+        tools: composer:v2
+      env:
+        fail-fast: true
+
+    - name: Locate Composer download cache
+      id: composer-cache
+      shell: bash
+      run: echo "path=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+
+    - name: Cache Composer downloads
+      uses: actions/cache@v6
+      with:
+        path: ${{ steps.composer-cache.outputs.path }}
+        key: ${{ runner.os }}-php-${{ inputs.php-version }}-composer-${{ hashFiles('composer.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-php-${{ inputs.php-version }}-composer-
+
+    - name: Install locked dependencies
+      shell: bash
+      run: composer install --prefer-dist --no-interaction --no-progress --no-scripts
+
+    - name: Verify PHP and extension requirements
+      shell: bash
+      run: composer check-platform-reqs

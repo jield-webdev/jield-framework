@@ -150,33 +150,40 @@
   },
   "scripts": {
     "package:validate": "@composer validate --strict --no-check-all",
-    "release:check": [
-      "@package:validate",
-      "@php-lint",
-      "@phpstan",
-      "@test"
-    ],
+    "release:check": "@check",
     "release": "@php bin/release.php",
     "check": [
+      "@package:validate",
       "@php-lint",
       "@phpstan",
       "@cs",
       "@cs-test",
-      "@test"
+      "@mago:check",
+      "@test",
+      "@security:check"
     ],
     "fix": [
       "@cbf",
       "@cbf-test",
       "@cs-fix"
     ],
-    "php-lint": "./vendor/bin/parallel-lint src",
-    "phpstan": "./vendor/bin/phpstan analyse src/ --level=1 --memory-limit=2G",
+    "php-lint": "@php ./vendor/bin/parallel-lint -e php,phtml,dist src test config bin resources .github/scripts autoload.php rector.php",
+    "phpstan": "@php ./vendor/bin/phpstan analyse --memory-limit=2G",
     "cs": "./vendor/bin/phpcs -n -p --standard=PSR2 --extensions=php,twig src",
     "cs-test": "./vendor/bin/phpcs -p --standard=PSR12 --extensions=php test",
     "cbf": "./vendor/bin/phpcbf src --standard=PSR2",
     "cbf-test": "./vendor/bin/phpcbf --standard=PSR12 --extensions=php test",
     "cs-fix": "./vendor/bin/php-cs-fixer fix -v src",
     "test": "./vendor/bin/phpunit --no-coverage",
+    "mago:check": [
+      "@mago:format",
+      "@mago:lint",
+      "@mago:analyze"
+    ],
+    "mago:format": "mago format --check",
+    "mago:lint": "mago lint",
+    "mago:analyze": "mago analyze",
+    "security:check": "@composer audit --locked --abandoned=fail --no-interaction",
     "test:consumer": "@php .github/scripts/test-consumer.php",
     "pdf-fonts": "@php bin/build-pdf-fonts.php",
     "post-install-cmd": [
@@ -188,7 +195,10 @@
   },
   "scripts-descriptions": {
     "package:validate": "Validate publishable Composer metadata (the alpha's exact stdlib alias is intentional).",
-    "release:check": "Validate the package, lint PHP, run static analysis and execute the test suite.",
+    "check": "Run package validation, PHP syntax, static analysis, coding standards, Mago, tests, and the dependency audit.",
+    "release:check": "Run the complete local quality gate before tagging a release (requires Mago 1.59.0).",
+    "mago:check": "Check formatting, lint rules, and static analysis with Mago 1.59.0.",
+    "security:check": "Audit locked dependencies for security advisories and abandoned packages.",
     "release": "Check and tag a release on main: composer release -- 0.1.0-alpha.1 [--dry-run].",
     "test:consumer": "Install the committed distribution archive in a separate Composer application."
   }

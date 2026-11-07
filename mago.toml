@@ -1,13 +1,13 @@
 #:schema https://mago.carthage.software/1.59.0/schema.json
 # Welcome to Mago!
 # For full documentation, see https://mago.carthage.software/1.59.0/en/tools/overview/
-version = "1"
+version = "1.59.0"
 php-version = "8.4.0"
 
 [source]
 workspace = "."
-paths = ["src/api-tools", "src/asset-manager", "src/authorize", "src/bootstrap5", "src/cors", "src/doctrine-module", "src/doctrine-orm-module", "src/error-handler", "src/export", "src/form", "src/google-analytics", "src/log", "src/module-manager", "src/mvc", "src/mvc-plugin-flashmessenger", "src/mvc-plugin-identity", "src/recaptcha", "src/search", "src/stdlib", "src/test", "src/twig", "src/validator"]
-includes = ["vendor"]
+paths = ["src"]
+includes = ["vendor", "resources/pdf/tcpdf_autoconfig.php"]
 patches = ["analysis/mago"]
 excludes = []
 
@@ -16,6 +16,11 @@ literal-separator = true
 
 [formatter]
 preset = "default"
+# Keep empty declarations compatible with the existing PHP_CodeSniffer checks.
+inline-empty-function-braces = false
+inline-empty-method-braces = false
+inline-empty-constructor-braces = false
+inline-empty-classlike-braces = false
 
 [linter]
 integrations = ["symfony"]

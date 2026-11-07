@@ -39,11 +39,13 @@ cannot silently carry over into 1.0.0.
 3. Commit all changes, push `main`, and wait for CI, including its consumer install
    on PHP 8.4 and 8.5. Fetch tags and fast-forward local `main` before releasing.
 4. Run `composer release -- 0.1.0-alpha.1 --dry-run` and then `composer release --
-   0.1.0-alpha.1`. Each command checks publishable Composer metadata, PHP syntax,
-   PHPStan, and PHPUnit. The real run creates an annotated `v0.1.0-alpha.1` tag
+   0.1.0-alpha.1`. Each command runs the [complete local CI gate](ci.md), including
+   Composer metadata, PHP syntax, PHPStan, coding standards, Mago, PHPUnit, and
+   the dependency audit. Install Mago 1.59.0 before running the checks. The real
+   run creates an annotated `v0.1.0-alpha.1` tag
    on the checked commit. The working tree must stay clean throughout.
 5. Push only that tag: `git push origin refs/tags/v0.1.0-alpha.1`. The GitHub
-   release workflow reruns the checks and consumer install, verifies the
+   release workflow reruns every CI check and the consumer install, verifies the
    annotated tag and phase order with `--verify-tag`, then creates a
    GitHub prerelease for a suffixed tag or a stable release for 1.x and later.
    GitHub's generated source archives preserve runtime source, configuration,
@@ -57,8 +59,8 @@ cannot silently carry over into 1.0.0.
 
 `composer package:validate` uses `--strict --no-check-all`: the latter permits the
 existing exact Stdlib compatibility alias. Schema, publishability, and lock-file
-checks still run. Existing coding-style commands remain available separately;
-they are not part of the initial alpha release gate.
+checks still run. Coding standards, Mago checks, and the dependency audit are
+part of the release gate. Existing violations block a release until resolved.
 
 ## Registry setup
 

@@ -110,3 +110,5 @@ git push origin refs/tags/v0.1.0-alpha.1
 The release command validates the version, phase order, changelog, clean `main`,
 and quality checks before creating an annotated local tag. Publishing and the
 1.0.0 acceptance criteria are described in [the release guide](docs/releases.md).
+
+Jield BV
