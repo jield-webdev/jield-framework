@@ -8,13 +8,14 @@ use Exception;
 use Jield\ApiTools\Hal\Exception\InvalidArgumentException;
 use Laminas\Paginator\Paginator;
 use Laminas\Stdlib\ArrayUtils;
-use Traversable;
 
 use function sprintf;
 
 /**
  * Model a collection for use with HAL payloads
  */
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:too-many-properties(1)
 class Collection implements Link\LinkCollectionAwareInterface
 {
     use Link\LinkCollectionAwareTrait;

@@ -9,7 +9,6 @@ use Laminas\ServiceManager\Factory\FactoryInterface;
 use Laminas\ServiceManager\ServiceManager;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
-use Psr\Container\NotFoundExceptionInterface;
 use Webmozart\Assert\Assert;
 
 final class AssertionServiceFactory implements FactoryInterface

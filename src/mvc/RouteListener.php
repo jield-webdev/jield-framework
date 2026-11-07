@@ -63,7 +63,7 @@ class RouteListener extends AbstractListenerAggregate
         $target = $event->getTarget();
         /** @mago-var mixed $results */
         $results = Value::call(Value::call(Assert::object($target), 'getEventManager'), 'triggerEvent', [$event]);
-        if (!empty($results)) {
+        if (!!($results ?? null)) {
             return Value::call($results, 'last');
         }
 

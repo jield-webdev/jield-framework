@@ -32,6 +32,9 @@ use const PREG_SPLIT_DELIM_CAPTURE;
 use const PREG_SPLIT_NO_EMPTY;
 
 /** @final */
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
+// @mago-expect lint:kan-defect(1)
 class FormDateTimeSelect extends AbstractFormDateSelect
 {
     /**
@@ -136,6 +139,8 @@ class FormDateTimeSelect extends AbstractFormDateSelect
         $data[$pattern['hour']] = $selectHelper->render(element: $hourElement);
         $data[$pattern['minute']] = $selectHelper->render(element: $minuteElement);
 
+        // These alternatives are mutually exclusive; the following code consumes the selected state.
+        // @mago-expect lint:no-else-clause(1)
         if ($element->shouldShowSeconds() && array_key_exists(key: 'second', array: $pattern)) {
             $secondOptions = $this->getSecondsOptions(pattern: \Webmozart\Assert\Assert::string($pattern['second']));
             $secondElement = $element->getSecondElement()->setValueOptions(options: $secondOptions);
@@ -159,9 +164,9 @@ class FormDateTimeSelect extends AbstractFormDateSelect
             // Delimiter
             if (is_numeric(value: $key)) {
                 $markup .= Value::stringify($value);
-            } else {
-                $markup .= $data[$value];
+                continue;
             }
+            $markup .= $data[$value];
         }
 
         return trim(string: $markup);
@@ -212,6 +217,8 @@ class FormDateTimeSelect extends AbstractFormDateSelect
      *
      * @throws Exception\IntlException
      */
+    // Preserve the existing parameter contract used by callers and inherited interfaces.
+    // @mago-expect lint:no-boolean-flag-parameter(1)
     protected function parsePattern(bool $renderDelimiters = true): array
     {
         $matches = [];
@@ -237,26 +244,38 @@ class FormDateTimeSelect extends AbstractFormDateSelect
             flags: PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY,
         );
 
-        assert(assertion: $pregResult !== false);
+        assert(assertion: $pregResult !== false, description: 'Expected $pregResult !== false.');
 
         $result = [];
         foreach ($pregResult as $value) {
             $noDelimiter = str_contains(haystack: $value, needle: "'") === false;
-
             if ($noDelimiter && stripos(haystack: $value, needle: 'd') !== false) {
                 $result['day'] = $value;
-            } elseif ($noDelimiter && str_contains(haystack: $value, needle: 'M')) {
+                continue;
+            }
+            if ($noDelimiter && str_contains(haystack: $value, needle: 'M')) {
                 $result['month'] = $value;
-            } elseif ($noDelimiter && stripos(haystack: $value, needle: 'y') !== false) {
+                continue;
+            }
+            if ($noDelimiter && stripos(haystack: $value, needle: 'y') !== false) {
                 $result['year'] = $value;
-            } elseif ($noDelimiter && stripos(haystack: $value, needle: 'h') !== false) {
+                continue;
+            }
+            if ($noDelimiter && stripos(haystack: $value, needle: 'h') !== false) {
                 $result['hour'] = $value;
-            } elseif ($noDelimiter && str_contains(haystack: $value, needle: 'm')) {
+                continue;
+            }
+            if ($noDelimiter && str_contains(haystack: $value, needle: 'm')) {
                 $result['minute'] = $value;
-            } elseif ($noDelimiter && str_contains(haystack: $value, needle: 's')) {
+                continue;
+            }
+            if ($noDelimiter && str_contains(haystack: $value, needle: 's')) {
                 $result['second'] = $value;
-            } elseif ($renderDelimiters) {
+                continue;
+            }
+            if ($renderDelimiters) {
                 $result[] = preg_replace(pattern: "/['0abvxz[\]]/i", replacement: '', subject: $value);
+                continue;
             }
         }
 

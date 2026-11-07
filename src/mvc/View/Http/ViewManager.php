@@ -46,6 +46,8 @@ use function is_string;
  * - RouteNotFoundStrategy (also aliased to Jield\Mvc\View\Http\RouteNotFoundStrategy and 404Strategy)
  * - ViewModel
  */
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
 class ViewManager extends AbstractListenerAggregate
 {
     protected array|ArrayAccess $config;
@@ -84,10 +86,11 @@ class ViewManager extends AbstractListenerAggregate
         $events = Assert::notNull($application)->getEventManager();
         $sharedEvents = $events->getSharedManager();
 
-        $this->config = isset($config['view_manager'])
-        && (is_array($config['view_manager']) || $config['view_manager'] instanceof ArrayAccess)
-            ? $config['view_manager']
-            : [];
+        $this->config =
+            ($config['view_manager'] ?? null) !== null
+            && (is_array($config['view_manager']) || $config['view_manager'] instanceof ArrayAccess)
+                ? $config['view_manager']
+                : [];
         $this->services = $services;
         $this->event = $event;
 
@@ -180,7 +183,8 @@ class ViewManager extends AbstractListenerAggregate
             return $this->viewModel;
         }
 
-        $this->viewModel = $model = $this->event->getViewModel();
+        $model = $this->event->getViewModel();
+        $this->viewModel = $model;
         /** @mago-var mixed $layoutTemplate */
         $layoutTemplate = Value::call($this->services->get('HttpDefaultRenderingStrategy'), 'getLayoutTemplate');
         $model->setTemplate(Assert::stringNotEmpty($layoutTemplate));
@@ -201,7 +205,7 @@ class ViewManager extends AbstractListenerAggregate
      */
     protected function registerMvcRenderingStrategies(EventManagerInterface $events): void
     {
-        if (!isset($this->config['mvc_strategies'])) {
+        if (($this->config['mvc_strategies'] ?? null) === null) {
             return;
         }
         /** @mago-var mixed $mvcStrategies */
@@ -240,7 +244,7 @@ class ViewManager extends AbstractListenerAggregate
      */
     protected function registerViewStrategies(EventManager $events): void
     {
-        if (!isset($this->config['strategies'])) {
+        if (($this->config['strategies'] ?? null) === null) {
             return;
         }
         /** @mago-var mixed $strategies */

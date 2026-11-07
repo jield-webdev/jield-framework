@@ -15,7 +15,8 @@ class ApiProblemStrategy extends AbstractListenerAggregate
 {
     public function __construct(
         private readonly ApiProblemRenderer $renderer,
-    ) {}
+    ) {
+    }
 
     public function attach(EventManagerInterface $events, $priority = 300): void
     {

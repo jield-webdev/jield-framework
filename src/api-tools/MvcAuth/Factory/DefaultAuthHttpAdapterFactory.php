@@ -31,7 +31,7 @@ class DefaultAuthHttpAdapterFactory implements FactoryInterface
         $config = $container->get('config');
 
         // If no HTTP adapter configuration present, nothing to create
-        if (!isset($config['api-tools-mvc-auth']['authentication']['http'])) {
+        if (($config['api-tools-mvc-auth']['authentication']['http'] ?? null) === null) {
             return false;
         }
 

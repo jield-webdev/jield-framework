@@ -25,7 +25,8 @@ final readonly class Name
      */
     public function __construct(
         private string $name,
-    ) {}
+    ) {
+    }
 
     /**
      * Retrieve the name

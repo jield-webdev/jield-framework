@@ -25,7 +25,8 @@ final readonly class ErrorMessage
      */
     public function __construct(
         private string $message,
-    ) {}
+    ) {
+    }
 
     /**
      * Retrieve the message

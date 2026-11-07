@@ -38,7 +38,11 @@ final class CollectionValidationGroups extends BaseInputFilter
         return InputFilterValidator::validate(
             $this->filter,
             $data,
-            $group === null ? null : (is_array($group) ? $group : [$group]),
+            match (true) {
+                $group === null => null,
+                is_array($group) => $group,
+                default => [$group],
+            },
             $context,
         );
     }

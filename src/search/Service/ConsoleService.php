@@ -13,6 +13,8 @@ use Webmozart\Assert\Assert;
 
 use function sprintf;
 
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
 class ConsoleService
 {
     private array $services = [];
@@ -36,9 +38,12 @@ class ConsoleService
         foreach (Assert::isIterable($services ?? []) as $key => $service) {
             $service = Assert::isArray($service);
             if (!$this->container->has(Assert::string(Value::accessible($service)['service']))) {
-                throw new InvalidArgumentException(message: sprintf('Service %s not found', Value::scalar(Value::path($service, [
-                    'service',
-                ]))));
+                throw new InvalidArgumentException(message: sprintf(
+                    'Service %s not found',
+                    Value::scalar(Value::path($service, [
+                        'service',
+                    ])),
+                ));
             }
 
             Assert::isInstanceOf(value: Value::instantiate($service['entity']), class: HasSearchInterface::class);
@@ -83,7 +88,7 @@ class ConsoleService
             return;
         }
 
-        if (!isset($this->services[$index])) {
+        if (($this->services[$index] ?? null) === null) {
             $output->writeln(messages: sprintf('<error>Index %s not found</error>', $index));
 
             return;
@@ -120,10 +125,13 @@ class ConsoleService
     {
         /** @mago-var mixed $service */
         foreach ($this->services as $service) {
-                $service = Assert::isArray($service);
+            $service = Assert::isArray($service);
             if ($service['skip_sync'] ?? false) {
                 $output->writeln(messages: '');
-                $output->writeln(messages: sprintf('<comment>Skipping sync for %s</comment>', Value::scalar(Value::accessible($service)['service'])));
+                $output->writeln(messages: sprintf(
+                    '<comment>Skipping sync for %s</comment>',
+                    Value::scalar(Value::accessible($service)['service']),
+                ));
                 continue;
             }
 
@@ -147,7 +155,7 @@ class ConsoleService
     {
         /** @mago-var mixed $service */
         foreach ($this->services as $service) {
-                $service = Assert::isArray($service);
+            $service = Assert::isArray($service);
             /** @var AbstractSearchService $serviceInstance */
             $serviceInstance = $this->container->get(Assert::string(Value::accessible($service)['service']));
             /** @var HasSearchInterface $entity */

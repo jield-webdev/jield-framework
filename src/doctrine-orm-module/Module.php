@@ -48,7 +48,7 @@ final class Module implements
     {
         /** @var array<array-key, mixed> $config */
         $config = include __DIR__ . '/../../config/docrine-orm-module/module.config.php';
-        return $config;
+        return \Webmozart\Assert\Assert::isArray($config);
     }
 
     /**
@@ -60,7 +60,7 @@ final class Module implements
     {
         /** @var array<array-key, mixed> $config */
         $config = include __DIR__ . '/../../config/docrine-orm-module/controllers.config.php';
-        return $config;
+        return \Webmozart\Assert\Assert::isArray($config);
     }
 
     /**

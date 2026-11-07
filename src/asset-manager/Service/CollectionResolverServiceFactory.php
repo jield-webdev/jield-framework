@@ -21,7 +21,7 @@ class CollectionResolverServiceFactory implements FactoryInterface
         $config = $container->get('config');
         $collections = [];
 
-        if (isset($config['asset_manager']['resolver_configs']['collections'])) {
+        if (($config['asset_manager']['resolver_configs']['collections'] ?? null) !== null) {
             /** @mago-var mixed $collections */
             $collections = $config['asset_manager']['resolver_configs']['collections'];
         }

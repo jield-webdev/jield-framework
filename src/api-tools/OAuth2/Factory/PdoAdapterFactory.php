@@ -51,7 +51,7 @@ final class PdoAdapterFactory implements FactoryInterface
         );
 
         $oauth2ServerConfig = [];
-        if (isset($oauthConfig['storage_settings']) && is_array(value: $oauthConfig['storage_settings'])) {
+        if (($oauthConfig['storage_settings'] ?? null) !== null && is_array(value: $oauthConfig['storage_settings'])) {
             $oauth2ServerConfig = $oauthConfig['storage_settings'];
         }
 

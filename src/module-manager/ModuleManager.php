@@ -13,6 +13,9 @@ use function is_array;
 use function is_object;
 use function sprintf;
 
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
+// @mago-expect lint:too-many-methods(1)
 class ModuleManager implements ModuleManagerInterface
 {
     public const string EVENT_BOOTSTRAP = 'bootstrap';
@@ -101,7 +104,7 @@ class ModuleManager implements ModuleManagerInterface
     #[Override]
     public function loadModule(string $moduleName): mixed
     {
-        if (isset($this->loadedModules[$moduleName])) {
+        if (($this->loadedModules[$moduleName] ?? null) !== null) {
             return $this->loadedModules[$moduleName];
         }
 
@@ -115,7 +118,7 @@ class ModuleManager implements ModuleManagerInterface
          * To load a module, we clone the event if we are inside a nested
          * loadModule() call, and use the original event otherwise.
          */
-        if (!isset($this->loadFinished)) {
+        if (($this->loadFinished ?? null) === null) {
             $this->loadFinished = 0;
         }
 
@@ -169,6 +172,8 @@ class ModuleManager implements ModuleManagerInterface
      * @param bool $loadModules If true, load modules if they're not already
      * @return array An array of Module objects, keyed by module name
      */
+    // Preserve the existing parameter contract used by callers and inherited interfaces.
+    // @mago-expect lint:no-boolean-flag-parameter(1)
     #[Override]
     public function getLoadedModules(bool $loadModules = false): array
     {
@@ -205,15 +210,14 @@ class ModuleManager implements ModuleManagerInterface
     #[Override]
     public function setModules(mixed $modules): static
     {
-        if (is_iterable($modules)) {
-            $this->modules = $modules;
-        } else {
+        if (!is_iterable($modules)) {
             throw new Exception\InvalidArgumentException(message: sprintf(
                 'Parameter to %s\'s %s method must be an array or implement the Traversable interface',
                 self::class,
                 __METHOD__,
             ));
         }
+        $this->modules = $modules;
         return $this;
     }
 

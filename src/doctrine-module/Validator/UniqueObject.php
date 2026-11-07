@@ -44,14 +44,12 @@ class UniqueObject extends ObjectExists implements ObjectManagerAwareInterface
     {
         parent::__construct(options: $options);
 
-        if (!isset($options['object_manager']) || !$options['object_manager'] instanceof ObjectManager) {
-            if (!array_key_exists(key: 'object_manager', array: $options)) {
-                $provided = 'nothing';
-            } elseif (is_object(value: $options['object_manager'])) {
-                $provided = $options['object_manager']::class;
-            } else {
-                $provided = gettype(value: $options['object_manager']);
-            }
+        if (($options['object_manager'] ?? null) === null || !$options['object_manager'] instanceof ObjectManager) {
+            $provided = match (true) {
+                !array_key_exists(key: 'object_manager', array: $options) => 'nothing',
+                is_object(value: $options['object_manager']) => $options['object_manager']::class,
+                default => gettype(value: $options['object_manager']),
+            };
 
             throw new Exception\InvalidArgumentException(message: sprintf(
                 'Option "object_manager" is required and must be an instance of'
@@ -61,7 +59,7 @@ class UniqueObject extends ObjectExists implements ObjectManagerAwareInterface
         }
 
         $this->objectManager = $options['object_manager'];
-        $this->useContext = isset($options['use_context']) ? Value::truthy($options['use_context']) : false;
+        $this->useContext = ($options['use_context'] ?? null) !== null ? Value::truthy($options['use_context']) : false;
     }
 
     /**

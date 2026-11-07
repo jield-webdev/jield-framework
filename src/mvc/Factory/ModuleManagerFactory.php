@@ -42,7 +42,9 @@ class ModuleManagerFactory implements FactoryInterface
     ): ModuleManager {
         /** @mago-var mixed $configuration */
         $configuration = $container->get('ApplicationConfig');
-        $listenerOptions = new ListenerOptions(\Jield\Stdlib\Value::options(\Jield\Stdlib\Value::accessible($configuration)['module_listener_options']));
+        $listenerOptions = new ListenerOptions(\Jield\Stdlib\Value::options(
+            \Jield\Stdlib\Value::accessible($configuration)['module_listener_options'],
+        ));
         $defaultListeners = new DefaultListenerAggregate($listenerOptions);
         $serviceListener = Service::get($container, ServiceListener::class, 'ServiceListener');
 
@@ -85,7 +87,10 @@ class ModuleManagerFactory implements FactoryInterface
         $moduleEvent = new ModuleEvent();
         $moduleEvent->setParam('ServiceManager', $container);
 
-        $moduleManager = new ModuleManager(Assert::isIterable(\Jield\Stdlib\Value::accessible($configuration)['modules']), $events);
+        $moduleManager = new ModuleManager(
+            Assert::isIterable(\Jield\Stdlib\Value::accessible($configuration)['modules']),
+            $events,
+        );
         $moduleManager->setEvent($moduleEvent);
 
         return $moduleManager;

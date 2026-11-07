@@ -42,9 +42,16 @@ class MapLoader implements Loader\LoaderInterface
             throw new Error\LoaderError(sprintf('Unable to find template "%s" from template map', $name));
         }
         if (!file_exists(Assert::string($this->map[$name]))) {
-            throw new Error\LoaderError(sprintf('Unable to open file "%s" from template map', \Jield\Stdlib\Value::scalar($this->map[$name])));
+            throw new Error\LoaderError(sprintf(
+                'Unable to open file "%s" from template map',
+                \Jield\Stdlib\Value::scalar($this->map[$name]),
+            ));
         }
-        return new Source(Assert::string(file_get_contents(Assert::string($this->map[$name]))), $name, Assert::string($this->map[$name]));
+        return new Source(
+            Assert::string(file_get_contents(Assert::string($this->map[$name]))),
+            $name,
+            Assert::string($this->map[$name]),
+        );
     }
 
     public function getCacheKey(string $name): string

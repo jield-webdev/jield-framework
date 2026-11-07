@@ -33,7 +33,8 @@ class HalJsonRenderer extends JsonRenderer
 
     public function __construct(
         protected ApiProblemRenderer $apiProblemRenderer,
-    ) {}
+    ) {
+    }
 
     /**
      * Set helper plugin manager instance.

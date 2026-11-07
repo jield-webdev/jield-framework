@@ -36,15 +36,19 @@ class Checkbox extends Element implements InputProviderInterface
     {
         parent::setOptions(options: $options);
 
-        if (isset($this->options['use_hidden_element'])) {
-            $this->setUseHiddenElement(useHiddenElement: \Webmozart\Assert\Assert::boolean($this->options['use_hidden_element']));
+        if (($this->options['use_hidden_element'] ?? null) !== null) {
+            $this->setUseHiddenElement(useHiddenElement: \Webmozart\Assert\Assert::boolean(
+                $this->options['use_hidden_element'],
+            ));
         }
 
-        if (isset($this->options['unchecked_value'])) {
-            $this->setUncheckedValue(uncheckedValue: \Webmozart\Assert\Assert::nullOrString($this->options['unchecked_value']));
+        if (($this->options['unchecked_value'] ?? null) !== null) {
+            $this->setUncheckedValue(uncheckedValue: \Webmozart\Assert\Assert::nullOrString(
+                $this->options['unchecked_value'],
+            ));
         }
 
-        if (isset($this->options['checked_value'])) {
+        if (($this->options['checked_value'] ?? null) !== null) {
             $this->setCheckedValue(checkedValue: \Webmozart\Assert\Assert::string($this->options['checked_value']));
         }
 
@@ -132,7 +136,8 @@ class Checkbox extends Element implements InputProviderInterface
             $spec['name'] = $name;
         }
 
-        if ($validator = $this->getValidator()) {
+        $validator = $this->getValidator();
+        if ($validator) {
             $spec['validators'] = [
                 $validator,
             ];
@@ -154,6 +159,8 @@ class Checkbox extends Element implements InputProviderInterface
      *
      * @param bool $value The flag to set.
      */
+    // Preserve the existing parameter contract used by callers and inherited interfaces.
+    // @mago-expect lint:no-boolean-flag-parameter(1)
     public function setChecked(bool $value): static
     {
         $this->value = $value ? $this->getCheckedValue() : $this->getUncheckedValue();

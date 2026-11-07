@@ -20,7 +20,7 @@ final class UniqueObjectFactory extends AbstractValidatorFactory
      */
     public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): UniqueObject
     {
-        $useContext = isset($options['use_context']) ? Value::truthy($options['use_context']) : false;
+        $useContext = ($options['use_context'] ?? null) !== null ? Value::truthy($options['use_context']) : false;
 
         return new UniqueObject(options: $this->merge(previousOptions: Assert::isArray($options), newOptions: [
             'object_manager' => $this->getObjectManager(container: $container, options: $options),

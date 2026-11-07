@@ -18,7 +18,8 @@ class ObjectRepositoryProvider implements ProviderInterface
 {
     public function __construct(
         protected ObjectRepository $objectRepository,
-    ) {}
+    ) {
+    }
 
     /**
      * {@inheritDoc}

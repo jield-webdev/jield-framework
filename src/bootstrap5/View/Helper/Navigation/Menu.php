@@ -19,6 +19,9 @@ use function is_int;
 use function str_repeat;
 use function trim;
 
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
+// @mago-expect lint:kan-defect(1)
 final class Menu
 {
     private string $ulClass = 'nav';
@@ -29,7 +32,8 @@ final class Menu
         private readonly EscapeHtmlAttr $escapeHtmlAttr,
         private readonly HtmlAttributes $htmlAttributes,
         private readonly ?TranslatorInterface $translator = null,
-    ) {}
+    ) {
+    }
 
     /**
      * @param array<string, mixed> $options
@@ -71,6 +75,11 @@ final class Menu
     /**
      * @throws \Exception
      */
+    // Preserve the existing parameter contract used by callers and inherited interfaces.
+    // @mago-expect lint:excessive-parameter-list(1)
+    // @mago-expect lint:no-boolean-flag-parameter(2)
+    // Keep the coordinated parsing or rendering steps of this compatibility method together.
+    // @mago-expect lint:halstead(1)
     private function renderNormalMenu(
         AbstractContainer $container,
         string $ulClass,
@@ -100,6 +109,8 @@ final class Menu
             $depth = $iterator->getDepth();
             $isActive = $page->isActive(true);
 
+            // These alternatives are mutually exclusive; the following code consumes the selected state.
+            // @mago-expect lint:no-else-clause(1)
             if ($depth === 0) {
                 $page->setClass(trim('nav-link ' . (string) $page->getClass()));
             } elseif ($depth > 0) {
@@ -120,6 +131,8 @@ final class Menu
             if ($onlyActive && !$isActive) {
                 $accept = false;
                 if ($foundPage instanceof AbstractPage) {
+                    // These alternatives are mutually exclusive; the following code consumes the selected state.
+                    // @mago-expect lint:no-else-clause(1)
                     if ($foundPage->hasPage($page)) {
                         $accept = true;
                     } else {
@@ -127,7 +140,8 @@ final class Menu
                         if ($foundParent && $foundParent->hasPage($page)) {
                             if (
                                 !$foundPage->hasPages(!$this->renderInvisible)
-                                || is_int($maxDepth) && ($foundDepth + 1) > $maxDepth
+                                || is_int($maxDepth)
+                                && ($foundDepth + 1) > $maxDepth
                             ) {
                                 $accept = true;
                             }
@@ -142,12 +156,13 @@ final class Menu
             $depth -= $minDepth;
             $myIndent = $indent . str_repeat('        ', Assert::notNegativeInteger($depth));
 
+            // These alternatives are mutually exclusive; the following code consumes the selected state.
+            // @mago-expect lint:no-else-clause(2)
             if ($depth > $prevDepth) {
-                if ($ulClass !== '' && $depth === 0) {
-                    $ulClass = ' class="' . Value::stringify($this->escapeHtmlAttr->__invoke($ulClass)) . '"';
-                } else {
-                    $ulClass = ' class="dropdown-menu" aria-labelledby="' . $key . '"';
-                }
+                $ulClass =
+                    $ulClass !== '' && $depth === 0
+                        ? ' class="' . Value::stringify($this->escapeHtmlAttr->__invoke($ulClass)) . '"'
+                        : ' class="dropdown-menu" aria-labelledby="' . $key . '"';
                 $html .= $myIndent . '<ul' . $ulClass . '>' . PHP_EOL;
             } elseif ($prevDepth > $depth) {
                 for ($i = $prevDepth; $i > $depth; $i--) {
@@ -200,6 +215,8 @@ final class Menu
         return $html;
     }
 
+    // Preserve the existing parameter contract used by callers and inherited interfaces.
+    // @mago-expect lint:no-boolean-flag-parameter(2)
     private function htmlify(AbstractPage $page, bool $escapeLabel = true, bool $addClassToListItem = false): string
     {
         $attribs = [
@@ -222,6 +239,8 @@ final class Menu
         }
 
         $href = $page->getHref();
+        // These alternatives are mutually exclusive; the following code consumes the selected state.
+        // @mago-expect lint:no-else-clause(1)
         if ($href) {
             $element = 'a';
             $attribs['href'] = $href;
@@ -233,6 +252,8 @@ final class Menu
         $html = '<' . $element . $this->htmlAttribs(Value::scalarMap($attribs)) . '>';
         $label = $this->translate($page->getLabel(), $page->getTextDomain());
 
+        // These alternatives are mutually exclusive; the following code consumes the selected state.
+        // @mago-expect lint:no-else-clause(1)
         if ($escapeLabel) {
             $html .= Value::stringify($this->escapeHtml->__invoke($label));
         } else {

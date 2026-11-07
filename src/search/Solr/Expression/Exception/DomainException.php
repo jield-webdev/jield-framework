@@ -6,4 +6,6 @@ namespace Jield\Search\Solr\Expression\Exception;
 
 use DomainException as BaseDomainException;
 
-class DomainException extends BaseDomainException implements ExceptionInterface {}
+class DomainException extends BaseDomainException implements ExceptionInterface
+{
+}

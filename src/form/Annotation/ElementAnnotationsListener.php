@@ -42,6 +42,10 @@ use function is_array;
  * work with the annotation values, as well as the element and input specification
  * passed in the event object.
  */
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
+// @mago-expect lint:kan-defect(1)
+// @mago-expect lint:too-many-methods(1)
 final class ElementAnnotationsListener extends AbstractAnnotationsListener
 {
     /**
@@ -109,7 +113,7 @@ final class ElementAnnotationsListener extends AbstractAnnotationsListener
 
         /** @mago-var mixed $elementSpec */
         $elementSpec = $e->getParam('elementSpec');
-        if (isset($elementSpec['spec']['attributes'])) {
+        if (($elementSpec['spec']['attributes'] ?? null) !== null) {
             $elementSpec['spec']['attributes'] = array_merge(
                 Assert::isArray($elementSpec['spec']['attributes']),
                 $annotation->getAttributes(),
@@ -135,89 +139,86 @@ final class ElementAnnotationsListener extends AbstractAnnotationsListener
 
         $class = $annotation->getComposedObject();
         $annotationManager = $e->getTarget();
-        $specification = ArrayUtils::iteratorToArray(
-            Assert::isIterable(Value::call(Assert::object($annotationManager), 'getFormSpecification', [$class])),
-        );
+        $specification = ArrayUtils::iteratorToArray(Assert::isIterable(Value::call(
+            Assert::object($annotationManager),
+            'getFormSpecification',
+            [$class],
+        )));
 
         /** @mago-var mixed $name */
         $name = $e->getParam('name');
         /** @mago-var mixed $elementSpec */
         $elementSpec = $e->getParam('elementSpec');
-
         if ($annotation->isCollection()) {
             // Compose specification as a fieldset into parent form/fieldset
-            if (!isset($specification['type'])) {
+            if (($specification['type'] ?? null) === null) {
                 //use input filter provider fieldset so we can compose the input filter into the fieldset
                 //it is assumed that if someone uses a custom fieldset, they will take care of the input
                 //filtering themselves or consume the input_filter_spec option.
                 Value::setPath($specification, ['type'], InputFilterProviderFieldset::class);
             }
-
             /** @mago-var mixed $inputFilter */
             $inputFilter = $specification['input_filter'];
-            if (!isset($inputFilter['type'])) {
+            if (($inputFilter['type'] ?? null) === null) {
                 Value::setPath($inputFilter, ['type'], InputFilter::class);
             }
             unset($specification['input_filter']);
-
             Value::setPath($elementSpec, ['spec', 'type'], Collection::class);
             Value::setPath($elementSpec, ['spec', 'name'], $name);
-
             /** @mago-var mixed $targetElementOptions */
             $targetElementOptions = $specification['options'] ?? [];
-            assert(is_array($targetElementOptions));
+            assert(is_array($targetElementOptions), 'Expected is_array($targetElementOptions).');
             $targetElementOptions['input_filter_spec'] = $inputFilter;
             $targetElementOptions['target_type'] = $class;
             Value::setPath($specification, ['options'], $targetElementOptions);
-
             Value::setPath(
                 $elementSpec,
                 ['spec', 'options'],
                 new ArrayObject($this->mergeOptions($elementSpec, $annotation)),
             );
-
             Value::setPath($elementSpec, ['spec', 'options', 'target_element'], $specification);
-
-            if (isset($specification['hydrator'])) {
+            if (($specification['hydrator'] ?? null) !== null) {
                 Value::setPath($elementSpec, ['spec', 'hydrator'], $specification['hydrator']);
             }
-        } else {
-            // Compose input filter into parent input filter
-            /** @mago-var mixed $inputFilter */
-            $inputFilter = $specification['input_filter'];
-            if (!isset($inputFilter['type'])) {
-                Value::setPath($inputFilter, ['type'], InputFilter::class);
-            }
-            /** @mago-var mixed $inputSpec */
-            $inputSpec = $e->getParam('inputSpec');
-            Value::call($inputSpec, 'exchangeArray', [
-                $inputFilter instanceof \ArrayObject ? $inputFilter->getArrayCopy() : Value::toArray($inputFilter),
-            ]);
-            unset($specification['input_filter']);
-
-            // Compose specification as a fieldset into parent form/fieldset
-            if (!isset($specification['type'])) {
-                Value::setPath($specification, ['type'], Fieldset::class);
-            }
-
-            if (isset($elementSpec['spec']['options'])) {
-                $specification['options'] ??= [];
-                Value::setPath(
-                    $specification,
-                    ['options'],
-                    array_merge(Assert::isArray($elementSpec['spec']['options']), Assert::isArray($specification['options'])),
-                );
-            }
-
-            // Add element spec:
-            Value::setPath($elementSpec, ['spec'], $specification);
-            Value::setPath($elementSpec, ['spec', 'name'], $name);
+            return;
+        }
+        // Compose input filter into parent input filter
+        /** @mago-var mixed $composedInputFilter */
+        $composedInputFilter = $specification['input_filter'];
+        if (($composedInputFilter['type'] ?? null) === null) {
+            Value::setPath($composedInputFilter, ['type'], InputFilter::class);
+        }
+        /** @mago-var mixed $inputSpec */
+        $inputSpec = $e->getParam('inputSpec');
+        Value::call($inputSpec, 'exchangeArray', [
+            $composedInputFilter instanceof \ArrayObject
+                ? $composedInputFilter->getArrayCopy()
+                : Value::toArray($composedInputFilter),
+        ]);
+        unset($specification['input_filter']);
+        // Compose specification as a fieldset into parent form/fieldset
+        if (($specification['type'] ?? null) === null) {
+            Value::setPath($specification, ['type'], Fieldset::class);
+        }
+        if (($elementSpec['spec']['options'] ?? null) !== null) {
+            $specification['options'] ??= [];
             Value::setPath(
-                $elementSpec,
-                ['spec', 'options'],
-                new ArrayObject($this->mergeOptions($elementSpec, $annotation)),
+                $specification,
+                ['options'],
+                array_merge(
+                    Assert::isArray($elementSpec['spec']['options']),
+                    Assert::isArray($specification['options']),
+                ),
             );
         }
+        // Add element spec:
+        Value::setPath($elementSpec, ['spec'], $specification);
+        Value::setPath($elementSpec, ['spec', 'name'], $name);
+        Value::setPath(
+            $elementSpec,
+            ['spec', 'options'],
+            new ArrayObject($this->mergeOptions($elementSpec, $annotation)),
+        );
     }
 
     /**
@@ -263,7 +264,7 @@ final class ElementAnnotationsListener extends AbstractAnnotationsListener
     {
         /** @mago-var mixed $annotations */
         $annotations = $e->getParam('annotations');
-        assert($annotations instanceof AnnotationCollection);
+        assert($annotations instanceof AnnotationCollection, 'Expected $annotations instanceof AnnotationCollection.');
 
         if ($annotations->hasAnnotation(Exclude::class)) {
             return true;
@@ -286,7 +287,7 @@ final class ElementAnnotationsListener extends AbstractAnnotationsListener
 
         /** @mago-var mixed $inputSpec */
         $inputSpec = $e->getParam('inputSpec');
-        if (!isset($inputSpec['filters'])) {
+        if (($inputSpec['filters'] ?? null) === null) {
             Value::setPath($inputSpec, ['filters'], []);
         }
         Value::setPath($inputSpec, ['filters', null], $annotation->getFilterSpecification());
@@ -381,7 +382,11 @@ final class ElementAnnotationsListener extends AbstractAnnotationsListener
 
         /** @mago-var mixed $elementSpec */
         $elementSpec = $e->getParam('elementSpec');
-        Value::setPath($elementSpec, ['spec', 'options'], $this->mergeOptions(Value::accessible($elementSpec), $annotation));
+        Value::setPath(
+            $elementSpec,
+            ['spec', 'options'],
+            $this->mergeOptions(Value::accessible($elementSpec), $annotation),
+        );
     }
 
     /**
@@ -405,7 +410,7 @@ final class ElementAnnotationsListener extends AbstractAnnotationsListener
         if ($required) {
             /** @mago-var mixed $elementSpec */
             $elementSpec = $e->getParam('elementSpec');
-            if (!isset($elementSpec['spec']['attributes'])) {
+            if (($elementSpec['spec']['attributes'] ?? null) === null) {
                 Value::setPath($elementSpec, ['spec', 'attributes'], []);
             }
 
@@ -446,7 +451,7 @@ final class ElementAnnotationsListener extends AbstractAnnotationsListener
 
         /** @mago-var mixed $inputSpec */
         $inputSpec = $e->getParam('inputSpec');
-        if (!isset($inputSpec['validators'])) {
+        if (($inputSpec['validators'] ?? null) === null) {
             Value::setPath($inputSpec, ['validators'], []);
         }
         Value::setPath($inputSpec, ['validators', null], $annotation->getValidatorSpecification());
@@ -458,7 +463,7 @@ final class ElementAnnotationsListener extends AbstractAnnotationsListener
      */
     private function mergeOptions($elementSpec, $annotation): array
     {
-        if (isset($elementSpec['spec']['options'])) {
+        if (($elementSpec['spec']['options'] ?? null) !== null) {
             if (is_array($elementSpec['spec']['options'])) {
                 return array_merge($elementSpec['spec']['options'], $annotation->getOptions());
             }

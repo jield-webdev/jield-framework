@@ -16,7 +16,9 @@ class ContentNegotiationOptionsFactory
      */
     public function __invoke(ContainerInterface $container): ContentNegotiationOptions
     {
-        return new ContentNegotiationOptions(options: \Jield\Stdlib\Value::options($this->getConfig(container: $container)));
+        return new ContentNegotiationOptions(options: \Jield\Stdlib\Value::options($this->getConfig(
+            container: $container,
+        )));
     }
 
     /**
@@ -39,7 +41,7 @@ class ContentNegotiationOptionsFactory
         $config = $container->get('config');
 
         if (
-            !isset($config['api-tools-content-negotiation'])
+            ($config['api-tools-content-negotiation'] ?? null) === null
             || !is_array(value: $config['api-tools-content-negotiation'])
         ) {
             return [];

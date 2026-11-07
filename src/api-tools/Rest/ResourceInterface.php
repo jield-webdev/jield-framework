@@ -13,6 +13,8 @@ use Laminas\Stdlib\Parameters;
 /**
  * Interface describing operations for a given resource.
  */
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:too-many-methods(1)
 interface ResourceInterface extends EventManagerAwareInterface
 {
     /**

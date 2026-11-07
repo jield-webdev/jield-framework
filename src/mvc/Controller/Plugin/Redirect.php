@@ -41,13 +41,11 @@ class Redirect extends AbstractPlugin
         /** @mago-var mixed $urlPlugin */
         $urlPlugin = $controller->plugin('url');
 
-        if (is_scalar($options)) {
-            /** @mago-var mixed $url */
-            $url = Value::call($urlPlugin, 'fromRoute', [$route, $params, $options]);
-        } else {
-            /** @mago-var mixed $url */
-            $url = Value::call($urlPlugin, 'fromRoute', [$route, $params, $options, $reuseMatchedParams]);
-        }
+        /** @mago-var mixed $url */
+        /** @mago-var mixed $url */
+        $url = is_scalar($options)
+            ? Value::call($urlPlugin, 'fromRoute', [$route, $params, $options])
+            : Value::call($urlPlugin, 'fromRoute', [$route, $params, $options, $reuseMatchedParams]);
 
         return $this->toUrl(Assert::string($url));
     }

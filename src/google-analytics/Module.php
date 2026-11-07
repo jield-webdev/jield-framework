@@ -22,7 +22,7 @@ final class Module implements ConfigProviderInterface, BootstrapListenerInterfac
     {
         /** @var array<array-key, mixed> $config */
         $config = include __DIR__ . '/../../resources/google-analytics/config/module.config.php';
-        return $config;
+        return \Webmozart\Assert\Assert::isArray($config);
     }
 
     #[Override]
@@ -38,11 +38,14 @@ final class Module implements ConfigProviderInterface, BootstrapListenerInterfac
         $sm = $app->getServiceManager();
         $em = $app->getEventManager();
 
-        $em->attach(MvcEvent::EVENT_RENDER, /** @throws \Psr\Container\ContainerExceptionInterface */ static function (MvcEvent $e) use ($sm): void {
-            $view = Service::get($sm, HelperPluginManager::class, 'ViewHelperManager');
-            /** @var GoogleAnalytics $plugin */
-            $plugin = $view->get('googleAnalytics');
-            $plugin->appendScript();
-        });
+        $em->attach(
+            MvcEvent::EVENT_RENDER,
+            /** @throws \Psr\Container\ContainerExceptionInterface */ static function (MvcEvent $e) use ($sm): void {
+                $view = Service::get($sm, HelperPluginManager::class, 'ViewHelperManager');
+                /** @var GoogleAnalytics $plugin */
+                $plugin = $view->get('googleAnalytics');
+                $plugin->appendScript();
+            },
+        );
     }
 }

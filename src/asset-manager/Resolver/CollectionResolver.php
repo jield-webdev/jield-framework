@@ -67,7 +67,7 @@ class CollectionResolver implements ResolverInterface, AggregateResolverAwareInt
     #[Override]
     public function resolve(string $fileName): ?\Assetic\Contracts\Asset\AssetInterface
     {
-        if (!isset($this->collections[$fileName])) {
+        if (($this->collections[$fileName] ?? null) === null) {
             return null;
         }
 

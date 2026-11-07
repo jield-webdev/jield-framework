@@ -22,13 +22,16 @@ class SearchUpdateService
         private readonly ContainerInterface $container,
         private readonly MessageBusInterface $bus,
         private readonly array $cores,
-    ) {}
+    ) {
+    }
 
     /**
      * @throws \Psr\Container\ContainerExceptionInterface
      * @throws \Symfony\Component\Messenger\Exception\ExceptionInterface
      * @throws \RuntimeException
      */
+    // Preserve the existing parameter contract used by callers and inherited interfaces.
+    // @mago-expect lint:no-boolean-flag-parameter(1)
     public function updateEntity(HasSearchInterface $entity, bool $queued = false): void
     {
         if ($queued) {
@@ -80,7 +83,7 @@ class SearchUpdateService
         }
 
         //The array cannot be empty
-        if (empty($entities)) {
+        if ($entities === []) {
             return;
         }
 
@@ -97,9 +100,9 @@ class SearchUpdateService
         foreach ($entities as $updateAbleEntity) {
             //We only allow entities of the same class
             if (
-                ClassUtils::getRealClass(className: Value::classString($updateAbleEntity::class)) !== ClassUtils::getRealClass(
-                    className: $entityClassName,
-                )
+                ClassUtils::getRealClass(className: Value::classString(
+                    $updateAbleEntity::class,
+                )) !== ClassUtils::getRealClass(className: $entityClassName)
             ) {
                 throw new InvalidArgumentException(
                     message: 'All entities must be of the same class, got '

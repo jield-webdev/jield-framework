@@ -26,7 +26,7 @@ class AuthenticationService implements UserIdProviderInterface
         private readonly ?AuthenticationServiceInterface $authenticationService = null,
         array $config = [],
     ) {
-        if (isset($config['api-tools-oauth2']['user_id'])) {
+        if (($config['api-tools-oauth2']['user_id'] ?? null) !== null) {
             $this->userId = \Webmozart\Assert\Assert::string($config['api-tools-oauth2']['user_id']);
         }
     }
@@ -59,7 +59,7 @@ class AuthenticationService implements UserIdProviderInterface
             return null;
         }
 
-        if (is_array(value: $identity) && isset($identity[$this->userId])) {
+        if (is_array(value: $identity) && ($identity[$this->userId] ?? null) !== null) {
             return $identity[$this->userId];
         }
 

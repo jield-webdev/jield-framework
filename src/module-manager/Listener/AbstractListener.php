@@ -15,7 +15,7 @@ abstract class AbstractListener
 
     public function __construct(?ListenerOptions $options = null)
     {
-        $options = $options ?: new ListenerOptions();
+        $options ??= new ListenerOptions();
         $this->setOptions(options: $options);
     }
 

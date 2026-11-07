@@ -14,7 +14,8 @@ final readonly class InitHighlightJs
         private HeadScript $headScript,
         private HeadLink $headLink,
         private InlineScript $inlineScript,
-    ) {}
+    ) {
+    }
 
     public function __invoke(): static
     {

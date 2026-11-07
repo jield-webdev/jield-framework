@@ -28,9 +28,9 @@ class AssetManagerServiceFactory implements FactoryInterface
         $config = $container->get('config');
         $assetManagerConfig = [];
 
-        if (!empty($config['asset_manager'])) {
+        if (!!($config['asset_manager'] ?? null)) {
             /** @mago-var mixed $assetManagerConfig */
-            $assetManagerConfig = $config['asset_manager'];
+            $assetManagerConfig = $config['asset_manager'] ?? null;
         }
 
         $assetManager = new AssetManager(

@@ -11,12 +11,15 @@ use Psr\Cache\CacheItemPoolInterface;
 use RuntimeException;
 use Throwable;
 
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
 readonly class EntraJwksProvider
 {
     public function __construct(
         private ClientInterface $http,
         private CacheItemPoolInterface $cache,
-    ) {}
+    ) {
+    }
 
     /**
      * @throws EntraException
@@ -29,7 +32,13 @@ readonly class EntraJwksProvider
         /** @mago-var mixed $data */
         $data = $item->isHit() ? $item->get() : null;
 
-        $key = is_array($data) ? $this->findKey(keys: \Webmozart\Assert\Assert::isArray($data['keys'] ?? []), tenantId: $tenantId, kid: $kid) : null;
+        $key = is_array($data)
+            ? $this->findKey(
+                keys: \Webmozart\Assert\Assert::isArray($data['keys'] ?? []),
+                tenantId: $tenantId,
+                kid: $kid,
+            )
+            : null;
         if ($key instanceof Key) {
             return $key;
         }

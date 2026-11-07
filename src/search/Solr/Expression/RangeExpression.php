@@ -27,7 +27,8 @@ class RangeExpression extends Expression implements Stringable
          * Inclusive or exclusive the range start/end?
          */
         protected bool $inclusive = true,
-    ) {}
+    ) {
+    }
 
     public function __toString(): string
     {

@@ -27,7 +27,7 @@ class FileResolverFactory implements FactoryInterface
         /** @mago-var mixed $config */
         $config = $container->get('config');
 
-        if (!isset($config['api-tools-mvc-auth']['authentication']['http']['htdigest'])) {
+        if (($config['api-tools-mvc-auth']['authentication']['http']['htdigest'] ?? null) === null) {
             return false;
         }
 

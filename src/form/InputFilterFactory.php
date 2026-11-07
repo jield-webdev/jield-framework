@@ -37,7 +37,11 @@ final class InputFilterFactory
         /** @mago-var mixed $input */
         foreach ($specification as $name => &$input) {
             if (
-                !(is_string($name) && is_array($input) && !in_array($name, ['options', 'validators', 'filters'], true))
+                !(
+                    is_string($name)
+                    && is_array($input)
+                    && !in_array($name, ['options', 'validators', 'filters'], true)
+                )
             ) {
                 continue;
             }

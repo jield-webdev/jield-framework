@@ -32,6 +32,10 @@ use function substr;
 
 use const DIRECTORY_SEPARATOR;
 
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
+// @mago-expect lint:kan-defect(1)
+// @mago-expect lint:too-many-methods(1)
 class ModuleAutoloader implements SplAutoloader
 {
     protected array $paths = [];
@@ -116,6 +120,8 @@ class ModuleAutoloader implements SplAutoloader
      *          get_class($class) [if $class is successfully loaded]
      * @throws \UnexpectedValueException
      */
+    // Keep the coordinated parsing or rendering steps of this compatibility method together.
+    // @mago-expect lint:halstead(1)
     public function autoload(string $class): mixed
     {
         // Limit scope of this autoloader
@@ -123,21 +129,27 @@ class ModuleAutoloader implements SplAutoloader
             return false;
         }
 
-        if (isset($this->moduleClassMap[$class])) {
+        if (($this->moduleClassMap[$class] ?? null) !== null) {
             require_once Assert::string($this->moduleClassMap[$class]);
             return $class;
         }
 
         $moduleName = substr(string: $class, offset: 0, length: -7);
-        if (isset($this->explicitPaths[$moduleName])) {
+        if (($this->explicitPaths[$moduleName] ?? null) !== null) {
             /** @mago-var mixed $classLoaded */
-            $classLoaded = $this->loadModuleFromDir(dirPath: Assert::string($this->explicitPaths[$moduleName]), class: $class);
+            $classLoaded = $this->loadModuleFromDir(
+                dirPath: Assert::string($this->explicitPaths[$moduleName]),
+                class: $class,
+            );
             if ($classLoaded) {
                 return $classLoaded;
             }
 
             /** @mago-var mixed $classLoaded */
-            $classLoaded = $this->loadModuleFromPhar(pharPath: Assert::string($this->explicitPaths[$moduleName]), class: $class);
+            $classLoaded = $this->loadModuleFromPhar(
+                pharPath: Assert::string($this->explicitPaths[$moduleName]),
+                class: $class,
+            );
             if ($classLoaded) {
                 return $classLoaded;
             }
@@ -182,7 +194,8 @@ class ModuleAutoloader implements SplAutoloader
             $path = Value::stringify($path) . $moduleClassPath;
 
             if ($path === '.' || str_starts_with($path, './') || str_starts_with($path, '.\\')) {
-                if (!($basePath = $this->pharBasePath)) {
+                $basePath = $this->pharBasePath;
+                if (!$basePath) {
                     $basePath = realpath(path: '.');
                 }
 
@@ -234,11 +247,9 @@ class ModuleAutoloader implements SplAutoloader
     protected function loadModuleFromDir(string $dirPath, string $class): mixed
     {
         $modulePath = $dirPath . '/Module.php';
-        if (str_starts_with($modulePath, 'phar://')) {
-            $file = new PharFileInfo(filename: $modulePath);
-        } else {
-            $file = new SplFileInfo(filename: $modulePath);
-        }
+        $file = str_starts_with($modulePath, 'phar://')
+            ? new PharFileInfo(filename: $modulePath)
+            : new SplFileInfo(filename: $modulePath);
 
         if ($file->isReadable() && $file->isFile()) {
             // Found directory with Module.php in it
@@ -342,9 +353,9 @@ class ModuleAutoloader implements SplAutoloader
         foreach ($paths as $module => $path) {
             if (is_string(value: $module)) {
                 $this->registerPath(path: Assert::string($path), moduleName: $module);
-            } else {
-                $this->registerPath(path: Assert::string($path));
+                continue;
             }
+            $this->registerPath(path: Assert::string($path));
         }
 
         return $this;
@@ -358,19 +369,23 @@ class ModuleAutoloader implements SplAutoloader
     public function registerPath(string $path, bool|string $moduleName = false): static
     {
         if ($moduleName) {
-            if (in_array(
-                needle: substr(string: Assert::string($moduleName), offset: -2),
-                haystack: ['\\*', '\\%'],
-                strict: true,
-            )) {
+            // These alternatives are mutually exclusive; the following code consumes the selected state.
+            // @mago-expect lint:no-else-clause(1)
+            if (
+                in_array(
+                    needle: substr(string: Assert::string($moduleName), offset: -2),
+                    haystack: ['\\*', '\\%'],
+                    strict: true,
+                )
+            ) {
                 $this->namespacedPaths[substr(string: Assert::string($moduleName), offset: 0, length: -2)] =
                     static::normalizePath(path: $path);
             } else {
                 $this->explicitPaths[$moduleName] = static::normalizePath(path: $path);
             }
-        } else {
-            $this->paths[] = static::normalizePath(path: $path);
+            return $this;
         }
+        $this->paths[] = static::normalizePath(path: $path);
         return $this;
     }
 
@@ -392,7 +407,7 @@ class ModuleAutoloader implements SplAutoloader
         do {
             $pathinfo = pathinfo(path: $pharPath);
             $pharPath = $pathinfo['filename'];
-        } while (isset($pathinfo['extension']));
+        } while (($pathinfo['extension'] ?? null) !== null);
         return $pathinfo['filename'];
     }
 
@@ -401,6 +416,8 @@ class ModuleAutoloader implements SplAutoloader
      *
      * @param bool $trailingSlash Whether trailing slash should be included
      */
+    // Preserve the existing parameter contract used by callers and inherited interfaces.
+    // @mago-expect lint:no-boolean-flag-parameter(1)
     public static function normalizePath(string $path, bool $trailingSlash = true): string
     {
         $path = rtrim(string: $path, characters: '/');

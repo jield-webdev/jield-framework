@@ -32,7 +32,7 @@ abstract class AbstractAnnotationsListener extends AbstractListenerAggregate
     {
         /** @mago-var mixed $annotations */
         $annotations = $e->getParam('annotations');
-        assert($annotations instanceof AnnotationCollection);
+        assert($annotations instanceof AnnotationCollection, 'Expected $annotations instanceof AnnotationCollection.');
 
         if (!$annotations->hasAnnotation(Name::class)) {
             return false;

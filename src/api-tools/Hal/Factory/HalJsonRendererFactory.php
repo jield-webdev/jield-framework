@@ -9,7 +9,6 @@ use Jield\ApiTools\Hal\View\HalJsonRenderer;
 use Jield\Stdlib\Service;
 use Laminas\View\HelperPluginManager;
 use Psr\Container\ContainerInterface;
-use Webmozart\Assert\Assert;
 
 class HalJsonRendererFactory
 {

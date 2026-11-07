@@ -14,7 +14,8 @@ class Asset extends AbstractHelper
         private readonly ResolverInterface $assetManagerResolver,
         private readonly ?AbstractCacheAdapter $cache,
         private readonly array $config,
-    ) {}
+    ) {
+    }
 
     /**
      * Append timestamp as query param to the filename
@@ -81,15 +82,17 @@ class Asset extends AbstractHelper
     public function __invoke(string $filename): string
     {
         // nothing to append
-        if (empty($this->config['view_helper']['append_timestamp'])) {
+        if (!($this->config['view_helper']['append_timestamp'] ?? null)) {
             return $filename;
         }
 
         // search the cache config for the specific file requested (if none, use the default one)
-        if (isset($this->config['caching'][$filename])) {
+        // These alternatives are mutually exclusive; the following code consumes the selected state.
+        // @mago-expect lint:no-else-clause(1)
+        if (($this->config['caching'][$filename] ?? null) !== null) {
             /** @mago-var mixed $cacheConfig */
             $cacheConfig = $this->config['caching'][$filename];
-        } elseif (isset($this->config['caching']['default'])) {
+        } elseif (($this->config['caching']['default'] ?? null) !== null) {
             /** @mago-var mixed $cacheConfig */
             $cacheConfig = $this->config['caching']['default'];
         }
@@ -99,18 +102,27 @@ class Asset extends AbstractHelper
         $queryString = $this->config['view_helper']['query_string'] ?? '_';
 
         // no cache dir is defined
-        if (!isset($cacheConfig['options']['dir'])) {
+        if (($cacheConfig['options']['dir'] ?? null) === null) {
             // append current timestamp to the filepath and use a custom query string
-            return $this->appendTimestamp(filename: $filename, queryString: \Webmozart\Assert\Assert::string($queryString));
+            return $this->appendTimestamp(
+                filename: $filename,
+                queryString: \Webmozart\Assert\Assert::string($queryString),
+            );
         }
 
         // get the filePath from the cache (if available)
         /** @mago-var mixed $filePath */
-        $filePath = $this->getFilePathFromCache(filename: $filename, queryString: \Webmozart\Assert\Assert::string($queryString));
+        $filePath = $this->getFilePathFromCache(
+            filename: $filename,
+            queryString: \Webmozart\Assert\Assert::string($queryString),
+        );
         if ($filePath !== null) {
             return \Webmozart\Assert\Assert::string($filePath);
         }
 
-        return $this->elaborateFilePath(filename: $filename, queryString: \Webmozart\Assert\Assert::string($queryString));
+        return $this->elaborateFilePath(
+            filename: $filename,
+            queryString: \Webmozart\Assert\Assert::string($queryString),
+        );
     }
 }

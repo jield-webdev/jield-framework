@@ -73,7 +73,10 @@ class RestParametersListener implements ListenerAggregateInterface
         $query = $request->getQuery();
         $matches = $e->getRouteMatch();
         $resource = $controller->getResource();
-        $resource->setQueryParams(params: \Jield\Stdlib\Value::nullableInstance($query, \Laminas\Stdlib\Parameters::class));
+        $resource->setQueryParams(params: \Jield\Stdlib\Value::nullableInstance(
+            $query,
+            \Laminas\Stdlib\Parameters::class,
+        ));
         $resource->setRouteMatch(matches: $matches);
     }
 }

@@ -35,7 +35,7 @@ class ModuleDependencyCheckerListener
 
             /** @mago-var mixed $dependencyModule */
             foreach (Assert::isIterable($dependencies) as $dependencyModule) {
-                if (!isset($this->loaded[$dependencyModule])) {
+                if (($this->loaded[$dependencyModule] ?? null) === null) {
                     throw new Exception\MissingDependencyModuleException(message: sprintf(
                         'Module "%s" depends on module "%s", which was not initialized before it',
                         $e->getModuleName(),

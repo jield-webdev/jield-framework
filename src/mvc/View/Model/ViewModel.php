@@ -21,6 +21,8 @@ use function iterator_to_array;
 /**
  * @psalm-no-seal-properties This object is a mixed property bag
  */
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:too-many-methods(1)
 class ViewModel implements ModelInterface, ClearableModelInterface, RetrievableChildrenInterface
 {
     /**
@@ -100,7 +102,7 @@ class ViewModel implements ModelInterface, ClearableModelInterface, RetrievableC
      */
     public function __isset(string $name): bool
     {
-        return isset($this->variables[$name]);
+        return ($this->variables[$name] ?? null) !== null;
     }
 
     /**
@@ -128,6 +130,8 @@ class ViewModel implements ModelInterface, ClearableModelInterface, RetrievableC
     }
 
     /** @inheritDoc */
+    // Preserve the existing parameter contract used by callers and inherited interfaces.
+    // @mago-expect lint:no-boolean-flag-parameter(1)
     public function setVariables(iterable $variables, bool $overwrite = false): static
     {
         if ($overwrite) {
@@ -200,6 +204,8 @@ class ViewModel implements ModelInterface, ClearableModelInterface, RetrievableC
         return $this;
     }
 
+    // Preserve the existing parameter contract used by callers and inherited interfaces.
+    // @mago-expect lint:no-boolean-flag-parameter(1)
     public function getChildrenByCaptureTo(string $capture, bool $recursive = true): array
     {
         $children = [];

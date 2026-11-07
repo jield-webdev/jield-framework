@@ -30,18 +30,22 @@ abstract class AbstractGuard extends AbstractListenerAggregate implements
         $this->container = $container;
         /** @mago-var mixed $rule */
         foreach ($rules as $rule) {
-            \Jield\Stdlib\Value::setPath($rule, ['roles'], \Jield\Stdlib\Value::toArray(\Jield\Stdlib\Value::accessible($rule)['roles']));
+            \Jield\Stdlib\Value::setPath(
+                $rule,
+                ['roles'],
+                \Jield\Stdlib\Value::toArray(\Jield\Stdlib\Value::accessible($rule)['roles']),
+            );
             \Jield\Stdlib\Value::setPath(
                 $rule,
                 ['action'],
-                isset($rule['action']) ? \Jield\Stdlib\Value::toArray($rule['action']) : [null],
+                ($rule['action'] ?? null) !== null ? \Jield\Stdlib\Value::toArray($rule['action']) : [null],
             );
             /** @mago-var mixed $resource */
             foreach (Assert::isIterable($this->extractResourcesFromRule(Assert::isArray($rule))) as $resource) {
                 $this->rules[\Jield\Stdlib\Value::key($resource)] = [
                     'roles' => \Jield\Stdlib\Value::toArray($rule['roles']),
                 ];
-                if (isset($rule['assertion'])) {
+                if (($rule['assertion'] ?? null) !== null) {
                     $this->rules[\Jield\Stdlib\Value::key($resource)]['assertion'] = $rule['assertion'];
                 }
             }
@@ -62,7 +66,7 @@ abstract class AbstractGuard extends AbstractListenerAggregate implements
             $rule = [];
             $rule[] = $ruleData['roles'];
             $rule[] = $resource;
-            if (isset($ruleData['assertion'])) {
+            if (($ruleData['assertion'] ?? null) !== null) {
                 $rule[] = null;
                 // no privilege
                 $rule[] = $ruleData['assertion'];

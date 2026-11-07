@@ -84,7 +84,7 @@ class ExceptionStrategy extends AbstractListenerAggregate
     {
         // Do nothing if no error in the event
         $error = $e->getError();
-        if (empty($error)) {
+        if (!$error) {
             return;
         }
 

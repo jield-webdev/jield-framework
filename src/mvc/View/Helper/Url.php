@@ -26,6 +26,8 @@ use function sprintf;
  *
  * @final
  */
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
 class Url extends AbstractHelper
 {
     /**
@@ -93,12 +95,12 @@ class Url extends AbstractHelper
         if ($reuseMatchedParams && $this->routeMatch !== null) {
             $routeMatchParams = $this->routeMatch->getParams();
 
-            if (isset($routeMatchParams[ModuleRouteListener::ORIGINAL_CONTROLLER])) {
+            if (($routeMatchParams[ModuleRouteListener::ORIGINAL_CONTROLLER] ?? null) !== null) {
                 $routeMatchParams['controller'] = $routeMatchParams[ModuleRouteListener::ORIGINAL_CONTROLLER];
                 unset($routeMatchParams[ModuleRouteListener::ORIGINAL_CONTROLLER]);
             }
 
-            if (isset($routeMatchParams[ModuleRouteListener::MODULE_NAMESPACE])) {
+            if (($routeMatchParams[ModuleRouteListener::MODULE_NAMESPACE] ?? null) !== null) {
                 unset($routeMatchParams[ModuleRouteListener::MODULE_NAMESPACE]);
             }
 

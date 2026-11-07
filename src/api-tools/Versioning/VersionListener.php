@@ -56,7 +56,7 @@ class VersionListener implements ListenerAggregateInterface
             return null;
         }
 
-        $pattern = '#' . preg_quote(str: '\V') . '(\d+)' . preg_quote(str: '\\') . '#';
+        $pattern = '#' . preg_quote(str: '\V', delimiter: '#') . '(\d+)' . preg_quote(str: '\\', delimiter: '#') . '#';
         if (!preg_match(pattern: $pattern, subject: (string) $controller, matches: $matches)) {
             // controller does not have a version subnamespace
             return null;

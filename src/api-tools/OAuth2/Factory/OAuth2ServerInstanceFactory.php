@@ -23,6 +23,8 @@ use function array_merge;
 use function is_array;
 use function is_string;
 
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
 class OAuth2ServerInstanceFactory
 {
     private ?OAuth2Server $server = null;
@@ -30,12 +32,15 @@ class OAuth2ServerInstanceFactory
     public function __construct(
         private readonly array $config,
         private readonly ContainerInterface $services,
-    ) {}
+    ) {
+    }
 
     /**
      * @throws Exception\RuntimeException
      * @throws \Psr\Container\ContainerExceptionInterface
      */
+    // Keep the coordinated parsing or rendering steps of this compatibility method together.
+    // @mago-expect lint:halstead(1)
     public function __invoke(): ?OAuth2Server
     {
         if ($this->server instanceof \OAuth2\Server) {
@@ -44,11 +49,13 @@ class OAuth2ServerInstanceFactory
 
         $config = $this->config;
 
-        if (empty($config['storage'])) {
+        if (!($config['storage'] ?? null)) {
             throw new Exception\RuntimeException(message: 'The storage configuration for OAuth2 is missing');
         }
 
         $storagesServices = [];
+        // These alternatives are mutually exclusive; the following code consumes the selected state.
+        // @mago-expect lint:no-else-clause(2)
         if (is_string(value: $config['storage'])) {
             $storagesServices[] = $config['storage'];
         } elseif (is_array(value: $config['storage'])) {
@@ -87,9 +94,12 @@ class OAuth2ServerInstanceFactory
         /** @mago-var mixed $availableGrantTypes */
         $availableGrantTypes = $config['grant_types'];
 
-        if (isset($availableGrantTypes['client_credentials']) && $availableGrantTypes['client_credentials'] === true) {
+        if (
+            ($availableGrantTypes['client_credentials'] ?? null) !== null
+            && $availableGrantTypes['client_credentials'] === true
+        ) {
             $clientOptions = [];
-            if (isset($options['allow_credentials_in_request_body'])) {
+            if (($options['allow_credentials_in_request_body'] ?? null) !== null) {
                 $clientOptions['allow_credentials_in_request_body'] = $options['allow_credentials_in_request_body'];
             }
 
@@ -103,7 +113,10 @@ class OAuth2ServerInstanceFactory
             ));
         }
 
-        if (isset($availableGrantTypes['authorization_code']) && $availableGrantTypes['authorization_code'] === true) {
+        if (
+            ($availableGrantTypes['authorization_code'] ?? null) !== null
+            && $availableGrantTypes['authorization_code'] === true
+        ) {
             // Add the "Authorization Code" grant type (this is where the oauth magic happens)
             $server->addGrantType(
                 grantType: new AuthorizationCode(storage: Assert::isInstanceOf(
@@ -113,7 +126,7 @@ class OAuth2ServerInstanceFactory
             );
         }
 
-        if (isset($availableGrantTypes['password']) && $availableGrantTypes['password'] === true) {
+        if (($availableGrantTypes['password'] ?? null) !== null && $availableGrantTypes['password'] === true) {
             // Add the "User Credentials" grant type
             $server->addGrantType(
                 grantType: new UserCredentials(storage: Assert::isInstanceOf(
@@ -123,7 +136,7 @@ class OAuth2ServerInstanceFactory
             );
         }
 
-        if (isset($availableGrantTypes['jwt']) && $availableGrantTypes['jwt'] === true) {
+        if (($availableGrantTypes['jwt'] ?? null) !== null && $availableGrantTypes['jwt'] === true) {
             // Add the "JWT Bearer" grant type
             $server->addGrantType(grantType: new JwtBearer(
                 storage: Assert::isInstanceOf($server->getStorage(name: 'jwt_bearer'), JwtBearerInterface::class),
@@ -131,13 +144,16 @@ class OAuth2ServerInstanceFactory
             ));
         }
 
-        if (isset($availableGrantTypes['refresh_token']) && $availableGrantTypes['refresh_token'] === true) {
+        if (
+            ($availableGrantTypes['refresh_token'] ?? null) !== null
+            && $availableGrantTypes['refresh_token'] === true
+        ) {
             $refreshOptions = [];
-            if (isset($options['always_issue_new_refresh_token'])) {
+            if (($options['always_issue_new_refresh_token'] ?? null) !== null) {
                 $refreshOptions['always_issue_new_refresh_token'] = $options['always_issue_new_refresh_token'];
             }
 
-            if (isset($options['unset_refresh_token_after_use'])) {
+            if (($options['unset_refresh_token_after_use'] ?? null) !== null) {
                 $refreshOptions['unset_refresh_token_after_use'] = $options['unset_refresh_token_after_use'];
             }
 

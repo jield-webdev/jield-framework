@@ -53,13 +53,13 @@ class ContentTypeFilterListener extends AbstractListenerAggregate
      */
     public function onRoute(MvcEvent $e): ?ApiProblemResponse
     {
-        if (empty($this->config)) {
+        if ($this->config === []) {
             return null;
         }
 
         /** @mago-var mixed $controllerName */
         $controllerName = Assert::notNull($e->getRouteMatch())->getParam(name: 'controller');
-        if (!isset($this->config[$controllerName])) {
+        if (($this->config[$controllerName] ?? null) === null) {
             return null;
         }
 

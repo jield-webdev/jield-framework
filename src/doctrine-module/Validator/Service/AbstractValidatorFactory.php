@@ -43,7 +43,7 @@ abstract class AbstractValidatorFactory implements FactoryInterface
             return $options['object_repository'];
         }
 
-        if (empty($options['target_class'])) {
+        if (!($options['target_class'] ?? null)) {
             throw new ServiceCreationException(message: sprintf(
                 "Option 'target_class' is missing when creating validator %s",
                 self::class,
@@ -55,7 +55,10 @@ abstract class AbstractValidatorFactory implements FactoryInterface
         $targetClassName = $options['target_class'];
 
         if (!class_exists(class: \Webmozart\Assert\Assert::string($targetClassName))) {
-            throw new BadMethodCallException(message: sprintf('Class %s could not be found.', Value::scalar($targetClassName)));
+            throw new BadMethodCallException(message: sprintf(
+                'Class %s could not be found.',
+                Value::scalar($targetClassName),
+            ));
         }
 
         return $objectManager->getRepository(className: Value::classString($targetClassName));
@@ -80,7 +83,7 @@ abstract class AbstractValidatorFactory implements FactoryInterface
 
     protected function getFields(array $options): array
     {
-        if (isset($options['fields'])) {
+        if (($options['fields'] ?? null) !== null) {
             return Value::toArray($options['fields']);
         }
 

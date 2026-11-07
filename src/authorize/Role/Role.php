@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Jield\Authorize\Role;
 
-use Jield\Authorize\Exception;
 use Laminas\Permissions\Acl\Role\RoleInterface;
 
 use function is_string;

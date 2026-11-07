@@ -26,7 +26,8 @@ class OptionsListener implements ListenerAggregateInterface
 
     public function __construct(
         protected array $config,
-    ) {}
+    ) {
+    }
 
     /**
      * {@inheritDoc}
@@ -64,7 +65,10 @@ class OptionsListener implements ListenerAggregateInterface
         /** @mago-var mixed $config */
         $config = $this->config[$controller];
 
-        if (!array_key_exists(key: 'http_methods', array: Assert::isArray($config)) || empty($config['http_methods'])) {
+        if (
+            !array_key_exists(key: 'http_methods', array: Assert::isArray($config))
+            || !($config['http_methods'] ?? null)
+        ) {
             // No HTTP methods set for controller, nothing to do
             return null;
         }
@@ -75,11 +79,9 @@ class OptionsListener implements ListenerAggregateInterface
             return null;
         }
 
-        $methods = $this->normalizeMethods(
-            methods: \Jield\Stdlib\Value::stringsOrString(is_array($config['http_methods'])
-                ? $config['http_methods']
-                : Assert::string($config['http_methods'])),
-        );
+        $methods = $this->normalizeMethods(methods: \Jield\Stdlib\Value::stringsOrString(
+            is_array($config['http_methods']) ? $config['http_methods'] : Assert::string($config['http_methods']),
+        ));
 
         $method = $request->getMethod();
         if ($method === Request::METHOD_OPTIONS) {

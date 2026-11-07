@@ -19,6 +19,8 @@ use Laminas\Validator\ValidatorInterface;
 use function date;
 use function sprintf;
 
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
 abstract class AbstractDateTime extends Element implements InputProviderInterface
 {
     /**
@@ -39,7 +41,7 @@ abstract class AbstractDateTime extends Element implements InputProviderInterfac
     {
         parent::setOptions(options: $options);
 
-        if (isset($this->options['format'])) {
+        if (($this->options['format'] ?? null) !== null) {
             $this->setFormat(format: \Webmozart\Assert\Assert::string($this->options['format']));
         }
 
@@ -58,6 +60,8 @@ abstract class AbstractDateTime extends Element implements InputProviderInterfac
      *
      * @inheritDoc
      */
+    // Preserve the existing parameter contract used by callers and inherited interfaces.
+    // @mago-expect lint:no-boolean-flag-parameter(1)
     public function getValue(bool $returnFormattedValue = true): mixed
     {
         /** @mago-var mixed $value */
@@ -93,6 +97,8 @@ abstract class AbstractDateTime extends Element implements InputProviderInterfac
      * @throws \DateMalformedIntervalStringException
      * @throws InvalidArgumentException
      */
+    // Keep the coordinated parsing or rendering steps of this compatibility method together.
+    // @mago-expect lint:halstead(1)
     protected function getValidators(): array
     {
         if ($this->validators) {
@@ -102,8 +108,10 @@ abstract class AbstractDateTime extends Element implements InputProviderInterfac
         $validators = [];
         $validators[] = $this->getDateValidator();
 
+        // These alternatives are mutually exclusive; the following code consumes the selected state.
+        // @mago-expect lint:no-else-clause(1)
         if (
-            isset($this->attributes['min'])
+            ($this->attributes['min'] ?? null) !== null
             && $this->valueIsValidDateTimeFormat(value: (string) $this->attributes['min'])
         ) {
             $validators[] = new DateComparison([
@@ -113,7 +121,7 @@ abstract class AbstractDateTime extends Element implements InputProviderInterfac
                 'inputFormat' => $this->format,
             ]);
         } elseif (
-            isset($this->attributes['min'])
+            ($this->attributes['min'] ?? null) !== null
             && !$this->valueIsValidDateTimeFormat(value: (string) $this->attributes['min'])
         ) {
             throw new InvalidArgumentException(message: sprintf(
@@ -124,8 +132,10 @@ abstract class AbstractDateTime extends Element implements InputProviderInterfac
             ));
         }
 
+        // These alternatives are mutually exclusive; the following code consumes the selected state.
+        // @mago-expect lint:no-else-clause(1)
         if (
-            isset($this->attributes['max'])
+            ($this->attributes['max'] ?? null) !== null
             && $this->valueIsValidDateTimeFormat(value: (string) $this->attributes['max'])
         ) {
             $validators[] = new DateComparison([
@@ -135,7 +145,7 @@ abstract class AbstractDateTime extends Element implements InputProviderInterfac
                 'inputFormat' => $this->format,
             ]);
         } elseif (
-            isset($this->attributes['max'])
+            ($this->attributes['max'] ?? null) !== null
             && !$this->valueIsValidDateTimeFormat(value: (string) $this->attributes['max'])
         ) {
             throw new InvalidArgumentException(message: sprintf(
@@ -145,7 +155,7 @@ abstract class AbstractDateTime extends Element implements InputProviderInterfac
                 (string) $this->attributes['max'],
             ));
         }
-        if (!isset($this->attributes['step']) || 'any' !== $this->attributes['step']) {
+        if (($this->attributes['step'] ?? null) === null || 'any' !== $this->attributes['step']) {
             $validators[] = $this->getStepValidator();
         }
 

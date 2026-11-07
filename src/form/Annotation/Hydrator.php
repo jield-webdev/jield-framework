@@ -51,13 +51,12 @@ final class Hydrator
                 ),
                 E_USER_DEPRECATED,
             );
-
             $this->type = Assert::string($type['type'] ?? null);
             $this->options = Assert::isArray($type['options'] ?? $options);
-        } else {
-            $this->type = $type;
-            $this->options = $options;
+            return;
         }
+        $this->type = $type;
+        $this->options = $options;
     }
 
     /**
@@ -66,7 +65,7 @@ final class Hydrator
     public function getHydratorSpecification(): array
     {
         $inputSpec = ['type' => $this->type];
-        if (!empty($this->options)) {
+        if (!!$this->options) {
             $inputSpec['options'] = $this->options;
         }
 

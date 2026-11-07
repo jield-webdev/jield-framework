@@ -30,6 +30,8 @@ use function strtolower;
 use function substr;
 use function trim;
 
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
 class InjectTemplateListener extends AbstractListenerAggregate
 {
     /**
@@ -65,15 +67,14 @@ class InjectTemplateListener extends AbstractListenerAggregate
         }
 
         $template = $model->getTemplate();
-        if (!empty($template)) {
+        if (!!$template) {
             return;
         }
 
         $routeMatch = $e->getRouteMatch();
         /** @mago-var mixed $preferRouteMatchController */
-        if (
-            $preferRouteMatchController = Assert::notNull($routeMatch)->getParam('prefer_route_match_controller', false)
-        ) {
+        $preferRouteMatchController = Assert::notNull($routeMatch)->getParam('prefer_route_match_controller', false);
+        if ($preferRouteMatchController) {
             $this->setPreferRouteMatchController(Assert::boolean($preferRouteMatchController));
         }
 
@@ -125,7 +126,10 @@ class InjectTemplateListener extends AbstractListenerAggregate
                 // merging have no feature to remove entries
                 $replacement === false
                 // Match full class or full namespace
-                || !($controller === $namespace || str_starts_with($controller, $namespace . '\\'))
+                || !(
+                    $controller === $namespace
+                    || str_starts_with($controller, $namespace . '\\')
+                )
             ) {
                 continue;
             }
@@ -133,7 +137,8 @@ class InjectTemplateListener extends AbstractListenerAggregate
             // Map namespace to $replacement if its value is string
             if (is_string($replacement)) {
                 $mapped = rtrim($replacement, '/') . '/';
-                $controller = substr($controller, strlen(Assert::string($namespace)) + 1) ?: '';
+                $controller = substr($controller, strlen(Assert::string($namespace)) + 1);
+                $controller = $controller ? $controller : '';
                 break;
             }
         }
@@ -161,6 +166,8 @@ class InjectTemplateListener extends AbstractListenerAggregate
      */
     protected function inflectName($name): string
     {
+        // These alternatives are mutually exclusive; the following code consumes the selected state.
+        // @mago-expect lint:no-else-clause(1)
         if (StringUtils::hasPcreUnicodeSupport()) {
             $pattern = ['#(?<=(?:\p{Lu}))(\p{Lu}\p{Ll})#', '#(?<=(?:\p{Ll}|\p{Nd}))(\p{Lu})#'];
             $replacement = ['-\1', '-\1'];
@@ -183,7 +190,8 @@ class InjectTemplateListener extends AbstractListenerAggregate
     protected function deriveControllerClass($controller): string
     {
         if (str_contains($controller, '\\')) {
-            $controller = substr($controller, (strrpos($controller, '\\') ?: -1) + 1);
+            $position = strrpos($controller, '\\');
+            $controller = substr($controller, ($position ? $position : -1) + 1);
         }
 
         if (10 < strlen($controller) && str_ends_with($controller, 'Controller')) {

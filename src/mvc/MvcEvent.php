@@ -16,6 +16,8 @@ use Laminas\View\Model\ModelInterface as Model;
 /**
  * @extends \Laminas\EventManager\Event<object|string|null, array<string, mixed>>
  */
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:too-many-methods(1)
 class MvcEvent extends Event
 {
     /**#@+

@@ -15,7 +15,6 @@ use Laminas\Http\Request;
 use Laminas\Http\Response;
 use Laminas\Stdlib\RequestInterface;
 use Laminas\Stdlib\ResponseInterface;
-use ReflectionException;
 use ReflectionFunction;
 use ReflectionNamedType;
 use ReflectionObject;
@@ -28,17 +27,22 @@ use function sprintf;
 use function str_replace;
 use function strtolower;
 
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
 class ParameterMatcher
 {
     public function __construct(
         protected MvcEvent $mvcEvent,
-    ) {}
+    ) {
+    }
 
     /**
      * @throws Exception
      */
     public function getMatchedParameters(callable $callable, array $parameters): array
     {
+        // These alternatives are mutually exclusive; the following code consumes the selected state.
+        // @mago-expect lint:no-else-clause(2)
         if (is_string(value: $callable) || $callable instanceof Closure) {
             $reflection = new ReflectionFunction(function: $callable);
             $reflMethodParams = $reflection->getParameters();
@@ -114,17 +118,15 @@ class ParameterMatcher
 
                 throw new Exception(message: sprintf('%s was requested, but could not be auto-bound', $typehint));
             }
-
-            if (isset($normalParams[$normalMethodParamName])) {
+            if (($normalParams[$normalMethodParamName] ?? null) !== null) {
                 $dispatchParams[] = $normalParams[$normalMethodParamName];
-            } else {
-                if ($reflMethodParam->isOptional()) {
-                    $dispatchParams[] = $reflMethodParam->getDefaultValue();
-                    continue;
-                }
-
-                $dispatchParams[] = null;
+                continue;
             }
+            if ($reflMethodParam->isOptional()) {
+                $dispatchParams[] = $reflMethodParam->getDefaultValue();
+                continue;
+            }
+            $dispatchParams[] = null;
         }
 
         return $dispatchParams;

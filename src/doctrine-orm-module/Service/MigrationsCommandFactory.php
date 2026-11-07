@@ -71,11 +71,13 @@ final class MigrationsCommandFactory implements FactoryInterface
         $objectManagerName = $this->getObjectManagerName();
 
         // Copied from DoctrineModule/ServiceFactory/AbstractDoctrineServiceFactory
-        if (!preg_match(
-            pattern: '/^doctrine\.((?<mappingType>orm|odm)\.|)(?<serviceType>[a-z0-9_]+)\.(?<serviceName>[a-z0-9_]+)$/',
-            subject: $objectManagerName,
-            matches: $matches,
-        )) {
+        if (
+            !preg_match(
+                pattern: '/^doctrine\.((?<mappingType>orm|odm)\.|)(?<serviceType>[a-z0-9_]+)\.(?<serviceName>[a-z0-9_]+)$/',
+                subject: $objectManagerName,
+                matches: $matches,
+            )
+        ) {
             throw new RuntimeException(message: 'The object manager name is invalid: ' . $objectManagerName);
         }
 
@@ -91,7 +93,10 @@ final class MigrationsCommandFactory implements FactoryInterface
 
         $dependencyFactory = DependencyFactory::fromEntityManager(
             new ConfigurationArray(Value::stringKeyedArray($migrationConfig)),
-            new ExistingEntityManager(Assert::isInstanceOf($container->get($objectManagerName), \Doctrine\ORM\EntityManagerInterface::class)),
+            new ExistingEntityManager(Assert::isInstanceOf(
+                $container->get($objectManagerName),
+                \Doctrine\ORM\EntityManagerInterface::class,
+            )),
         );
 
         /**
@@ -99,7 +104,10 @@ final class MigrationsCommandFactory implements FactoryInterface
          * @mago-var mixed $service
          */
         foreach (Assert::isIterable($dependencyFactoryServices) as $id => $service) {
-            $dependencyFactory->setService(Assert::string($id), Assert::isCallable($container->get(Assert::string($service))));
+            $dependencyFactory->setService(
+                Assert::string($id),
+                Assert::isCallable($container->get(Assert::string($service))),
+            );
         }
 
         // An object manager may not have a migrations configuration and that's OK.

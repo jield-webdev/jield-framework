@@ -11,6 +11,8 @@ use Laminas\Hydrator\HydratorInterface;
 use Traversable;
 
 /** @extends IteratorAggregate<string, ElementInterface> */
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:too-many-methods(1)
 interface FieldsetInterface extends
     Countable,
     IteratorAggregate,

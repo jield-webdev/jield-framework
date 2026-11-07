@@ -20,7 +20,8 @@ final readonly class UpdateSearchIndexHandler
     public function __construct(
         private ContainerInterface $container,
         private EntityManager $entityManager,
-    ) {}
+    ) {
+    }
 
     /**
      * @throws \Psr\Container\ContainerExceptionInterface

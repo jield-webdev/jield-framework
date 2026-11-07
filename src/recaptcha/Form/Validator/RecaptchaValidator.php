@@ -6,19 +6,26 @@ namespace Jield\Recaptcha\Form\Validator;
 
 use ErrorException;
 use JsonException;
+use Laminas\Stdlib\ErrorHandler;
 use Laminas\Translator\TranslatorInterface;
 use Laminas\Validator\AbstractValidator;
 use Override;
 use SensitiveParameter;
 
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
 class RecaptchaValidator extends AbstractValidator
 {
     public const string NOT_ANSWERED = 'not_answered';
 
     public const string EXPIRED = 'expired';
 
+    // This is a public protocol or form identifier, not a credential.
+    // @mago-expect lint:no-literal-password(1)
     public const string ERROR_MISSING_SECRET = 'missing-input-secret';
 
+    // This is a public protocol or form identifier, not a credential.
+    // @mago-expect lint:no-literal-password(1)
     public const string ERROR_INVALID_SECRET = 'invalid-input-secret';
 
     public const string ERROR_MISSING_INPUT_RESPONSE = 'missing-input-response';
@@ -96,14 +103,19 @@ class RecaptchaValidator extends AbstractValidator
             ]);
 
         try {
-            $googleResponse = @file_get_contents(filename: $requestUrl);
+            ErrorHandler::start(errorLevel: E_WARNING);
+            try {
+                $googleResponse = file_get_contents(filename: $requestUrl);
+            } finally {
+                ErrorHandler::stop();
+            }
             if ($googleResponse === false) {
                 throw new ErrorException(message: 'Site could not be reached');
             }
 
             /** @mago-var mixed $json */
             $json = json_decode(json: $googleResponse, associative: true, flags: JSON_THROW_ON_ERROR);
-            if (!is_array($json) || !isset($json['success']) || !is_bool($json['success'])) {
+            if (!is_array($json) || ($json['success'] ?? null) === null || !is_bool($json['success'])) {
                 $this->errorCodes[] = self::ERROR_INVALID_INPUT_RESPONSE;
                 $this->error(messageKey: self::ERROR_INVALID_INPUT_RESPONSE);
                 return false;
@@ -119,7 +131,7 @@ class RecaptchaValidator extends AbstractValidator
         }
 
         if (!$json['success']) {
-            if (!empty($json['error-codes']) && is_array($json['error-codes'])) {
+            if (!!($json['error-codes'] ?? null) && is_array($json['error-codes'])) {
                 /** @mago-var mixed $r */
                 foreach ($json['error-codes'] as $r) {
                     if (!is_string($r)) {
@@ -128,15 +140,14 @@ class RecaptchaValidator extends AbstractValidator
                     $this->errorCodes[] = $r;
                     $this->error(messageKey: $r);
                 }
-            } else {
-                $this->errorCodes[] = 'no-error-codes';
-                $this->error(messageKey: self::EXPIRED);
+                return false;
             }
-
+            $this->errorCodes[] = 'no-error-codes';
+            $this->error(messageKey: self::EXPIRED);
             return false;
         }
 
-        if (isset($json['challenge_ts']) && is_string($json['challenge_ts'])) {
+        if (($json['challenge_ts'] ?? null) !== null && is_string($json['challenge_ts'])) {
             $challengeVerificationTimestamp = time();
             $challengeTime = strtotime(datetime: $json['challenge_ts']);
             if (
@@ -158,11 +169,11 @@ class RecaptchaValidator extends AbstractValidator
     {
         $ipAddress = false;
 
-        if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
+        if (!!($_SERVER['HTTP_CLIENT_IP'] ?? null)) {
             $ipAddress = $_SERVER['HTTP_CLIENT_IP'];
         }
 
-        if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+        if (!!($_SERVER['HTTP_X_FORWARDED_FOR'] ?? null)) {
             // Put the IPs into an array which we shall work with shortly.
             $ips = explode(separator: ', ', string: $_SERVER['HTTP_X_FORWARDED_FOR']);
             if ($ipAddress) {
@@ -180,10 +191,10 @@ class RecaptchaValidator extends AbstractValidator
             }
         }
 
-        if (!$ipAddress && !isset($_SERVER['REMOTE_ADDR'])) {
+        if (!$ipAddress && ($_SERVER['REMOTE_ADDR'] ?? null) === null) {
             return null;
         }
 
-        return $ipAddress ?: $_SERVER['REMOTE_ADDR'];
+        return $ipAddress ? $ipAddress : $_SERVER['REMOTE_ADDR'];
     }
 }

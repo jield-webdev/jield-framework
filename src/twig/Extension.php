@@ -11,7 +11,8 @@ class Extension extends AbstractExtension
 {
     public function __construct(
         protected TwigRenderer $renderer,
-    ) {}
+    ) {
+    }
 
     public function getRenderer(): TwigRenderer
     {

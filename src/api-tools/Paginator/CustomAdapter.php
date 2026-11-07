@@ -16,7 +16,8 @@ class CustomAdapter implements AdapterInterface
 
     public function __construct(
         private readonly array $array,
-    ) {}
+    ) {
+    }
 
     public function setProvider(ProviderInterface $provider): self
     {

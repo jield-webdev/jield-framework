@@ -26,9 +26,11 @@ final class Options
             $options['translatorTextDomain'] = Assert::nullOrString($options['translatorTextDomain']);
         }
         foreach (['translatorEnabled', 'valueObscured'] as $key) {
-            if (array_key_exists($key, $options)) {
-                $options[$key] = Assert::boolean($options[$key]);
+            if (!array_key_exists($key, $options)) {
+                continue;
             }
+
+            $options[$key] = Assert::boolean($options[$key]);
         }
 
         /** @var AbstractOptions $options All standard options have been checked; custom options remain intact. */

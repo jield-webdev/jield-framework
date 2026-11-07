@@ -17,6 +17,8 @@ use function is_array;
 use function is_string;
 use function method_exists;
 
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
 class AcceptListener
 {
     protected AcceptableViewModelSelector $selector;
@@ -29,11 +31,11 @@ class AcceptListener
     {
         $this->selector = $selector;
 
-        if (isset($config['controllers']) && is_array(value: $config['controllers'])) {
+        if (($config['controllers'] ?? null) !== null && is_array(value: $config['controllers'])) {
             $this->controllerConfig = $config['controllers'];
         }
 
-        if (isset($config['selectors']) && is_array(value: $config['selectors'])) {
+        if (($config['selectors'] ?? null) !== null && is_array(value: $config['selectors'])) {
             $this->selectorsConfig = $config['selectors'];
         }
     }
@@ -85,12 +87,15 @@ class AcceptListener
             /** @mago-var mixed $controllerName */
             $controllerName = Assert::notNull($e->getRouteMatch())->getParam(name: 'controller');
 
-            $criteria = $this->getSelectorCriteria(fallbackConfig: Assert::nullOrString($fallbackConfig), controllerName: Assert::nullOrString($controllerName));
+            $criteria = $this->getSelectorCriteria(
+                fallbackConfig: Assert::nullOrString($fallbackConfig),
+                controllerName: Assert::nullOrString($controllerName),
+            );
         }
 
         // Retrieve a view model based on the criteria
         $useDefault = false;
-        if (empty($criteria)) {
+        if (!$criteria) {
             $useDefault = true;
         }
 
@@ -124,7 +129,7 @@ class AcceptListener
         $controllers = $this->controllerConfig;
 
         // if there is no config for this controller, move on
-        if (!$controllerName || !isset($controllers[$controllerName])) {
+        if (!$controllerName || ($controllers[$controllerName] ?? null) === null) {
             return $this->getCriteria(criteria: $fallbackConfig);
         }
 
@@ -132,7 +137,8 @@ class AcceptListener
         /** @mago-var mixed $criteria */
         $criteria = $controllers[$controllerName];
 
-        return $this->getCriteria(criteria: \Jield\Stdlib\Value::nullableArrayOrString($criteria)) ?: $this->getCriteria(criteria: $fallbackConfig);
+        $criteria = $this->getCriteria(criteria: \Jield\Stdlib\Value::nullableArrayOrString($criteria));
+        return $criteria ? $criteria : $this->getCriteria(criteria: $fallbackConfig);
     }
 
     /**
@@ -188,10 +194,10 @@ class AcceptListener
         }
 
         // if it's a string, we should try to resolve that key to a reusable selector set
-        if (is_string(value: $criteria) && isset($this->selectorsConfig[$criteria])) {
+        if (is_string(value: $criteria) && ($this->selectorsConfig[$criteria] ?? null) !== null) {
             /** @mago-var mixed $criteria */
             $criteria = $this->selectorsConfig[$criteria];
-            if (!empty($criteria)) {
+            if ($criteria) {
                 return Assert::isArray($criteria);
             }
         }

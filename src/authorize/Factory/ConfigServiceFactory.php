@@ -24,7 +24,10 @@ class ConfigServiceFactory implements FactoryInterface
         $jieldAuthorizeConfig = Assert::isArray(Value::accessible($config)['jield_authorize']);
 
         //Check if the role entity class implements the RoleInterface
-        Assert::implementsInterface(value: Value::accessible($jieldAuthorizeConfig)['role_entity_class'], interface: RoleInterface::class);
+        Assert::implementsInterface(
+            value: Value::accessible($jieldAuthorizeConfig)['role_entity_class'],
+            interface: RoleInterface::class,
+        );
 
         //Inject the role_provider
         Value::setPath(

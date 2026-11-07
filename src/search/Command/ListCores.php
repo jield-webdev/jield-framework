@@ -26,7 +26,11 @@ final class ListCores extends Command
 
         /** @mago-var mixed $core */
         foreach ($cores as $key => $core) {
-            $output->writeln(messages: sprintf('Core for %s with service %s', $key, \Jield\Stdlib\Value::scalar(\Jield\Stdlib\Value::accessible($core)['service'])));
+            $output->writeln(messages: sprintf(
+                'Core for %s with service %s',
+                $key,
+                \Jield\Stdlib\Value::scalar(\Jield\Stdlib\Value::accessible($core)['service']),
+            ));
         }
 
         $output->writeln(messages: sprintf('<info>In total %d cores are active</info>', count(value: $cores)));

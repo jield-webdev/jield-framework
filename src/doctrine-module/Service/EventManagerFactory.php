@@ -50,6 +50,8 @@ final class EventManagerFactory extends AbstractFactory
             $subscriber = $subscriberName;
 
             if (is_string(value: $subscriber)) {
+                // These alternatives are mutually exclusive; the following code consumes the selected state.
+                // @mago-expect lint:no-else-clause(1)
                 if ($container->has($subscriber)) {
                     /** @mago-var mixed $subscriber */
                     $subscriber = $container->get($subscriber);

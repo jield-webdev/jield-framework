@@ -25,7 +25,8 @@ final readonly class Attributes
      */
     public function __construct(
         private array $attributes,
-    ) {}
+    ) {
+    }
 
     /**
      * Retrieve the attributes

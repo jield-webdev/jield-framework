@@ -16,7 +16,8 @@ class CliConfigurator
 {
     public function __construct(
         private readonly ContainerInterface $container,
-    ) {}
+    ) {
+    }
 
     /**
      * @throws \Psr\Container\ContainerExceptionInterface
@@ -26,7 +27,13 @@ class CliConfigurator
         $arguments = new ArgvInput();
         /** @mago-var mixed $managerName */
         $managerName = $arguments->getParameterOption('--object-manager', 'doctrine.entitymanager.orm_default');
-        $provider = new SingleManagerProvider(\Webmozart\Assert\Assert::isInstanceOf($this->container->get(\Webmozart\Assert\Assert::string($managerName)), \Doctrine\ORM\EntityManagerInterface::class), \Webmozart\Assert\Assert::string($managerName));
+        $provider = new SingleManagerProvider(
+            \Webmozart\Assert\Assert::isInstanceOf(
+                $this->container->get(\Webmozart\Assert\Assert::string($managerName)),
+                \Doctrine\ORM\EntityManagerInterface::class,
+            ),
+            \Webmozart\Assert\Assert::string($managerName),
+        );
         ConsoleRunner::addCommands($cli, $provider);
         foreach ($cli->all() as $command) {
             $command

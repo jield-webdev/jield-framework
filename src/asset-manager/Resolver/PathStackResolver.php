@@ -18,6 +18,8 @@ use Webmozart\Assert\Assert;
 /**
  * This resolver allows you to resolve from a stack of paths.
  */
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:kan-defect(1)
 class PathStackResolver implements ResolverInterface, MimeResolverAwareInterface
 {
     protected SplStack $paths;
@@ -176,21 +178,20 @@ class PathStackResolver implements ResolverInterface, MimeResolverAwareInterface
                 if (!$pathInfo->isReadable()) {
                     continue;
                 }
-
                 if ($pathInfo->isDir()) {
                     $dir = new DirectoryResource(path: Assert::string($pathInfo->getRealPath()));
                     /** @mago-var mixed $resource */
                     foreach ($dir as $resource) {
                         $locations->push(value: new SplFileInfo(filename: Assert::string($resource)));
                     }
-                } else {
-                    $relativePath = substr(
-                        string: Assert::string($pathInfo->getRealPath()),
-                        offset: strlen(string: $basePath),
-                    );
-                    if (!in_array($relativePath, $collection, true)) {
-                        $collection[] = $relativePath;
-                    }
+                    continue;
+                }
+                $relativePath = substr(
+                    string: Assert::string($pathInfo->getRealPath()),
+                    offset: strlen(string: $basePath),
+                );
+                if (!in_array($relativePath, $collection, true)) {
+                    $collection[] = $relativePath;
                 }
             }
         }

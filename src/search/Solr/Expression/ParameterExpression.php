@@ -16,7 +16,8 @@ class ParameterExpression extends Expression implements Stringable
     /** @param mixed[] $parameters */
     public function __construct(
         private readonly array $parameters,
-    ) {}
+    ) {
+    }
 
     public function __toString(): string
     {

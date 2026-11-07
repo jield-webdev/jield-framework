@@ -21,6 +21,8 @@ if (class_exists(AutoloaderFactory::class)) {
 }
 
 // phpcs:ignore WebimpressCodingStandard.NamingConventions.AbstractClass.Prefix
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
 abstract class AutoloaderFactory
 {
     public const STANDARD_AUTOLOADER = StandardAutoloader::class;
@@ -64,7 +66,7 @@ abstract class AutoloaderFactory
     public static function factory($options = null)
     {
         if (null === $options) {
-            if (!isset(static::$loaders[static::STANDARD_AUTOLOADER])) {
+            if ((static::$loaders[static::STANDARD_AUTOLOADER] ?? null) === null) {
                 $autoloader = static::getStandardAutoloader();
                 $autoloader->register();
                 static::$loaders[static::STANDARD_AUTOLOADER] = $autoloader;
@@ -85,13 +87,12 @@ abstract class AutoloaderFactory
          */
         foreach ($options as $class => $autoloaderOptions) {
             $class = Assert::string($class);
-            if (!isset(static::$loaders[$class])) {
+            if ((static::$loaders[$class] ?? null) === null) {
                 $autoloader = static::getStandardAutoloader();
                 if (!class_exists(Assert::string($class)) && !$autoloader->autoload(Assert::string($class))) {
                     require_once 'Exception/InvalidArgumentException.php';
                     throw new Exception\InvalidArgumentException(sprintf('Autoloader class "%s" not loaded', $class));
                 }
-
                 if (!is_subclass_of(Assert::string($class), SplAutoloader::class)) {
                     require_once 'Exception/InvalidArgumentException.php';
                     throw new Exception\InvalidArgumentException(sprintf(
@@ -99,7 +100,8 @@ abstract class AutoloaderFactory
                         Value::scalar($class),
                     ));
                 }
-
+                // These alternatives are mutually exclusive; the following code consumes the selected state.
+                // @mago-expect lint:no-else-clause(1)
                 if ($class === static::STANDARD_AUTOLOADER) {
                     $autoloader->setOptions(Assert::isIterable($autoloaderOptions));
                 } else {
@@ -110,9 +112,9 @@ abstract class AutoloaderFactory
                 }
                 $autoloader->register();
                 static::$loaders[$class] = $autoloader;
-            } else {
-                Value::call(static::$loaders[$class], 'setOptions', [$autoloaderOptions]);
+                continue;
             }
+            Value::call(static::$loaders[$class], 'setOptions', [$autoloaderOptions]);
         }
     }
 
@@ -137,7 +139,7 @@ abstract class AutoloaderFactory
      */
     public static function getRegisteredAutoloader($class)
     {
-        if (!isset(static::$loaders[$class])) {
+        if ((static::$loaders[$class] ?? null) === null) {
             require_once 'Exception/InvalidArgumentException.php';
             throw new Exception\InvalidArgumentException(sprintf('Autoloader class "%s" not loaded', $class));
         }
@@ -167,7 +169,7 @@ abstract class AutoloaderFactory
      */
     public static function unregisterAutoloader($autoloaderClass)
     {
-        if (!isset(static::$loaders[$autoloaderClass])) {
+        if ((static::$loaders[$autoloaderClass] ?? null) === null) {
             return false;
         }
 

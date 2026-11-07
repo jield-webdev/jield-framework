@@ -11,7 +11,8 @@ class Config implements ProviderInterface
 {
     public function __construct(
         protected array $rules = [],
-    ) {}
+    ) {
+    }
 
     /**
      * {@inheritDoc}

@@ -40,7 +40,7 @@ class ResourceEvent extends Event
     {
         parent::setParams(params: $params);
         $params = parent::getParams();
-        if ((is_array(value: $params) || $params instanceof ArrayAccess) && isset($params['request'])) {
+        if ((is_array(value: $params) || $params instanceof ArrayAccess) && ($params['request'] ?? null) !== null) {
             $this->setRequest(request: Assert::isInstanceOf($params['request'], RequestInterface::class));
             unset($params['request']);
         }

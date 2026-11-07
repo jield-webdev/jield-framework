@@ -19,13 +19,11 @@ final class DoctrineDbalHandler extends AbstractProcessingHandler
         int|string|Level $level = Level::Error,
         bool $bubble = true,
     ) {
-        $level = $level instanceof Level
-            ? $level
-            : (
-                is_int($level)
-                    ? Level::from($level)
-                    : Level::fromName(Value::oneOf(strtoupper($level), Level::NAMES))
-            );
+        $level = match (true) {
+            $level instanceof Level => $level,
+            is_int($level) => Level::from($level),
+            default => Level::fromName(Value::oneOf(strtoupper($level), Level::NAMES)),
+        };
         parent::__construct($level, $bubble);
     }
 

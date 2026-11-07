@@ -66,12 +66,11 @@ abstract class BaseLoggingCommand extends Command
             $this->phpError();
             return parent::run(input: $input, output: $output);
         } catch (Throwable $throwable) {
+            $this->exceptionError(throwable: $throwable);
+
+            // show default view if display_errors setting = 0.
+            return $this->showDefaultConsoleView(output: $output);
         }
-
-        $this->exceptionError(throwable: $throwable);
-
-        // show default view if display_errors setting = 0.
-        return $this->showDefaultConsoleView(output: $output);
     }
 
     /**
@@ -80,9 +79,11 @@ abstract class BaseLoggingCommand extends Command
     private function exceptionError(Throwable $throwable): void
     {
         if (
-            isset($this->errorHeroModuleConfig[self::DISPLAY_SETTINGS]['exclude-exceptions'])
+            ($this->errorHeroModuleConfig[self::DISPLAY_SETTINGS]['exclude-exceptions'] ?? null) !== null
             && isExcludedException(
-                excludeExceptionsConfig: \Webmozart\Assert\Assert::isArray($this->errorHeroModuleConfig[self::DISPLAY_SETTINGS]['exclude-exceptions']),
+                excludeExceptionsConfig: \Webmozart\Assert\Assert::isArray(
+                    $this->errorHeroModuleConfig[self::DISPLAY_SETTINGS]['exclude-exceptions'],
+                ),
                 throwable: $throwable,
             )
         ) {

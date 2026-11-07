@@ -14,7 +14,8 @@ final readonly class DateInterval
     public function __construct(
         private ?DateTime $startDate = null,
         private ?DateTime $endDate = null,
-    ) {}
+    ) {
+    }
 
     #[Pure]
     public static function fromValue(string $value): DateInterval

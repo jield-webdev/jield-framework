@@ -9,4 +9,6 @@ use Throwable;
 /**
  * Marker interface; catch this to catch any module-specific exception.
  */
-interface ExceptionInterface extends Throwable {}
+interface ExceptionInterface extends Throwable
+{
+}

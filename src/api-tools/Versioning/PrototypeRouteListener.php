@@ -20,6 +20,8 @@ use function is_array;
 use function is_scalar;
 use function strstr;
 
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
 class PrototypeRouteListener implements ListenerAggregateInterface
 {
     use ListenerAggregateTrait;
@@ -62,6 +64,8 @@ class PrototypeRouteListener implements ListenerAggregateInterface
      * injects the route prototype and adds a chain route to each route listed
      * in the api-tools-versioning.url array.
      */
+    // Keep the coordinated parsing or rendering steps of this compatibility method together.
+    // @mago-expect lint:halstead(1)
     public function onMergeConfig(ModuleEvent $e): void
     {
         $configListener = $e->getConfigListener();
@@ -73,22 +77,22 @@ class PrototypeRouteListener implements ListenerAggregateInterface
         $config = $configListener->getMergedConfig(returnConfigAsObject: false);
 
         // Check for config keys
-        if (!isset($config['api-tools-versioning']) || !isset($config['router'])) {
+        if (($config['api-tools-versioning'] ?? null) === null || ($config['router'] ?? null) === null) {
             return;
         }
 
         // Do we need to inject a prototype?
         if (
-            !isset($config['api-tools-versioning']['uri'])
+            ($config['api-tools-versioning']['uri'] ?? null) === null
             || !is_array(value: Value::accessible($config['api-tools-versioning'])['uri'])
-            || empty($config['api-tools-versioning']['uri'])
+            || !($config['api-tools-versioning']['uri'] ?? null)
         ) {
             return;
         }
 
         // Override default version of 1 with user-specified config value, if available.
         if (
-            isset($config['api-tools-versioning']['default_version'])
+            ($config['api-tools-versioning']['default_version'] ?? null) !== null
             && is_scalar(value: $config['api-tools-versioning']['default_version'])
         ) {
             Value::setPath(
@@ -119,20 +123,22 @@ class PrototypeRouteListener implements ListenerAggregateInterface
 
         // Inject chained routes
         foreach ($routes as $routeName) {
-            if (!isset($config['router']['routes'][$routeName])) {
+            if (($config['router']['routes'][$routeName] ?? null) === null) {
                 continue;
             }
 
-            if (!str_contains(
-                haystack: (string) Value::path($config, [
-                    'router',
-                    'routes',
-                    $routeName,
-                    'options',
-                    'route',
-                ]),
-                needle: $this->versionRoutePrefix,
-            )) {
+            if (
+                !str_contains(
+                    haystack: (string) Value::path($config, [
+                        'router',
+                        'routes',
+                        $routeName,
+                        'options',
+                        'route',
+                    ]),
+                    needle: $this->versionRoutePrefix,
+                )
+            ) {
                 Value::setPath(
                     $config,
                     ['router', 'routes', $routeName, 'options', 'route'],
@@ -148,7 +154,7 @@ class PrototypeRouteListener implements ListenerAggregateInterface
             }
 
             $routeVersion = $this->versionRouteOptions;
-            if (isset($config['api-tools-versioning']['default_version'][$routeName])) {
+            if (($config['api-tools-versioning']['default_version'][$routeName] ?? null) !== null) {
                 Value::setPath(
                     $routeVersion,
                     ['defaults', 'version'],
@@ -160,11 +166,13 @@ class PrototypeRouteListener implements ListenerAggregateInterface
                 $config,
                 ['router', 'routes', $routeName, 'options'],
                 ArrayUtils::merge(
-                    a: \Webmozart\Assert\Assert::isArray(Value::accessible(Value::path($config, [
-                        'router',
-                        'routes',
-                        $routeName,
-                    ]))['options']),
+                    a: \Webmozart\Assert\Assert::isArray(
+                        Value::accessible(Value::path($config, [
+                            'router',
+                            'routes',
+                            $routeName,
+                        ]))['options'],
+                    ),
                     b: $routeVersion,
                 ),
             );

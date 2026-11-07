@@ -22,7 +22,7 @@ class ApiProblemListenerFactory
             $config = $container->get('config');
         }
 
-        if (isset($config['api-tools-api-problem']['accept_filters'])) {
+        if (($config['api-tools-api-problem']['accept_filters'] ?? null) !== null) {
             /** @mago-var mixed $filters */
             $filters = $config['api-tools-api-problem']['accept_filters'];
         }

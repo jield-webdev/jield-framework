@@ -56,6 +56,8 @@ final class ConfigProvider
      *
      * @return ServiceManagerConfiguration
      */
+    // Keep the coordinated parsing or rendering steps of this compatibility method together.
+    // @mago-expect lint:halstead(1)
     public function getViewHelperConfig(): array
     {
         return [

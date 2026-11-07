@@ -18,7 +18,8 @@ final readonly class UpdateSearchEntitiesHandler
     public function __construct(
         private ContainerInterface $container,
         private EntityManager $entityManager,
-    ) {}
+    ) {
+    }
 
     /**
      * @throws \Psr\Container\ContainerExceptionInterface
@@ -38,7 +39,9 @@ final readonly class UpdateSearchEntitiesHandler
 
         /** @mago-var mixed $entityId */
         foreach ($entityIds as $entityId) {
-            $entity = $this->entityManager->getRepository(className: \Jield\Stdlib\Value::classString($entityClassName))->find(id: $entityId);
+            $entity = $this->entityManager
+                ->getRepository(className: \Jield\Stdlib\Value::classString($entityClassName))
+                ->find(id: $entityId);
 
             Assert::isInstanceOf(value: $entity, class: HasSearchInterface::class);
 

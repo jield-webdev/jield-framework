@@ -21,7 +21,8 @@ class LocalParamsExpression extends Expression implements Stringable
         private readonly ExpressionInterface|string $type,
         private readonly array $params = [],
         private readonly bool $shortForm = true,
-    ) {}
+    ) {
+    }
 
     public function __toString(): string
     {

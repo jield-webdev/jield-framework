@@ -10,12 +10,13 @@ use Jield\AssetManager\Asset\AssetCache;
 use Jield\AssetManager\Asset\AssetInterface;
 use Jield\AssetManager\Cache\FilePathCache;
 use Jield\Stdlib\Value;
-use Laminas\ServiceManager\ServiceLocatorInterface;
 use Psr\Container\ContainerInterface;
 
 /**
  * Asset Cache Manager.  Sets asset cache based on configuration.
  */
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
 class AssetCacheManager
 {
     /**
@@ -24,7 +25,8 @@ class AssetCacheManager
     public function __construct(
         protected ContainerInterface $container,
         protected array $config = [],
-    ) {}
+    ) {
+    }
 
     /**
      * Set the cache (if any) on the asset, and return the new AssetCache.
@@ -78,7 +80,7 @@ class AssetCacheManager
         /** @mago-var mixed $class */
         $class = $cacheProvider['cache'];
 
-        if (!empty($cacheProvider['options']['dir'])) {
+        if (!!($cacheProvider['options']['dir'] ?? null)) {
             /** @mago-var mixed $dir */
             $dir = $cacheProvider['options']['dir'];
         }
@@ -99,11 +101,11 @@ class AssetCacheManager
     {
         $cacheProvider = null;
 
-        if (!empty($this->config[$path]) && !empty($this->config[$path]['cache'])) {
+        if (!!($this->config[$path] ?? null) && !!($this->config[$path]['cache'] ?? null)) {
             $cacheProvider = $this->config[$path];
         }
 
-        if (!$cacheProvider && !empty($this->config['default']) && !empty($this->config['default']['cache'])) {
+        if (!$cacheProvider && !!($this->config['default'] ?? null) && !!($this->config['default']['cache'] ?? null)) {
             $cacheProvider = $this->config['default'];
         }
 

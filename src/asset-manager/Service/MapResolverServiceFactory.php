@@ -21,7 +21,7 @@ class MapResolverServiceFactory implements FactoryInterface
         $config = $container->get('config');
         $map = [];
 
-        if (isset($config['asset_manager']['resolver_configs']['map'])) {
+        if (($config['asset_manager']['resolver_configs']['map'] ?? null) !== null) {
             /** @mago-var mixed $map */
             $map = $config['asset_manager']['resolver_configs']['map'];
         }

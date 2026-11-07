@@ -54,7 +54,10 @@ abstract class AbstractAssertion implements AssertionInterface
             return false;
         }
 
-        return $this->authenticationIdentityProvider->hasPermit(resource: Assert::object($entity), privilege: $privilege);
+        return $this->authenticationIdentityProvider->hasPermit(
+            resource: Assert::object($entity),
+            privilege: $privilege,
+        );
     }
 
     protected function isLoggedIn(): bool
@@ -101,10 +104,12 @@ abstract class AbstractAssertion implements AssertionInterface
             return $privilege;
         }
 
-        if (!isset($this->routeMatch)) {
+        if (($this->routeMatch ?? null) === null) {
             throw new RuntimeException(message: 'Calling parsePrivilege before setting the routematch is not possible');
         }
 
-        return Assert::string($this->routeMatch->getParam(name: 'privilege') ?? $this->routeMatch->getParam(name: 'action'));
+        return Assert::string(
+            $this->routeMatch->getParam(name: 'privilege') ?? $this->routeMatch->getParam(name: 'action'),
+        );
     }
 }

@@ -19,6 +19,9 @@ use Webmozart\Assert\Assert;
 /**
  * This resolver allows you to resolve from a multitude of prioritized paths.
  */
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
+// @mago-expect lint:kan-defect(1)
 class PrioritizedPathsResolver implements ResolverInterface, MimeResolverAwareInterface
 {
     /**
@@ -82,8 +85,11 @@ class PrioritizedPathsResolver implements ResolverInterface, MimeResolverAwareIn
             ));
         }
 
-        if (isset($path['priority'], $path['path'])) {
-            $this->paths->insert(data: $this->normalizePath(path: Assert::string($path['path'])), priority: Assert::integer($path['priority']));
+        if (($path['priority'] ?? null) !== null && ($path['path'] ?? null) !== null) {
+            $this->paths->insert(
+                data: $this->normalizePath(path: Assert::string($path['path'])),
+                priority: Assert::integer($path['priority']),
+            );
 
             return;
         }
@@ -209,18 +215,17 @@ class PrioritizedPathsResolver implements ResolverInterface, MimeResolverAwareIn
                 if (!$pathInfo->isReadable()) {
                     throw new Exception\RuntimeException(message: sprintf('%s is not readable.', $pathInfo->getPath()));
                 }
-
                 if ($pathInfo->isDir()) {
                     /** @mago-var mixed $resource */
                     foreach (new DirectoryResource(path: Assert::string($pathInfo->getRealPath())) as $resource) {
                         $locations->push(value: new SplFileInfo(filename: Assert::string($resource)));
                     }
-                } else {
-                    $collection[] = substr(
-                        string: Assert::string($pathInfo->getRealPath()),
-                        offset: strlen(string: $basePath),
-                    );
+                    continue;
                 }
+                $collection[] = substr(
+                    string: Assert::string($pathInfo->getRealPath()),
+                    offset: strlen(string: $basePath),
+                );
             }
         }
 

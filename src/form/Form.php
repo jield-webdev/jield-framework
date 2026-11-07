@@ -19,6 +19,7 @@ use Laminas\InputFilter\ReplaceableInputInterface;
 use Laminas\Stdlib\ArrayUtils;
 use Traversable;
 use Webmozart\Assert\Assert;
+
 use function array_key_exists;
 use function array_keys;
 use function assert;
@@ -32,13 +33,17 @@ use function sprintf;
  * @template TFilteredValues of array<array-key, mixed>
  * @implements FormInterface<TFilteredValues>
  */
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
+// @mago-expect lint:kan-defect(1)
+// @mago-expect lint:too-many-methods(1)
+// @mago-expect lint:too-many-properties(1)
 class Form extends Fieldset implements FormInterface
 {
     /** @var array<string, scalar|null> */
-    protected array $attributes
-        = [
-            'method' => 'POST',
-        ];
+    protected array $attributes = [
+        'method' => 'POST',
+    ];
 
     /**
      * How to bind values to the attached object
@@ -121,12 +126,16 @@ class Form extends Fieldset implements FormInterface
     {
         parent::setOptions(options: $options);
 
-        if (isset($this->options['prefer_form_input_filter'])) {
-            $this->setPreferFormInputFilter(preferFormInputFilter: Assert::boolean($this->options['prefer_form_input_filter']));
+        if (($this->options['prefer_form_input_filter'] ?? null) !== null) {
+            $this->setPreferFormInputFilter(preferFormInputFilter: Assert::boolean(
+                $this->options['prefer_form_input_filter'],
+            ));
         }
 
-        if (isset($this->options['use_input_filter_defaults'])) {
-            $this->setUseInputFilterDefaults(useInputFilterDefaults: Assert::boolean($this->options['use_input_filter_defaults']));
+        if (($this->options['use_input_filter_defaults'] ?? null) !== null) {
+            $this->setUseInputFilterDefaults(useInputFilterDefaults: Assert::boolean(
+                $this->options['use_input_filter_defaults'],
+            ));
         }
 
         return $this;
@@ -140,13 +149,14 @@ class Form extends Fieldset implements FormInterface
      */
     public function add(Traversable|ElementInterface|array $elementOrFieldset, array $flags = []): static
     {
-        // TODO: find a better solution than duplicating the factory code, the problem being that if
+        // Resolve the factory specification here as well: if
         // $elementOrFieldset is an array, it is passed by value, and we don't get back the concrete ElementInterface
         if (
             is_array(value: $elementOrFieldset)
-            || $elementOrFieldset instanceof Traversable && !$elementOrFieldset instanceof ElementInterface
+            || $elementOrFieldset instanceof Traversable
+            && !$elementOrFieldset instanceof ElementInterface
         ) {
-            $factory           = $this->getFormFactory();
+            $factory = $this->getFormFactory();
             $elementOrFieldset = $factory->create(spec: $elementOrFieldset);
         }
 
@@ -168,6 +178,8 @@ class Form extends Fieldset implements FormInterface
      *
      * @throws \Exception
      */
+    // Keep the coordinated parsing or rendering steps of this compatibility method together.
+    // @mago-expect lint:halstead(1)
     public function prepare(): static
     {
         if ($this->isPrepared) {
@@ -177,14 +189,19 @@ class Form extends Fieldset implements FormInterface
         $this->getInputFilter();
 
         // If the user wants to, elements names can be wrapped by the form's name
+        // These alternatives are mutually exclusive; the following code consumes the selected state.
+        // @mago-expect lint:no-else-clause(1)
         if ($this->wrapElements()) {
             $this->prepareElement(form: $this);
         } else {
             foreach ($this->getIterator() as $elementOrFieldset) {
                 if ($elementOrFieldset instanceof Form) {
                     $elementOrFieldset->prepare();
-                } elseif ($elementOrFieldset instanceof ElementPrepareAwareInterface) {
+                    continue;
+                }
+                if ($elementOrFieldset instanceof ElementPrepareAwareInterface) {
                     $elementOrFieldset->prepareElement(form: $this);
+                    continue;
                 }
             }
         }
@@ -203,7 +220,7 @@ class Form extends Fieldset implements FormInterface
 
         foreach ($this->iterator as $elementOrFieldset) {
             if ($form instanceof Form && $form->wrapElements()) {
-                $elementOrFieldset->setName(name: (string)$name . '[' . (string)$elementOrFieldset->getName() . ']');
+                $elementOrFieldset->setName(name: (string) $name . '[' . (string) $elementOrFieldset->getName() . ']');
             }
 
             // Recursively prepare elements
@@ -227,7 +244,7 @@ class Form extends Fieldset implements FormInterface
         }
 
         $this->hasValidated = false;
-        $this->data         = $data;
+        $this->data = $data;
         $this->populateValues(data: $data);
 
         return $this;
@@ -243,11 +260,13 @@ class Form extends Fieldset implements FormInterface
      */
     public function bind(object $object, int $flags = FormInterface::VALUES_NORMALIZED): static
     {
-        if (!in_array(
-            needle: $flags,
-            haystack: [FormInterface::VALUES_NORMALIZED, FormInterface::VALUES_RAW],
-            strict: true,
-        )) {
+        if (
+            !in_array(
+                needle: $flags,
+                haystack: [FormInterface::VALUES_NORMALIZED, FormInterface::VALUES_RAW],
+                strict: true,
+            )
+        ) {
             throw new Exception\InvalidArgumentException(message: sprintf(
                 '%s expects the $flags argument to be one of "%s" or "%s"; received "%s"',
                 __METHOD__,
@@ -288,6 +307,8 @@ class Form extends Fieldset implements FormInterface
      *
      * @throws \Exception
      */
+    // Keep the coordinated parsing or rendering steps of this compatibility method together.
+    // @mago-expect lint:halstead(1)
     public function bindValues(array $values = [], ?array $validationGroup = null): mixed
     {
         if (!is_object(value: $this->object)) {
@@ -295,7 +316,9 @@ class Form extends Fieldset implements FormInterface
                 return null;
             }
         }
-        if (!$this->hasValidated() && !empty($values)) {
+        // These alternatives are mutually exclusive; the following code consumes the selected state.
+        // @mago-expect lint:no-else-clause(1)
+        if (!$this->hasValidated() && !($values === [])) {
             $this->setData(data: $values);
             if (!$this->isValid()) {
                 return null;
@@ -307,21 +330,26 @@ class Form extends Fieldset implements FormInterface
         $validationResult = $this->validationResult ?? throw new Exception\DomainException(
             'No validation result is available for binding.',
         );
-        $data             = match ($this->bindAs) {
+        $data = match ($this->bindAs) {
             FormInterface::VALUES_RAW => $validationResult->rawValue(),
-            default                   => $validationResult->value(),
+            default => $validationResult->value(),
         };
 
-        $data            = $this->prepareBindData(values: $data, match: Assert::isArray($this->data));
+        $data = $this->prepareBindData(values: $data, match: Assert::isArray($this->data));
         $validationGroup = $this->getValidationGroup();
-
         // If there is a base fieldset, only hydrate beginning from the base fieldset
         if ($this->baseFieldset !== null) {
-            $name         = Assert::string($this->baseFieldset->getName());
-            $this->object = \Jield\Stdlib\Value::nullableArrayOrObject($this->baseFieldset->bindValues(Assert::isArray($data[$name] ?? []), \Jield\Stdlib\Value::nullableArray($validationGroup[$name] ?? [])));
-        } else {
-            $this->object = \Jield\Stdlib\Value::nullableArrayOrObject(parent::bindValues(values: $data, validationGroup: $validationGroup));
+            $name = Assert::string($this->baseFieldset->getName());
+            $this->object = \Jield\Stdlib\Value::nullableArrayOrObject($this->baseFieldset->bindValues(
+                Assert::isArray($data[$name] ?? []),
+                \Jield\Stdlib\Value::nullableArray($validationGroup[$name] ?? []),
+            ));
+            return null;
         }
+        $this->object = \Jield\Stdlib\Value::nullableArrayOrObject(parent::bindValues(
+            values: $data,
+            validationGroup: $validationGroup,
+        ));
         return null;
     }
 
@@ -337,11 +365,9 @@ class Form extends Fieldset implements FormInterface
                 continue;
             }
 
-            if (is_array(value: $value) && is_array(value: $match[$name])) {
-                $data[$name] = $this->prepareBindData(values: $value, match: $match[$name]);
-            } else {
-                $data[$name] = $value;
-            }
+            $data[$name] = is_array(value: $value) && is_array(value: $match[$name])
+                ? $this->prepareBindData(values: $value, match: $match[$name])
+                : $value;
         }
         return $data;
     }
@@ -353,11 +379,9 @@ class Form extends Fieldset implements FormInterface
      */
     public function setBindOnValidate(int $bindOnValidateFlag): static
     {
-        if (!in_array(
-            needle: $bindOnValidateFlag,
-            haystack: [self::BIND_ON_VALIDATE, self::BIND_MANUAL],
-            strict: true,
-        )) {
+        if (
+            !in_array(needle: $bindOnValidateFlag, haystack: [self::BIND_ON_VALIDATE, self::BIND_MANUAL], strict: true)
+        ) {
             throw new Exception\InvalidArgumentException(message: sprintf(
                 '%s expects the flag to be one of %s::%s or %s::%s',
                 __METHOD__,
@@ -413,6 +437,8 @@ class Form extends Fieldset implements FormInterface
      *
      * @throws \Exception
      */
+    // Keep the coordinated parsing or rendering steps of this compatibility method together.
+    // @mago-expect lint:halstead(1)
     public function isValid(): bool
     {
         if ($this->hasValidated) {
@@ -438,7 +464,11 @@ class Form extends Fieldset implements FormInterface
 
         $validationGroup = $this->getValidationGroup();
         if ($validationGroup !== null) {
-            $this->prepareValidationGroup(formOrFieldset: $this, data: Assert::isArray($this->data), validationGroup: $validationGroup);
+            $this->prepareValidationGroup(
+                formOrFieldset: $this,
+                data: Assert::isArray($this->data),
+                validationGroup: $validationGroup,
+            );
         }
 
         $this->validationResult = InputFilterValidator::validate(
@@ -446,8 +476,9 @@ class Form extends Fieldset implements FormInterface
             Assert::isArray($this->data),
             $validationGroup,
         );
-        $this->isValid          = $result = $this->validationResult->valid();
-        $this->hasValidated     = true;
+        $result = $this->validationResult->valid();
+        $this->isValid = $result;
+        $this->hasValidated = true;
 
         if ($result && $this->bindOnValidate()) {
             $this->bindValues();
@@ -489,6 +520,8 @@ class Form extends Fieldset implements FormInterface
             return $validationResult->rawValue();
         }
         /** @var TFilteredValues $values The configured input filter defines the normalized data shape. */
+        // Keep the local variable as the target of its generic type annotation.
+        // @mago-expect lint:inline-variable-return(1)
         $values = $validationResult->value();
         return $values;
     }
@@ -500,14 +533,14 @@ class Form extends Fieldset implements FormInterface
      */
     public function setValidationGroup(array $group): static
     {
-        $this->hasValidated    = false;
+        $this->hasValidated = false;
         $this->validationGroup = $group;
         return $this;
     }
 
     public function setValidateAll(): void
     {
-        $this->hasValidated    = false;
+        $this->hasValidated = false;
         $this->validationGroup = null;
     }
 
@@ -541,27 +574,26 @@ class Form extends Fieldset implements FormInterface
      */
     private function prepareFieldsetValidationGroup(
         FieldsetInterface $formOrFieldset,
-        array             $data,
-        array             &$validationGroup,
-    ): void
-    {
+        array $data,
+        array &$validationGroup,
+    ): void {
         $elements = iterator_to_array(iterator: $formOrFieldset->getIterator());
         /** @mago-var mixed $value */
         foreach ($validationGroup as $key => &$value) {
-            if (!isset($elements[$key])) {
+            if (($elements[$key] ?? null) === null) {
                 continue;
             }
             $fieldset = $elements[$key];
 
             if ($fieldset instanceof CollectionInterface) {
-                if (!isset($data[$key]) && $fieldset->getCount() === 0) {
+                if (($data[$key] ?? null) === null && $fieldset->getCount() === 0) {
                     unset($validationGroup[$key]);
                     continue;
                 }
 
                 $values = [];
 
-                if (isset($data[$key])) {
+                if (($data[$key] ?? null) !== null) {
                     foreach (array_keys(array: Assert::isArray($data[$key])) as $cKey) {
                         $values[$cKey] = $value;
                     }
@@ -588,9 +620,9 @@ class Form extends Fieldset implements FormInterface
      */
     public function setInputFilter(InputFilterInterface $inputFilter): static
     {
-        $this->hasValidated                = false;
+        $this->hasValidated = false;
         $this->hasAddedInputFilterDefaults = false;
-        $this->filter                      = $inputFilter;
+        $this->filter = $inputFilter;
 
         if (false === $this->hasSetPreferFormInputFilter) {
             $this->preferFormInputFilter = false;
@@ -605,13 +637,17 @@ class Form extends Fieldset implements FormInterface
      * @return InputFilterInterface<TFilteredValues>
      * @throws \Laminas\InputFilter\Exception\RuntimeException
      */
+    // Keep the coordinated parsing or rendering steps of this compatibility method together.
+    // @mago-expect lint:halstead(1)
     public function getInputFilter(): InputFilterInterface
     {
         if ($this->object instanceof InputFilterAwareInterface) {
+            // These alternatives are mutually exclusive; the following code consumes the selected state.
+            // @mago-expect lint:no-else-clause(1)
             if (null === $this->baseFieldset) {
                 $this->filter = $this->object->getInputFilter();
             } else {
-                $name = (string)$this->baseFieldset->getName();
+                $name = (string) $this->baseFieldset->getName();
                 if (!$this->filter instanceof InputFilterInterface || !$this->filter->has($name)) {
                     $filter = new InputFilter($this->getFormFactory()->getInputFilterFactory());
                     $filter->add(input: $this->object->getInputFilter(), name: $name);
@@ -628,6 +664,8 @@ class Form extends Fieldset implements FormInterface
         }
 
         /** @var InputFilterInterface<TFilteredValues> $filter */
+        // Keep the local variable as the target of its generic type annotation.
+        // @mago-expect lint:inline-variable-return(1)
         $filter = $this->filter;
         return $filter;
     }
@@ -654,7 +692,7 @@ class Form extends Fieldset implements FormInterface
      */
     public function setPreferFormInputFilter(bool $preferFormInputFilter): static
     {
-        $this->preferFormInputFilter       = $preferFormInputFilter;
+        $this->preferFormInputFilter = $preferFormInputFilter;
         $this->hasSetPreferFormInputFilter = true;
         return $this;
     }
@@ -673,19 +711,18 @@ class Form extends Fieldset implements FormInterface
      * @param FieldsetInterface $fieldset Fieldset to traverse when looking for default inputs
      * @throws \Laminas\InputFilter\Exception\RuntimeException
      */
+    // Keep the coordinated parsing or rendering steps of this compatibility method together.
+    // @mago-expect lint:halstead(1)
     public function attachInputFilterDefaults(InputFilterInterface $inputFilter, FieldsetInterface $fieldset): void
     {
-        $formFactory  = $this->getFormFactory();
+        $formFactory = $this->getFormFactory();
         $inputFactory = $formFactory->getInputFilterFactory();
 
-        if (
+        $elements =
             $fieldset instanceof CollectionInterface
             && ($targetElement = $fieldset->getTargetElement()) instanceof FieldsetInterface
-        ) {
-            $elements = $targetElement->getElements();
-        } else {
-            $elements = $fieldset->getElements();
-        }
+                ? $targetElement->getElements()
+                : $fieldset->getElements();
 
         if (
             !$fieldset instanceof CollectionInterface
@@ -693,21 +730,23 @@ class Form extends Fieldset implements FormInterface
             || $inputFilter instanceof CollectionInputFilter
         ) {
             foreach ($elements as $name => $element) {
-                $name = (string)$name;
+                $name = (string) $name;
                 if ($this->preferFormInputFilter && $inputFilter->has($name)) {
                     continue;
                 }
 
+                // These alternatives are mutually exclusive; the following code consumes the selected state.
+                // @mago-expect lint:no-else-clause(1)
                 if (!$element instanceof InputProviderInterface) {
                     if ($inputFilter->has($name)) {
                         continue;
                     }
                     // Create a new empty default input for this element
-                    $spec  = ['name' => $name, 'required' => false];
+                    $spec = ['name' => $name, 'required' => false];
                     $input = $inputFactory->createInput(inputSpecification: $spec);
                 } else {
                     // Create an input based on the specification returned from the element
-                    $spec  = $element->getInputSpecification();
+                    $spec = $element->getInputSpecification();
                     $input = $inputFactory->createInput(inputSpecification: $spec);
 
                     if (
@@ -726,7 +765,8 @@ class Form extends Fieldset implements FormInterface
                     if (
                         $input instanceof MutableInputInterface
                         && $inputFilter instanceof CollectionInputFilter
-                        && ($collectionInputFilter = $inputFilter->getInputFilter()) instanceof ReplaceableInputInterface
+                        && ($collectionInputFilter = $inputFilter->getInputFilter())
+                            instanceof ReplaceableInputInterface
                         && $collectionInputFilter->has($name)
                     ) {
                         $input->merge(input: Assert::isInstanceOf(
@@ -737,13 +777,12 @@ class Form extends Fieldset implements FormInterface
                         continue;
                     }
                 }
-
                 // Add element input filter to CollectionInputFilter
                 if ($inputFilter instanceof CollectionInputFilter && !$inputFilter->getInputFilter()->has($name)) {
                     $inputFilter->getInputFilter()->add(input: $input, name: $name);
-                } else {
-                    $inputFilter->add(input: $input, name: $name);
+                    continue;
                 }
+                $inputFilter->add(input: $input, name: $name);
             }
 
             if ($fieldset === $this && $fieldset instanceof InputFilterProviderInterface) {
@@ -757,7 +796,7 @@ class Form extends Fieldset implements FormInterface
                         continue;
                     }
                     $spec['name'] = \Jield\Stdlib\Value::key($spec['name'] ?? $name);
-                    $input        = $inputFactory->createInput(inputSpecification: $spec);
+                    $input = $inputFactory->createInput(inputSpecification: $spec);
                     $inputFilter->add(input: $input, name: $name);
                 }
             }
@@ -769,9 +808,11 @@ class Form extends Fieldset implements FormInterface
                     // Add a new empty input filter if it does not exist (or the fieldset's object input filter),
                     // so that elements of nested fieldsets can be recursively added
                     /** @mago-var mixed $boundObject */
+                    // These alternatives are mutually exclusive; the following code consumes the selected state.
+                    // @mago-expect lint:no-else-clause(2)
                     if (($boundObject = $childFieldset->getObject()) instanceof InputFilterAwareInterface) {
                         $inputFilter->add(input: $boundObject->getInputFilter(), name: $name);
-                    } else if (
+                    } elseif (
                         $childFieldset instanceof CollectionInterface
                         && null !== ($targetElement = $childFieldset->getTargetElement())
                         && $targetElement instanceof InputFilterProviderInterface
@@ -781,7 +822,7 @@ class Form extends Fieldset implements FormInterface
                             \Jield\Form\InputFilterFactory::create(),
                         );
 
-                        $spec   = $targetElement->getInputFilterSpecification();
+                        $spec = $targetElement->getInputFilterSpecification();
                         $filter = $inputFactory->createInputFilter(inputFilterSpecification: \Jield\Form\InputFilterFactory::normalizeSpecification(
                             $spec,
                         ));
@@ -827,7 +868,7 @@ class Form extends Fieldset implements FormInterface
             }
 
             // Create an input filter based on the specification returned from the fieldset
-            $spec   = $childFieldset->getInputFilterSpecification();
+            $spec = $childFieldset->getInputFilterSpecification();
             $filter = $inputFactory->createInputFilter(inputFilterSpecification: \Jield\Form\InputFilterFactory::normalizeSpecification(
                 $spec,
             ));
@@ -876,20 +917,21 @@ class Form extends Fieldset implements FormInterface
         return $this->wrapElements;
     }
 
+    // Preserve the existing parameter contract used by callers and inherited interfaces.
+    // @mago-expect lint:no-boolean-flag-parameter(1)
     public function populateValues(iterable $data, bool $onlyBase = false): void
     {
         if ($data instanceof Traversable) {
             $data = ArrayUtils::iteratorToArray(iterator: $data);
         }
-
         if ($onlyBase && $this->baseFieldset !== null) {
-            $name = (string)$this->baseFieldset->getName();
+            $name = (string) $this->baseFieldset->getName();
             if (array_key_exists(key: $name, array: Assert::isArray($data))) {
                 $this->baseFieldset->populateValues(data: Assert::isIterable($data[$name]));
             }
-        } else {
-            parent::populateValues(data: $data);
+            return;
         }
+        parent::populateValues(data: $data);
     }
 
     /**
@@ -898,14 +940,14 @@ class Form extends Fieldset implements FormInterface
     protected function extract(): array
     {
         if ($this->baseFieldset !== null) {
-            assert(assertion: $this->baseFieldset instanceof Fieldset);
-            $name   = (string)$this->baseFieldset->getName();
-            $values = [$name => $this->baseFieldset->extract()];
-        } else {
-            $values = parent::extract();
+            assert(
+                assertion: $this->baseFieldset instanceof Fieldset,
+                description: 'Expected $this->baseFieldset instanceof Fieldset.',
+            );
+            $name = (string) $this->baseFieldset->getName();
+            return [$name => $this->baseFieldset->extract()];
         }
-
-        return $values;
+        return parent::extract();
     }
 
     /**

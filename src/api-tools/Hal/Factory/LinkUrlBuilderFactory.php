@@ -28,7 +28,7 @@ class LinkUrlBuilderFactory
         $serverUrlHelper = $viewHelperManager->get('ServerUrl');
         Assert::isInstanceOf(value: $serverUrlHelper, class: ServerUrl::class);
 
-        if (isset($halConfig['options']['use_proxy'])) {
+        if (($halConfig['options']['use_proxy'] ?? null) !== null) {
             $serverUrlHelper->setUseProxy(Assert::boolean($halConfig['options']['use_proxy']));
         }
 

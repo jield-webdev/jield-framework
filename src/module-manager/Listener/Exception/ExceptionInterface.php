@@ -6,4 +6,6 @@ namespace Jield\ModuleManager\Listener\Exception;
 
 use Jield\ModuleManager\Exception\ExceptionInterface as Exception;
 
-interface ExceptionInterface extends Exception {}
+interface ExceptionInterface extends Exception
+{
+}

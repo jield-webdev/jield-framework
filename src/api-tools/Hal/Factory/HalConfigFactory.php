@@ -19,7 +19,9 @@ class HalConfigFactory
         $config = $container->has('config') ? $container->get('config') : [];
 
         return (
-            isset($config['api-tools-hal']) && is_array(value: $config['api-tools-hal']) ? $config['api-tools-hal'] : []
+            ($config['api-tools-hal'] ?? null) !== null && is_array(value: $config['api-tools-hal'])
+                ? $config['api-tools-hal']
+                : []
         );
     }
 }

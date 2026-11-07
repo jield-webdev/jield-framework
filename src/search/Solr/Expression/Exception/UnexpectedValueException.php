@@ -6,4 +6,6 @@ namespace Jield\Search\Solr\Expression\Exception;
 
 use UnexpectedValueException as BaseUnexpectedValueException;
 
-class UnexpectedValueException extends BaseUnexpectedValueException implements ExceptionInterface {}
+class UnexpectedValueException extends BaseUnexpectedValueException implements ExceptionInterface
+{
+}

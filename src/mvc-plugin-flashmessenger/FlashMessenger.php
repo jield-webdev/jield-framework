@@ -24,6 +24,10 @@ use function count;
  * @template-implements IteratorAggregate<array-key, string>
  * @psalm-type MessageList = SplQueue<array-key, string>
  */
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
+// @mago-expect lint:kan-defect(1)
+// @mago-expect lint:too-many-methods(1)
 class FlashMessenger extends AbstractPlugin implements IteratorAggregate, Countable
 {
     public const string NAMESPACE_DEFAULT = 'default';
@@ -116,7 +120,10 @@ class FlashMessenger extends AbstractPlugin implements IteratorAggregate, Counta
             $this->setSessionManager(manager: Container::getDefaultManager());
         }
 
-        assert(assertion: $this->session instanceof Manager);
+        assert(
+            assertion: $this->session instanceof Manager,
+            description: 'Expected $this->session instanceof Manager.',
+        );
 
         return $this->session;
     }
@@ -157,7 +164,7 @@ class FlashMessenger extends AbstractPlugin implements IteratorAggregate, Counta
      */
     protected function getMessagesFromContainer(): void
     {
-        if (!empty($this->messages) || $this->messageAdded) {
+        if (!!$this->messages || $this->messageAdded) {
             return;
         }
 
@@ -219,7 +226,7 @@ class FlashMessenger extends AbstractPlugin implements IteratorAggregate, Counta
 
         $this->getMessagesFromContainer();
 
-        return isset($this->messages[$namespace]);
+        return ($this->messages[$namespace] ?? null) !== null;
     }
 
     public function hasSuccessMessages(): bool
@@ -326,7 +333,7 @@ class FlashMessenger extends AbstractPlugin implements IteratorAggregate, Counta
     public function clearMessagesFromContainer(): bool
     {
         $this->getMessagesFromContainer();
-        if (empty($this->messages)) {
+        if (!$this->messages) {
             return false;
         }
 
@@ -353,7 +360,7 @@ class FlashMessenger extends AbstractPlugin implements IteratorAggregate, Counta
         $container = $this->getContainer();
         $namespace ??= $this->getNamespace();
 
-        return isset($container[$namespace]);
+        return ($container[$namespace] ?? null) !== null;
     }
 
     /**
@@ -505,7 +512,7 @@ class FlashMessenger extends AbstractPlugin implements IteratorAggregate, Counta
             $namespaces[] = $namespace;
         }
 
-        if (empty($namespaces)) {
+        if ($namespaces === []) {
             return false;
         }
 

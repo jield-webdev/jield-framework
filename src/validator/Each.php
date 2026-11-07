@@ -14,7 +14,8 @@ final class Each implements ValidatorInterface
 
     public function __construct(
         private readonly ValidatorInterface $validator,
-    ) {}
+    ) {
+    }
 
     public function isValid(mixed $value): bool
     {

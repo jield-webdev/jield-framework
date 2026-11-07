@@ -16,6 +16,7 @@ class FormFileApcProgress extends FormFileUploadProgress
 {
     protected function getName(): string
     {
-        return ini_get(option: 'apc.rfc1867_name') ?: '';
+        $name = ini_get(option: 'apc.rfc1867_name');
+        return $name ? $name : '';
     }
 }

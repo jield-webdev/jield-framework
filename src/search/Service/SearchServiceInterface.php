@@ -15,7 +15,11 @@ interface SearchServiceInterface
 {
     public function getSolrClient(): Client;
 
+    // Preserve the existing parameter contract used by callers and inherited interfaces.
+    // @mago-expect lint:no-boolean-flag-parameter(1)
     public function clearIndex(bool $optimize = true): Result;
 
+    // Preserve the existing parameter contract used by callers and inherited interfaces.
+    // @mago-expect lint:no-boolean-flag-parameter(1)
     public function deleteDocument(HasSearchInterface $entity, bool $optimize = true): Result;
 }

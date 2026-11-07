@@ -19,6 +19,8 @@ use Psr\Container\ContainerInterface;
  * @psalm-type HandlerConfig = array{type?: string, options?: HandlerOptions}
  * @psalm-type MonologConfig = array{default_logger?: string, loggers?: array<string, array{name?: string, handlers?: list<string>}>, handlers?: array<string, HandlerConfig>}
  */
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
 final class LoggerFactory
 {
     /**

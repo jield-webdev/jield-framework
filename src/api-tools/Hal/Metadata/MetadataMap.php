@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Jield\ApiTools\Hal\Metadata;
 
-use Jield\Stdlib\Value;
 use Jield\ApiTools\Hal\Exception;
+use Jield\Stdlib\Value;
 use Laminas\Hydrator\HydratorPluginManager;
 use Laminas\Hydrator\HydratorPluginManagerInterface;
 use Laminas\ServiceManager\ServiceManager;
@@ -17,6 +17,8 @@ use function is_array;
 use function is_object;
 use function sprintf;
 
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
 class MetadataMap
 {
     protected HydratorPluginManagerInterface|HydratorPluginManager|null $hydrators = null;
@@ -122,7 +124,7 @@ class MetadataMap
     {
         $className = is_object(value: $class) ? $class::class : $class;
 
-        if (isset($this->map[$className])) {
+        if (($this->map[$className] ?? null) !== null) {
             return $this->getMetadataInstance(class: $className);
         }
 
@@ -140,6 +142,8 @@ class MetadataMap
      * @psalm-param class-string $class
      * @throws \ReflectionException
      */
+    // Keep the coordinated parsing or rendering steps of this compatibility method together.
+    // @mago-expect lint:halstead(1)
     private function getMetadataInstance($class): Metadata
     {
         if ($this->map[$class] instanceof Metadata) {

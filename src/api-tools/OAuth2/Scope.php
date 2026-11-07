@@ -9,6 +9,7 @@ final class Scope
     /** @return list<string> */
     public static function split(?string $value): array
     {
-        return array_values(array_unique(preg_split('/\s+/', trim($value ?? ''), flags: PREG_SPLIT_NO_EMPTY) ?: []));
+        $scopes = preg_split('/\s+/', trim($value ?? ''), flags: PREG_SPLIT_NO_EMPTY);
+        return array_values(array_unique($scopes === false ? [] : $scopes));
     }
 }

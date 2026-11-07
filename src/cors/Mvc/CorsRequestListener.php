@@ -45,7 +45,8 @@ class CorsRequestListener extends AbstractListenerAggregate
 
     public function __construct(
         protected CorsService $corsService,
-    ) {}
+    ) {
+    }
 
     /**
      * {@inheritDoc}

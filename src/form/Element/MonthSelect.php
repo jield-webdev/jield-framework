@@ -20,6 +20,9 @@ use function is_array;
 use function is_string;
 use function sprintf;
 
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
+// @mago-expect lint:too-many-methods(1)
 class MonthSelect extends Element implements InputProviderInterface, ElementPrepareAwareInterface
 {
     /**
@@ -89,28 +92,34 @@ class MonthSelect extends Element implements InputProviderInterface, ElementPrep
     {
         parent::setOptions(options: $options);
 
-        if (isset($this->options['month_attributes'])) {
-            $this->setMonthAttributes(monthAttributes: \Jield\Stdlib\Value::scalarMap($this->options['month_attributes']));
+        if (($this->options['month_attributes'] ?? null) !== null) {
+            $this->setMonthAttributes(monthAttributes: \Jield\Stdlib\Value::scalarMap(
+                $this->options['month_attributes'],
+            ));
         }
 
-        if (isset($this->options['year_attributes'])) {
+        if (($this->options['year_attributes'] ?? null) !== null) {
             $this->setYearAttributes(yearAttributes: \Jield\Stdlib\Value::scalarMap($this->options['year_attributes']));
         }
 
-        if (isset($this->options['min_year'])) {
+        if (($this->options['min_year'] ?? null) !== null) {
             $this->setMinYear(minYear: \Webmozart\Assert\Assert::integer($this->options['min_year']));
         }
 
-        if (isset($this->options['max_year'])) {
+        if (($this->options['max_year'] ?? null) !== null) {
             $this->setMaxYear(maxYear: \Webmozart\Assert\Assert::integer($this->options['max_year']));
         }
 
-        if (isset($this->options['create_empty_option'])) {
-            $this->setShouldCreateEmptyOption(createEmptyOption: \Webmozart\Assert\Assert::boolean($this->options['create_empty_option']));
+        if (($this->options['create_empty_option'] ?? null) !== null) {
+            $this->setShouldCreateEmptyOption(createEmptyOption: \Webmozart\Assert\Assert::boolean(
+                $this->options['create_empty_option'],
+            ));
         }
 
-        if (isset($this->options['render_delimiters'])) {
-            $this->setShouldRenderDelimiters(renderDelimiters: \Webmozart\Assert\Assert::boolean($this->options['render_delimiters']));
+        if (($this->options['render_delimiters'] ?? null) !== null) {
+            $this->setShouldRenderDelimiters(renderDelimiters: \Webmozart\Assert\Assert::boolean(
+                $this->options['render_delimiters'],
+            ));
         }
 
         return $this;
@@ -251,14 +260,13 @@ class MonthSelect extends Element implements InputProviderInterface, ElementPrep
                 'month' => $value->format(format: 'm'),
             ];
         }
-
         if (is_array(value: $value)) {
             $this->yearElement->setValue(value: $value['year']);
             $this->monthElement->setValue(value: $value['month']);
-        } else {
-            $this->yearElement->setValue(value: null);
-            $this->monthElement->setValue(value: null);
+            return $this;
         }
+        $this->yearElement->setValue(value: null);
+        $this->monthElement->setValue(value: null);
 
         return $this;
     }

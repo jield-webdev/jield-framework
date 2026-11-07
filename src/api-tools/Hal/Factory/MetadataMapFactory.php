@@ -9,7 +9,6 @@ use Laminas\Hydrator\HydratorPluginManager;
 use Laminas\Hydrator\HydratorPluginManagerInterface;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
-use Psr\Container\NotFoundExceptionInterface;
 use Webmozart\Assert\Assert;
 
 use function is_array;
@@ -29,7 +28,7 @@ class MetadataMapFactory
             ? $container->get('HydratorManager')
             : new HydratorPluginManager(creationContext: $container);
 
-        $map = isset($config['metadata_map']) && is_array(value: $config['metadata_map'])
+        $map = ($config['metadata_map'] ?? null) !== null && is_array(value: $config['metadata_map'])
             ? $config['metadata_map']
             : [];
 

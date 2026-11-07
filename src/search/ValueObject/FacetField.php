@@ -13,6 +13,8 @@ final class FacetField
     public const int TYPE_SLIDER = 2;
     public const int TYPE_CHECKBOX_MIN = 3;
 
+    // Preserve the existing parameter contract used by callers and inherited interfaces.
+    // @mago-expect lint:excessive-parameter-list(1)
     public function __construct(
         private readonly string $field,
         private readonly string $name,
@@ -25,7 +27,8 @@ final class FacetField
         private readonly ?string $defaultValue = null,
         private readonly int $limit = 100,
         private readonly FacetFieldVisibilityEnum $visibility = FacetFieldVisibilityEnum::FILTER_COLUMN,
-    ) {}
+    ) {
+    }
 
     #[Pure]
     public static function fromArray(array $params): FacetField
@@ -41,7 +44,10 @@ final class FacetField
             hasAndOr: \Webmozart\Assert\Assert::boolean($params['hasAndOr'] ?? false),
             defaultValue: \Webmozart\Assert\Assert::nullOrString($params['defaultValue'] ?? false),
             limit: \Webmozart\Assert\Assert::integer($params['limit'] ?? 100),
-            visibility: \Webmozart\Assert\Assert::isInstanceOf($params['visibility'] ?? FacetFieldVisibilityEnum::FILTER_COLUMN, \Jield\Search\Enum\FacetFieldVisibilityEnum::class),
+            visibility: \Webmozart\Assert\Assert::isInstanceOf(
+                $params['visibility'] ?? FacetFieldVisibilityEnum::FILTER_COLUMN,
+                \Jield\Search\Enum\FacetFieldVisibilityEnum::class,
+            ),
         );
     }
 

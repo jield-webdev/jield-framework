@@ -85,23 +85,30 @@ class ServiceManagerConfig
             ): SharedEventManager => new SharedEventManager(),
         );
 
-        $this->config['initializers'] = ArrayUtils::merge(\Webmozart\Assert\Assert::isArray($this->config['initializers']), [
-            'EventManagerAwareInitializer' => /** @throws \Psr\Container\ContainerExceptionInterface */ static function (ContainerInterface $container, mixed $instance): void {
-                if (!$instance instanceof EventManagerAwareInterface) {
-                    return;
-                }
-                $eventManager = $instance->getEventManager();
-                // If the instance has an EM WITH an SEM composed, do nothing.
-                if ($eventManager->getSharedManager() instanceof SharedEventManagerInterface) {
-                    return;
-                }
-                $instance->setEventManager(Service::get(
-                    $container,
-                    \Laminas\EventManager\EventManagerInterface::class,
-                    'EventManager',
-                ));
-            },
-        ]);
+        $this->config['initializers'] = ArrayUtils::merge(
+            \Webmozart\Assert\Assert::isArray($this->config['initializers']),
+            [
+                'EventManagerAwareInitializer' =>
+                    /** @throws \Psr\Container\ContainerExceptionInterface */ static function (
+                        ContainerInterface $container,
+                        mixed $instance,
+                    ): void {
+                        if (!$instance instanceof EventManagerAwareInterface) {
+                            return;
+                        }
+                        $eventManager = $instance->getEventManager();
+                        // If the instance has an EM WITH an SEM composed, do nothing.
+                        if ($eventManager->getSharedManager() instanceof SharedEventManagerInterface) {
+                            return;
+                        }
+                        $instance->setEventManager(Service::get(
+                            $container,
+                            \Laminas\EventManager\EventManagerInterface::class,
+                            'EventManager',
+                        ));
+                    },
+            ],
+        );
 
         if ($config !== []) {
             $this->config = ArrayUtils::merge($this->config, $config);

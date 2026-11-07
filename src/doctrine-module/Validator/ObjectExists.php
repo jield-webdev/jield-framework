@@ -52,14 +52,15 @@ class ObjectExists extends AbstractValidator
      */
     public function __construct(array $options)
     {
-        if (!isset($options['object_repository']) || !$options['object_repository'] instanceof ObjectRepository) {
-            if (!array_key_exists(key: 'object_repository', array: $options)) {
-                $provided = 'nothing';
-            } elseif (is_object(value: $options['object_repository'])) {
-                $provided = $options['object_repository']::class;
-            } else {
-                $provided = gettype(value: $options['object_repository']);
-            }
+        if (
+            ($options['object_repository'] ?? null) === null
+            || !$options['object_repository'] instanceof ObjectRepository
+        ) {
+            $provided = match (true) {
+                !array_key_exists(key: 'object_repository', array: $options) => 'nothing',
+                is_object(value: $options['object_repository']) => $options['object_repository']::class,
+                default => gettype(value: $options['object_repository']),
+            };
 
             throw new Exception\InvalidArgumentException(message: sprintf(
                 'Option "object_repository" is required and must be an instance of'
@@ -70,7 +71,7 @@ class ObjectExists extends AbstractValidator
 
         $this->objectRepository = $options['object_repository'];
 
-        if (!isset($options['fields'])) {
+        if (($options['fields'] ?? null) === null) {
             throw new Exception\InvalidArgumentException(message: 'Key `fields` must be provided and be a field or a list of fields to be used when searching for'
             . ' existing instances');
         }
@@ -119,10 +120,8 @@ class ObjectExists extends AbstractValidator
     protected function cleanSearchValue(mixed $value): array
     {
         $value = is_object(value: $value) ? [$value] : Value::toArray($value);
-
         if (ArrayUtils::isHashTable(value: $value)) {
             $matchedFieldsValues = [];
-
             foreach ($this->fields as $field) {
                 if (!array_key_exists(key: $field, array: $value)) {
                     throw new Exception\RuntimeException(message: sprintf(
@@ -134,18 +133,17 @@ class ObjectExists extends AbstractValidator
 
                 $matchedFieldsValues[$field] = $value[$field];
             }
-        } else {
-            $matchedFieldsValues = count($this->fields) === count($value)
-                ? array_combine(keys: $this->fields, values: $value)
-                : false;
-
-            if ($matchedFieldsValues === false) {
-                throw new Exception\RuntimeException(message: sprintf(
-                    'Provided values count is %s, while expected number of fields to be matched is %s',
-                    count(value: $value),
-                    count(value: $this->fields),
-                ));
-            }
+            return $matchedFieldsValues;
+        }
+        $matchedFieldsValues = count($this->fields) === count($value)
+            ? array_combine(keys: $this->fields, values: $value)
+            : false;
+        if ($matchedFieldsValues === false) {
+            throw new Exception\RuntimeException(message: sprintf(
+                'Provided values count is %s, while expected number of fields to be matched is %s',
+                count(value: $value),
+                count(value: $this->fields),
+            ));
         }
 
         return $matchedFieldsValues;

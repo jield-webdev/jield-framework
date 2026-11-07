@@ -37,10 +37,13 @@ class AuthenticationAdapterDelegatorFactory implements DelegatorFactoryInterface
         /** @mago-var mixed $config */
         $config = $container->get('config');
         if (
-            !isset($config['api-tools-mvc-auth']['authentication']['adapters'])
+            ($config['api-tools-mvc-auth']['authentication']['adapters'] ?? null) === null
             || !is_array(value: $config['api-tools-mvc-auth']['authentication']['adapters'])
         ) {
-            return Assert::isInstanceOf($listener, \Jield\ApiTools\MvcAuth\Authentication\DefaultAuthenticationListener::class);
+            return Assert::isInstanceOf(
+                $listener,
+                \Jield\ApiTools\MvcAuth\Authentication\DefaultAuthenticationListener::class,
+            );
         }
 
         /** @mago-var mixed $data */
@@ -49,11 +52,17 @@ class AuthenticationAdapterDelegatorFactory implements DelegatorFactoryInterface
                 type: Assert::string($type),
                 adapterConfig: Assert::isArray($data),
                 container: $container,
-                listener: Assert::isInstanceOf($listener, \Jield\ApiTools\MvcAuth\Authentication\DefaultAuthenticationListener::class),
+                listener: Assert::isInstanceOf(
+                    $listener,
+                    \Jield\ApiTools\MvcAuth\Authentication\DefaultAuthenticationListener::class,
+                ),
             );
         }
 
-        return Assert::isInstanceOf($listener, \Jield\ApiTools\MvcAuth\Authentication\DefaultAuthenticationListener::class);
+        return Assert::isInstanceOf(
+            $listener,
+            \Jield\ApiTools\MvcAuth\Authentication\DefaultAuthenticationListener::class,
+        );
     }
 
     /**
@@ -67,7 +76,7 @@ class AuthenticationAdapterDelegatorFactory implements DelegatorFactoryInterface
         ContainerInterface $container,
         DefaultAuthenticationListener $listener,
     ): void {
-        if (!isset($adapterConfig['adapter']) || !is_string(value: $adapterConfig['adapter'])) {
+        if (($adapterConfig['adapter'] ?? null) === null || !is_string(value: $adapterConfig['adapter'])) {
             return;
         }
 

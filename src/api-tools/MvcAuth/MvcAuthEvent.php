@@ -43,7 +43,8 @@ class MvcAuthEvent extends Event
         protected MvcEvent $mvcEvent,
         protected $authentication,
         protected $authorization,
-    ) {}
+    ) {
+    }
 
     public function getAuthenticationService(): mixed
     {

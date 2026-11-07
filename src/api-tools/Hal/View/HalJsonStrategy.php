@@ -16,7 +16,8 @@ class HalJsonStrategy extends AbstractListenerAggregate
 {
     public function __construct(
         private readonly HalJsonRenderer $renderer,
-    ) {}
+    ) {
+    }
 
     public function attach(EventManagerInterface $events, $priority = 300): void
     {

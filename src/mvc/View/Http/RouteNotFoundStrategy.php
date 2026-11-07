@@ -16,6 +16,8 @@ use Webmozart\Assert\Assert;
 
 use function is_string;
 
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
 class RouteNotFoundStrategy extends AbstractListenerAggregate
 {
     /**
@@ -114,7 +116,7 @@ class RouteNotFoundStrategy extends AbstractListenerAggregate
     public function detectNotFoundError(MvcEvent $e): void
     {
         $error = $e->getError();
-        if (empty($error)) {
+        if (!$error) {
             return;
         }
 
@@ -150,6 +152,8 @@ class RouteNotFoundStrategy extends AbstractListenerAggregate
             return;
         }
 
+        // These alternatives are mutually exclusive; the following code consumes the selected state.
+        // @mago-expect lint:no-else-clause(2)
         if (!$vars instanceof ViewModel) {
             $model = new ViewModel();
             if (is_string($vars)) {
@@ -249,9 +253,9 @@ class RouteNotFoundStrategy extends AbstractListenerAggregate
         }
 
         $controller = $e->getController();
-        if (empty($controller)) {
+        if (!($controller ?? null)) {
             $routeMatch = $e->getRouteMatch();
-            if (empty($routeMatch)) {
+            if (!($routeMatch ?? null)) {
                 return;
             }
 

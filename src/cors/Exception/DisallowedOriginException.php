@@ -23,4 +23,6 @@ namespace Jield\Cors\Exception;
 
 use DomainException;
 
-class DisallowedOriginException extends DomainException implements ExceptionInterface {}
+class DisallowedOriginException extends DomainException implements ExceptionInterface
+{
+}

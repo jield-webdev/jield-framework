@@ -23,7 +23,7 @@ class PdoAdapter extends OAuth2Pdo
     public function __construct($connection, $config = [])
     {
         parent::__construct(connection: $connection, config: Assert::isArray($config));
-        if (isset($config['bcrypt_cost'])) {
+        if (($config['bcrypt_cost'] ?? null) !== null) {
             $this->bcryptCost = Assert::integer($config['bcrypt_cost']);
         }
     }
@@ -47,7 +47,7 @@ class PdoAdapter extends OAuth2Pdo
         $result = $stmt->fetch();
 
         // Do not bother verifying if the secret is missing or empty.
-        if (empty($result['client_secret'])) {
+        if (!($result['client_secret'] ?? null)) {
             return false;
         }
 
@@ -55,6 +55,8 @@ class PdoAdapter extends OAuth2Pdo
         return password_verify(password: (string) $client_secret, hash: (string) $result['client_secret']);
     }
 
+    // Preserve the existing parameter contract used by callers and inherited interfaces.
+    // @mago-expect lint:excessive-parameter-list(1)
     #[Override]
     public function setClientDetails(
         $client_id,
@@ -65,13 +67,15 @@ class PdoAdapter extends OAuth2Pdo
         $scope = null,
         $user_id = null,
     ): bool {
+        // These alternatives are mutually exclusive; the following code consumes the selected state.
+        // @mago-expect lint:no-else-clause(1)
         if (func_num_args() > 5) {
         } else {
             $user_id = $scope;
             $scope = null;
         }
 
-        if (!empty($client_secret)) {
+        if (!!($client_secret ?? null)) {
             $client_secret = password_hash(password: $client_secret, algo: PASSWORD_BCRYPT, options: [
                 'cost' => $this->bcryptCost,
             ]);

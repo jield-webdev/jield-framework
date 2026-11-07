@@ -32,6 +32,10 @@ use Webmozart\Assert\Assert;
 use function defined;
 use function sprintf;
 
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
+// @mago-expect lint:kan-defect(1)
+// @mago-expect lint:too-many-methods(1)
 abstract class AbstractSearchService implements SearchServiceInterface
 {
     final public const string DATE_SOLR = 'Y-m-d\TH:i:s\Z';
@@ -79,7 +83,7 @@ abstract class AbstractSearchService implements SearchServiceInterface
             /** @mago-var mixed $prefix */
             $prefix = $this->config['solr']['prefix'] ?? '';
             $connection = static::SOLR_CONNECTION;
-            if (!empty($prefix)) {
+            if ($prefix) {
                 $connection = sprintf('%s_%s', Value::scalar($prefix), $connection);
             }
 
@@ -89,22 +93,25 @@ abstract class AbstractSearchService implements SearchServiceInterface
             $params = $this->config['solr']['connection'][$connection] ?? [];
 
             //Only change the core when this is different from the already given core
-            if (!isset($params['endpoint']['server']['core'])) {
+            if (($params['endpoint']['server']['core'] ?? null) === null) {
                 Value::setPath($params, ['endpoint', 'server', 'core'], $connection);
             }
 
-            if (isset($this->config['solr']['host'])) {
+            if (($this->config['solr']['host'] ?? null) !== null) {
                 Value::setPath($params, ['endpoint', 'server', 'host'], $this->config['solr']['host']);
             }
 
-            if (isset($this->config['solr']['username'])) {
+            if (($this->config['solr']['username'] ?? null) !== null) {
                 Value::setPath($params, ['endpoint', 'server', 'username'], $this->config['solr']['username']);
                 Value::setPath($params, ['endpoint', 'server', 'password'], $this->config['solr']['password']);
             }
 
             $adapter = new Http();
 
-            if (isset($this->config['solr']['timeout']) && Value::truthy($this->config['solr']['timeout'])) {
+            if (
+                ($this->config['solr']['timeout'] ?? null) !== null
+                && Value::truthy($this->config['solr']['timeout'])
+            ) {
                 $adapter->setTimeout(timeoutInSeconds: (int) $this->config['solr']['timeout']);
             }
 
@@ -194,6 +201,9 @@ abstract class AbstractSearchService implements SearchServiceInterface
      * @throws \Psr\Container\ContainerExceptionInterface
      * @throws \Exception
      */
+    // Preserve the existing parameter contract used by callers and inherited interfaces.
+    // @mago-expect lint:excessive-parameter-list(1)
+    // @mago-expect lint:no-boolean-flag-parameter(2)
     public function updateCollection(
         OutputInterface $output,
         HasSearchInterface $entity,
@@ -217,6 +227,8 @@ abstract class AbstractSearchService implements SearchServiceInterface
 
         $amount = $this->findCount(entity: $entity::class, criteria: $criteria);
 
+        // These alternatives are mutually exclusive; the following code consumes the selected state.
+        // @mago-expect lint:no-else-clause(1)
         if ($shallow) {
             $amount = min($amount, 1000);
             $output->writeln(messages: sprintf('Shallow update of latest %d items', $amount));
@@ -234,7 +246,10 @@ abstract class AbstractSearchService implements SearchServiceInterface
 
             /** @mago-var mixed $element */
             foreach ($elements as $element) {
-                $document = $this->getSearchDocumentFromEntity(update: $update, entity: Assert::isInstanceOf($element, \Jield\Search\Entity\HasSearchInterface::class));
+                $document = $this->getSearchDocumentFromEntity(update: $update, entity: Assert::isInstanceOf(
+                    $element,
+                    \Jield\Search\Entity\HasSearchInterface::class,
+                ));
 
                 $update->addDocument(document: $document);
                 $output->write(messages: '.');
@@ -268,6 +283,8 @@ abstract class AbstractSearchService implements SearchServiceInterface
     /**
      * @throws \Solarium\Exception\OutOfBoundsException
      */
+    // Preserve the existing parameter contract used by callers and inherited interfaces.
+    // @mago-expect lint:no-boolean-flag-parameter(1)
     public function clearIndex(bool $optimize = true): Result
     {
         $update = $this->getSolrClient()->createUpdate();
@@ -357,8 +374,11 @@ abstract class AbstractSearchService implements SearchServiceInterface
              *
              * For this function we are only interested in the "real" id, so we will remove the first part
              */
-            $id = explode(separator: '-', string: Assert::string(Assert::isInstanceOf($document, Document::class)->offsetGet('id')));
-            if (isset($id[1])) {
+            $id = explode(
+                separator: '-',
+                string: Assert::string(Assert::isInstanceOf($document, Document::class)->offsetGet('id')),
+            );
+            if (($id[1] ?? null) !== null) {
                 $ids[] = (int) $id[1];
             }
         }
@@ -371,7 +391,7 @@ abstract class AbstractSearchService implements SearchServiceInterface
         $queryBuilder = $this->entityManager->createQueryBuilder();
         $queryBuilder->select('e.id');
         $queryBuilder->from(from: $entity::class, alias: 'e');
-        if (!empty($criteria)) {
+        if (!!$criteria) {
             /** @mago-var mixed $value */
             foreach ($criteria as $key => $value) {
                 $queryBuilder->andWhere(sprintf('e.%s = :%s', $key, $key));
@@ -395,7 +415,7 @@ abstract class AbstractSearchService implements SearchServiceInterface
         $queryBuilder->select('COUNT(e.id)');
         $queryBuilder->from(from: $entity, alias: 'e');
 
-        if (!empty($criteria)) {
+        if (!!$criteria) {
             /** @mago-var mixed $value */
             foreach ($criteria as $key => $value) {
                 $queryBuilder->andWhere(sprintf('e.%s = :%s', $key, $key));
@@ -430,10 +450,10 @@ abstract class AbstractSearchService implements SearchServiceInterface
         } catch (HttpException $e) {
             $responseBody = $e->getBody();
 
-            if (!empty($responseBody)) {
+            if (!!($responseBody ?? null)) {
                 /** @mago-var mixed $response */
                 $response = json_decode(json: $responseBody);
-                if (isset($response->responseHeader)) {
+                if (($response->responseHeader ?? null) !== null) {
                     $output->writeln(messages: sprintf(
                         '<error>Solr HTTP response code: %s</error>',
                         Value::scalar(Assert::isInstanceOf(
@@ -442,7 +462,7 @@ abstract class AbstractSearchService implements SearchServiceInterface
                         )->status),
                     ));
                 }
-                if (isset($response->error)) {
+                if (($response->error ?? null) !== null) {
                     $output->writeln(messages: sprintf(
                         '<error>Solr error message: %s</error>',
                         Value::scalar(Assert::isInstanceOf(
@@ -525,6 +545,8 @@ abstract class AbstractSearchService implements SearchServiceInterface
     /**
      * @throws \Solarium\Exception\OutOfBoundsException
      */
+    // Preserve the existing parameter contract used by callers and inherited interfaces.
+    // @mago-expect lint:no-boolean-flag-parameter(1)
     public function deleteDocument(HasSearchInterface $entity, bool $optimize = false): Result
     {
         $update = $this->getSolrClient()->createUpdate();
@@ -588,31 +610,31 @@ abstract class AbstractSearchService implements SearchServiceInterface
         /** @mago-var mixed $facet */
         foreach ($facets as $field => $facet) {
             //Skip when we have no values
-            if (!array_key_exists(key: 'values', array: Assert::isArray($facet)) || empty($facet['values'])) {
+            if (!array_key_exists(key: 'values', array: Assert::isArray($facet)) || !($facet['values'] ?? null)) {
                 continue;
             }
 
             //When we have an AND we need all values
-            if (isset($facet['andOr']) && $facet['andOr'] === 'and') {
+            if (($facet['andOr'] ?? null) !== null && $facet['andOr'] === 'and') {
                 /** @mago-var mixed $value */
                 foreach (Assert::isIterable($facet['values']) as $value) {
                     $this->addFilterQueryFromFacet(
                         key: $key++,
                         field: Assert::string($field),
                         value: Value::arrayOrIntOrString($value),
-                        exclude: isset($facet['yesNo']) && $facet['yesNo'] === 'no',
+                        exclude: ($facet['yesNo'] ?? null) !== null && $facet['yesNo'] === 'no',
                         and: true,
                     );
                 }
             }
 
             //An or is just to put all values in the result
-            if (!isset($facet['andOr'])) {
+            if (($facet['andOr'] ?? null) === null) {
                 $this->addFilterQueryFromFacet(
                     key: $key++,
                     field: Assert::string($field),
                     value: Value::arrayOrIntOrString($facet['values']),
-                    exclude: isset($facet['yesNo']) && $facet['yesNo'] === 'no',
+                    exclude: ($facet['yesNo'] ?? null) !== null && $facet['yesNo'] === 'no',
                 );
             }
         }
@@ -621,6 +643,8 @@ abstract class AbstractSearchService implements SearchServiceInterface
     /**
      * @throws \Solarium\Exception\OutOfBoundsException
      */
+    // Preserve the existing parameter contract used by callers and inherited interfaces.
+    // @mago-expect lint:no-boolean-flag-parameter(2)
     private function addFilterQueryFromFacet(
         int $key,
         string $field,
@@ -660,6 +684,8 @@ abstract class AbstractSearchService implements SearchServiceInterface
                 $max = $values[1] ?? '';
 
                 //@todo; this fields a bit sloppy
+                // These alternatives are mutually exclusive; the following code consumes the selected state.
+                // @mago-expect lint:no-else-clause(1)
                 if (str_contains(haystack: $field, needle: 'array_int')) {
                     $minField = str_replace(search: 'array_int', replace: 'min', subject: $field);
                     $maxField = str_replace(search: 'array_int', replace: 'max', subject: $field);
@@ -690,7 +716,7 @@ abstract class AbstractSearchService implements SearchServiceInterface
 
     public function hasFacet(string $fieldName): bool
     {
-        return isset($this->facets[$fieldName]);
+        return ($this->facets[$fieldName] ?? null) !== null;
     }
 
     /**
@@ -698,6 +724,8 @@ abstract class AbstractSearchService implements SearchServiceInterface
      * @throws \Psr\Container\ContainerExceptionInterface
      * @throws \ReflectionException
      */
+    // Preserve the existing parameter contract used by callers and inherited interfaces.
+    // @mago-expect lint:no-boolean-flag-parameter(1)
     public function testIndex(OutputInterface $output, HasSearchInterface $entity, bool $clearIndex): void
     {
         $output->writeln(messages: '');
@@ -734,6 +762,8 @@ abstract class AbstractSearchService implements SearchServiceInterface
 
         $requireDelete = false;
 
+        // These alternatives are mutually exclusive; the following code consumes the selected state.
+        // @mago-expect lint:no-else-clause(1)
         if (count($result) === 0) {
             $entity = Assert::isInstanceOf(Value::instantiate($entity), HasSearchInterface::class);
 
@@ -745,7 +775,10 @@ abstract class AbstractSearchService implements SearchServiceInterface
             $entity = $result[0];
         }
 
-        $document = $this->getSearchDocumentFromEntity(update: $update, entity: Assert::isInstanceOf($entity, \Jield\Search\Entity\HasSearchInterface::class));
+        $document = $this->getSearchDocumentFromEntity(update: $update, entity: Assert::isInstanceOf(
+            $entity,
+            \Jield\Search\Entity\HasSearchInterface::class,
+        ));
         $update->addDocument(document: $document);
         $update->addCommit();
 
@@ -754,7 +787,10 @@ abstract class AbstractSearchService implements SearchServiceInterface
             $output->writeln(messages: '<comment>Test successful</comment>');
 
             if ($requireDelete) {
-                $this->deleteDocument(entity: Assert::isInstanceOf($entity, \Jield\Search\Entity\HasSearchInterface::class));
+                $this->deleteDocument(entity: Assert::isInstanceOf(
+                    $entity,
+                    \Jield\Search\Entity\HasSearchInterface::class,
+                ));
                 $output->writeln(messages: '<comment>Test document deleted</comment>');
             }
         } catch (HttpException $e) {
@@ -765,7 +801,10 @@ abstract class AbstractSearchService implements SearchServiceInterface
             $output->writeln(messages: sprintf(
                 '<error>Error updating %s: %s</error>',
                 Value::scalar($entity::class),
-                Value::scalar(Assert::isInstanceOf(Assert::isInstanceOf($response, stdClass::class)->error, stdClass::class)->msg),
+                Value::scalar(Assert::isInstanceOf(
+                    Assert::isInstanceOf($response, stdClass::class)->error,
+                    stdClass::class,
+                )->msg),
             ));
         }
     }

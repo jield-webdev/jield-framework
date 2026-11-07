@@ -25,13 +25,13 @@ class AcceptFilterListener extends ContentTypeFilterListener
     #[Override]
     public function onRoute(MvcEvent $e): ?ApiProblemResponse
     {
-        if (empty($this->config)) {
+        if ($this->config === []) {
             return null;
         }
 
         /** @mago-var mixed $controllerName */
         $controllerName = Assert::notNull($e->getRouteMatch())->getParam(name: 'controller');
-        if (!isset($this->config[$controllerName])) {
+        if (($this->config[$controllerName] ?? null) === null) {
             return null;
         }
 
@@ -45,12 +45,20 @@ class AcceptFilterListener extends ContentTypeFilterListener
         $headers = $request->getHeaders();
 
         $matched = false;
+        // These alternatives are mutually exclusive; the following code consumes the selected state.
+        // @mago-expect lint:no-else-clause(1)
         if (is_string(value: $this->config[$controllerName])) {
-            $matched = $this->validateMediaType(match: $this->config[$controllerName], headers: Assert::isInstanceOf($headers, \Laminas\Http\Headers::class));
+            $matched = $this->validateMediaType(
+                match: $this->config[$controllerName],
+                headers: Assert::isInstanceOf($headers, \Laminas\Http\Headers::class),
+            );
         } elseif (is_array(value: $this->config[$controllerName])) {
             /** @mago-var mixed $whitelistType */
             foreach ($this->config[$controllerName] as $whitelistType) {
-                $matched = $this->validateMediaType(match: Assert::string($whitelistType), headers: Assert::isInstanceOf($headers, \Laminas\Http\Headers::class));
+                $matched = $this->validateMediaType(
+                    match: Assert::string($whitelistType),
+                    headers: Assert::isInstanceOf($headers, \Laminas\Http\Headers::class),
+                );
                 if ($matched) {
                     break;
                 }

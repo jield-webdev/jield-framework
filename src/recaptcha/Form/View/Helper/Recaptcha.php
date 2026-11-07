@@ -6,7 +6,6 @@ namespace Jield\Recaptcha\Form\View\Helper;
 
 use Jield\Form\ElementInterface;
 use Jield\Form\View\Helper\AbstractHelper;
-use Override;
 
 class Recaptcha extends AbstractHelper
 {
@@ -17,7 +16,10 @@ class Recaptcha extends AbstractHelper
 
     public function render($element): string
     {
-        assert($element instanceof \Jield\Recaptcha\Form\Element\Recaptcha);
+        assert(
+            $element instanceof \Jield\Recaptcha\Form\Element\Recaptcha,
+            'Expected $element instanceof \Jield\Recaptcha\Form\Element\Recaptcha.',
+        );
 
         $scriptTag = sprintf(
             '<script src="//www.google.com/recaptcha/api.js?render=%s"></script>',

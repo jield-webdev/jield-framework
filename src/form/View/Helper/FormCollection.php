@@ -98,10 +98,10 @@ class FormCollection extends AbstractHelper
         $markup = '';
         $templateMarkup = '';
         $elementHelper = $this->getElementHelper();
-        assert(assertion: is_callable(value: $elementHelper));
+        assert(assertion: is_callable(value: $elementHelper), description: 'Expected is_callable($elementHelper).');
 
         $fieldsetHelper = $this->getFieldsetHelper();
-        assert(assertion: is_callable(value: $fieldsetHelper));
+        assert(assertion: is_callable(value: $fieldsetHelper), description: 'Expected is_callable($fieldsetHelper).');
 
         if ($element instanceof CollectionElement && $element->shouldCreateTemplate()) {
             $templateMarkup = $this->renderTemplate(collection: $element);
@@ -111,9 +111,9 @@ class FormCollection extends AbstractHelper
         foreach ($element->getIterator() as $elementOrFieldset) {
             if ($elementOrFieldset instanceof FieldsetInterface) {
                 $markup .= Value::stringify($fieldsetHelper($elementOrFieldset, $this->shouldWrap()));
-            } else {
-                $markup .= Value::stringify($elementHelper($elementOrFieldset));
+                continue;
             }
+            $markup .= Value::stringify($elementHelper($elementOrFieldset));
         }
 
         if (!$this->shouldWrap) {
@@ -130,7 +130,7 @@ class FormCollection extends AbstractHelper
         $label = $element->getLabel();
         $legend = '';
 
-        if (!empty($label)) {
+        if (!!($label ?? null)) {
             $label = $this->translateLabel(label: $label);
             $label = $this->escapeLabel(element: $element, label: $label);
 
@@ -150,20 +150,19 @@ class FormCollection extends AbstractHelper
     public function renderTemplate(CollectionElement $collection): string
     {
         $elementHelper = $this->getElementHelper();
-        assert(assertion: is_callable(value: $elementHelper));
+        assert(assertion: is_callable(value: $elementHelper), description: 'Expected is_callable($elementHelper).');
         $escapeHtmlAttribHelper = $this->getEscapeHtmlAttrHelper();
         $fieldsetHelper = $this->getFieldsetHelper();
-        assert(assertion: is_callable(value: $fieldsetHelper));
+        assert(assertion: is_callable(value: $fieldsetHelper), description: 'Expected is_callable($fieldsetHelper).');
 
         $templateMarkup = '';
 
         $elementOrFieldset = $collection->getTemplateElement();
-
         if ($elementOrFieldset instanceof FieldsetInterface) {
             $templateMarkup .= Value::stringify($fieldsetHelper($elementOrFieldset, $this->shouldWrap()));
-        } else {
-            $templateMarkup .= Value::stringify($elementHelper($elementOrFieldset));
+            return sprintf($this->getTemplateWrapper(), Value::scalar($escapeHtmlAttribHelper(value: $templateMarkup)));
         }
+        $templateMarkup .= Value::stringify($elementHelper($elementOrFieldset));
 
         return sprintf($this->getTemplateWrapper(), Value::scalar($escapeHtmlAttribHelper(value: $templateMarkup)));
     }
@@ -228,7 +227,10 @@ class FormCollection extends AbstractHelper
         }
 
         if ($this->view !== null) {
-            $this->elementHelper = Value::nullableInstance($this->getView()->plugin($this->getDefaultElementHelper(), HelperInterface::class), \Laminas\View\Helper\HelperInterface::class);
+            $this->elementHelper = Value::nullableInstance(
+                $this->getView()->plugin($this->getDefaultElementHelper(), HelperInterface::class),
+                \Laminas\View\Helper\HelperInterface::class,
+            );
         }
 
         if (!$this->elementHelper instanceof HelperInterface) {

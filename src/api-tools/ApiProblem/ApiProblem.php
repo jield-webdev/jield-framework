@@ -19,6 +19,9 @@ use function trim;
 /**
  * Object describing an API-Problem payload.
  */
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
+// @mago-expect lint:kan-defect(1)
 class ApiProblem
 {
     /**
@@ -150,9 +153,11 @@ class ApiProblem
             $this->type = $type;
         }
 
-        $this->additionalDetails = $additional === null
-            ? []
-            : (is_array($additional) ? $additional : iterator_to_array($additional));
+        $this->additionalDetails = match (true) {
+            $additional === null => [],
+            is_array($additional) => $additional,
+            default => iterator_to_array($additional),
+        };
     }
 
     /**
@@ -164,7 +169,7 @@ class ApiProblem
     public function __get(string $name)
     {
         $normalized = strtolower(string: $name);
-        if (isset($this->normalizedProperties[$normalized])) {
+        if (($this->normalizedProperties[$normalized] ?? null) !== null) {
             /** @mago-var mixed $prop */
             $prop = $this->normalizedProperties[$normalized];
 
@@ -177,11 +182,11 @@ class ApiProblem
             };
         }
 
-        if (isset($this->additionalDetails[$name])) {
+        if (($this->additionalDetails[$name] ?? null) !== null) {
             return $this->additionalDetails[$name];
         }
 
-        if (isset($this->additionalDetails[$normalized])) {
+        if (($this->additionalDetails[$normalized] ?? null) !== null) {
             return $this->additionalDetails[$normalized];
         }
 

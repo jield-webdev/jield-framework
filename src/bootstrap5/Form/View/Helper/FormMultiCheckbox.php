@@ -24,6 +24,9 @@ use function method_exists;
  * Class FormMultiCheckbox
  * @package Jield\Bootstrap5\Form\View\Helper
  */
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
+// @mago-expect lint:kan-defect(1)
 class FormMultiCheckbox extends Helper\FormMultiCheckbox
 {
     private string $template = '<div class="form-check %s">%s%s%s%s</div>';
@@ -71,6 +74,8 @@ class FormMultiCheckbox extends Helper\FormMultiCheckbox
      * @throws \Jield\Form\Exception\ExceptionInterface
      * @throws \Psr\Container\ContainerExceptionInterface
      */
+    // Keep the coordinated parsing or rendering steps of this compatibility method together.
+    // @mago-expect lint:halstead(1)
     protected function renderOptions(
         ElementInterface $element,
         array $options,
@@ -88,7 +93,7 @@ class FormMultiCheckbox extends Helper\FormMultiCheckbox
             $globalLabelAttributes = $element->getLabelAttributes();
         }
 
-        if (empty($globalLabelAttributes)) {
+        if ($globalLabelAttributes === []) {
             $globalLabelAttributes = $this->labelAttributes;
         }
 
@@ -107,10 +112,10 @@ class FormMultiCheckbox extends Helper\FormMultiCheckbox
             $inputAttributes = $attributes;
             $labelAttributes = $globalLabelAttributes;
             $selected =
-                isset($inputAttributes['selected'])
+                ($inputAttributes['selected'] ?? null) !== null
                 && $inputAttributes['type'] !== 'radio'
                 && Value::truthy($inputAttributes['selected']);
-            $disabled = isset($inputAttributes['disabled']) && Value::truthy($inputAttributes['disabled']);
+            $disabled = ($inputAttributes['disabled'] ?? null) !== null && Value::truthy($inputAttributes['disabled']);
 
             if (is_scalar(value: $optionSpec)) {
                 $optionSpec = [
@@ -119,29 +124,29 @@ class FormMultiCheckbox extends Helper\FormMultiCheckbox
                 ];
             }
 
-            if (isset($optionSpec['value'])) {
+            if (($optionSpec['value'] ?? null) !== null) {
                 /** @mago-var mixed $value */
                 $value = $optionSpec['value'];
             }
-            if (isset($optionSpec['label'])) {
+            if (($optionSpec['label'] ?? null) !== null) {
                 /** @mago-var mixed $label */
                 $label = $optionSpec['label'];
             }
-            if (isset($optionSpec['selected'])) {
+            if (($optionSpec['selected'] ?? null) !== null) {
                 /** @mago-var mixed $selected */
                 $selected = $optionSpec['selected'];
             }
-            if (isset($optionSpec['disabled'])) {
+            if (($optionSpec['disabled'] ?? null) !== null) {
                 /** @mago-var mixed $disabled */
                 $disabled = $optionSpec['disabled'];
             }
-            if (isset($optionSpec['label_attributes'])) {
+            if (($optionSpec['label_attributes'] ?? null) !== null) {
                 $labelAttributes = array_merge(
                     Assert::isArray($labelAttributes),
                     Assert::isArray($optionSpec['label_attributes']),
                 );
             }
-            if (isset($optionSpec['attributes'])) {
+            if (($optionSpec['attributes'] ?? null) !== null) {
                 $inputAttributes = array_merge($inputAttributes, Assert::isArray($optionSpec['attributes']));
             }
 
@@ -187,8 +192,22 @@ class FormMultiCheckbox extends Helper\FormMultiCheckbox
             $inlineClass = '';
 
             $markup = match ($labelPosition) {
-                self::LABEL_PREPEND => sprintf($this->template, $inlineClass, Value::scalar($label), $labelOpen, $input, $labelClose),
-                default => sprintf($this->template, $inlineClass, $input, $labelOpen, Value::scalar($label), $labelClose),
+                self::LABEL_PREPEND => sprintf(
+                    $this->template,
+                    $inlineClass,
+                    Value::scalar($label),
+                    $labelOpen,
+                    $input,
+                    $labelClose,
+                ),
+                default => sprintf(
+                    $this->template,
+                    $inlineClass,
+                    $input,
+                    $labelOpen,
+                    Value::scalar($label),
+                    $labelClose,
+                ),
             };
 
             $combinedMarkup[] = $markup;

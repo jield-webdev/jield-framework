@@ -29,7 +29,8 @@ class EntityHydratorManager
     public function __construct(
         protected HydratorPluginManagerInterface|HydratorPluginManager $hydrators,
         protected MetadataMap $metadataMap,
-    ) {}
+    ) {
+    }
 
     public function getHydratorManager(): HydratorPluginManager|HydratorPluginManagerInterface
     {
@@ -78,7 +79,7 @@ class EntityHydratorManager
         $class = $entity::class;
         $classLower = strtolower(string: $class);
 
-        if (isset($this->hydratorMap[$classLower])) {
+        if (($this->hydratorMap[$classLower] ?? null) !== null) {
             return Assert::isInstanceOf($this->hydratorMap[$classLower], ExtractionInterface::class);
         }
 

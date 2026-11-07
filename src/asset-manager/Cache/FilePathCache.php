@@ -29,7 +29,8 @@ class FilePathCache implements CacheInterface
     public function __construct(
         protected string $dir,
         protected string $filename,
-    ) {}
+    ) {
+    }
 
     /**
      * {@inheritDoc}
@@ -105,7 +106,14 @@ class FilePathCache implements CacheInterface
         // Use "rename" to achieve atomic writes
         $tmpFilePath = $cacheDir . '/AssetManagerFilePathCache_' . $fileName;
 
-        if (@file_put_contents(filename: $tmpFilePath, data: $value, flags: LOCK_EX) === false) {
+        ErrorHandler::start(errorLevel: E_WARNING);
+        try {
+            $written = file_put_contents(filename: $tmpFilePath, data: $value, flags: LOCK_EX);
+        } finally {
+            ErrorHandler::stop();
+        }
+
+        if ($written === false) {
             throw new RuntimeException(message: 'Unable to write file ' . $this->cachedFile());
         }
 

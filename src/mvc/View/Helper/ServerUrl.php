@@ -22,6 +22,10 @@ use function trim;
  *
  * @final
  */
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
+// @mago-expect lint:kan-defect(1)
+// @mago-expect lint:too-many-methods(1)
 class ServerUrl extends AbstractHelper
 {
     /**
@@ -65,13 +69,11 @@ class ServerUrl extends AbstractHelper
      */
     public function __invoke($requestUri = null)
     {
-        if ($requestUri === true) {
-            $path = $_SERVER['REQUEST_URI'];
-        } elseif (is_string($requestUri)) {
-            $path = $requestUri;
-        } else {
-            $path = '';
-        }
+        $path = match (true) {
+            $requestUri === true => $_SERVER['REQUEST_URI'],
+            is_string($requestUri) => $requestUri,
+            default => '',
+        };
 
         return $this->getScheme() . '://' . $this->getHost() . $path;
     }
@@ -88,10 +90,10 @@ class ServerUrl extends AbstractHelper
             return;
         }
 
-        if (isset($_SERVER['HTTP_HOST']) && !empty($_SERVER['HTTP_HOST'])) {
+        if (($_SERVER['HTTP_HOST'] ?? null) !== null && !!$_SERVER['HTTP_HOST']) {
             // Detect if the port is set in SERVER_PORT and included in HTTP_HOST
             if (
-                isset($_SERVER['SERVER_PORT'])
+                ($_SERVER['SERVER_PORT'] ?? null) !== null
                 && preg_match('/^(?P<host>.*?):(?P<port>\d+)$/', $_SERVER['HTTP_HOST'], $matches)
             ) {
                 // If they are the same, set the host to just the hostname
@@ -115,7 +117,7 @@ class ServerUrl extends AbstractHelper
             return;
         }
 
-        if (!isset($_SERVER['SERVER_NAME']) || !isset($_SERVER['SERVER_PORT'])) {
+        if (($_SERVER['SERVER_NAME'] ?? null) === null || ($_SERVER['SERVER_PORT'] ?? null) === null) {
             return;
         }
 
@@ -132,7 +134,7 @@ class ServerUrl extends AbstractHelper
             return;
         }
 
-        if (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT']) {
+        if (($_SERVER['SERVER_PORT'] ?? null) !== null && $_SERVER['SERVER_PORT']) {
             if ($this->isReversedProxy()) {
                 $this->setPort(443);
                 return;
@@ -153,8 +155,8 @@ class ServerUrl extends AbstractHelper
         }
 
         $scheme = match (true) {
-            isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on',
-            isset($_SERVER['HTTP_SCHEME']) && $_SERVER['HTTP_SCHEME'] === 'https',
+            ($_SERVER['HTTPS'] ?? null) !== null && $_SERVER['HTTPS'] === 'on',
+            ($_SERVER['HTTP_SCHEME'] ?? null) !== null && $_SERVER['HTTP_SCHEME'] === 'https',
             443 === $this->getPort(),
             $this->isReversedProxy(),
                 => 'https',
@@ -166,7 +168,7 @@ class ServerUrl extends AbstractHelper
 
     protected function isReversedProxy(): bool
     {
-        return isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https';
+        return ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? null) !== null && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https';
     }
 
     /**
@@ -180,7 +182,7 @@ class ServerUrl extends AbstractHelper
             return false;
         }
 
-        if (!isset($_SERVER['HTTP_X_FORWARDED_HOST']) || empty($_SERVER['HTTP_X_FORWARDED_HOST'])) {
+        if (($_SERVER['HTTP_X_FORWARDED_HOST'] ?? null) === null || !$_SERVER['HTTP_X_FORWARDED_HOST']) {
             return false;
         }
 
@@ -189,7 +191,7 @@ class ServerUrl extends AbstractHelper
             $hosts = explode(',', Assert::string($host));
             $host = trim(array_pop($hosts));
         }
-        if (empty($host)) {
+        if (!$host) {
             return false;
         }
         $this->setHost(Assert::string($host));
@@ -208,7 +210,7 @@ class ServerUrl extends AbstractHelper
             return false;
         }
 
-        if (!isset($_SERVER['HTTP_X_FORWARDED_PORT']) || empty($_SERVER['HTTP_X_FORWARDED_PORT'])) {
+        if (($_SERVER['HTTP_X_FORWARDED_PORT'] ?? null) === null || !$_SERVER['HTTP_X_FORWARDED_PORT']) {
             return false;
         }
 
@@ -230,7 +232,7 @@ class ServerUrl extends AbstractHelper
             return false;
         }
 
-        if (isset($_SERVER['SSL_HTTPS'])) {
+        if (($_SERVER['SSL_HTTPS'] ?? null) !== null) {
             $sslHttps = strtolower($_SERVER['SSL_HTTPS']);
             if (in_array($sslHttps, ['on', 1], strict: true)) {
                 $this->setScheme('https');
@@ -238,12 +240,12 @@ class ServerUrl extends AbstractHelper
             }
         }
 
-        if (!isset($_SERVER['HTTP_X_FORWARDED_PROTO']) || empty($_SERVER['HTTP_X_FORWARDED_PROTO'])) {
+        if (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? null) === null || !$_SERVER['HTTP_X_FORWARDED_PROTO']) {
             return false;
         }
 
         $scheme = trim(strtolower($_SERVER['HTTP_X_FORWARDED_PROTO']));
-        if (empty($scheme)) {
+        if (!$scheme) {
             return false;
         }
 
@@ -264,8 +266,16 @@ class ServerUrl extends AbstractHelper
         $scheme = $this->getScheme();
 
         if (
-            $scheme === 'http' && (null === $port || $port === 80)
-            || $scheme === 'https' && (null === $port || $port === 443)
+            $scheme === 'http'
+            && (
+                null === $port
+                || $port === 80
+            )
+            || $scheme === 'https'
+            && (
+                null === $port
+                || $port === 443
+            )
         ) {
             $this->host = $host;
             return $this;

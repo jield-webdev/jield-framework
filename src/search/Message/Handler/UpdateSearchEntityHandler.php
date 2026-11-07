@@ -17,7 +17,8 @@ final readonly class UpdateSearchEntityHandler
     public function __construct(
         private ContainerInterface $container,
         private EntityManager $entityManager,
-    ) {}
+    ) {
+    }
 
     /**
      * @throws \Psr\Container\ContainerExceptionInterface
@@ -34,7 +35,9 @@ final readonly class UpdateSearchEntityHandler
 
         //Just use the entityManager to get the entity
         /** @var HasSearchInterface $entity */
-        $entity = $this->entityManager->getRepository(className: \Jield\Stdlib\Value::classString($entityClassName))->find(id: $entityId);
+        $entity = $this->entityManager
+            ->getRepository(className: \Jield\Stdlib\Value::classString($entityClassName))
+            ->find(id: $entityId);
 
         /** @mago-var mixed $searchService */
         foreach ($searchServices as $searchService) {

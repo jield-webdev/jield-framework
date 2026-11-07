@@ -6,4 +6,6 @@ namespace Jield\Mvc\Exception;
 
 use Throwable;
 
-interface ExceptionInterface extends Throwable {}
+interface ExceptionInterface extends Throwable
+{
+}

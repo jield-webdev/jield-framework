@@ -19,7 +19,8 @@ class ConstructedNavigationFactory extends AbstractNavigationFactory
      */
     public function __construct(
         protected mixed $config,
-    ) {}
+    ) {
+    }
 
     /**
      * @return array<array-key, array<string, mixed>>

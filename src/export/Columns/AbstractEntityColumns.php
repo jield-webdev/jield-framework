@@ -19,12 +19,15 @@ abstract class AbstractEntityColumns implements ColumnsHelperInterface
 
     public function __construct(
         protected readonly EntityManager $entityManager,
-    ) {}
+    ) {
+    }
 
     /** @param array<string, mixed> $criteria Field names and values to match. */
     protected function findCount(array $criteria): int
     {
-        return $this->entityManager->getRepository(\Jield\Stdlib\Value::classString($this->entity))->count(criteria: \Jield\Stdlib\Value::stringKeyedArray($criteria));
+        return $this->entityManager
+            ->getRepository(\Jield\Stdlib\Value::classString($this->entity))
+            ->count(criteria: \Jield\Stdlib\Value::stringKeyedArray($criteria));
     }
 
     /**

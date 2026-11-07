@@ -33,6 +33,8 @@ require_once __DIR__ . '/SplAutoloader.php';
  *
  * Utilizes class-map files to lookup classfile locations.
  */
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
 class ClassMapAutoloader implements SplAutoloader
 {
     /**
@@ -109,7 +111,7 @@ class ClassMapAutoloader implements SplAutoloader
 
         $this->map = $map + $this->map;
 
-        if (isset($location)) {
+        if (($location ?? null) !== null) {
             $this->mapsLoaded[] = $location;
         }
 
@@ -151,7 +153,7 @@ class ClassMapAutoloader implements SplAutoloader
      */
     public function autoload($class)
     {
-        if (isset($this->map[$class])) {
+        if (($this->map[$class] ?? null) !== null) {
             require_once Assert::string($this->map[$class]);
 
             return $class;
@@ -191,7 +193,8 @@ class ClassMapAutoloader implements SplAutoloader
             ));
         }
 
-        if (!($path = static::realPharPath($location))) {
+        $path = static::realPharPath($location);
+        if (!$path) {
             $path = realpath($location);
         }
 
@@ -232,7 +235,11 @@ class ClassMapAutoloader implements SplAutoloader
             }
         });
 
-        if (file_exists($realPath = str_pad('phar:', $prefixLength, '/') . implode('/', \Jield\Stdlib\Value::scalars($parts)))) {
+        if (
+            file_exists(
+                $realPath = str_pad('phar:', $prefixLength, '/') . implode('/', \Jield\Stdlib\Value::scalars($parts)),
+            )
+        ) {
             return $realPath;
         }
         return null;

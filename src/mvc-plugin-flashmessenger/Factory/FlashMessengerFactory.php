@@ -25,7 +25,7 @@ class FlashMessengerFactory implements FactoryInterface
 
         /** @mago-var mixed $config */
         $config = $container->get('config');
-        if (isset($config['view_helper_config']['flashmessenger'])) {
+        if (($config['view_helper_config']['flashmessenger'] ?? null) !== null) {
             $configHelper = Value::toArray($config['view_helper_config']['flashmessenger']);
             return $this->createHelperWithActualConfig(flashMessenger: $flashMessenger, configHelper: $configHelper);
         }
@@ -46,17 +46,17 @@ class FlashMessengerFactory implements FactoryInterface
         foreach ($configHelper as $configNamespace => $arrProperties) {
             $namespace = new FlashMessengerNamespace(
                 name: (string) $configNamespace,
-                classes: isset($arrProperties['classes']) ? (string) $arrProperties['classes'] : '',
+                classes: ($arrProperties['classes'] ?? null) !== null ? (string) $arrProperties['classes'] : '',
             );
-            if (isset($arrProperties['message_open_format'])) {
+            if (($arrProperties['message_open_format'] ?? null) !== null) {
                 $namespace->setMessageOpenFormat(messageOpenFormat: (string) $arrProperties['message_open_format']);
             }
-            if (isset($arrProperties['message_separator_string'])) {
+            if (($arrProperties['message_separator_string'] ?? null) !== null) {
                 $namespace->setMessageSeparatorString(
                     messageSeparatorString: (string) $arrProperties['message_separator_string'],
                 );
             }
-            if (isset($arrProperties['message_close_string'])) {
+            if (($arrProperties['message_close_string'] ?? null) !== null) {
                 $namespace->setMessageCloseString(messageCloseString: (string) $arrProperties['message_close_string']);
             }
             $namespaces[$namespace->getName()] = $namespace;

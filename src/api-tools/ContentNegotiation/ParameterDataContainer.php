@@ -25,7 +25,7 @@ class ParameterDataContainer
 
     public function hasRouteParam(string $name): bool
     {
-        return isset($this->routeParams[$name]);
+        return ($this->routeParams[$name] ?? null) !== null;
     }
 
     public function getRouteParam(string $name, mixed $default = null): mixed
@@ -52,7 +52,7 @@ class ParameterDataContainer
 
     public function hasQueryParam(string $name): bool
     {
-        return isset($this->queryParams[$name]);
+        return ($this->queryParams[$name] ?? null) !== null;
     }
 
     public function getQueryParam(string $name, mixed $default = null): mixed
@@ -79,7 +79,7 @@ class ParameterDataContainer
 
     public function hasBodyParam(string $name): bool
     {
-        return isset($this->bodyParams[$name]);
+        return ($this->bodyParams[$name] ?? null) !== null;
     }
 
     public function getBodyParam(string $name, mixed $default = null): mixed

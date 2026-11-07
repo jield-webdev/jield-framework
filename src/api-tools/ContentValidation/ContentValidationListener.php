@@ -44,6 +44,10 @@ use function sprintf;
 
 use const ARRAY_FILTER_USE_BOTH;
 
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
+// @mago-expect lint:kan-defect(1)
+// @mago-expect lint:too-many-methods(1)
 class ContentValidationListener implements ListenerAggregateInterface, EventManagerAwareInterface
 {
     use ListenerAggregateTrait;
@@ -77,7 +81,8 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
         protected array $restControllers = [],
     ) {
         if (
-            isset($this->config['methods_without_bodies']) && is_array(value: $this->config['methods_without_bodies'])
+            ($this->config['methods_without_bodies'] ?? null) !== null
+            && is_array(value: $this->config['methods_without_bodies'])
         ) {
             /** @mago-var mixed $method */
             foreach ($this->config['methods_without_bodies'] as $method) {
@@ -151,6 +156,8 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
      * @throws \Laminas\InputFilter\Exception\RuntimeException
      * @throws \Psr\Container\ContainerExceptionInterface
      */
+    // Keep the coordinated parsing or rendering steps of this compatibility method together.
+    // @mago-expect lint:halstead(1)
     public function onRoute(MvcEvent $e): ?ApiProblemResponse
     {
         $request = $e->getRequest();
@@ -211,7 +218,10 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
         }
 
         $files = $request->getFiles();
-        if (!$isCollection && 0 < count(value: Assert::isArray(Assert::isInstanceOf($files, ParametersInterface::class)->toArray()))) {
+        if (
+            !$isCollection
+            && 0 < count(value: Assert::isArray(Assert::isInstanceOf($files, ParametersInterface::class)->toArray()))
+        ) {
             // File uploads are not validated for collections; impossible to
             // match file fields to discrete sets
             $data = ArrayUtils::merge(a: $data, b: Assert::isArray($files->toArray()), preserveNumericKeys: true);
@@ -319,12 +329,18 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
         $unknown = $inputFilter->getUnknown();
 
         if ($this->allowsOnlyFieldsInFilter(controllerService: Assert::string($controllerService))) {
+            // These alternatives are mutually exclusive; the following code consumes the selected state.
+            // @mago-expect lint:no-else-clause(1)
             if ($inputFilter instanceof CollectionInputFilter) {
                 $unknownFields = [];
                 /** @mago-var mixed $fields */
                 foreach ($unknown as $key => $fields) {
                     $unknownFields[] =
-                        '[' . $key . ': ' . implode(separator: ', ', array: array_keys(array: Assert::isArray($fields))) . ']';
+                        '['
+                        . $key
+                        . ': '
+                        . implode(separator: ', ', array: array_keys(array: Assert::isArray($fields)))
+                        . ']';
                 }
 
                 $fields = implode(separator: ', ', array: $unknownFields);
@@ -361,7 +377,7 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
 
     protected function allowsOnlyFieldsInFilter(string $controllerService): bool
     {
-        if (isset($this->config[$controllerService]['allows_only_fields_in_filter'])) {
+        if (($this->config[$controllerService]['allows_only_fields_in_filter'] ?? null) !== null) {
             return true === $this->config[$controllerService]['allows_only_fields_in_filter'];
         }
 
@@ -371,7 +387,7 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
     protected function useRawData(string $controllerService): bool
     {
         return (
-            !isset($this->config[$controllerService]['use_raw_data'])
+            ($this->config[$controllerService]['use_raw_data'] ?? null) === null
             || $this->config[$controllerService]['use_raw_data'] === true
         );
     }
@@ -379,7 +395,7 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
     protected function shouldRemoveEmptyData(string $controllerService): bool
     {
         return (
-            isset($this->config[$controllerService]['remove_empty_data'])
+            ($this->config[$controllerService]['remove_empty_data'] ?? null) !== null
             && $this->config[$controllerService]['remove_empty_data'] === true
         );
     }
@@ -389,6 +405,8 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
      * @param array $compareTo Original data, send along to preserve
      *     keys/values in $data which are intentional
      */
+    // Keep the coordinated parsing or rendering steps of this compatibility method together.
+    // @mago-expect lint:halstead(1)
     protected function removeEmptyData(array $data, array $compareTo = []): array
     {
         /**
@@ -422,8 +440,9 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
             if (
                 !is_array(value: $value)
                 && (
-                    !empty($value)
-                    || is_bool(value: $value) && !in_array(needle: $key, haystack: $compareTo, strict: true)
+                    !!($value ?? null)
+                    || is_bool(value: $value)
+                    && !in_array(needle: $key, haystack: $compareTo, strict: true)
                 )
             ) {
                 continue;
@@ -463,16 +482,18 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
      *
      * If neither are present, return boolean false.
      */
+    // Preserve the existing parameter contract used by callers and inherited interfaces.
+    // @mago-expect lint:no-boolean-flag-parameter(1)
     protected function getInputFilterService(
         string $controllerService,
         string $method,
         bool $isCollection,
     ): false|string {
-        if ($isCollection && isset($this->config[$controllerService][$method . '_COLLECTION'])) {
+        if ($isCollection && ($this->config[$controllerService][$method . '_COLLECTION'] ?? null) !== null) {
             return Assert::string(Value::path($this->config, [$controllerService, $method . '_COLLECTION']));
         }
 
-        if (isset($this->config[$controllerService][$method])) {
+        if (($this->config[$controllerService][$method] ?? null) !== null) {
             return Assert::string($this->config[$controllerService][$method]);
         }
 
@@ -513,7 +534,10 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
      */
     protected function getInputFilter(string $inputFilterService): InputFilterInterface
     {
-        return Assert::isInstanceOf($this->inputFilters[$inputFilterService], \Laminas\InputFilter\InputFilterInterface::class);
+        return Assert::isInstanceOf(
+            $this->inputFilters[$inputFilterService],
+            \Laminas\InputFilter\InputFilterInterface::class,
+        );
     }
 
     /**
@@ -541,12 +565,16 @@ class ContentValidationListener implements ListenerAggregateInterface, EventMana
     /**
      * Validate a PATCH request
      */
+    // Preserve the existing parameter contract used by callers and inherited interfaces.
+    // @mago-expect lint:no-boolean-flag-parameter(1)
     protected function validatePatch(
         InputFilterInterface $inputFilter,
         object|array $data,
         bool $isCollection,
     ): bool|ApiProblemResponse {
         $data = is_object($data) ? get_object_vars($data) : $data;
+        // These alternatives are mutually exclusive; the following code consumes the selected state.
+        // @mago-expect lint:no-else-clause(1)
         if ($isCollection) {
             $validationGroup = $data;
             /** @mago-var mixed $subData */

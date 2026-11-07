@@ -17,7 +17,9 @@ final class AuthenticationHttpAdapterFactory
     /**
      * Intentionally empty and private to prevent instantiation
      */
-    private function __construct() {}
+    private function __construct()
+    {
+    }
 
     /**
      * Create an instance of HttpAdapter based on the configuration provided
@@ -34,7 +36,7 @@ final class AuthenticationHttpAdapterFactory
             );
         }
 
-        if (!isset($config['options']) || !is_array(value: $config['options'])) {
+        if (($config['options'] ?? null) === null || !is_array(value: $config['options'])) {
             throw new ServiceNotCreatedException(message: 'Cannot create HTTP authentication adapter; missing options');
         }
 

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Jield\Form;
 
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:too-many-methods(1)
 interface LabelAwareInterface
 {
     /**

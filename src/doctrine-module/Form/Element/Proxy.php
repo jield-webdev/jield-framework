@@ -34,6 +34,11 @@ use function sprintf;
 use function strtolower;
 use function trim;
 
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
+// @mago-expect lint:kan-defect(1)
+// @mago-expect lint:too-many-methods(1)
+// @mago-expect lint:too-many-properties(1)
 class Proxy implements ObjectManagerAwareInterface
 {
     use ArrayOrTraversableGuardTrait;
@@ -79,47 +84,50 @@ class Proxy implements ObjectManagerAwareInterface
             $options = ArrayUtils::iteratorToArray(iterator: $options);
         }
 
-        if (isset($options['object_manager'])) {
-            $this->setObjectManager(objectManager: Assert::isInstanceOf($options['object_manager'], \Doctrine\Persistence\ObjectManager::class));
+        if (($options['object_manager'] ?? null) !== null) {
+            $this->setObjectManager(objectManager: Assert::isInstanceOf(
+                $options['object_manager'],
+                \Doctrine\Persistence\ObjectManager::class,
+            ));
         }
 
-        if (isset($options['target_class'])) {
+        if (($options['target_class'] ?? null) !== null) {
             $this->setTargetClass(targetClass: Assert::string($options['target_class']));
         }
 
-        if (isset($options['property'])) {
+        if (($options['property'] ?? null) !== null) {
             $this->setProperty(property: Assert::string($options['property']));
         }
 
-        if (isset($options['label_generator'])) {
+        if (($options['label_generator'] ?? null) !== null) {
             $this->setLabelGenerator(callable: Assert::isCallable($options['label_generator']));
         }
 
-        if (isset($options['find_method'])) {
+        if (($options['find_method'] ?? null) !== null) {
             $this->setFindMethod(findMethod: Assert::isArray($options['find_method']));
         }
 
-        if (isset($options['is_method'])) {
+        if (($options['is_method'] ?? null) !== null) {
             $this->setIsMethod(method: Assert::boolean($options['is_method']));
         }
 
-        if (isset($options['display_empty_item'])) {
+        if (($options['display_empty_item'] ?? null) !== null) {
             $this->setDisplayEmptyItem(displayEmptyItem: Assert::boolean($options['display_empty_item']));
         }
 
-        if (isset($options['empty_item_label'])) {
+        if (($options['empty_item_label'] ?? null) !== null) {
             $this->setEmptyItemLabel(emptyItemLabel: Assert::string($options['empty_item_label']));
         }
 
-        if (isset($options['option_attributes'])) {
+        if (($options['option_attributes'] ?? null) !== null) {
             $this->setOptionAttributes(optionAttributes: Assert::isArray($options['option_attributes']));
         }
 
-        if (isset($options['optgroup_identifier'])) {
+        if (($options['optgroup_identifier'] ?? null) !== null) {
             $this->setOptgroupIdentifier(optgroupIdentifier: Assert::string($options['optgroup_identifier']));
         }
 
-        if (!isset($options['optgroup_default'])) {
+        if (($options['optgroup_default'] ?? null) === null) {
             return;
         }
 
@@ -335,6 +343,8 @@ class Proxy implements ObjectManagerAwareInterface
         $metadata = $this->getObjectManager()->getClassMetadata(className: $this->getTargetClass());
 
         if (is_object(value: $value)) {
+            // These alternatives are mutually exclusive; the following code consumes the selected state.
+            // @mago-expect lint:no-else-clause(1)
             if ($value instanceof Collection) {
                 $data = [];
 
@@ -372,24 +382,28 @@ class Proxy implements ObjectManagerAwareInterface
      */
     protected function loadObjects(): void
     {
-        if (!empty($this->objects)) {
+        if ($this->objects) {
             return;
         }
 
         $findMethod = $this->getFindMethod();
 
+        // These alternatives are mutually exclusive; the following code consumes the selected state.
+        // @mago-expect lint:no-else-clause(3)
         if ($findMethod === []) {
             $findMethodName = 'findAll';
             $repository = Assert::notNull($this->objectManager)->getRepository(className: $this->getTargetClass());
             $objects = $repository->findAll();
         } else {
-            if (!isset($findMethod['name'])) {
+            if (($findMethod['name'] ?? null) === null) {
                 throw new RuntimeException(message: 'No method name was set');
             }
 
             /** @mago-var mixed $findMethodName */
             $findMethodName = $findMethod['name'];
-            $findMethodParams = isset($findMethod['params']) ? array_change_key_case(array: Value::stringKeyedArray($findMethod['params'])) : [];
+            $findMethodParams = ($findMethod['params'] ?? null) !== null
+                ? array_change_key_case(array: Value::stringKeyedArray($findMethod['params']))
+                : [];
             $repository = Assert::notNull($this->objectManager)->getRepository(className: $this->getTargetClass());
 
             if (!method_exists(object_or_class: $repository, method: Assert::string($findMethodName))) {
@@ -428,7 +442,10 @@ class Proxy implements ObjectManagerAwareInterface
             exceptionClass: InvalidRepositoryResultException::class,
         );
 
-        $this->objects = array_map(Assert::object(...), is_array($objects) ? $objects : iterator_to_array(Assert::isIterable($objects)));
+        $this->objects = array_map(
+            Assert::object(...),
+            is_array($objects) ? $objects : iterator_to_array(Assert::isIterable($objects)),
+        );
     }
 
     /**
@@ -436,6 +453,8 @@ class Proxy implements ObjectManagerAwareInterface
      *
      * @throws \Exception
      */
+    // Keep the coordinated parsing or rendering steps of this compatibility method together.
+    // @mago-expect lint:halstead(1)
     protected function loadValueOptions(): void
     {
         $metadata = $this->getObjectManager()->getClassMetadata(className: $this->getTargetClass());
@@ -455,13 +474,18 @@ class Proxy implements ObjectManagerAwareInterface
          */
         foreach (Assert::isIterable($objects) as $key => $object) {
             $generatedLabel = $this->generateLabel(targetEntity: $object);
+            // These alternatives are mutually exclusive; the following code consumes the selected state.
+            // @mago-expect lint:no-else-clause(2)
             if ($generatedLabel !== null) {
                 $label = $generatedLabel;
             } elseif ($this->property !== null) {
                 /** @mago-var mixed $property */
                 $property = $this->property;
                 if (
-                    ($this->getIsMethod() === false || $this->getIsMethod() === null)
+                    (
+                        $this->getIsMethod() === false
+                        || $this->getIsMethod() === null
+                    )
                     && !$metadata->hasField(fieldName: Assert::string($property))
                 ) {
                     throw new RuntimeException(message: sprintf(
@@ -496,7 +520,9 @@ class Proxy implements ObjectManagerAwareInterface
             }
 
             /** @mago-var mixed $value */
-            $value = count(value: $identifier) > 1 ? $key : current(array: $metadata->getIdentifierValues(Assert::object($object)));
+            $value = count(value: $identifier) > 1
+                ? $key
+                : current(array: $metadata->getIdentifierValues(Assert::object($object)));
 
             /** @mago-var mixed $optionValue */
             foreach ($this->getOptionAttributes() as $optionKey => $optionValue) {

@@ -42,7 +42,7 @@ final class FormElementManagerFactory implements FactoryInterface
         $config = $container->get('config');
 
         // If we do not have form_elements configuration, nothing more to do
-        if (!isset($config['form_elements']) || !is_array(value: $config['form_elements'])) {
+        if (($config['form_elements'] ?? null) === null || !is_array(value: $config['form_elements'])) {
             return $pluginManager;
         }
 

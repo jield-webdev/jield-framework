@@ -14,6 +14,6 @@ final class Module implements ConfigProviderInterface
     {
         /** @var array<array-key, mixed> $config */
         $config = include __DIR__ . '/../../resources/recaptcha/config/module.config.php';
-        return $config;
+        return \Webmozart\Assert\Assert::isArray($config);
     }
 }

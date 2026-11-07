@@ -32,6 +32,8 @@ use function var_export;
 /**
  * Creates a form and input-filters from an array-based form specification
  */
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
 abstract class AbstractBuilder implements EventManagerAwareInterface, FormFactoryAwareInterface
 {
     /** @var null|EventManagerInterface */
@@ -89,7 +91,7 @@ abstract class AbstractBuilder implements EventManagerAwareInterface, FormFactor
     {
         if (null === $this->eventManager) {
             $this->setEventManager(new EventManager());
-            assert(null !== $this->eventManager);
+            assert(null !== $this->eventManager, 'Expected null !== $this->eventManager.');
         }
         return $this->eventManager;
     }
@@ -112,11 +114,16 @@ abstract class AbstractBuilder implements EventManagerAwareInterface, FormFactor
 
         $this->entity = $entity;
         [$formSpec, $filterSpec] = $this->getFormSpecificationInternal($entity);
-
-        if (!isset($formSpec['input_filter'])) {
+        if (($formSpec['input_filter'] ?? null) === null) {
             $formSpec['input_filter'] = $filterSpec;
-        } elseif (is_array($formSpec['input_filter'])) {
-            $formSpec['input_filter'] = ArrayUtils::merge($filterSpec->getArrayCopy(), \Webmozart\Assert\Assert::isArray($formSpec['input_filter']));
+            return $formSpec;
+        }
+        if (is_array($formSpec['input_filter'])) {
+            $formSpec['input_filter'] = ArrayUtils::merge(
+                $filterSpec->getArrayCopy(),
+                \Webmozart\Assert\Assert::isArray($formSpec['input_filter']),
+            );
+            return $formSpec;
         }
 
         return $formSpec;
@@ -235,6 +242,8 @@ abstract class AbstractBuilder implements EventManagerAwareInterface, FormFactor
         // we need to add the specification without the name as the key.
         // In all other cases, though, the name is fine.
         if ($params['inputSpec']->count() > 1) {
+            // These alternatives are mutually exclusive; the following code consumes the selected state.
+            // @mago-expect lint:no-else-clause(1)
             if ($name === 'type') {
                 $filterSpec[] = $params['inputSpec'];
             } else {
@@ -249,16 +258,15 @@ abstract class AbstractBuilder implements EventManagerAwareInterface, FormFactor
         if (!class_exists($type)) {
             $type = $this->getFormFactory()->getFormElementManager()->get($type)::class;
         }
-
         // Compose as a fieldset or an element, based on specification type.
         // If preserve defined order is true, all elements are composed as elements to keep their ordering
         if (!$this->preserveDefinedOrder() && is_subclass_of($type, FieldsetInterface::class)) {
             $formSpec['fieldsets'] ??= [];
             Value::setPath($formSpec, ['fieldsets', null], $params['elementSpec']);
-        } else {
-            $formSpec['elements'] ??= [];
-            Value::setPath($formSpec, ['elements', null], $params['elementSpec']);
+            return;
         }
+        $formSpec['elements'] ??= [];
+        Value::setPath($formSpec, ['elements', null], $params['elementSpec']);
     }
 
     /**

@@ -16,6 +16,7 @@ literal-separator = true
 
 [formatter]
 preset = "default"
+preserve-breaking-condition-expression = true
 # Keep empty declarations compatible with the existing PHP_CodeSniffer checks.
 inline-empty-function-braces = false
 inline-empty-method-braces = false

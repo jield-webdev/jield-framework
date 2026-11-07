@@ -11,7 +11,8 @@ class TwigResolver implements ResolverInterface
 {
     public function __construct(
         protected Environment $environment,
-    ) {}
+    ) {
+    }
 
     public function resolve(string $name): string|false
     {

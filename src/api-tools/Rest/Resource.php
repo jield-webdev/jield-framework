@@ -34,6 +34,9 @@ use function sprintf;
  * Essentially, simply marshals arguments and triggers events; it is useless
  * without listeners to do the actual work.
  */
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
+// @mago-expect lint:too-many-methods(1)
 class Resource implements ResourceInterface
 {
     protected ?EventManagerInterface $events = null;

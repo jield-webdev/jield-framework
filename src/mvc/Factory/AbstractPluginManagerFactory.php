@@ -31,7 +31,7 @@ abstract class AbstractPluginManagerFactory implements FactoryInterface
         string $requestedName,
         ?array $options = null,
     ): AbstractPluginManager {
-        $options = $options ?: [];
+        $options ??= [];
         $pluginManagerClass = static::PLUGIN_MANAGER_CLASS;
         /** @var ServiceManagerConfiguration $managerConfiguration */
         $managerConfiguration = $options;

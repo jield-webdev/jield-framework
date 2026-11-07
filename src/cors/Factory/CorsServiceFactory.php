@@ -27,7 +27,6 @@ use Jield\Stdlib\Service;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
-use Psr\Container\NotFoundExceptionInterface;
 
 /**
  * CorsServiceFactory

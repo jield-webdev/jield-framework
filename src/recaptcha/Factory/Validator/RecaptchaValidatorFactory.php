@@ -25,7 +25,7 @@ class RecaptchaValidatorFactory implements FactoryInterface
             responseTimeout: $config['default_timeout'] ?? self::DEFAULT_TIMEOUT,
         );
 
-        if (!empty($config['bypass'])) {
+        if (!!($config['bypass'] ?? null)) {
             $validator->setCaptchaBypassed(captchaBypassed: $config['bypass']);
         }
 

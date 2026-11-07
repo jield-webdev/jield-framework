@@ -19,7 +19,7 @@ class RenderErrorListenerFactory
         $config = $container->get('config');
         $displayExceptions = false;
 
-        if (isset($config['view_manager']['display_exceptions'])) {
+        if (($config['view_manager']['display_exceptions'] ?? null) !== null) {
             $displayExceptions = Value::truthy($config['view_manager']['display_exceptions']);
         }
 

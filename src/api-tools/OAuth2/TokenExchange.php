@@ -6,14 +6,19 @@ namespace Jield\ApiTools\OAuth2;
 
 use OAuth2\Encryption\Jwt;
 
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
 final readonly class TokenExchange
 {
     public const string GRANT_TYPE = 'urn:ietf:params:oauth:grant-type:token-exchange';
+    // This is a public protocol or form identifier, not a credential.
+    // @mago-expect lint:no-literal-password(1)
     public const string ACCESS_TOKEN = 'urn:ietf:params:oauth:token-type:access_token';
 
     public function __construct(
         private array $config = [],
-    ) {}
+    ) {
+    }
 
     /**
      * @throws EntraException
@@ -24,12 +29,14 @@ final readonly class TokenExchange
             throw new EntraException(error: 'unsupported_grant_type', description: 'Use the token-exchange grant');
         }
 
+        // Token-type URIs are public protocol identifiers, not bearer-token secrets.
+        // @mago-expect lint:no-insecure-comparison(2)
         if (
             ($data['subject_token_type'] ?? null) !== self::ACCESS_TOKEN
             || ($data['requested_token_type'] ?? self::ACCESS_TOKEN) !== self::ACCESS_TOKEN
-            || isset($data['actor_token'])
-            || isset($data['resource'])
-            || isset($data['audience'])
+            || ($data['actor_token'] ?? null) !== null
+            || ($data['resource'] ?? null) !== null
+            || ($data['audience'] ?? null) !== null
         ) {
             throw new EntraException(
                 error: 'invalid_request',
@@ -50,6 +57,8 @@ final readonly class TokenExchange
      * @throws EntraException
      * @throws \Random\RandomException
      */
+    // Preserve the existing parameter contract used by callers and inherited interfaces.
+    // @mago-expect lint:excessive-parameter-list(1)
     public function issueToken(
         string $clientId,
         int|string $subject,

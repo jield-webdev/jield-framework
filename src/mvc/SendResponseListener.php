@@ -12,7 +12,6 @@ use Laminas\EventManager\AbstractListenerAggregate;
 use Laminas\EventManager\EventManager;
 use Laminas\EventManager\EventManagerAwareInterface;
 use Laminas\EventManager\EventManagerInterface;
-use Laminas\Stdlib\ResponseInterface as Response;
 
 class SendResponseListener extends AbstractListenerAggregate implements EventManagerAwareInterface
 {

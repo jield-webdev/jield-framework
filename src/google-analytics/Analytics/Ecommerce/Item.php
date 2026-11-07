@@ -12,7 +12,8 @@ class Item
         protected ?int $quantity = null,
         protected ?string $product = null,
         protected ?string $category = null,
-    ) {}
+    ) {
+    }
 
     public function getSku(): int
     {

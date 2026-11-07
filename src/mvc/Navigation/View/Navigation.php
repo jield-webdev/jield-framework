@@ -27,6 +27,8 @@ use function sprintf;
  * @method Navigation\Menu menu($container = null)
  * @final
  */
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
 class Navigation extends AbstractNavigationHelper
 {
     /**
@@ -158,6 +160,8 @@ class Navigation extends AbstractNavigationHelper
      * @throws \Psr\Container\ContainerExceptionInterface
      * @throws Exception\ExceptionInterface
      */
+    // Preserve the existing parameter contract used by callers and inherited interfaces.
+    // @mago-expect lint:no-boolean-flag-parameter(1)
     public function findHelper(string $proxy, bool $strict = true)
     {
         $plugins = $this->getPluginManager();
@@ -171,18 +175,17 @@ class Navigation extends AbstractNavigationHelper
 
         /** @mago-var mixed $helper */
         $helper = $plugins->get($proxy);
-        assert($helper instanceof NavigationHelper);
+        assert($helper instanceof NavigationHelper, 'Expected $helper instanceof NavigationHelper.');
         $container = $this->getContainer();
         $hash = spl_object_hash($container) . spl_object_hash($helper);
-
-        if (!isset($this->injected[$hash])) {
+        if (($this->injected[$hash] ?? null) === null) {
             $helper->setContainer();
             $this->inject($helper);
             $this->injected[$hash] = true;
-        } else {
-            if ($this->getInjectContainer()) {
-                $helper->setContainer($container);
-            }
+            return $helper;
+        }
+        if ($this->getInjectContainer()) {
+            $helper->setContainer($container);
         }
 
         return $helper;

@@ -53,6 +53,8 @@ use function ucwords;
  * @method Url url()
  * @method ViewModel createHttpNotFoundModel(Response $response)
  */
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:too-many-methods(1)
 abstract class AbstractController implements Dispatchable, EventManagerAwareInterface, InjectApplicationEventInterface
 {
     protected ?PluginManager $plugins = null;
@@ -177,9 +179,10 @@ abstract class AbstractController implements Dispatchable, EventManagerAwareInte
             $identifiers[] = substr($className, 0, $rightmostNsPos); // full namespace
         }
 
+        $implementedInterfaces = class_implements($className);
         $eventManager->setIdentifiers(Value::strings(array_merge(
             $identifiers,
-            array_values(class_implements($className) ?: []),
+            array_values($implementedInterfaces === false ? [] : $implementedInterfaces),
             Value::toArray($this->eventIdentifier),
         )));
 

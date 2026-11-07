@@ -15,7 +15,6 @@ use Jield\Mvc\View\Renderer\PhpRenderer;
 use Jield\Stdlib\Service;
 use Jield\Stdlib\Value;
 use Laminas\Authentication\AuthenticationService;
-use Laminas\ServiceManager\Exception\ServiceNotCreatedException;
 use Laminas\Stdlib\RequestInterface;
 use Laminas\Translator\TranslatorInterface;
 use Laminas\View\Factory\Configuration;
@@ -52,19 +51,23 @@ class ViewHelperManagerFactory extends AbstractPluginManagerFactory
         string $requestedName,
         ?array $options = null,
     ): HelperPluginManager {
-        $options = $options ?: [];
+        $options ??= [];
         $options['factories'] ??= [];
-        Value::setPath($options, ['initializers', null], /** @throws \Psr\Container\ContainerExceptionInterface|\ReflectionException */ static function (
-            ContainerInterface $pluginContainer,
-            mixed $helper,
-        ) use ($container): void {
-            if (method_exists(Value::objectOrString($helper), 'setView')) {
-                Value::call($helper, 'setView', [Service::get($container, PhpRenderer::class)]);
-            }
-            if (method_exists(Value::objectOrString($helper), 'setTranslator')) {
-                Value::call($helper, 'setTranslator', [Service::get($container, TranslatorInterface::class)]);
-            }
-        });
+        Value::setPath(
+            $options,
+            ['initializers', null],
+            /** @throws \Psr\Container\ContainerExceptionInterface|\ReflectionException */ static function (
+                ContainerInterface $pluginContainer,
+                mixed $helper,
+            ) use ($container): void {
+                if (method_exists(Value::objectOrString($helper), 'setView')) {
+                    Value::call($helper, 'setView', [Service::get($container, PhpRenderer::class)]);
+                }
+                if (method_exists(Value::objectOrString($helper), 'setTranslator')) {
+                    Value::call($helper, 'setTranslator', [Service::get($container, TranslatorInterface::class)]);
+                }
+            },
+        );
         $plugins = parent::__invoke($container, $requestedName, $options);
 
         // Override plugin factories
@@ -90,7 +93,11 @@ class ViewHelperManagerFactory extends AbstractPluginManagerFactory
             ServerUrl::class => static fn() => new ServerUrl(),
         ]]);
         $plugins->configure(['factories' => [
-            Identity::class => /** @throws \Psr\Container\ContainerExceptionInterface */ static fn() => new Identity(Service::get($services, AuthenticationService::class)),
+            Identity::class =>
+                /** @throws \Psr\Container\ContainerExceptionInterface */ static fn() => new Identity(Service::get(
+                    $services,
+                    AuthenticationService::class,
+                )),
         ]]);
         $plugins->configure(['factories' => [
             Translate::class => static fn() => new Translate(),
@@ -152,7 +159,9 @@ class ViewHelperManagerFactory extends AbstractPluginManagerFactory
      */
     private function createBasePathHelperFactory(ContainerInterface $services): callable|Closure
     {
-        return /** @throws \Psr\Container\ContainerExceptionInterface|\ReflectionException */ static function () use ($services): BasePath {
+        return /** @throws \Psr\Container\ContainerExceptionInterface|\ReflectionException */ static function () use (
+            $services,
+        ): BasePath {
             $config = Configuration::get($services);
             /** @mago-var mixed $basePath */
             $basePath = $config['view_manager']['base_path'] ?? null;

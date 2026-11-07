@@ -6,4 +6,6 @@ namespace Jield\Mvc\Exception;
 
 use Exception;
 
-class InvalidPluginException extends Exception implements ExceptionInterface {}
+class InvalidPluginException extends Exception implements ExceptionInterface
+{
+}

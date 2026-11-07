@@ -17,7 +17,8 @@ class DefaultResourceResolverListener
 {
     public function __construct(
         protected array $restControllers = [],
-    ) {}
+    ) {
+    }
 
     /**
      * Attempt to determine the authorization resource based on the request
@@ -88,7 +89,11 @@ class DefaultResourceResolverListener
         /** @mago-var mixed $identifierName */
         $identifierName = $this->restControllers[$controller];
         /** @mago-var mixed $id */
-        $id = $this->getIdentifier(identifierName: Assert::string($identifierName), routeMatch: $routeMatch, request: $request);
+        $id = $this->getIdentifier(
+            identifierName: Assert::string($identifierName),
+            routeMatch: $routeMatch,
+            request: $request,
+        );
         if ($id !== false) {
             return sprintf('%s::entity', $controller);
         }

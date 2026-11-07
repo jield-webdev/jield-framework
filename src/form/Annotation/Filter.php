@@ -58,15 +58,14 @@ final class Filter
                 ),
                 E_USER_DEPRECATED,
             );
-
             $this->name = Assert::string($name['name'] ?? null);
             $this->options = Assert::isArray($name['options'] ?? $options);
             $this->priority = Assert::nullOrInteger($name['priority'] ?? $priority);
-        } else {
-            $this->name = $name;
-            $this->options = $options;
-            $this->priority = $priority;
+            return;
         }
+        $this->name = $name;
+        $this->options = $options;
+        $this->priority = $priority;
     }
 
     /**
@@ -75,7 +74,7 @@ final class Filter
     public function getFilterSpecification(): array
     {
         $inputSpec = ['name' => $this->name];
-        if (!empty($this->options)) {
+        if (!!$this->options) {
             $inputSpec['options'] = $this->options;
         }
         if (null !== $this->priority) {

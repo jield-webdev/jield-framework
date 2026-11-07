@@ -25,6 +25,8 @@ use function strtolower;
 /**
  * Plugin class locator interface
  */
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
 class PluginClassLoader implements PluginClassLocator
 {
     /**
@@ -48,7 +50,7 @@ class PluginClassLoader implements PluginClassLocator
     public function __construct($map = null)
     {
         // Merge in static overrides
-        if (!empty(static::$staticMap)) {
+        if (static::$staticMap) {
             $this->registerPlugins(static::$staticMap);
         }
 
@@ -192,7 +194,7 @@ class PluginClassLoader implements PluginClassLocator
     public function isLoaded($name)
     {
         $lookup = strtolower($name);
-        return isset($this->plugins[$lookup]);
+        return ($this->plugins[$lookup] ?? null) !== null;
     }
 
     /**

@@ -33,7 +33,10 @@ class ChainLoaderFactory implements FactoryInterface
             if (!$container->has($loader)) {
                 throw new InvalidArgumentException(message: 'Loaders should be a service manager alias.');
             }
-            $chain->addLoader(loader: \Webmozart\Assert\Assert::isInstanceOf($container->get($loader), \Twig\Loader\LoaderInterface::class));
+            $chain->addLoader(loader: \Webmozart\Assert\Assert::isInstanceOf(
+                $container->get($loader),
+                \Twig\Loader\LoaderInterface::class,
+            ));
         }
 
         return $chain;

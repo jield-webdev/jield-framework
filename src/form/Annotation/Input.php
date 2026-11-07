@@ -26,7 +26,8 @@ final readonly class Input
      */
     public function __construct(
         private string $input,
-    ) {}
+    ) {
+    }
 
     /**
      * Retrieve the input class

@@ -19,7 +19,8 @@ final class TokenExchangeController extends AbstractActionController
 {
     public function __construct(
         private readonly TokenExchangeInterface $exchange,
-    ) {}
+    ) {
+    }
 
     /**
      * @throws JsonException
@@ -43,7 +44,6 @@ final class TokenExchangeController extends AbstractActionController
                 throw new EntraException(error: 'invalid_request', description: 'Request is too large');
             }
             $type = Assert::isInstanceOf($request->getHeaders(), Headers::class)->get('Content-Type');
-
             if ($type instanceof ContentType && $type->match('application/json')) {
                 /** @mago-var mixed $data */
                 $data = json_decode(
@@ -55,18 +55,18 @@ final class TokenExchangeController extends AbstractActionController
                 if (!is_array($data) || array_is_list($data)) {
                     throw new EntraException(error: 'invalid_request', description: 'Expected a JSON object');
                 }
-            } elseif ($type instanceof ContentType && $type->match('application/x-www-form-urlencoded')) {
+                return $this->json(status: 200, data: $this->exchange->exchange(Assert::isArray($data)));
+            }
+            if ($type instanceof ContentType && $type->match('application/x-www-form-urlencoded')) {
                 /** @mago-var mixed $data */
                 $data = Value::call($request->getPost(), 'toArray');
-            } else {
-                throw new EntraException(
-                    error: 'invalid_request',
-                    description: 'Use JSON or form-urlencoded content',
-                    status: 415,
-                );
+                return $this->json(status: 200, data: $this->exchange->exchange(Assert::isArray($data)));
             }
-
-            return $this->json(status: 200, data: $this->exchange->exchange(Assert::isArray($data)));
+            throw new EntraException(
+                error: 'invalid_request',
+                description: 'Use JSON or form-urlencoded content',
+                status: 415,
+            );
         } catch (JsonException) {
             return $this->json(status: 400, data: [
                 'error' => 'invalid_request',

@@ -16,6 +16,9 @@ use function sprintf;
 use function strtolower;
 
 /** @final */
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
+// @mago-expect lint:kan-defect(1)
 class FormRow extends AbstractHelper
 {
     public const string LABEL_APPEND = 'append';
@@ -100,6 +103,8 @@ class FormRow extends AbstractHelper
      * @throws \Laminas\View\Exception\RenderingFailedException
      * @throws \Psr\Container\ContainerExceptionInterface
      */
+    // Keep the coordinated parsing or rendering steps of this compatibility method together.
+    // @mago-expect lint:halstead(1)
     public function render(ElementInterface $element, ?string $labelPosition = null): string
     {
         $labelHelper = $this->getLabelHelper();
@@ -160,7 +165,7 @@ class FormRow extends AbstractHelper
 
         $label = $this->escapeLabel(element: $element, label: $label);
 
-        if (empty($labelAttributes)) {
+        if ($labelAttributes === []) {
             $labelAttributes = $this->labelAttributes;
         }
 
@@ -174,9 +179,14 @@ class FormRow extends AbstractHelper
 
         // Ensure element and label will be separated if element has an `id`-attribute.
         // If element has label option `always_wrap` it will be nested in any case.
+        // These alternatives are mutually exclusive; the following code consumes the selected state.
+        // @mago-expect lint:no-else-clause(1)
         if (
             $element->hasAttribute(key: 'id')
-            && ($element instanceof LabelAwareInterface && !$element->getLabelOption(key: 'always_wrap'))
+            && (
+                $element instanceof LabelAwareInterface
+                && !$element->getLabelOption(key: 'always_wrap')
+            )
         ) {
             $labelOpen = '';
             $labelClose = '';
@@ -187,15 +197,19 @@ class FormRow extends AbstractHelper
         }
 
         if (
-            $label !== '' && !$element->hasAttribute(key: 'id')
-            || $element instanceof LabelAwareInterface && Value::truthy($element->getLabelOption(key: 'always_wrap'))
+            $label !== ''
+            && !$element->hasAttribute(key: 'id')
+            || $element instanceof LabelAwareInterface
+            && Value::truthy($element->getLabelOption(key: 'always_wrap'))
         ) {
             $label = '<span>' . $label . '</span>';
         }
 
         // Button element is a special case, because label is always rendered inside it
         if ($element instanceof Button) {
-            $labelOpen = $labelClose = $label = '';
+            $label = '';
+            $labelClose = $label;
+            $labelOpen = $labelClose;
         }
 
         if ($element instanceof LabelAwareInterface && Value::truthy($element->getLabelOption(key: 'label_position'))) {
@@ -314,6 +328,8 @@ class FormRow extends AbstractHelper
      *
      * @throws \Psr\Container\ContainerExceptionInterface
      */
+    // Keep the coordinated parsing or rendering steps of this compatibility method together.
+    // @mago-expect lint:halstead(1)
     protected function getLabelHelper(): FormLabel
     {
         if ($this->labelHelper) {

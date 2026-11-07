@@ -19,6 +19,8 @@ use function http_build_query;
 use function urldecode;
 use function urlencode;
 
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:too-many-methods(1)
 class GetFilter extends AbstractPlugin
 {
     private SearchFormResult $filter;
@@ -57,7 +59,7 @@ class GetFilter extends AbstractPlugin
             direction: Assert::string($request->getQuery(name: 'direction', default: Order::Ascending->value)),
         );
 
-        if (!empty($encodedFilter)) {
+        if (!!($encodedFilter ?? null)) {
             $this->filter->updateFromEncodedFilter(encodedFilter: $encodedFilter);
         }
 
@@ -71,7 +73,7 @@ class GetFilter extends AbstractPlugin
             $this->filter->setFacet(facet: Assert::isArray($request->getQuery(name: 'facet')));
         }
 
-        if (!empty($request->getQuery(name: 'dateInterval'))) {
+        if (!!($request->getQuery(name: 'dateInterval') ?? null)) {
             $dateInterval = DateInterval::fromValue(value: Assert::string($request->getQuery(name: 'dateInterval')));
             $this->filter->setDateInterval(dateInterval: $dateInterval);
         }
@@ -95,11 +97,17 @@ class GetFilter extends AbstractPlugin
         if ($this->request->isPost()) {
             $this->filter = new SearchFormResult(
                 order: Assert::string($this->request->getQuery(name: 'order', default: 'default')),
-                direction: Assert::string($this->request->getQuery(name: 'direction', default: Order::Ascending->value)),
+                direction: Assert::string($this->request->getQuery(
+                    name: 'direction',
+                    default: Order::Ascending->value,
+                )),
                 query: Assert::nullOrString($this->request->getPost(name: 'query')),
                 filter: Assert::isArray($this->request->getPost(name: 'filter', default: [])),
                 facet: Assert::isArray($this->request->getPost(name: 'facet', default: [])),
-                dateInterval: Assert::isInstanceOf($this->request->getPost(name: 'dateInterval', default: new DateInterval()), \Jield\Search\ValueObject\DateInterval::class),
+                dateInterval: Assert::isInstanceOf(
+                    $this->request->getPost(name: 'dateInterval', default: new DateInterval()),
+                    \Jield\Search\ValueObject\DateInterval::class,
+                ),
             );
         }
 

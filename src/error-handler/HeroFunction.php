@@ -12,19 +12,23 @@ use Throwable;
 use function is_array;
 use function strip_tags;
 
+// This exported function keeps its established camelCase name.
+// @mago-expect lint:function-name(1)
 function detectMessageContentType(string $message): string
 {
     $jsonParser = new JsonParser();
-    return (
-        $jsonParser->lint(input: $message) instanceof ParsingException
-            ? (strip_tags(string: $message) === $message ? 'text/plain' : 'text/html')
-            : 'application/problem+json'
-    );
+    if (!$jsonParser->lint(input: $message) instanceof ParsingException) {
+        return 'application/problem+json';
+    }
+
+    return strip_tags(string: $message) === $message ? 'text/plain' : 'text/html';
 }
 
 /**
  * @param array<array-key, mixed> $excludeExceptionsConfig
  */
+// This exported function keeps its established camelCase name.
+// @mago-expect lint:function-name(1)
 function isExcludedException(array $excludeExceptionsConfig, Throwable $throwable): bool
 {
     $exceptionOrErrorClass = $throwable::class;

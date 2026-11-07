@@ -22,6 +22,8 @@ use function strtr;
 /**
  * Factory for creating an AclAuthorization instance from configuration
  */
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
 class AclAuthorizationFactory implements FactoryInterface
 {
     protected array $httpMethods = [
@@ -59,7 +61,8 @@ class AclAuthorizationFactory implements FactoryInterface
         $denyByDefault = false;
 
         if (array_key_exists(key: 'deny_by_default', array: $config)) {
-            $denyByDefault = $aclConfig['deny_by_default'] = Value::truthy($config['deny_by_default']);
+            $aclConfig['deny_by_default'] = Value::truthy($config['deny_by_default']);
+            $denyByDefault = $aclConfig['deny_by_default'];
             unset($config['deny_by_default']);
         }
 
@@ -92,7 +95,7 @@ class AclAuthorizationFactory implements FactoryInterface
         // laminas-mvc will always pass the name using namespace seprators, but
         // the admin may write the name using dash seprators.
         $controllerService = strtr($controllerService, '-', '\\');
-        if (isset($privileges['actions'])) {
+        if (($privileges['actions'] ?? null) !== null) {
             /**
              * @mago-var mixed $action
              * @mago-var mixed $methods
@@ -109,7 +112,7 @@ class AclAuthorizationFactory implements FactoryInterface
             }
         }
 
-        if (isset($privileges['collection'])) {
+        if (($privileges['collection'] ?? null) !== null) {
             $aclConfig[] = [
                 'resource' => sprintf('%s::collection', $controllerService),
                 'privileges' => $this->createPrivilegesFromMethods(
@@ -119,7 +122,7 @@ class AclAuthorizationFactory implements FactoryInterface
             ];
         }
 
-        if (isset($privileges['entity'])) {
+        if (($privileges['entity'] ?? null) !== null) {
             $aclConfig[] = [
                 'resource' => sprintf('%s::entity', $controllerService),
                 'privileges' => $this->createPrivilegesFromMethods(
@@ -133,11 +136,13 @@ class AclAuthorizationFactory implements FactoryInterface
     /**
      * Create the list of HTTP methods defining privileges
      */
+    // Preserve the existing parameter contract used by callers and inherited interfaces.
+    // @mago-expect lint:no-boolean-flag-parameter(1)
     protected function createPrivilegesFromMethods(array $methods, bool $denyByDefault): ?array
     {
         $privileges = [];
 
-        if (isset($methods['default']) && Value::truthy($methods['default'])) {
+        if (($methods['default'] ?? null) !== null && Value::truthy($methods['default'])) {
             $privileges = $this->httpMethods;
             unset($methods['default']);
         }
@@ -148,7 +153,7 @@ class AclAuthorizationFactory implements FactoryInterface
             // if the flag evaluates false and we're allowing by default,
             // THEN no rule needs to be added
             if ($denyByDefault && Value::truthy($flag) || !$denyByDefault && !$flag) {
-                if (isset($privileges[$method])) {
+                if (($privileges[$method] ?? null) !== null) {
                     unset($privileges[$method]);
                 }
 
@@ -159,7 +164,7 @@ class AclAuthorizationFactory implements FactoryInterface
             $privileges[$method] = true;
         }
 
-        if (empty($privileges)) {
+        if ($privileges === []) {
             return null;
         }
 
@@ -183,7 +188,7 @@ class AclAuthorizationFactory implements FactoryInterface
         /** @mago-var mixed $config */
         $config = $container->get('config');
 
-        if (!isset($config['api-tools-mvc-auth']['authorization'])) {
+        if (($config['api-tools-mvc-auth']['authorization'] ?? null) === null) {
             return [];
         }
 

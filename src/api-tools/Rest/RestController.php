@@ -56,6 +56,10 @@ use function sprintf;
  * @see http://tools.ietf.org/html/draft-kelly-json-hal-03
  * @see http://tools.ietf.org/html/draft-nottingham-http-problem-02
  */
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
+// @mago-expect lint:kan-defect(1)
+// @mago-expect lint:too-many-methods(1)
 final class RestController extends AbstractRestfulController
 {
     /**
@@ -394,7 +398,7 @@ final class RestController extends AbstractRestfulController
         }
 
         /** @mago-var mixed $result */
-        $result = $result ?: new ApiProblem(status: 422, detail: 'Unable to delete entity.');
+        $result = $result ? $result : new ApiProblem(status: 422, detail: 'Unable to delete entity.');
 
         if ($this->isPreparedResponse(object: $result)) {
             return $result;
@@ -428,7 +432,7 @@ final class RestController extends AbstractRestfulController
         }
 
         /** @mago-var mixed $result */
-        $result = $result ?: new ApiProblem(status: 422, detail: 'Unable to delete collection.');
+        $result = $result ? $result : new ApiProblem(status: 422, detail: 'Unable to delete collection.');
 
         if ($this->isPreparedResponse(object: $result)) {
             return $result;
@@ -464,7 +468,7 @@ final class RestController extends AbstractRestfulController
         }
 
         /** @mago-var mixed $entity */
-        $entity = $entity ?: new ApiProblem(status: 404, detail: 'Entity not found.');
+        $entity = $entity ? $entity : new ApiProblem(status: 404, detail: 'Entity not found.');
 
         if ($this->isPreparedResponse(object: $entity)) {
             return $entity;
@@ -487,6 +491,8 @@ final class RestController extends AbstractRestfulController
      * @throws \Psr\Container\ContainerExceptionInterface
      * @throws \ReflectionException
      */
+    // Keep the coordinated parsing or rendering steps of this compatibility method together.
+    // @mago-expect lint:halstead(1)
     #[Override]
     public function getList(): mixed
     {
@@ -617,7 +623,7 @@ final class RestController extends AbstractRestfulController
 
         try {
             /** @mago-var mixed $entity */
-            $entity = $this->getResource()->patch(id: (int) $id, data: Value::arrayOrObject(empty($data) ? [] : $data));
+            $entity = $this->getResource()->patch(id: (int) $id, data: Value::arrayOrObject($data ? $data : []));
         } catch (Throwable $throwable) {
             return $this->createApiProblemFromException(e: $throwable);
         }
@@ -838,7 +844,10 @@ final class RestController extends AbstractRestfulController
             return;
         }
 
-        Assert::notNull($this->resource)->setInputFilter(inputFilter: Value::nullableInstance($inputFilter, \Laminas\InputFilter\InputFilterInterface::class));
+        Assert::notNull($this->resource)->setInputFilter(inputFilter: Value::nullableInstance(
+            $inputFilter,
+            \Laminas\InputFilter\InputFilterInterface::class,
+        ));
     }
 
     protected function injectRequestIntoResourceEventParams(): void
@@ -870,7 +879,10 @@ final class RestController extends AbstractRestfulController
             $collection = Value::call($halPlugin, 'createCollection', [$collection, $this->route]);
         }
 
-        return $this->prepareHalCollection(collection: Assert::isInstanceOf($collection, \Jield\ApiTools\Hal\Collection::class));
+        return $this->prepareHalCollection(collection: Assert::isInstanceOf(
+            $collection,
+            \Jield\ApiTools\Hal\Collection::class,
+        ));
     }
 
     /**

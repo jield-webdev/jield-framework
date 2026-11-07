@@ -23,6 +23,10 @@ use function is_callable;
 use function is_file;
 use function sprintf;
 
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
+// @mago-expect lint:kan-defect(1)
+// @mago-expect lint:too-many-methods(1)
 class ConfigListener extends AbstractListener implements ConfigMergerInterface
 {
     use ListenerAggregateTrait;
@@ -38,6 +42,8 @@ class ConfigListener extends AbstractListener implements ConfigMergerInterface
     public function __construct(?ListenerOptions $options = null)
     {
         parent::__construct(options: $options);
+        // These alternatives are mutually exclusive; the following code consumes the selected state.
+        // @mago-expect lint:no-else-clause(1)
         if ($this->hasCachedConfig()) {
             $this->skipConfig = true;
             $this->setMergedConfig(config: Assert::isArray($this->getCachedConfig()));
@@ -92,11 +98,15 @@ class ConfigListener extends AbstractListener implements ConfigMergerInterface
      *
      * @throws \ReflectionException
      */
+    // Keep the coordinated parsing or rendering steps of this compatibility method together.
+    // @mago-expect lint:halstead(1)
     public function onLoadModule(ModuleEvent $e): static
     {
         $module = $e->getModule();
         $config = null;
 
+        // These alternatives are mutually exclusive; the following code consumes the selected state.
+        // @mago-expect lint:no-else-clause(2)
         if ($module instanceof ConfigProviderInterface || is_callable(value: [$module, 'getConfig'])) {
             /** @mago-var mixed $config */
             $config = Value::call($module, 'getConfig');
@@ -167,7 +177,10 @@ class ConfigListener extends AbstractListener implements ConfigMergerInterface
         /** @mago-var mixed $path */
         foreach ($this->paths as $path) {
             $path = Assert::isArray($path);
-            $this->addConfigByPath(path: Assert::string(Value::accessible($path)['path']), type: Assert::string($path['type']));
+            $this->addConfigByPath(
+                path: Assert::string(Value::accessible($path)['path']),
+                type: Assert::string($path['type']),
+            );
         }
 
         // Merge all of the collected configs
@@ -205,7 +218,10 @@ class ConfigListener extends AbstractListener implements ConfigMergerInterface
         // If enabled, update the config cache
         if ($this->getOptions()->getConfigCacheEnabled() && false === $this->skipConfig) {
             $configFile = $this->getOptions()->getConfigCacheFile();
-            $this->writeArrayToFile(filePath: $configFile, array: Assert::isArray($this->getMergedConfig(returnConfigAsObject: false)));
+            $this->writeArrayToFile(
+                filePath: $configFile,
+                array: Assert::isArray($this->getMergedConfig(returnConfigAsObject: false)),
+            );
         }
 
         return $this;
@@ -379,8 +395,9 @@ class ConfigListener extends AbstractListener implements ConfigMergerInterface
      */
     private function normalizeServiceManagerConfig(array $config): array
     {
-        $hasDependencies = isset($config['dependencies']) && is_array(value: $config['dependencies']);
-        $hasServiceConfig = isset($config['service_manager']) && is_array(value: $config['service_manager']);
+        $hasDependencies = ($config['dependencies'] ?? null) !== null && is_array(value: $config['dependencies']);
+        $hasServiceConfig =
+            ($config['service_manager'] ?? null) !== null && is_array(value: $config['service_manager']);
 
         if (!$hasDependencies && !$hasServiceConfig) {
             return $config;

@@ -93,6 +93,8 @@ class ObjectRepository extends AbstractAdapter
         $credentialProperty = $this->options->getCredentialProperty();
         $getter = 'get' . $this->inflector->classify(word: $credentialProperty);
 
+        // These alternatives are mutually exclusive; the following code consumes the selected state.
+        // @mago-expect lint:no-else-clause(2)
         if (method_exists(object_or_class: $identity, method: $getter)) {
             /** @mago-var mixed $documentCredential */
             $documentCredential = Value::call($identity, $getter);

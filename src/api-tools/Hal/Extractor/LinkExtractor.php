@@ -17,7 +17,8 @@ class LinkExtractor implements LinkExtractorInterface
 {
     public function __construct(
         protected LinkUrlBuilder $linkUrlBuilder,
-    ) {}
+    ) {
+    }
 
     /**
      * @inheritDoc
@@ -44,7 +45,7 @@ class LinkExtractor implements LinkExtractorInterface
 
         $reuseMatchedParams = true;
         $options = $link->getRouteOptions();
-        if (isset($options['reuse_matched_params'])) {
+        if (($options['reuse_matched_params'] ?? null) !== null) {
             $reuseMatchedParams = Value::truthy($options['reuse_matched_params']);
             unset($options['reuse_matched_params']);
         }

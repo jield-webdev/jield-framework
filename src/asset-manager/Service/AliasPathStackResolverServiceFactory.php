@@ -24,7 +24,7 @@ class AliasPathStackResolverServiceFactory implements FactoryInterface
         $config = $container->get('config');
         $aliases = [];
 
-        if (isset($config['asset_manager']['resolver_configs']['aliases'])) {
+        if (($config['asset_manager']['resolver_configs']['aliases'] ?? null) !== null) {
             /** @mago-var mixed $aliases */
             $aliases = $config['asset_manager']['resolver_configs']['aliases'];
         }

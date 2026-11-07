@@ -64,7 +64,7 @@ class MapResolver implements ResolverInterface, MimeResolverAwareInterface
     #[Override]
     public function resolve(string $fileName): ?AssetInterface
     {
-        if (!isset($this->map[$fileName])) {
+        if (($this->map[$fileName] ?? null) === null) {
             return null;
         }
 
@@ -72,11 +72,9 @@ class MapResolver implements ResolverInterface, MimeResolverAwareInterface
         $file = $this->map[$fileName];
         $mimeType = $this->getMimeResolver()->getMimeType(filename: Assert::string($file));
 
-        if (false === filter_var(value: $file, filter: FILTER_VALIDATE_URL)) {
-            $asset = new FileAsset(source: Assert::string($file));
-        } else {
-            $asset = new HttpAsset(sourceUrl: Assert::string($file));
-        }
+        $asset = false === filter_var(value: $file, filter: FILTER_VALIDATE_URL)
+            ? new FileAsset(source: Assert::string($file))
+            : new HttpAsset(sourceUrl: Assert::string($file));
 
         $asset->setMimetype(mimetype: $mimeType);
 

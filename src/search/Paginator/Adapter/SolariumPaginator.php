@@ -21,7 +21,8 @@ class SolariumPaginator implements AdapterInterface
     public function __construct(
         protected Client $client,
         protected Query $query,
-    ) {}
+    ) {
+    }
 
     public function count(): int
     {

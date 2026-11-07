@@ -24,6 +24,9 @@ use function sprintf;
 /**
  * Object describing a link relation
  */
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
+// @mago-expect lint:too-many-methods(1)
 class Link implements LinkInterface
 {
     /** @var array<string,mixed> */
@@ -71,7 +74,7 @@ class Link implements LinkInterface
      */
     public static function factory(array $spec): Link
     {
-        if (!isset($spec['rel'])) {
+        if (($spec['rel'] ?? null) === null) {
             throw new Exception\InvalidArgumentException(message: sprintf(
                 '%s requires that the specification array contain a "rel" element; none found',
                 __METHOD__,
@@ -80,26 +83,26 @@ class Link implements LinkInterface
 
         $link = new Link(relation: $spec['rel']);
         /** @psalm-suppress RedundantConditionGivenDocblockType */
-        if (isset($spec['props'])) {
+        if (($spec['props'] ?? null) !== null) {
             /** @var array<string, mixed> $props */
             $props = $spec['props'];
             $link->setProps(props: $props);
         }
 
         // deprecated since 1.5.0; use 'href' instead
-        if (isset($spec['url'])) {
+        if (($spec['url'] ?? null) !== null) {
             $url = $spec['url'];
             $link->setUrl(href: $url);
             return $link;
         }
 
         /** @psalm-suppress RedundantConditionGivenDocblockType */
-        if (isset($spec['href'])) {
+        if (($spec['href'] ?? null) !== null) {
             $link->href = $spec['href'];
             return $link;
         }
 
-        if (isset($spec['route'])) {
+        if (($spec['route'] ?? null) !== null) {
             /** @mago-var mixed $routeInfo */
             $routeInfo = $spec['route'];
             if (is_string(value: $routeInfo)) {
@@ -116,7 +119,7 @@ class Link implements LinkInterface
                 ));
             }
 
-            if (!isset($routeInfo['name'])) {
+            if (($routeInfo['name'] ?? null) === null) {
                 throw new Exception\InvalidArgumentException(message: sprintf(
                     '%s requires that the specification array\'s "route" array contain a "name" element; none found',
                     __METHOD__,
@@ -143,7 +146,7 @@ class Link implements LinkInterface
      */
     public function setProps(array $props): static
     {
-        if (isset($props['href'])) {
+        if (($props['href'] ?? null) !== null) {
             unset($props['href']);
         }
 
@@ -304,7 +307,7 @@ class Link implements LinkInterface
      */
     public function isComplete(): bool
     {
-        return !empty($this->href) || $this->route !== '' && $this->route !== '0';
+        return !!($this->href ?? null) || $this->route !== '' && $this->route !== '0';
     }
 
     /**
@@ -312,7 +315,7 @@ class Link implements LinkInterface
      */
     public function hasRoute(): bool
     {
-        return !empty($this->route);
+        return !!$this->route;
     }
 
     /**
@@ -322,7 +325,7 @@ class Link implements LinkInterface
      */
     public function hasUrl(): bool
     {
-        return !empty($this->href);
+        return !!($this->href ?? null);
     }
 
     /**

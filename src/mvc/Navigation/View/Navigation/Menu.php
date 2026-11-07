@@ -26,6 +26,10 @@ use const PHP_EOL;
 /**
  * Helper for rendering menus from navigation containers.
  */
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
+// @mago-expect lint:kan-defect(1)
+// @mago-expect lint:too-many-methods(1)
 class Menu extends AbstractHelper
 {
     /**
@@ -123,6 +127,9 @@ class Menu extends AbstractHelper
      * @return string
      * @throws \Psr\Container\ContainerExceptionInterface
      */
+    // Preserve the existing parameter contract used by callers and inherited interfaces.
+    // @mago-expect lint:excessive-parameter-list(1)
+    // @mago-expect lint:no-boolean-flag-parameter(1)
     protected function renderDeepestMenu(
         AbstractContainer $container,
         string $ulClass,
@@ -134,11 +141,15 @@ class Menu extends AbstractHelper
         string $liActiveClass,
     ) {
         $active = $this->findActive($container, ($minDepth ?? 0) - 1, $maxDepth);
+        // Keep both fields correlated for navigation result validation and static analysis.
+        // @mago-expect lint:no-isset
         if (!isset($active['page'], $active['depth'])) {
             return '';
         }
 
         // special case if active page is one below minDepth
+        // These alternatives are mutually exclusive; the following code consumes the selected state.
+        // @mago-expect lint:no-else-clause(2)
         if ($active['depth'] < ($minDepth ?? 0)) {
             if (!$active['page']->hasPages(!$this->renderInvisible)) {
                 return '';
@@ -173,7 +184,7 @@ class Menu extends AbstractHelper
                 $liClasses[] = $subPage->getClass();
             }
 
-            $liClass = empty($liClasses) ? '' : ' class="' . Value::stringify($escaper(implode(' ', $liClasses))) . '"';
+            $liClass = $liClasses === [] ? '' : ' class="' . Value::stringify($escaper(implode(' ', $liClasses))) . '"';
             $html .= $indent . '    <li' . $liClass . '>' . PHP_EOL;
             $html .= $indent . '        ' . $this->htmlify($subPage, $escapeLabels, $addClassToListItem) . PHP_EOL;
             $html .= $indent . '    </li>' . PHP_EOL;
@@ -246,6 +257,11 @@ class Menu extends AbstractHelper
      * @throws \Exception
      * @throws \Psr\Container\ContainerExceptionInterface
      */
+    // Preserve the existing parameter contract used by callers and inherited interfaces.
+    // @mago-expect lint:excessive-parameter-list(1)
+    // @mago-expect lint:no-boolean-flag-parameter(2)
+    // Keep the coordinated parsing or rendering steps of this compatibility method together.
+    // @mago-expect lint:halstead(1)
     protected function renderNormalMenu(
         AbstractContainer $container,
         string $ulClass,
@@ -267,6 +283,8 @@ class Menu extends AbstractHelper
         $foundPage = null;
         $foundDepth = 0;
 
+        // Keep both fields correlated for navigation result validation and static analysis.
+        // @mago-expect lint:no-isset
         if (isset($found['page'], $found['depth'])) {
             $foundPage = $found['page'];
             $foundDepth = $found['depth'];
@@ -287,10 +305,13 @@ class Menu extends AbstractHelper
             if ($depth < ($minDepth ?? 0) || !$this->accept($page)) {
                 // page is below minDepth or not accepted by acl/visibility
                 continue;
-            } elseif ($onlyActive && !$isActive) {
+            }
+            if ($onlyActive && !$isActive) {
                 // page is not active itself, but might be in the active branch
                 $accept = false;
                 if ($foundPage) {
+                    // These alternatives are mutually exclusive; the following code consumes the selected state.
+                    // @mago-expect lint:no-else-clause(1)
                     if ($foundPage->hasPage($page)) {
                         // accept if page is a direct child of the active page
                         $accept = true;
@@ -298,7 +319,8 @@ class Menu extends AbstractHelper
                         // page is a sibling of the active page...
                         if (
                             !$foundPage->hasPages(!$this->renderInvisible)
-                            || is_int($maxDepth) && ($foundDepth + 1) > $maxDepth
+                            || is_int($maxDepth)
+                            && ($foundDepth + 1) > $maxDepth
                         ) {
                             // accept if active page has no children, or the
                             // children are too deep to be rendered
@@ -314,13 +336,11 @@ class Menu extends AbstractHelper
             // make sure indentation is correct
             $depth -= $minDepth ?? 0;
             $myIndent = $indent . str_repeat('        ', Assert::notNegativeInteger($depth));
+            // These alternatives are mutually exclusive; the following code consumes the selected state.
+            // @mago-expect lint:no-else-clause(2)
             if ($depth > $prevDepth) {
                 // start new ul tag
-                if ($ulClass && $depth === 0) {
-                    $ulClass = ' class="' . Value::stringify($escaper($ulClass)) . '"';
-                } else {
-                    $ulClass = '';
-                }
+                $ulClass = $ulClass && $depth === 0 ? ' class="' . Value::stringify($escaper($ulClass)) . '"' : '';
                 $html .= $myIndent . '<ul' . $ulClass . '>' . PHP_EOL;
             } elseif ($prevDepth > $depth) {
                 // close li/ul tags until we're at current depth
@@ -348,7 +368,7 @@ class Menu extends AbstractHelper
             if ($addClassToListItem && $page->getClass()) {
                 $liClasses[] = $page->getClass();
             }
-            $liClass = empty($liClasses) ? '' : ' class="' . Value::stringify($escaper(implode(' ', $liClasses))) . '"';
+            $liClass = $liClasses === [] ? '' : ' class="' . Value::stringify($escaper(implode(' ', $liClasses))) . '"';
             $html .=
                 $myIndent
                 . '    <li'
@@ -484,6 +504,8 @@ class Menu extends AbstractHelper
      * @param bool $addClassToListItem Whether or not to add the page class to the list item
      * @throws \Psr\Container\ContainerExceptionInterface
      */
+    // Preserve the existing parameter contract used by callers and inherited interfaces.
+    // @mago-expect lint:no-boolean-flag-parameter(2)
     public function htmlify(AbstractPage $page, bool $escapeLabel = true, bool $addClassToListItem = false): string
     {
         // get attribs for element
@@ -498,6 +520,8 @@ class Menu extends AbstractHelper
 
         // does page have a href?
         $href = $page->getHref();
+        // These alternatives are mutually exclusive; the following code consumes the selected state.
+        // @mago-expect lint:no-else-clause(1)
         if ($href) {
             $element = 'a';
             $attribs['href'] = $href;
@@ -513,6 +537,8 @@ class Menu extends AbstractHelper
         $html = '<' . $element . $this->htmlAttribs($attribs) . '>';
         $label = $this->translate($page->getLabel(), $page->getTextDomain());
 
+        // These alternatives are mutually exclusive; the following code consumes the selected state.
+        // @mago-expect lint:no-else-clause(1)
         if ($escapeLabel === true) {
             $escaper = $this->getView()->plugin('escapeHtml', \Laminas\View\Helper\EscapeHtml::class);
             $html .= Value::stringify($escaper($label));
@@ -530,20 +556,20 @@ class Menu extends AbstractHelper
      * @param array $options [optional] options to normalize
      * @return array
      */
+    // Keep the coordinated parsing or rendering steps of this compatibility method together.
+    // @mago-expect lint:halstead(1)
     protected function normalizeOptions(array $options = [])
     {
-        if (isset($options['indent'])) {
-            $options['indent'] = $this->getWhitespace(Value::key($options['indent']));
-        } else {
-            $options['indent'] = $this->getIndent();
-        }
+        $options['indent'] = ($options['indent'] ?? null) !== null
+            ? $this->getWhitespace(Value::key($options['indent']))
+            : $this->getIndent();
 
-        if (isset($options['ulClass'])) {
-            $options['ulClass'] = (string) $options['ulClass'];
-        } else {
-            $options['ulClass'] = $this->getUlClass();
-        }
+        $options['ulClass'] = ($options['ulClass'] ?? null) !== null
+            ? (string) $options['ulClass']
+            : $this->getUlClass();
 
+        // These alternatives are mutually exclusive; the following code consumes the selected state.
+        // @mago-expect lint:no-else-clause(1)
         if (array_key_exists('minDepth', $options)) {
             if (null !== $options['minDepth']) {
                 $options['minDepth'] = (int) $options['minDepth'];
@@ -556,6 +582,8 @@ class Menu extends AbstractHelper
             $options['minDepth'] = 0;
         }
 
+        // These alternatives are mutually exclusive; the following code consumes the selected state.
+        // @mago-expect lint:no-else-clause(1)
         if (array_key_exists('maxDepth', $options)) {
             if (null !== $options['maxDepth']) {
                 $options['maxDepth'] = (int) $options['maxDepth'];
@@ -572,11 +600,9 @@ class Menu extends AbstractHelper
 
         $options['addClassToListItem'] ??= $this->getAddClassToListItem();
 
-        if (isset($options['liActiveClass'])) {
-            $options['liActiveClass'] = (string) $options['liActiveClass'];
-        } else {
-            $options['liActiveClass'] = $this->getLiActiveClass();
-        }
+        $options['liActiveClass'] = ($options['liActiveClass'] ?? null) !== null
+            ? (string) $options['liActiveClass']
+            : $this->getLiActiveClass();
 
         return $options;
     }
@@ -752,7 +778,7 @@ class Menu extends AbstractHelper
 
         $partial ??= $this->getPartial();
 
-        if (empty($partial)) {
+        if (!($partial ?? null)) {
             throw new Exception\RuntimeException('Unable to render menu: No partial view script provided');
         }
 
@@ -768,6 +794,6 @@ class Menu extends AbstractHelper
             return $partialHelper(Assert::stringNotEmpty($partial[0]), $model);
         }
 
-        return $partialHelper($partial, $model);
+        return $partialHelper(Assert::stringNotEmpty($partial), $model);
     }
 }

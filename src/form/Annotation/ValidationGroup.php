@@ -26,7 +26,8 @@ final readonly class ValidationGroup
      */
     public function __construct(
         private array $validationGroup,
-    ) {}
+    ) {
+    }
 
     /**
      * Retrieve the options

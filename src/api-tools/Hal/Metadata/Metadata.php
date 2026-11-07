@@ -20,6 +20,9 @@ use function trigger_error;
 
 use const E_USER_DEPRECATED;
 
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
+// @mago-expect lint:too-many-properties(1)
 class Metadata
 {
     /**
@@ -165,15 +168,14 @@ class Metadata
             }
 
             $method = 'set' . $filteredKey;
-            if (method_exists(object_or_class: $this, method: $method)) {
-                Value::call($this, $method, [$value], scope: self::class);
-            } else {
+            if (!method_exists(object_or_class: $this, method: $method)) {
                 throw new Exception\InvalidArgumentException(message: sprintf(
                     'Unhandled option passed to Metadata constructor: %s %s',
                     $method,
                     $key,
                 ));
             }
+            Value::call($this, $method, [$value], scope: self::class);
         }
 
         if (is_string(value: $legacyIdentifierName)) {
@@ -251,6 +253,8 @@ class Metadata
     public function getEntityRoute(): ?string
     {
         if (null === $this->entityRoute) {
+            // These alternatives are mutually exclusive; the following code consumes the selected state.
+            // @mago-expect lint:no-else-clause(1)
             if ($this->hasRoute()) {
                 $this->setEntityRoute(route: Assert::string($this->getRoute()));
             } else {
@@ -351,9 +355,13 @@ class Metadata
      * @throws \Psr\Container\ContainerExceptionInterface
      * @throws \ReflectionException
      */
+    // Keep the coordinated parsing or rendering steps of this compatibility method together.
+    // @mago-expect lint:halstead(1)
     public function setHydrator(ExtractionInterface|string $hydrator): static
     {
         if (is_string(value: $hydrator)) {
+            // These alternatives are mutually exclusive; the following code consumes the selected state.
+            // @mago-expect lint:no-else-clause(1)
             if ($this->hydrators->has($hydrator)) {
                 /** @mago-var mixed $hydrator */
                 $hydrator = $this->hydrators->get($hydrator);

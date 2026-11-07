@@ -30,7 +30,7 @@ class OptionsListenerFactory
 
         /** @mago-var mixed $config */
         $config = $container->get('config');
-        if (!isset($config['api-tools-rpc'])) {
+        if (($config['api-tools-rpc'] ?? null) === null) {
             return [];
         }
 

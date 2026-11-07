@@ -70,7 +70,7 @@ class JsonModel extends BaseJsonModel
         $variables = $this->getVariables();
 
         // 'payload' == payload for HAL representations
-        if (isset($variables['payload'])) {
+        if (($variables['payload'] ?? null) !== null) {
             /** @mago-var mixed $variables */
             $variables = $variables['payload'];
         }
@@ -89,9 +89,7 @@ class JsonModel extends BaseJsonModel
             return $this->jsonpCallback . '(' . Json::encode(valueToEncode: $variables) . ');';
         }
 
-        $serialized = Json::encode(valueToEncode: $variables);
-
-        return $serialized;
+        return Json::encode(valueToEncode: $variables);
     }
 
     /**

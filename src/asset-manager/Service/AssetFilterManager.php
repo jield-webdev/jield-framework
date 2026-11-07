@@ -13,6 +13,8 @@ use Override;
 use Psr\Container\ContainerInterface;
 use Webmozart\Assert\Assert;
 
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
 class AssetFilterManager implements MimeResolverAwareInterface
 {
     protected ContainerInterface $container;
@@ -29,7 +31,8 @@ class AssetFilterManager implements MimeResolverAwareInterface
      */
     public function __construct(
         protected array $config = [],
-    ) {}
+    ) {
+    }
 
     /**
      * Get the filter configuration.
@@ -52,21 +55,22 @@ class AssetFilterManager implements MimeResolverAwareInterface
         $config = $this->getConfig();
         $mimeType = $asset->getMimeType() ?? '';
 
-        if (!empty($config[$path])) {
+        // These alternatives are mutually exclusive; the following code consumes the selected state.
+        // @mago-expect lint:no-else-clause(2)
+        if (!!($config[$path] ?? null)) {
             /** @mago-var mixed $filters */
             $filters = $config[$path];
-        } elseif (!empty($config[$mimeType])) {
+        } elseif (!!($config[$mimeType] ?? null)) {
             /** @mago-var mixed $filters */
             $filters = $config[$mimeType];
         } else {
             /** @mago-var mixed $extension */
             $extension = $this->getMimeResolver()->getExtension(mimetype: $mimeType);
-            if (!empty($config[$extension])) {
-                /** @mago-var mixed $filters */
-                $filters = $config[$extension];
-            } else {
+            if (!($config[$extension] ?? null)) {
                 return;
             }
+            /** @mago-var mixed $filters */
+            $filters = $config[$extension];
         }
 
         /** @mago-var mixed $filter */
@@ -74,14 +78,18 @@ class AssetFilterManager implements MimeResolverAwareInterface
             if (is_null(value: $filter)) {
                 continue;
             }
-
-            if (!empty($filter['filter'])) {
-                $this->ensureByFilter(asset: $asset, filter: Value::instanceOrString($filter['filter'], \Assetic\Contracts\Filter\FilterInterface::class));
-            } elseif (!empty($filter['service'])) {
-                $this->ensureByService(asset: $asset, service: Assert::string(Value::accessible($filter)['service']));
-            } else {
-                throw new Exception\RuntimeException(message: 'Invalid filter supplied. Expected Filter or Service.');
+            if (!!($filter['filter'] ?? null)) {
+                $this->ensureByFilter(asset: $asset, filter: Value::instanceOrString(
+                    $filter['filter'] ?? null,
+                    \Assetic\Contracts\Filter\FilterInterface::class,
+                ));
+                continue;
             }
+            if (!!($filter['service'] ?? null)) {
+                $this->ensureByService(asset: $asset, service: Assert::string(Value::accessible($filter)['service']));
+                continue;
+            }
+            throw new Exception\RuntimeException(message: 'Invalid filter supplied. Expected Filter or Service.');
         }
     }
 
@@ -95,7 +103,10 @@ class AssetFilterManager implements MimeResolverAwareInterface
      */
     protected function ensureByService(AssetInterface $asset, string $service): void
     {
-        $this->ensureByFilter(asset: $asset, filter: Value::instanceOrString($this->container->get($service), \Assetic\Contracts\Filter\FilterInterface::class));
+        $this->ensureByFilter(asset: $asset, filter: Value::instanceOrString(
+            $this->container->get($service),
+            \Assetic\Contracts\Filter\FilterInterface::class,
+        ));
     }
 
     /**

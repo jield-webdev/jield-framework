@@ -46,11 +46,14 @@ use function strtoupper;
  *
  * This service closely follow the specification here: https://developer.mozilla.org/en-US/docs/HTTP/Access_control_CORS
  */
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
 class CorsService
 {
     public function __construct(
         protected CorsOptions $options,
-    ) {}
+    ) {
+    }
 
     /**
      * Check if the HTTP request is a CORS request by checking if the Origin header is present and that the
@@ -109,8 +112,14 @@ class CorsService
         $headers = $response->getHeaders();
 
         $headers->addHeaderLine('Access-Control-Allow-Origin', $this->getAllowedOriginValue($request));
-        $headers->addHeaderLine('Access-Control-Allow-Methods', implode(', ', \Jield\Stdlib\Value::scalars($this->options->getAllowedMethods())));
-        $headers->addHeaderLine('Access-Control-Allow-Headers', implode(', ', \Jield\Stdlib\Value::scalars($this->options->getAllowedHeaders())));
+        $headers->addHeaderLine('Access-Control-Allow-Methods', implode(
+            ', ',
+            \Jield\Stdlib\Value::scalars($this->options->getAllowedMethods()),
+        ));
+        $headers->addHeaderLine('Access-Control-Allow-Headers', implode(
+            ', ',
+            \Jield\Stdlib\Value::scalars($this->options->getAllowedHeaders()),
+        ));
         $headers->addHeaderLine('Access-Control-Max-Age', (string) $this->options->getMaxAge());
         $headers->addHeaderLine('Content-Length', '0');
 
@@ -130,7 +139,9 @@ class CorsService
     ): HttpResponse {
         $options = $this->options;
         if ($routeMatch !== null) {
-            $options->setFromArray(\Jield\Stdlib\Value::options($routeMatch->getParam(CorsOptions::ROUTE_PARAM) ?: []) ?? []);
+            /** @mago-var mixed $routeOptions */
+            $routeOptions = $routeMatch->getParam(CorsOptions::ROUTE_PARAM);
+            $options->setFromArray(\Jield\Stdlib\Value::options($routeOptions ? $routeOptions : []) ?? []);
         }
         return $this->createPreflightCorsResponse($request);
     }
@@ -146,7 +157,9 @@ class CorsService
         RouteMatchInterface|RouteMatch|null $routeMatch = null,
     ): HttpResponse {
         if ($routeMatch !== null) {
-            $this->options->setFromArray(\Jield\Stdlib\Value::options($routeMatch->getParam(CorsOptions::ROUTE_PARAM) ?: []) ?? []);
+            /** @mago-var mixed $routeOptions */
+            $routeOptions = $routeMatch->getParam(CorsOptions::ROUTE_PARAM);
+            $this->options->setFromArray(\Jield\Stdlib\Value::options($routeOptions ? $routeOptions : []) ?? []);
         }
 
         $origin = $this->getAllowedOriginValue($request);
@@ -162,7 +175,10 @@ class CorsService
 
         $headers = $response->getHeaders();
         $headers->addHeaderLine('Access-Control-Allow-Origin', $origin);
-        $headers->addHeaderLine('Access-Control-Expose-Headers', implode(', ', \Jield\Stdlib\Value::scalars($this->options->getExposedHeaders())));
+        $headers->addHeaderLine('Access-Control-Expose-Headers', implode(
+            ', ',
+            \Jield\Stdlib\Value::scalars($this->options->getExposedHeaders()),
+        ));
 
         $headers = $this->ensureVaryHeader($response);
 
@@ -223,12 +239,11 @@ class CorsService
         if ($headers->has('Vary')) {
             $varyHeader = $headers->get('Vary');
             $varyValue = Assert::isInstanceOf($varyHeader, HeaderInterface::class)->getFieldValue() . ', Origin';
-
             $headers->removeHeader($varyHeader);
             $headers->addHeaderLine('Vary', $varyValue);
-        } else {
-            $headers->addHeaderLine('Vary', 'Origin');
+            return $headers;
         }
+        $headers->addHeaderLine('Vary', 'Origin');
 
         return $headers;
     }

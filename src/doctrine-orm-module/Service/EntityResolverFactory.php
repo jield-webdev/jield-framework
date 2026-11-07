@@ -24,7 +24,10 @@ final class EntityResolverFactory extends AbstractFactory
     public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): mixed
     {
         $options = $this->getOptions(container: $container, key: 'entity_resolver');
-        assert(assertion: $options instanceof EntityResolver);
+        assert(
+            assertion: $options instanceof EntityResolver,
+            description: 'Expected $options instanceof EntityResolver.',
+        );
         /** @mago-var mixed $eventManager */
         $eventManager = $container->get($options->getEventManager());
         $resolvers = $options->getResolvers();

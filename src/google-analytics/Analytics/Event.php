@@ -11,7 +11,8 @@ class Event
         protected string $action,
         protected ?string $label = null,
         protected ?string $value = null,
-    ) {}
+    ) {
+    }
 
     public function getCategory(): string
     {

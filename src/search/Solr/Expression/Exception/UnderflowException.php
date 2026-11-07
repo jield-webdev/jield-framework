@@ -6,4 +6,6 @@ namespace Jield\Search\Solr\Expression\Exception;
 
 use UnderflowException as BaseUnderflowException;
 
-class UnderflowException extends BaseUnderflowException implements ExceptionInterface {}
+class UnderflowException extends BaseUnderflowException implements ExceptionInterface
+{
+}

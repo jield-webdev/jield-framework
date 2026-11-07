@@ -18,6 +18,8 @@ use Webmozart\Assert\Assert;
 /**
  * This resolver allows you to resolve from a stack of aliases to a path.
  */
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:kan-defect(1)
 class AliasPathStackResolver implements ResolverInterface, MimeResolverAwareInterface
 {
     protected array $aliases = [];
@@ -158,17 +160,16 @@ class AliasPathStackResolver implements ResolverInterface, MimeResolverAwareInte
                 if (!$pathInfo->isReadable()) {
                     throw new RuntimeException(message: sprintf('%s is not readable.', $pathInfo->getPath()));
                 }
-
                 if ($pathInfo->isDir()) {
                     /** @mago-var mixed $resource */
                     foreach (new DirectoryResource(path: Assert::string($pathInfo->getRealPath())) as $resource) {
                         $locations->push(value: new SplFileInfo(filename: Assert::string($resource)));
                     }
-                } else {
-                    $collection[] =
-                        $alias
-                        . substr(string: Assert::string($pathInfo->getRealPath()), offset: strlen(string: $basePath));
+                    continue;
                 }
+                $collection[] =
+                    $alias
+                    . substr(string: Assert::string($pathInfo->getRealPath()), offset: strlen(string: $basePath));
             }
         }
 

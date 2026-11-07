@@ -14,7 +14,8 @@ final class HasRedirectConstraint extends Constraint
 {
     public function __construct(
         private readonly AbstractHttpControllerTestCase $activeTestCase,
-    ) {}
+    ) {
+    }
 
     #[Override]
     public function toString(): string

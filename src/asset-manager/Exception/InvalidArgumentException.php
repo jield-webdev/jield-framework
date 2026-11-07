@@ -9,4 +9,6 @@ namespace Jield\AssetManager\Exception;
  * @package    AssetManager
  * @subpackage Exception
  */
-class InvalidArgumentException extends \InvalidArgumentException implements ExceptionInterface {}
+class InvalidArgumentException extends \InvalidArgumentException implements ExceptionInterface
+{
+}

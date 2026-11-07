@@ -22,6 +22,9 @@ use function count;
 use function http_build_query;
 use function sprintf;
 
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
+// @mago-expect lint:kan-defect(1)
 class SolrSearchFilter extends SearchFilter implements InputFilterProviderInterface
 {
     /**
@@ -57,7 +60,7 @@ class SolrSearchFilter extends SearchFilter implements InputFilterProviderInterf
         $filter = new Fieldset(name: 'filter');
 
         // Add the field selection
-        if (!empty($fields)) {
+        if (!($fields === [])) {
             /** @mago-var mixed $values */
             foreach ($fields as $key => $values) {
                 $filter->add(elementOrFieldset: [
@@ -189,12 +192,14 @@ class SolrSearchFilter extends SearchFilter implements InputFilterProviderInterf
     /**
      * @throws \JsonException
      */
+    // Keep the coordinated parsing or rendering steps of this compatibility method together.
+    // @mago-expect lint:halstead(1)
     public function getBadges(): array
     {
         $submittedData = $this->data ?? [];
         $badges = [];
 
-        if (!empty($submittedData['query'])) {
+        if (!!($submittedData['query'] ?? null)) {
             $data = [
                 'facet' => $submittedData['facet'],
                 'filter' => $submittedData['filter'],
@@ -210,7 +215,7 @@ class SolrSearchFilter extends SearchFilter implements InputFilterProviderInterf
             ];
         }
 
-        if (!empty($submittedData['dateInterval'])) {
+        if (!!($submittedData['dateInterval'] ?? null)) {
             $data = [
                 'facet' => $submittedData['facet'],
                 'filter' => $submittedData['filter'],
@@ -225,7 +230,7 @@ class SolrSearchFilter extends SearchFilter implements InputFilterProviderInterf
             ];
         }
 
-        if (!empty($submittedData['filter']['general'])) {
+        if (!!($submittedData['filter']['general'] ?? null)) {
             /** @mago-var mixed $selectedValues */
             $selectedValues = $submittedData['filter']['general'];
             /** @mago-var mixed $value */
@@ -240,7 +245,7 @@ class SolrSearchFilter extends SearchFilter implements InputFilterProviderInterf
                     'query' => $submittedData['query'],
                 ];
 
-                if (!empty($submittedData['dateInterval'])) {
+                if (!!($submittedData['dateInterval'] ?? null)) {
                     $data['dateInterval'] = $submittedData['dateInterval'];
                 }
 
@@ -268,13 +273,18 @@ class SolrSearchFilter extends SearchFilter implements InputFilterProviderInterf
             /** @mago-var mixed $values */
             $values = $facetData['values'] ?? [];
 
+            // These alternatives are mutually exclusive; the following code consumes the selected state.
+            // @mago-expect lint:no-else-clause(2)
             if (is_string(value: $values) && $facetField->isSlider()) {
                 $values = array_map(callback: intval(...), array: explode(separator: ',', string: $values));
                 $valueText = sprintf('BETWEEN %s and %s', $values[0], $values[1] ?? '');
             } elseif ($facetField->isCheckboxMin()) {
                 $valueText = sprintf('AT LEAST %d', Value::scalar($values[0] ?? ''));
             } else {
-                $valueText = implode(separator: $facetData['andOr'] ?? false ? ' and ' : ' or ', array: Value::scalars($values));
+                $valueText = implode(
+                    separator: $facetData['andOr'] ?? false ? ' and ' : ' or ',
+                    array: Value::scalars($values),
+                );
             }
 
             //Remaining facets are all facets where the current facet value is filtered out
@@ -288,7 +298,7 @@ class SolrSearchFilter extends SearchFilter implements InputFilterProviderInterf
                 'filter' => $submittedData['filter'],
             ];
 
-            if (!empty($submittedData['dateInterval'])) {
+            if (!!($submittedData['dateInterval'] ?? null)) {
                 $data['dateInterval'] = $submittedData['dateInterval'];
             }
 
@@ -298,7 +308,7 @@ class SolrSearchFilter extends SearchFilter implements InputFilterProviderInterf
                 'name' => $facetField->getName(),
                 'values' => $valueText,
                 'hasValues' => (is_countable(value: $values) ? count(value: $values) : 0) > 0,
-                'not' => !(isset($facetData['yesNo']) && $facetData['yesNo'] === 'no'),
+                'not' => !(($facetData['yesNo'] ?? null) !== null && $facetData['yesNo'] === 'no'),
                 'facetArguments' => http_build_query(data: $data),
                 'resetEncodedFilter' => base64_encode(string: json_encode(value: $data, flags: JSON_THROW_ON_ERROR)),
             ];

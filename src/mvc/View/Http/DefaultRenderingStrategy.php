@@ -27,7 +27,8 @@ class DefaultRenderingStrategy extends AbstractListenerAggregate
      */
     public function __construct(
         protected View $view,
-    ) {}
+    ) {
+    }
 
     /**
      * {@inheritDoc}

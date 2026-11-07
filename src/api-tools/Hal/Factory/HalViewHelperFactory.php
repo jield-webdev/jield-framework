@@ -71,7 +71,10 @@ class HalViewHelperFactory
         $hydratorMap = $rendererOptions->getHydrators();
         /** @mago-var mixed $hydratorServiceName */
         foreach ($hydratorMap as $class => $hydratorServiceName) {
-            $helper->addHydrator(class: Assert::string($class), hydrator: Assert::isInstanceOf($hydratorServiceName, \Laminas\Hydrator\ExtractionInterface::class));
+            $helper->addHydrator(
+                class: Assert::string($class),
+                hydrator: Assert::isInstanceOf($hydratorServiceName, \Laminas\Hydrator\ExtractionInterface::class),
+            );
         }
 
         return $helper;

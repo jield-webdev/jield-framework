@@ -12,6 +12,8 @@ use Laminas\Http\Response;
 use Webmozart\Assert\Assert;
 
 /** Attach after authentication and HTTP method overrides, before application authorization. */
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
 abstract class AbstractListenerScopeGuard
 {
     /**

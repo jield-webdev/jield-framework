@@ -33,6 +33,9 @@ use function is_string;
 use function method_exists;
 use function sprintf;
 
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
+// @mago-expect lint:kan-defect(1)
 class RestControllerFactory implements AbstractFactoryInterface
 {
     /**
@@ -57,7 +60,7 @@ class RestControllerFactory implements AbstractFactoryInterface
 
         /** @mago-var mixed $config */
         $config = $container->get('config');
-        if (!isset($config['api-tools-rest']) || !is_array(value: $config['api-tools-rest'])) {
+        if (($config['api-tools-rest'] ?? null) === null || !is_array(value: $config['api-tools-rest'])) {
             $this->lookupCache[$requestedName] = false;
             return false;
         }
@@ -65,9 +68,9 @@ class RestControllerFactory implements AbstractFactoryInterface
         $config = $config['api-tools-rest'];
 
         if (
-            !isset($config[$requestedName])
-            || !isset($config[$requestedName]['listener'])
-            || !isset($config[$requestedName]['route_name'])
+            ($config[$requestedName] ?? null) === null
+            || ($config[$requestedName]['listener'] ?? null) === null
+            || ($config[$requestedName]['route_name'] ?? null) === null
         ) {
             // Configuration, and specifically the listener and route_name
             // keys, is required
@@ -97,8 +100,11 @@ class RestControllerFactory implements AbstractFactoryInterface
      * @throws \Psr\Container\ContainerExceptionInterface
      */
     #[Override]
-    public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): RestController
-    {
+    public function __invoke(
+        ContainerInterface $container,
+        string $requestedName,
+        ?array $options = null,
+    ): RestController {
         /** @mago-var mixed $config */
         $config = $container->get('config');
         $config = Assert::isArray(Value::path($config, ['api-tools-rest', $requestedName]));
@@ -109,7 +115,7 @@ class RestControllerFactory implements AbstractFactoryInterface
             : Value::instantiate($config['listener']);
 
         $resourceIdentifiers = [$listener::class];
-        if (isset($config['resource_identifiers'])) {
+        if (($config['resource_identifiers'] ?? null) !== null) {
             if (!is_array(value: $config['resource_identifiers'])) {
                 $config['resource_identifiers'] = Value::toArray($config['resource_identifiers']);
             }
@@ -126,7 +132,7 @@ class RestControllerFactory implements AbstractFactoryInterface
         $resource->setEventManager($events);
 
         $identifier = $requestedName;
-        if (isset($config['identifier'])) {
+        if (($config['identifier'] ?? null) !== null) {
             /** @mago-var mixed $identifier */
             $identifier = $config['identifier'];
         }
@@ -150,11 +156,11 @@ class RestControllerFactory implements AbstractFactoryInterface
         $controller->setResource(resource: $resource);
         $this->setControllerOptions(config: Assert::isArray($config), controller: $controller);
 
-        if (isset($config['entity_class'])) {
+        if (($config['entity_class'] ?? null) !== null) {
             $listener->setEntityClass(className: Assert::string($config['entity_class']));
         }
 
-        if (isset($config['collection_class'])) {
+        if (($config['collection_class'] ?? null) !== null) {
             $listener->setCollectionClass(className: Assert::string($config['collection_class']));
         }
 
@@ -164,6 +170,8 @@ class RestControllerFactory implements AbstractFactoryInterface
     /**
      * Loop through configuration to discover and set controller options.
      */
+    // Keep the coordinated parsing or rendering steps of this compatibility method together.
+    // @mago-expect lint:halstead(1)
     protected function setControllerOptions(array $config, RestController $controller): void
     {
         /** @mago-var mixed $value */

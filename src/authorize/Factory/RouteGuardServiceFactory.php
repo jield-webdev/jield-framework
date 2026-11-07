@@ -23,7 +23,10 @@ class RouteGuardServiceFactory implements FactoryInterface
     public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): Route
     {
         return new Route(
-            rules: \Webmozart\Assert\Assert::isArray(Value::path($container->get(Config::class), ['guards', Route::class])),
+            rules: \Webmozart\Assert\Assert::isArray(Value::path(
+                $container->get(Config::class),
+                ['guards', Route::class],
+            )),
             container: $container,
         );
     }

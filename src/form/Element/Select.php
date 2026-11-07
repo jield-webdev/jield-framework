@@ -39,6 +39,9 @@ use const E_USER_DEPRECATED;
  * }
  * @psalm-type ValueOptions = array<array-key, OptGroup|ValueOption>
  */
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
+// @mago-expect lint:kan-defect(1)
 class Select extends Element implements InputProviderInterface
 {
     /** @var array<string, scalar|null>  */
@@ -85,7 +88,7 @@ class Select extends Element implements InputProviderInterface
 
     public function unsetValueOption(string $key): static
     {
-        if (isset($this->valueOptions[$key])) {
+        if (($this->valueOptions[$key] ?? null) !== null) {
             unset($this->valueOptions[$key]);
             $this->validator = null;
         }
@@ -106,34 +109,40 @@ class Select extends Element implements InputProviderInterface
     {
         parent::setOptions(options: $options);
 
-        if (isset($this->options['value_options'])) {
+        if (($this->options['value_options'] ?? null) !== null) {
             /** @var ValueOptions $valueOptions */
             $valueOptions = $this->options['value_options'];
             $this->setValueOptions(options: $valueOptions);
         }
         // Alias for 'value_options'
-        if (isset($this->options['options'])) {
+        if (($this->options['options'] ?? null) !== null) {
             /** @var ValueOptions $valueOptions */
             $valueOptions = $this->options['options'];
             $this->setValueOptions(options: $valueOptions);
         }
 
-        if (isset($this->options['empty_option'])) {
+        if (($this->options['empty_option'] ?? null) !== null) {
             /** @var EmptyOption $emptyOption */
             $emptyOption = $this->options['empty_option'];
             $this->setEmptyOption(emptyOption: $emptyOption);
         }
 
-        if (isset($this->options['disable_inarray_validator'])) {
-            $this->setDisableInArrayValidator(disableOption: \Webmozart\Assert\Assert::boolean($this->options['disable_inarray_validator']));
+        if (($this->options['disable_inarray_validator'] ?? null) !== null) {
+            $this->setDisableInArrayValidator(disableOption: \Webmozart\Assert\Assert::boolean(
+                $this->options['disable_inarray_validator'],
+            ));
         }
 
-        if (isset($this->options['use_hidden_element'])) {
-            $this->setUseHiddenElement(useHiddenElement: \Webmozart\Assert\Assert::boolean($this->options['use_hidden_element']));
+        if (($this->options['use_hidden_element'] ?? null) !== null) {
+            $this->setUseHiddenElement(useHiddenElement: \Webmozart\Assert\Assert::boolean(
+                $this->options['use_hidden_element'],
+            ));
         }
 
-        if (isset($this->options['unselected_value'])) {
-            $this->setUnselectedValue(unselectedValue: \Webmozart\Assert\Assert::string($this->options['unselected_value']));
+        if (($this->options['unselected_value'] ?? null) !== null) {
+            $this->setUnselectedValue(unselectedValue: \Webmozart\Assert\Assert::string(
+                $this->options['unselected_value'],
+            ));
         }
 
         return $this;
@@ -285,7 +294,8 @@ class Select extends Element implements InputProviderInterface
             ];
         }
 
-        if ($validator = $this->getValidator()) {
+        $validator = $this->getValidator();
+        if ($validator) {
             $spec['validators'] = [
                 $validator,
             ];
@@ -329,7 +339,7 @@ class Select extends Element implements InputProviderInterface
     public function isMultiple(): bool
     {
         return (
-            isset($this->attributes['multiple'])
+            ($this->attributes['multiple'] ?? null) !== null
             && ($this->attributes['multiple'] === true || $this->attributes['multiple'] === 'multiple')
         );
     }

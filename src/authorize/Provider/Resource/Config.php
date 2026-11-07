@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Jield\Authorize\Provider\Resource;
 
-use Laminas\Permissions\Acl\Resource\ResourceInterface;
-
 /**
  * Array-based resources list
  */
@@ -16,7 +14,8 @@ class Config implements ProviderInterface
      */
     public function __construct(
         protected array $resources = [],
-    ) {}
+    ) {
+    }
 
     /**
      * {@inheritDoc}

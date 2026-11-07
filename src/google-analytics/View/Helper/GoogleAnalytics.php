@@ -17,7 +17,8 @@ class GoogleAnalytics extends AbstractHelper
     public function __construct(
         protected ScriptInterface $script,
         protected string $id,
-    ) {}
+    ) {
+    }
 
     public function getContainerName(): string
     {

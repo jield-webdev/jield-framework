@@ -6,4 +6,6 @@ namespace Jield\ModuleManager\Loader\Exception;
 
 require_once __DIR__ . '/ExceptionInterface.php';
 
-class DomainException extends \DomainException implements ExceptionInterface {}
+class DomainException extends \DomainException implements ExceptionInterface
+{
+}

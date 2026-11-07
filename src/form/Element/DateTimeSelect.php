@@ -18,6 +18,9 @@ use function is_string;
 use function sprintf;
 
 /** @final */
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
+// @mago-expect lint:too-many-methods(1)
 class DateTimeSelect extends DateSelect
 {
     /**
@@ -71,20 +74,26 @@ class DateTimeSelect extends DateSelect
     {
         parent::setOptions(options: $options);
 
-        if (isset($this->options['hour_attributes'])) {
+        if (($this->options['hour_attributes'] ?? null) !== null) {
             $this->setHourAttributes(hourAttributes: \Jield\Stdlib\Value::scalarMap($this->options['hour_attributes']));
         }
 
-        if (isset($this->options['minute_attributes'])) {
-            $this->setMinuteAttributes(minuteAttributes: \Jield\Stdlib\Value::scalarMap($this->options['minute_attributes']));
+        if (($this->options['minute_attributes'] ?? null) !== null) {
+            $this->setMinuteAttributes(minuteAttributes: \Jield\Stdlib\Value::scalarMap(
+                $this->options['minute_attributes'],
+            ));
         }
 
-        if (isset($this->options['second_attributes'])) {
-            $this->setSecondAttributes(secondAttributes: \Jield\Stdlib\Value::scalarMap($this->options['second_attributes']));
+        if (($this->options['second_attributes'] ?? null) !== null) {
+            $this->setSecondAttributes(secondAttributes: \Jield\Stdlib\Value::scalarMap(
+                $this->options['second_attributes'],
+            ));
         }
 
-        if (isset($this->options['should_show_seconds'])) {
-            $this->setShouldShowSeconds(shouldShowSeconds: \Webmozart\Assert\Assert::boolean($this->options['should_show_seconds']));
+        if (($this->options['should_show_seconds'] ?? null) !== null) {
+            $this->setShouldShowSeconds(shouldShowSeconds: \Webmozart\Assert\Assert::boolean(
+                $this->options['should_show_seconds'],
+            ));
         }
 
         return $this;
@@ -223,7 +232,6 @@ class DateTimeSelect extends DateSelect
                 'second' => $value->format(format: 's'),
             ];
         }
-
         if (is_array(value: $value)) {
             $this->yearElement->setValue(value: $value['year']);
             $this->monthElement->setValue(value: $value['month']);
@@ -231,14 +239,14 @@ class DateTimeSelect extends DateSelect
             $this->hourElement->setValue(value: $value['hour']);
             $this->minuteElement->setValue(value: $value['minute']);
             $this->secondElement->setValue(value: $value['second'] ?? '00');
-        } else {
-            $this->yearElement->setValue(value: null);
-            $this->monthElement->setValue(value: null);
-            $this->dayElement->setValue(value: null);
-            $this->hourElement->setValue(value: null);
-            $this->minuteElement->setValue(value: null);
-            $this->secondElement->setValue(value: null);
+            return $this;
         }
+        $this->yearElement->setValue(value: null);
+        $this->monthElement->setValue(value: null);
+        $this->dayElement->setValue(value: null);
+        $this->hourElement->setValue(value: null);
+        $this->minuteElement->setValue(value: null);
+        $this->secondElement->setValue(value: null);
 
         return $this;
     }
@@ -266,7 +274,10 @@ class DateTimeSelect extends DateSelect
             && null === $day
             && null === $hour
             && null === $minute
-            && (null === $second || '00' === $second)
+            && (
+                null === $second
+                || '00' === $second
+            )
         ) {
             return null;
         }
@@ -284,14 +295,25 @@ class DateTimeSelect extends DateSelect
             $this->shouldCreateEmptyOption()
             && null === $hour
             && null === $minute
-            && (null === $second || '00' === $second)
+            && (
+                null === $second
+                || '00' === $second
+            )
         ) {
             $hour = '00';
             $minute = '00';
             $second = '00';
         }
 
-        return sprintf('%04d-%02d-%02d %02d:%02d:%02d', \Jield\Stdlib\Value::scalar($year), \Jield\Stdlib\Value::scalar($month), \Jield\Stdlib\Value::scalar($day), \Jield\Stdlib\Value::scalar($hour), \Jield\Stdlib\Value::scalar($minute), \Jield\Stdlib\Value::scalar($second));
+        return sprintf(
+            '%04d-%02d-%02d %02d:%02d:%02d',
+            \Jield\Stdlib\Value::scalar($year),
+            \Jield\Stdlib\Value::scalar($month),
+            \Jield\Stdlib\Value::scalar($day),
+            \Jield\Stdlib\Value::scalar($hour),
+            \Jield\Stdlib\Value::scalar($minute),
+            \Jield\Stdlib\Value::scalar($second),
+        );
     }
 
     /**

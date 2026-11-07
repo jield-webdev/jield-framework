@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Jield\Form\Element;
 
 use DateInterval;
-use DateTimeZone;
 use Jield\Form\Element\AbstractDateTime as DateTimeElement;
 use Laminas\Validator\DateStep as DateStepValidator;
 use Laminas\Validator\ValidatorInterface;

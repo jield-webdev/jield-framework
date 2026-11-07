@@ -95,6 +95,6 @@ class RedirectionStrategy implements ListenerAggregateInterface
 
     public function setRedirectUri(?string $redirectUri): void
     {
-        $this->redirectUri = $redirectUri ?: null;
+        $this->redirectUri = $redirectUri ? $redirectUri : null;
     }
 }

@@ -58,7 +58,8 @@ final class Mvc extends AbstractListenerAggregate
         private readonly array $errorHeroModuleConfig,
         private readonly Logging $logging,
         private readonly PhpRenderer $phpRenderer,
-    ) {}
+    ) {
+    }
 
     /**
      * @param int $priority
@@ -100,9 +101,11 @@ final class Mvc extends AbstractListenerAggregate
         }
 
         if (
-            isset($this->errorHeroModuleConfig[self::DISPLAY_SETTINGS]['exclude-exceptions'])
+            ($this->errorHeroModuleConfig[self::DISPLAY_SETTINGS]['exclude-exceptions'] ?? null) !== null
             && isExcludedException(
-                excludeExceptionsConfig: Assert::isArray($this->errorHeroModuleConfig[self::DISPLAY_SETTINGS]['exclude-exceptions']),
+                excludeExceptionsConfig: Assert::isArray(
+                    $this->errorHeroModuleConfig[self::DISPLAY_SETTINGS]['exclude-exceptions'],
+                ),
                 throwable: $exception,
             )
         ) {
@@ -142,7 +145,10 @@ final class Mvc extends AbstractListenerAggregate
         $sendResponseListener->detach(events: $eventManager);
 
         $isXmlHttpRequest = $request->isXmlHttpRequest();
-        if ($isXmlHttpRequest && isset($this->errorHeroModuleConfig[self::DISPLAY_SETTINGS]['ajax'][self::MESSAGE])) {
+        if (
+            $isXmlHttpRequest
+            && ($this->errorHeroModuleConfig[self::DISPLAY_SETTINGS]['ajax'][self::MESSAGE] ?? null) !== null
+        ) {
             /** @mago-var mixed $message */
             $message = Value::path($this->errorHeroModuleConfig, [self::DISPLAY_SETTINGS, 'ajax', self::MESSAGE]);
             $contentType = detectMessageContentType(message: Assert::string($message));

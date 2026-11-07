@@ -28,7 +28,8 @@ final readonly class Flags
      */
     public function __construct(
         private array $flags,
-    ) {}
+    ) {
+    }
 
     /**
      * Retrieve the flags

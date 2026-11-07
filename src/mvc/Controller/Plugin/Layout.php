@@ -80,8 +80,6 @@ class Layout extends AbstractPlugin
     protected function getViewModel(): Model
     {
         $event = $this->getEvent();
-        $viewModel = $event->getViewModel();
-
-        return $viewModel;
+        return $event->getViewModel();
     }
 }

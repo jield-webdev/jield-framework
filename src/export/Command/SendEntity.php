@@ -71,6 +71,8 @@ final class SendEntity extends Command
         /** @mago-var mixed $memoryLimit */
         $memoryLimit = $input->getOption(name: 'memory-limit');
 
+        // This adapter deliberately configures the current process for its documented runtime behavior.
+        // @mago-expect lint:no-ini-set(1)
         ini_set(option: 'memory_limit', value: Assert::string($memoryLimit));
 
         /** @mago-var mixed $entity */
@@ -100,7 +102,11 @@ final class SendEntity extends Command
         $output->writeln(messages: $startMessage);
         $output->writeln(messages: $memoryMessage);
 
-        $this->consoleService->sendEntity(output: $output, entity: Assert::string($entity), storageLocations: $storageLocations);
+        $this->consoleService->sendEntity(
+            output: $output,
+            entity: Assert::string($entity),
+            storageLocations: $storageLocations,
+        );
 
         $output->writeln(messages: $endMessage);
 

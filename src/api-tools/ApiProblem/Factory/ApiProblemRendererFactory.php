@@ -18,7 +18,7 @@ class ApiProblemRendererFactory
         /** @mago-var mixed $config */
         $config = $container->get('config');
         $displayExceptions =
-            isset($config['view_manager']['display_exceptions'])
+            ($config['view_manager']['display_exceptions'] ?? null) !== null
             && Value::truthy($config['view_manager']['display_exceptions']);
 
         $renderer = new ApiProblemRenderer();

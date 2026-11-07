@@ -46,7 +46,7 @@ class Request extends BaseRequest
             return $this->contentStream;
         }
 
-        if (empty($this->content)) {
+        if (!($this->content ?? null)) {
             $stream = fopen(filename: Assert::string($this->contentStream), mode: 'r');
             if ($stream === false) {
                 throw new RuntimeException('Unable to open the request content stream.');

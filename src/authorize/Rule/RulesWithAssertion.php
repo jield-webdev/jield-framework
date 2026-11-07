@@ -39,36 +39,33 @@ class RulesWithAssertion extends Route
         )->getAcl();
 
         foreach ($this->rules as $resource => $rule) {
-            if (!isset($rule['assertion'])) {
+            if (($rule['assertion'] ?? null) === null) {
                 continue;
             }
 
             /** @mago-var mixed $assertionClass */
             $assertionClass = $rule['assertion'];
-            if ($this->container->has(Assert::string($assertionClass))) {
-                /** @mago-var mixed $assert */
-                $assert = $this->container->get(Assert::string($assertionClass));
-
-                if ($assert instanceof AbstractAssertion) {
-                    $assert->setRouteMatch(routeMatch: Assert::isInstanceOf(
-                        $event->getRouteMatch(),
-                        RouteMatch::class,
-                    ));
-                    $assert->setRequest(request: $event->getRequest());
-                }
-
-                //Do not specify any roles, we do that in the assertion, giving a role would lead to ignorance of the assertion
-                $acl->allow(
-                    roles: null,
-                    resources: \Jield\Stdlib\Value::instanceOrArrayOrString($resource, \Laminas\Permissions\Acl\Resource\ResourceInterface::class),
-                    assert: Assert::isInstanceOf($assert, AssertionInterface::class),
-                );
-            } else {
+            if (!$this->container->has(Assert::string($assertionClass))) {
                 throw new InvalidArgumentException(message: sprintf(
                     'Assertion class %s cannot be found',
                     \Jield\Stdlib\Value::scalar($assertionClass),
                 ));
             }
+            /** @mago-var mixed $assert */
+            $assert = $this->container->get(Assert::string($assertionClass));
+            if ($assert instanceof AbstractAssertion) {
+                $assert->setRouteMatch(routeMatch: Assert::isInstanceOf($event->getRouteMatch(), RouteMatch::class));
+                $assert->setRequest(request: $event->getRequest());
+            }
+            //Do not specify any roles, we do that in the assertion, giving a role would lead to ignorance of the assertion
+            $acl->allow(
+                roles: null,
+                resources: \Jield\Stdlib\Value::instanceOrArrayOrString(
+                    $resource,
+                    \Laminas\Permissions\Acl\Resource\ResourceInterface::class,
+                ),
+                assert: Assert::isInstanceOf($assert, AssertionInterface::class),
+            );
         }
         return null;
     }

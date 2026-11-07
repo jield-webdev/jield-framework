@@ -26,6 +26,10 @@ use function method_exists;
 use function sprintf;
 
 /** @final */
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
+// @mago-expect lint:kan-defect(1)
+// @mago-expect lint:too-many-methods(1)
 class Factory
 {
     protected ?InputFilterFactory $inputFilterFactory = null;
@@ -195,9 +199,9 @@ class Factory
         }
 
         if (is_iterable(value: $attributes)) {
-            $element->setAttributes(
-                arrayOrTraversable: Value::scalarMap(is_array($attributes) ? $attributes : iterator_to_array($attributes)),
-            );
+            $element->setAttributes(arrayOrTraversable: Value::scalarMap(
+                is_array($attributes) ? $attributes : iterator_to_array($attributes),
+            ));
         }
 
         return $element;
@@ -228,13 +232,20 @@ class Factory
     ): FieldsetInterface {
         $spec = $this->validateSpecification(spec: $spec, method: __METHOD__);
         $fieldset = $this->configureElement(element: $fieldset, spec: $spec);
-        assert(assertion: $fieldset instanceof FieldsetInterface);
+        assert(
+            assertion: $fieldset instanceof FieldsetInterface,
+            description: 'Expected $fieldset instanceof FieldsetInterface.',
+        );
 
-        if (isset($spec['object'])) {
-            $this->prepareAndInjectObject(objectName: Assert::string($spec['object']), fieldset: $fieldset, method: __METHOD__);
+        if (($spec['object'] ?? null) !== null) {
+            $this->prepareAndInjectObject(
+                objectName: Assert::string($spec['object']),
+                fieldset: $fieldset,
+                method: __METHOD__,
+            );
         }
 
-        if (isset($spec['hydrator'])) {
+        if (($spec['hydrator'] ?? null) !== null) {
             /** @mago-var mixed $hydrator */
             $hydrator = $spec['hydrator'];
             $this->prepareAndInjectHydrator(
@@ -244,7 +255,7 @@ class Factory
             );
         }
 
-        if (isset($spec['elements'])) {
+        if (($spec['elements'] ?? null) !== null) {
             $this->prepareAndInjectElements(
                 elements: Assert::isIterable($spec['elements']),
                 fieldset: $fieldset,
@@ -252,7 +263,7 @@ class Factory
             );
         }
 
-        if (isset($spec['fieldsets'])) {
+        if (($spec['fieldsets'] ?? null) !== null) {
             $this->prepareAndInjectFieldsets(
                 fieldsets: Assert::isIterable($spec['fieldsets']),
                 masterFieldset: $fieldset,
@@ -289,9 +300,9 @@ class Factory
     {
         $spec = $this->validateSpecification(spec: $spec, method: __METHOD__);
         $form = $this->configureFieldset(fieldset: $form, spec: $spec);
-        assert(assertion: $form instanceof FormInterface);
+        assert(assertion: $form instanceof FormInterface, description: 'Expected $form instanceof FormInterface.');
 
-        if (isset($spec['input_filter'])) {
+        if (($spec['input_filter'] ?? null) !== null) {
             /** @mago-var mixed $inputFilter */
             $inputFilter = $spec['input_filter'];
             $this->prepareAndInjectInputFilter(
@@ -303,7 +314,7 @@ class Factory
             );
         }
 
-        if (isset($spec['validation_group'])) {
+        if (($spec['validation_group'] ?? null) !== null) {
             $form->setValidationGroup(group: Assert::isArray($spec['validation_group']));
         }
 
@@ -358,7 +369,7 @@ class Factory
             /** @mago-var mixed $spec */
             $spec = $elementSpecification['spec'] ?? [];
 
-            if (!isset($spec['type'])) {
+            if (($spec['type'] ?? null) === null) {
                 Value::setPath($spec, ['type'], Element::class);
             }
 
@@ -438,8 +449,10 @@ class Factory
             return;
         }
 
+        // These alternatives are mutually exclusive; the following code consumes the selected state.
+        // @mago-expect lint:no-else-clause(1)
         if (is_array(value: $hydratorOrName)) {
-            if (!isset($hydratorOrName['type'])) {
+            if (($hydratorOrName['type'] ?? null) === null) {
                 throw new Exception\DomainException(message: sprintf(
                     '%s expects array specification to have a type value',
                     $method,
@@ -458,7 +471,7 @@ class Factory
             $hydrator = $this->getFormElementManager()->getHydratorFromName(hydratorName: $hydratorOrName);
         }
 
-        if (!isset($hydrator) || !$hydrator instanceof HydratorInterface) {
+        if (($hydrator ?? null) === null || !$hydrator instanceof HydratorInterface) {
             throw new Exception\DomainException(message: sprintf(
                 '%s expects a valid implementation of Laminas\Hydrator\HydratorInterface; received "%s"',
                 $method,
@@ -466,7 +479,7 @@ class Factory
             ));
         }
 
-        if (!empty($hydratorOptions) && $hydrator instanceof Hydrator\HydratorOptionsInterface) {
+        if (Value::truthy($hydratorOptions) && $hydrator instanceof Hydrator\HydratorOptionsInterface) {
             $hydrator->setOptions(options: Assert::isArray($hydratorOptions));
         }
 
@@ -490,7 +503,7 @@ class Factory
         string $method,
     ): void {
         if (is_array(value: $factoryOrName)) {
-            if (!isset($factoryOrName['type'])) {
+            if (($factoryOrName['type'] ?? null) === null) {
                 throw new Exception\DomainException(message: sprintf(
                     '%s expects array specification to have a type value',
                     $method,
@@ -558,20 +571,19 @@ class Factory
             $reflection = new ReflectionClass($spec);
             $constructor = $reflection->getConstructor();
             // Laminas InputFilter 3 requires its factory; custom no-argument constructors remain supported.
-            $arguments = $constructor !== null && $constructor->getNumberOfRequiredParameters() > 0
-                ? [$this->getInputFilterFactory()]
-                : [];
+            $arguments =
+                $constructor !== null && $constructor->getNumberOfRequiredParameters() > 0
+                    ? [$this->getInputFilterFactory()]
+                    : [];
             $filter = Assert::notNull($reflection->newInstanceArgs($arguments));
             $form->setInputFilter(inputFilter: $filter);
             return;
         }
 
         $factory = $this->getInputFilterFactory();
-        $filter = $factory->createInputFilter(
-            inputFilterSpecification: \Jield\Form\InputFilterFactory::normalizeSpecification(
-                ArrayUtils::iteratorToArray($spec),
-            ),
-        );
+        $filter = $factory->createInputFilter(inputFilterSpecification: \Jield\Form\InputFilterFactory::normalizeSpecification(ArrayUtils::iteratorToArray(
+            $spec,
+        )));
         if (method_exists(object_or_class: $filter, method: 'setFactory')) {
             $filter->setFactory($factory);
         }

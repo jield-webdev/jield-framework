@@ -26,7 +26,9 @@ final class ElementFactory implements FactoryInterface
     {
         $options ??= [];
 
-        if (isset($options['name'])) {
+        // These alternatives are mutually exclusive; the following code consumes the selected state.
+        // @mago-expect lint:no-else-clause(1)
+        if (($options['name'] ?? null) !== null) {
             /** @mago-var mixed $name */
             $name = $options['name'];
         } else {
@@ -35,7 +37,7 @@ final class ElementFactory implements FactoryInterface
             $name = strtolower(string: array_pop(array: $parts));
         }
 
-        if (isset($options['options'])) {
+        if (($options['options'] ?? null) !== null) {
             /** @mago-var mixed $options */
             $options = $options['options'];
         }

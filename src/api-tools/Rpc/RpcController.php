@@ -49,6 +49,8 @@ final class RpcController extends BaseAbstractActionController
         $parameterMatcher = new ParameterMatcher(mvcEvent: $e);
 
         // match route params to dispatchable parameters
+        // These alternatives are mutually exclusive; the following code consumes the selected state.
+        // @mago-expect lint:no-else-clause(3)
         if ($this->wrappedCallable instanceof Closure) {
             $callable = $this->wrappedCallable;
         } elseif (is_array(value: $this->wrappedCallable)) {
@@ -69,7 +71,7 @@ final class RpcController extends BaseAbstractActionController
 
         $dispatchParameters = $parameterMatcher->getMatchedParameters(
             callable: Assert::isCallable($callable),
-            parameters: Assert::isArray($routeParameters ?: []),
+            parameters: Assert::isArray($routeParameters ? $routeParameters : []),
         );
         /** @mago-var mixed $result */
         $result = call_user_func_array(callback: $callable, args: $dispatchParameters);

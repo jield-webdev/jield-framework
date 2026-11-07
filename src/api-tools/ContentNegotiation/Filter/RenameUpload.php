@@ -20,7 +20,8 @@ class RenameUpload implements FilterInterface
 
     public function __construct(
         private readonly ?array $targetOrOptions = null,
-    ) {}
+    ) {
+    }
 
     public function setRequest(RequestInterface $request): void
     {

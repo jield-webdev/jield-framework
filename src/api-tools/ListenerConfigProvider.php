@@ -18,6 +18,9 @@ use Symfony\Component\Finder\Finder;
 use Symfony\Component\Finder\SplFileInfo;
 use Webmozart\Assert\Assert;
 
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
+// @mago-expect lint:kan-defect(1)
 final class ListenerConfigProvider
 {
     use GlobTrait;
@@ -72,10 +75,8 @@ final class ListenerConfigProvider
                 //$hasFetch    = $reflectionClass->hasMethod(name: 'fetch');
                 //$hasDelete = $reflectionClass->hasMethod(name: 'delete');
 
-                {
-                    if (in_array(needle: 'fetchAll', haystack: $definedClasses, strict: true)) {
-                        $routeType = RouteTypeEnum::COLLECTION;
-                    }
+                if (in_array(needle: 'fetchAll', haystack: $definedClasses, strict: true)) {
+                    $routeType = RouteTypeEnum::COLLECTION;
                 }
                 if (in_array(needle: 'create', haystack: $definedClasses, strict: true)) {
                     //Create can be for entities or collections depending on we have an :id in the route

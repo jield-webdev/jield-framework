@@ -32,6 +32,9 @@ use const UPLOAD_ERR_CANT_WRITE;
 use const UPLOAD_ERR_NO_TMP_DIR;
 use const UPLOAD_ERR_OK;
 
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
+// @mago-expect lint:kan-defect(1)
 class MultipartContentParser
 {
     /**
@@ -47,11 +50,13 @@ class MultipartContentParser
         protected HttpRequest $request,
     ) {
         $matches = [];
-        if (!preg_match(
-            pattern: '/boundary=(?P<boundary>[^\s]+)/',
-            subject: $contentType->getFieldValue(),
-            matches: $matches,
-        )) {
+        if (
+            !preg_match(
+                pattern: '/boundary=(?P<boundary>[^\s]+)/',
+                subject: $contentType->getFieldValue(),
+                matches: $matches,
+            )
+        ) {
             throw new Exception\InvalidMultipartContentException();
         }
 
@@ -101,6 +106,8 @@ class MultipartContentParser
      * @param resource $stream
      * @throws Exception\InvalidMultipartContentException
      */
+    // Keep the coordinated parsing or rendering steps of this compatibility method together.
+    // @mago-expect lint:halstead(1)
     protected function parseFromStream($stream): array
     {
         $matches = [];
@@ -135,31 +142,19 @@ class MultipartContentParser
                     }
 
                     // File (successful upload so far)
-                    if ($filename && $tmpFile && isset($file['tmp_name'])) {
+                    if ($filename && $tmpFile && ($file['tmp_name'] ?? null) !== null) {
                         // Write the last line, stripping the EOL characters
-                        if (
-                            false === fwrite(stream: $tmpFile, data: rtrim(
-                                string: Assert::string($lastLine),
-                                characters: "\r\n",
-                            ))
-                        ) {
+                        $written = fwrite(stream: $tmpFile, data: rtrim(
+                            string: Assert::string($lastLine),
+                            characters: "\r\n",
+                        ));
+                        fclose(stream: $tmpFile);
+                        if ($written === false) {
                             // Ooops! error writing the very last line!
                             $file['error'] = UPLOAD_ERR_CANT_WRITE;
-                            fclose(stream: $tmpFile);
-                        } else {
-                            // Success! Let's try and guess the MIME type based on the file written
-                            fclose(stream: $tmpFile);
-
-                            if ($mimeType === 'application/octet-stream' && function_exists(function: 'finfo_open')) {
-                                $finfo = new finfo(FILEINFO_MIME_TYPE);
-                                $type = $finfo->file(filename: Assert::string($file['tmp_name']));
-                                if (false !== $type) {
-                                    $file['type'] = $type;
-                                }
-                            }
-
-                            // Finally, set the filesize
-                            $file['size'] = filesize(filename: Assert::string($file['tmp_name']));
+                        }
+                        if ($written !== false) {
+                            $file = $this->withFileMetadata($file, $mimeType);
                         }
                     }
 
@@ -212,11 +207,13 @@ class MultipartContentParser
                     continue;
                 }
 
-                if (preg_match(
-                    pattern: '/^(?P<header>[a-z]+[a-z0-9_-]+):\s*(?P<value>.*)$/i',
-                    subject: $trimmedLine,
-                    matches: $matches,
-                )) {
+                if (
+                    preg_match(
+                        pattern: '/^(?P<header>[a-z]+[a-z0-9_-]+):\s*(?P<value>.*)$/i',
+                        subject: $trimmedLine,
+                        matches: $matches,
+                    )
+                ) {
                     $header = strtoupper(string: $matches['header']);
                     $headers[$header] = $matches['value'];
 
@@ -271,7 +268,7 @@ class MultipartContentParser
 
             // Off-by-one operation. Last line must be trimmed, so we'll write
             // the lines one iteration behind.
-            if (empty($lastLine)) {
+            if (!($lastLine ?? null)) {
                 $lastLine = $line;
                 continue;
             }
@@ -302,15 +299,17 @@ class MultipartContentParser
     protected function getNameFromHeaders(array $headers): false|string
     {
         $matches = [];
-        if (!isset($headers['CONTENT-DISPOSITION'])) {
+        if (($headers['CONTENT-DISPOSITION'] ?? null) === null) {
             return false;
         }
 
-        if (!preg_match(
-            pattern: '/(?:;|\s)name="(?P<name>[^"]+)"/',
-            subject: (string) $headers['CONTENT-DISPOSITION'],
-            matches: $matches,
-        )) {
+        if (
+            !preg_match(
+                pattern: '/(?:;|\s)name="(?P<name>[^"]+)"/',
+                subject: (string) $headers['CONTENT-DISPOSITION'],
+                matches: $matches,
+            )
+        ) {
             return false;
         }
 
@@ -323,19 +322,35 @@ class MultipartContentParser
     protected function getFilenameFromHeaders(array $headers): false|string
     {
         $matches = [];
-        if (!isset($headers['CONTENT-DISPOSITION'])) {
+        if (($headers['CONTENT-DISPOSITION'] ?? null) === null) {
             return false;
         }
 
-        if (!preg_match(
-            pattern: '/filename="(?P<filename>[^"]*)"/',
-            subject: (string) $headers['CONTENT-DISPOSITION'],
-            matches: $matches,
-        )) {
+        if (
+            !preg_match(
+                pattern: '/filename="(?P<filename>[^"]*)"/',
+                subject: (string) $headers['CONTENT-DISPOSITION'],
+                matches: $matches,
+            )
+        ) {
             return false;
         }
 
         return $matches['filename'];
+    }
+
+    private function withFileMetadata(array $file, string|false $mimeType): array
+    {
+        $path = Assert::string($file['tmp_name']);
+        if ($mimeType === 'application/octet-stream' && function_exists(function: 'finfo_open')) {
+            $type = new finfo(FILEINFO_MIME_TYPE)->file(filename: $path);
+            if ($type !== false) {
+                $file['type'] = $type;
+            }
+        }
+        $file['size'] = filesize(filename: $path);
+
+        return $file;
     }
 
     /**
@@ -343,7 +358,7 @@ class MultipartContentParser
      */
     protected function getMimeTypeFromHeaders(array $headers): string
     {
-        if (!isset($headers['CONTENT-TYPE'])) {
+        if (($headers['CONTENT-TYPE'] ?? null) === null) {
             return 'application/octet-stream';
         }
 

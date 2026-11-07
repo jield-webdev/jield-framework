@@ -28,13 +28,16 @@ final class Controller extends AbstractGuard
     protected function extractResourcesFromRule(array $rule): array
     {
         $results = [];
-        $rule['action'] = isset($rule['action']) ? Value::toArray($rule['action']) : [null];
+        $rule['action'] = ($rule['action'] ?? null) !== null ? Value::toArray($rule['action']) : [null];
 
         /** @mago-var mixed $controller */
         foreach (Value::toArray($rule['controller']) as $controller) {
             /** @mago-var mixed $action */
             foreach ($rule['action'] as $action) {
-                $results[] = $this->getResourceName(controller: Assert::string($controller), action: Assert::nullOrString($action));
+                $results[] = $this->getResourceName(
+                    controller: Assert::string($controller),
+                    action: Assert::nullOrString($action),
+                );
             }
         }
 
@@ -52,7 +55,7 @@ final class Controller extends AbstractGuard
 
     public function getResourceName(string $controller, ?string $action = null): string
     {
-        if (isset($action)) {
+        if (($action ?? null) !== null) {
             return sprintf('controller/%s:%s', $controller, strtolower(string: $action));
         }
 
@@ -76,9 +79,15 @@ final class Controller extends AbstractGuard
         $authorized =
             PHP_SAPI === 'cli'
             || $service->isAllowed(resource: $this->getResourceName(controller: Assert::string($controller)))
-            || $service->isAllowed(resource: $this->getResourceName(controller: Assert::string($controller), action: Assert::nullOrString($action)))
+            || $service->isAllowed(resource: $this->getResourceName(
+                controller: Assert::string($controller),
+                action: Assert::nullOrString($action),
+            ))
             || $method
-            && $service->isAllowed(resource: $this->getResourceName(controller: Assert::string($controller), action: $method));
+            && $service->isAllowed(resource: $this->getResourceName(
+                controller: Assert::string($controller),
+                action: $method,
+            ));
 
         if ($authorized) {
             return $request;
@@ -89,7 +98,11 @@ final class Controller extends AbstractGuard
         $event->setParam(name: 'controller', value: $controller);
         $event->setParam(name: 'action', value: $action);
 
-        $errorMessage = sprintf('You are not authorized to access %s:%s', Value::scalar($controller), Value::scalar($action));
+        $errorMessage = sprintf(
+            'You are not authorized to access %s:%s',
+            Value::scalar($controller),
+            Value::scalar($action),
+        );
         $event->setParam(name: 'exception', value: new UnAuthorizedException(message: $errorMessage));
 
         /** @var ApplicationInterface $app */

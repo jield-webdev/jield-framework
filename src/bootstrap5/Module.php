@@ -32,7 +32,10 @@ final class Module implements ConfigProviderInterface, BootstrapListenerInterfac
         $sm = Value::call($app, 'getServiceManager');
 
         $setTitle = Service::get($sm, InjectJavascriptAndCss::class);
-        $setTitle->attach(events: \Webmozart\Assert\Assert::isInstanceOf(Value::call($app, 'getEventManager'), \Laminas\EventManager\EventManagerInterface::class));
+        $setTitle->attach(events: \Webmozart\Assert\Assert::isInstanceOf(
+            Value::call($app, 'getEventManager'),
+            \Laminas\EventManager\EventManagerInterface::class,
+        ));
     }
 
     public function getModuleDependencies(): array

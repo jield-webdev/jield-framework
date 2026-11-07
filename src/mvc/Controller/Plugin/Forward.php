@@ -22,6 +22,9 @@ use function is_array;
 use function is_object;
 use function sprintf;
 
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
+// @mago-expect lint:kan-defect(1)
 class Forward extends AbstractPlugin
 {
     protected ?MvcEvent $event = null;
@@ -35,7 +38,8 @@ class Forward extends AbstractPlugin
 
     public function __construct(
         protected ControllerManager $controllers,
-    ) {}
+    ) {
+    }
 
     /**
      * Set maximum number of nested forwards allowed
@@ -154,10 +158,10 @@ class Forward extends AbstractPlugin
         // Convert the problem list from two-dimensional array to more convenient id => event => class format:
         $formattedProblems = [];
         foreach ($this->getListenersToDetach() ?? [] as $current) {
-            if (!isset($formattedProblems[$current['id']])) {
+            if (($formattedProblems[$current['id']] ?? null) === null) {
                 $formattedProblems[Value::key($current['id'])] = [];
             }
-            if (!isset($formattedProblems[$current['id']][$current['event']])) {
+            if (($formattedProblems[$current['id']][$current['event']] ?? null) === null) {
                 $formattedProblems[Value::key($current['id'])][Value::key($current['event'])] = [];
             }
             $formattedProblems[Value::key($current['id'])][Value::key($current['event'])][] = $current['class'];

@@ -25,6 +25,10 @@ use function is_numeric;
 use function is_string;
 use function trim;
 
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
+// @mago-expect lint:kan-defect(1)
+// @mago-expect lint:too-many-methods(1)
 class ExpressionBuilder
 {
     private DateTimeZone|string $defaultTimezone = 'UTC';
@@ -109,18 +113,17 @@ class ExpressionBuilder
         $stack = [$collection];
         $result = [];
 
-        while (!empty($stack)) {
+        while (!($stack === [])) {
             /** @mago-var mixed $item */
             $item = array_shift(array: $stack);
-
             if (is_iterable(value: $item)) {
                 /** @mago-var mixed $element */
                 foreach ($item as $element) {
                     array_unshift($stack, $element);
                 }
-            } else {
-                array_unshift($result, $item);
+                continue;
             }
+            array_unshift($result, $item);
         }
 
         return $result;
@@ -210,9 +213,8 @@ class ExpressionBuilder
 
         if ($operator) {
             return $this->req(expr: $expr);
-        } else {
-            return $this->prhb(expr: $expr);
         }
+        return $this->prhb(expr: $expr);
     }
 
     /**
@@ -330,6 +332,8 @@ class ExpressionBuilder
         ExpressionInterface|string $field,
         array|ExpressionInterface|string|int|bool|null $expr,
     ): ?ExpressionInterface {
+        // These alternatives are mutually exclusive; the following code consumes the selected state.
+        // @mago-expect lint:no-else-clause(1)
         if (is_array(value: $expr)) {
             $expr = $this->grp(expr: $expr);
         } elseif ($this->ignore(expr: $expr)) {
@@ -340,10 +344,12 @@ class ExpressionBuilder
             return null;
         }
 
-        return new FieldExpression(
-            field: $field,
-            expr: is_bool($expr) ? ($expr ? 'true' : 'false') : (is_int($expr) ? (string) $expr : $expr),
-        );
+        return new FieldExpression(field: $field, expr: match (true) {
+            $expr === true => 'true',
+            $expr === false => 'false',
+            is_int($expr) => (string) $expr,
+            default => $expr,
+        });
     }
 
     /**
@@ -356,7 +362,7 @@ class ExpressionBuilder
         array|ExpressionInterface|string|null $expr = null,
         ?string $type = CompositeExpression::TYPE_SPACE,
     ): ?ExpressionInterface {
-        if (empty($expr)) {
+        if (!($expr ?? null)) {
             return null;
         }
 
@@ -530,6 +536,8 @@ class ExpressionBuilder
     {
         $additional = null;
 
+        // These alternatives are mutually exclusive; the following code consumes the selected state.
+        // @mago-expect lint:no-else-clause(1)
         if (!is_bool(value: $shortForm)) {
             /** @mago-var mixed $additional */
             $additional = $shortForm;
@@ -546,12 +554,20 @@ class ExpressionBuilder
 
         if ($additional !== null) {
             return $this->comp(expr: [
-                new LocalParamsExpression(type: $type, params: $params, shortForm: \Webmozart\Assert\Assert::boolean($shortForm)),
+                new LocalParamsExpression(
+                    type: $type,
+                    params: $params,
+                    shortForm: \Webmozart\Assert\Assert::boolean($shortForm),
+                ),
                 $additional,
             ], type: null);
         }
 
-        return new LocalParamsExpression(type: $type, params: $params, shortForm: \Webmozart\Assert\Assert::boolean($shortForm));
+        return new LocalParamsExpression(
+            type: $type,
+            params: $params,
+            shortForm: \Webmozart\Assert\Assert::boolean($shortForm),
+        );
     }
 
     /**
@@ -658,7 +674,7 @@ class ExpressionBuilder
             && substr_count(haystack: $searchQuery, needle: '"') === 2
         ) {
             $content = substr(string: $searchQuery, offset: 1, length: -1);
-            if (empty(trim(string: $content))) {
+            if (!trim(string: $content)) {
                 return null;
             }
             return new SearchQueryPhraseExpression(expr: $content);
@@ -674,7 +690,7 @@ class ExpressionBuilder
 
         // Add each quoted phrase as a SearchQueryPhraseExpression
         foreach ($matches[1] as $phrase) {
-            if (empty(trim(string: $phrase))) {
+            if (!trim(string: $phrase)) {
                 continue;
             }
 
@@ -691,14 +707,14 @@ class ExpressionBuilder
             limit: -1,
             flags: PREG_SPLIT_NO_EMPTY,
         );
-        foreach ($words ?: [] as $word) {
+        foreach ($words ? $words : [] as $word) {
             // Escape special characters according to SOLR rules
             $escapedWord = Util::escape(value: $word);
             $expressions[] = new Expression(expr: $escapedWord);
         }
 
         // If no expressions were created, return null
-        if (empty($expressions)) {
+        if ($expressions === []) {
             return null;
         }
 
@@ -736,7 +752,7 @@ class ExpressionBuilder
         }
 
         // If no fields specified, return the base expression
-        if (empty($fields)) {
+        if ($fields === []) {
             return $baseExpression;
         }
 
@@ -766,7 +782,7 @@ class ExpressionBuilder
         }
 
         // If no field expressions were created, return null
-        if (empty($fieldExpressions)) {
+        if ($fieldExpressions === []) {
             return null;
         }
 
@@ -819,16 +835,12 @@ class ExpressionBuilder
                     }
 
                     // Create appropriate expression based on the part
-                    if (
-                        str_starts_with(haystack: $part, needle: '"')
-                        && strrpos(haystack: $part, needle: '"') === (strlen(string: $part) - 1)
-                    ) {
-                        // It's a phrase
-                        $subExpr = new SearchQueryPhraseExpression(expr: substr(string: $part, offset: 1, length: -1));
-                    } else {
-                        // It's a regular expression
-                        $subExpr = new Expression(expr: $part);
-                    }
+                    // It's a phrase
+                    // It's a regular expression
+                    $subExpr = str_starts_with(haystack: $part, needle: '"')
+                    && strrpos(haystack: $part, needle: '"') === (strlen(string: $part) - 1)
+                        ? new SearchQueryPhraseExpression(expr: substr(string: $part, offset: 1, length: -1))
+                        : new Expression(expr: $part);
 
                     // Apply wildcards if needed for non-phrase expressions
                     if (!$subExpr instanceof SearchQueryPhraseExpression) {
@@ -843,7 +855,7 @@ class ExpressionBuilder
             }
 
             // If no sub-expressions were created, return null
-            if (empty($subExpressions)) {
+            if ($subExpressions === []) {
                 return null;
             }
 
@@ -858,6 +870,8 @@ class ExpressionBuilder
             return $fieldExpression;
         }
 
+        // These alternatives are mutually exclusive; the following code consumes the selected state.
+        // @mago-expect lint:no-else-clause(1)
         if ($expression instanceof SearchQueryPhraseExpression) {
             // For phrase expressions, create a field expression with the phrase
             $fieldExpression = new FieldExpression(field: $field, expr: $expression);

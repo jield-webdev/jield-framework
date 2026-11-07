@@ -7,15 +7,9 @@ namespace Jield\Twig;
 use Twig\Error;
 use Twig\Loader;
 
-use function explode;
-use function implode;
-use function is_file;
 use function ltrim;
 use function pathinfo;
 use function preg_replace;
-use function sprintf;
-use function strpos;
-use function substr;
 
 use const PATHINFO_EXTENSION;
 

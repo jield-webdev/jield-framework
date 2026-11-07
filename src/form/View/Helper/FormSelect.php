@@ -23,6 +23,9 @@ use function strval;
  * @psalm-import-type ValueOptions from SelectElement
  * @psalm-import-type OptGroup from SelectElement
  */
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
+// @mago-expect lint:kan-defect(1)
 class FormSelect extends AbstractHelper
 {
     /**
@@ -176,21 +179,21 @@ class FormSelect extends AbstractHelper
             }
 
             /** @psalm-suppress RedundantConditionGivenDocblockType Retain defensive check that `options` is an array */
-            if (isset($optionSpec['options'])) {
+            if (($optionSpec['options'] ?? null) !== null) {
                 $optionStrings[] = $this->renderOptgroup(optgroup: $optionSpec, selectedOptions: $selectedOptions);
                 continue;
             }
 
-            if (isset($optionSpec['value'])) {
+            if (($optionSpec['value'] ?? null) !== null) {
                 $value = $optionSpec['value'];
             }
-            if (isset($optionSpec['label'])) {
+            if (($optionSpec['label'] ?? null) !== null) {
                 $label = $optionSpec['label'];
             }
-            if (isset($optionSpec['selected'])) {
+            if (($optionSpec['selected'] ?? null) !== null) {
                 $selected = $optionSpec['selected'];
             }
-            if (isset($optionSpec['disabled'])) {
+            if (($optionSpec['disabled'] ?? null) !== null) {
                 $disabled = $optionSpec['disabled'];
             }
 
@@ -207,7 +210,7 @@ class FormSelect extends AbstractHelper
             ];
 
             /** @psalm-suppress RedundantConditionGivenDocblockType Retain defensive check that `attributes` is an array */
-            if (isset($optionSpec['attributes'])) {
+            if (($optionSpec['attributes'] ?? null) !== null) {
                 $attributes = array_merge($attributes, $optionSpec['attributes']);
             }
 
@@ -241,7 +244,7 @@ class FormSelect extends AbstractHelper
 
         $this->validTagAttributes = $this->validOptgroupAttributes;
         $attributes = $this->createAttributesString(attributes: $optgroup);
-        if (!empty($attributes)) {
+        if ($attributes !== '') {
             $attributes = ' ' . $attributes;
         }
 
@@ -272,7 +275,7 @@ class FormSelect extends AbstractHelper
             return [$value];
         }
 
-        if (!isset($attributes['multiple']) || !$attributes['multiple']) {
+        if (($attributes['multiple'] ?? null) === null || !$attributes['multiple']) {
             throw new Exception\DomainException(message: sprintf(
                 '%s does not allow specifying multiple selected values when the element does not have a multiple '
                 . 'attribute set to a boolean true',

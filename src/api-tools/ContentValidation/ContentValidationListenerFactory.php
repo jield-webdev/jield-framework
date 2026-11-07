@@ -48,7 +48,7 @@ class ContentValidationListenerFactory implements FactoryInterface
     protected function getRestServicesFromConfig(array $config): array
     {
         $restServices = [];
-        if (!isset($config['api-tools-rest'])) {
+        if (($config['api-tools-rest'] ?? null) === null) {
             return $restServices;
         }
 
@@ -57,7 +57,7 @@ class ContentValidationListenerFactory implements FactoryInterface
          * @mago-var mixed $restConfig
          */
         foreach (Assert::isIterable($config['api-tools-rest']) as $controllerService => $restConfig) {
-            if (!isset($restConfig['route_identifier_name'])) {
+            if (($restConfig['route_identifier_name'] ?? null) === null) {
                 continue;
             }
 

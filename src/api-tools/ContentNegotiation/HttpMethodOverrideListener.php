@@ -23,11 +23,12 @@ class HttpMethodOverrideListener extends AbstractListenerAggregate
 {
     public function __construct(
         protected array $httpMethodOverride,
-    ) {}
+    ) {
+    }
 
     /**
      * Priority is set very high (should be executed before all other listeners that rely on the request method value).
-     * TODO: Check priority value, maybe value should be even higher??
+     * The default priority ensures method negotiation precedes request dispatch.
      *
      * @param int                   $priority
      */

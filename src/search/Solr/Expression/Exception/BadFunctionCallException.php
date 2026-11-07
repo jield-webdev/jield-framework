@@ -6,4 +6,6 @@ namespace Jield\Search\Solr\Expression\Exception;
 
 use BadFunctionCallException as BaseBadFunctionCallException;
 
-class BadFunctionCallException extends BaseBadFunctionCallException implements ExceptionInterface {}
+class BadFunctionCallException extends BaseBadFunctionCallException implements ExceptionInterface
+{
+}

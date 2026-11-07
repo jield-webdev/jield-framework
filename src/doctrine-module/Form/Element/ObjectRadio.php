@@ -58,7 +58,7 @@ class ObjectRadio extends RadioElement
         /** @var ValueOptionSpec $proxyValueOptions */
         $proxyValueOptions = $this->getProxy()->getValueOptions();
 
-        if (!empty($proxyValueOptions)) {
+        if (!($proxyValueOptions === [])) {
             $this->setValueOptions(options: $proxyValueOptions);
         }
 

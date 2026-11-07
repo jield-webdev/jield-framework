@@ -29,7 +29,8 @@ class CompositeExpression extends Expression implements Stringable
     public function __construct(
         private readonly array $expressions,
         private readonly ?string $type = self::TYPE_SPACE,
-    ) {}
+    ) {
+    }
 
     public function __toString(): string
     {
@@ -48,11 +49,10 @@ class CompositeExpression extends Expression implements Stringable
             return '';
         }
 
-        if ($this->type === static::TYPE_OR || $this->type === static::TYPE_AND) {
-            $glue = ' ' . $this->type . ' ';
-        } else {
-            $glue = $this->type ?? '';
-        }
+        $glue =
+            $this->type === static::TYPE_OR || $this->type === static::TYPE_AND
+                ? ' ' . $this->type . ' '
+                : $this->type ?? '';
 
         return implode(separator: $glue, array: array_filter(array: $parts));
     }

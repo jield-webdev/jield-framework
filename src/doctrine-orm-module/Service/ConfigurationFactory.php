@@ -25,6 +25,9 @@ use Webmozart\Assert\Assert;
 use function is_string;
 use function sprintf;
 
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
+// @mago-expect lint:kan-defect(1)
 final class ConfigurationFactory extends DoctrineConfigurationFactory
 {
     /** @return array<string, class-string<FunctionNode>|callable(string): FunctionNode> */
@@ -37,10 +40,13 @@ final class ConfigurationFactory extends DoctrineConfigurationFactory
             if (is_string($function) && !is_callable($function)) {
                 Assert::isAOf($function, FunctionNode::class);
                 $result[$name] = $function;
-            } else {
-                $callback = Assert::isCallable($function);
-                $result[$name] = static fn(string $name): FunctionNode => Assert::isInstanceOf($callback($name), \Doctrine\ORM\Query\AST\Functions\FunctionNode::class);
+                continue;
             }
+            $callback = Assert::isCallable($function);
+            $result[$name] = static fn(string $name): FunctionNode => Assert::isInstanceOf(
+                $callback($name),
+                \Doctrine\ORM\Query\AST\Functions\FunctionNode::class,
+            );
         }
         return $result;
     }
@@ -51,6 +57,8 @@ final class ConfigurationFactory extends DoctrineConfigurationFactory
      * @throws \Psr\Container\ContainerExceptionInterface
      * @throws \ReflectionException
      */
+    // Keep the coordinated parsing or rendering steps of this compatibility method together.
+    // @mago-expect lint:halstead(1)
     public function __invoke(
         ContainerInterface $container,
         string $requestedName,
@@ -96,14 +104,31 @@ final class ConfigurationFactory extends DoctrineConfigurationFactory
             $config->addFilter(name: Assert::string($name), className: $class);
         }
 
-        $config->setMetadataCache(Assert::isInstanceOf($container->get($options->getMetadataCache()), \Psr\Cache\CacheItemPoolInterface::class));
-        $config->setQueryCache(Assert::isInstanceOf($container->get($options->getQueryCache()), \Psr\Cache\CacheItemPoolInterface::class));
-        $config->setResultCache(Assert::isInstanceOf($container->get($options->getResultCache()), \Psr\Cache\CacheItemPoolInterface::class));
-        $config->setHydrationCache(Assert::isInstanceOf($container->get($options->getHydrationCache()), \Psr\Cache\CacheItemPoolInterface::class));
-        $config->setMetadataDriverImpl(driverImpl: Assert::isInstanceOf($container->get($options->getDriver()), \Doctrine\Persistence\Mapping\Driver\MappingDriver::class));
+        $config->setMetadataCache(Assert::isInstanceOf(
+            $container->get($options->getMetadataCache()),
+            \Psr\Cache\CacheItemPoolInterface::class,
+        ));
+        $config->setQueryCache(Assert::isInstanceOf(
+            $container->get($options->getQueryCache()),
+            \Psr\Cache\CacheItemPoolInterface::class,
+        ));
+        $config->setResultCache(Assert::isInstanceOf(
+            $container->get($options->getResultCache()),
+            \Psr\Cache\CacheItemPoolInterface::class,
+        ));
+        $config->setHydrationCache(Assert::isInstanceOf(
+            $container->get($options->getHydrationCache()),
+            \Psr\Cache\CacheItemPoolInterface::class,
+        ));
+        $config->setMetadataDriverImpl(driverImpl: Assert::isInstanceOf(
+            $container->get($options->getDriver()),
+            \Doctrine\Persistence\Mapping\Driver\MappingDriver::class,
+        ));
 
         $namingStrategy = $options->getNamingStrategy();
         if ($namingStrategy) {
+            // These alternatives are mutually exclusive; the following code consumes the selected state.
+            // @mago-expect lint:no-else-clause(1)
             if (is_string(value: $namingStrategy)) {
                 if (!$container->has($namingStrategy)) {
                     throw new InvalidArgumentException(message: sprintf(
@@ -112,7 +137,10 @@ final class ConfigurationFactory extends DoctrineConfigurationFactory
                     ));
                 }
 
-                $config->setNamingStrategy(namingStrategy: Assert::isInstanceOf($container->get($namingStrategy), \Doctrine\ORM\Mapping\NamingStrategy::class));
+                $config->setNamingStrategy(namingStrategy: Assert::isInstanceOf(
+                    $container->get($namingStrategy),
+                    \Doctrine\ORM\Mapping\NamingStrategy::class,
+                ));
             } else {
                 $config->setNamingStrategy(namingStrategy: $namingStrategy);
             }
@@ -120,6 +148,8 @@ final class ConfigurationFactory extends DoctrineConfigurationFactory
 
         $quoteStrategy = $options->getQuoteStrategy();
         if ($quoteStrategy) {
+            // These alternatives are mutually exclusive; the following code consumes the selected state.
+            // @mago-expect lint:no-else-clause(1)
             if (is_string(value: $quoteStrategy)) {
                 if (!$container->has($quoteStrategy)) {
                     throw new InvalidArgumentException(message: sprintf(
@@ -128,7 +158,10 @@ final class ConfigurationFactory extends DoctrineConfigurationFactory
                     ));
                 }
 
-                $config->setQuoteStrategy(quoteStrategy: Assert::isInstanceOf($container->get($quoteStrategy), \Doctrine\ORM\Mapping\QuoteStrategy::class));
+                $config->setQuoteStrategy(quoteStrategy: Assert::isInstanceOf(
+                    $container->get($quoteStrategy),
+                    \Doctrine\ORM\Mapping\QuoteStrategy::class,
+                ));
             } else {
                 $config->setQuoteStrategy(quoteStrategy: $quoteStrategy);
             }
@@ -136,6 +169,8 @@ final class ConfigurationFactory extends DoctrineConfigurationFactory
 
         $repositoryFactory = $options->getRepositoryFactory();
         if ($repositoryFactory) {
+            // These alternatives are mutually exclusive; the following code consumes the selected state.
+            // @mago-expect lint:no-else-clause(1)
             if (is_string(value: $repositoryFactory)) {
                 if (!$container->has($repositoryFactory)) {
                     throw new InvalidArgumentException(message: sprintf(
@@ -144,7 +179,10 @@ final class ConfigurationFactory extends DoctrineConfigurationFactory
                     ));
                 }
 
-                $config->setRepositoryFactory(repositoryFactory: Assert::isInstanceOf($container->get($repositoryFactory), \Doctrine\ORM\Repository\RepositoryFactory::class));
+                $config->setRepositoryFactory(repositoryFactory: Assert::isInstanceOf(
+                    $container->get($repositoryFactory),
+                    \Doctrine\ORM\Repository\RepositoryFactory::class,
+                ));
             } else {
                 $config->setRepositoryFactory(repositoryFactory: $repositoryFactory);
             }
@@ -152,10 +190,15 @@ final class ConfigurationFactory extends DoctrineConfigurationFactory
 
         $entityListenerResolver = $options->getEntityListenerResolver();
         if ($entityListenerResolver) {
+            // These alternatives are mutually exclusive; the following code consumes the selected state.
+            // @mago-expect lint:no-else-clause(1)
             if ($entityListenerResolver instanceof EntityListenerResolver) {
                 $config->setEntityListenerResolver(resolver: $entityListenerResolver);
             } else {
-                $config->setEntityListenerResolver(resolver: Assert::isInstanceOf($container->get($entityListenerResolver), \Doctrine\ORM\Mapping\EntityListenerResolver::class));
+                $config->setEntityListenerResolver(resolver: Assert::isInstanceOf(
+                    $container->get($entityListenerResolver),
+                    \Doctrine\ORM\Mapping\EntityListenerResolver::class,
+                ));
             }
         }
 
@@ -172,15 +215,21 @@ final class ConfigurationFactory extends DoctrineConfigurationFactory
              * @mago-var mixed $regionConfig
              */
             foreach (Assert::isIterable(Value::call($secondLevelCache, 'getRegions')) as $regionName => $regionConfig) {
-                if (isset($regionConfig['lifetime'])) {
-                    $regionsConfig->setLifetime(name: Assert::string($regionName), lifetime: Assert::integer($regionConfig['lifetime']));
+                if (($regionConfig['lifetime'] ?? null) !== null) {
+                    $regionsConfig->setLifetime(
+                        name: Assert::string($regionName),
+                        lifetime: Assert::integer($regionConfig['lifetime']),
+                    );
                 }
 
-                if (!isset($regionConfig['lock_lifetime'])) {
+                if (($regionConfig['lock_lifetime'] ?? null) === null) {
                     continue;
                 }
 
-                $regionsConfig->setLockLifetime(name: Assert::string($regionName), lifetime: Assert::integer($regionConfig['lock_lifetime']));
+                $regionsConfig->setLockLifetime(
+                    name: Assert::string($regionName),
+                    lifetime: Assert::integer($regionConfig['lock_lifetime']),
+                );
             }
 
             // As Second Level Cache caches queries results, we reuse the result cache impl

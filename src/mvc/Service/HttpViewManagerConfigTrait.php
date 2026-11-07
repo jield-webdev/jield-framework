@@ -24,8 +24,11 @@ trait HttpViewManagerConfigTrait
         $config = $container->has('config') ? $container->get('config') : [];
 
         if (
-            isset($config['view_manager'])
-            && (is_array($config['view_manager']) || $config['view_manager'] instanceof ArrayAccess)
+            ($config['view_manager'] ?? null) !== null
+            && (
+                is_array($config['view_manager'])
+                || $config['view_manager'] instanceof ArrayAccess
+            )
         ) {
             return $config['view_manager'];
         }

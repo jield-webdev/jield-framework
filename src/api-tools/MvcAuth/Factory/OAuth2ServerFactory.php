@@ -27,12 +27,17 @@ use function is_array;
 use function is_string;
 use function strtolower;
 
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
+// @mago-expect lint:kan-defect(1)
 final class OAuth2ServerFactory
 {
     /**
      * Intentionally empty and private to prevent instantiation
      */
-    private function __construct() {}
+    private function __construct()
+    {
+    }
 
     /**
      * Create and return a fully configured OAuth2 server instance.
@@ -48,7 +53,10 @@ final class OAuth2ServerFactory
         $options = self::marshalOptions(config: Assert::isArray($oauth2Config));
 
         $oauth2Server = new OAuth2Server(
-            storage: self::createStorage(config: array_merge(Assert::isArray($oauth2Config), $config), container: $container),
+            storage: self::createStorage(
+                config: array_merge(Assert::isArray($oauth2Config), $config),
+                container: $container,
+            ),
             config: $options,
         );
 
@@ -67,16 +75,21 @@ final class OAuth2ServerFactory
      */
     private static function createStorage(array $config, ContainerInterface $container): PdoAdapter|array
     {
-        if (isset($config['adapter']) && is_string(value: $config['adapter'])) {
+        if (($config['adapter'] ?? null) !== null && is_string(value: $config['adapter'])) {
             return self::createStorageFromAdapter(adapter: $config['adapter'], config: $config, container: $container);
         }
 
         if (
-            isset($config['storage'])
-            && (is_string(value: $config['storage']) || is_array(value: $config['storage']))
+            ($config['storage'] ?? null) !== null
+            && (
+                is_string(value: $config['storage'])
+                || is_array(value: $config['storage'])
+            )
         ) {
             return self::createStorageFromServices(
-                storage: \Jield\Stdlib\Value::stringsOrString(is_array($config['storage']) ? $config['storage'] : $config['storage']),
+                storage: \Jield\Stdlib\Value::stringsOrString(
+                    is_array($config['storage']) ? $config['storage'] : $config['storage'],
+                ),
                 container: $container,
             );
         }
@@ -147,7 +160,7 @@ final class OAuth2ServerFactory
      */
     private static function createPdoConfig(array $config): array
     {
-        if (!isset($config['dsn'])) {
+        if (($config['dsn'] ?? null) === null) {
             throw new ServiceNotCreatedException(message: 'Missing DSN for OAuth2 PDO adapter creation');
         }
 
@@ -172,7 +185,7 @@ final class OAuth2ServerFactory
     private static function getOAuth2ServerConfig(array $config): array
     {
         $oauth2ServerConfig = [];
-        if (isset($config['storage_settings']) && is_array(value: $config['storage_settings'])) {
+        if (($config['storage_settings'] ?? null) !== null && is_array(value: $config['storage_settings'])) {
             $oauth2ServerConfig = $config['storage_settings'];
         }
 
@@ -217,7 +230,7 @@ final class OAuth2ServerFactory
             && $availableGrantTypes['client_credentials'] === true
         ) {
             $clientOptions = [];
-            if (isset($options['allow_credentials_in_request_body'])) {
+            if (($options['allow_credentials_in_request_body'] ?? null) !== null) {
                 $clientOptions['allow_credentials_in_request_body'] = $options['allow_credentials_in_request_body'];
             }
 
@@ -271,15 +284,15 @@ final class OAuth2ServerFactory
             && $availableGrantTypes['refresh_token'] === true
         ) {
             $refreshOptions = [];
-            if (isset($options['always_issue_new_refresh_token'])) {
+            if (($options['always_issue_new_refresh_token'] ?? null) !== null) {
                 $refreshOptions['always_issue_new_refresh_token'] = $options['always_issue_new_refresh_token'];
             }
 
-            if (isset($options['refresh_token_lifetime'])) {
+            if (($options['refresh_token_lifetime'] ?? null) !== null) {
                 $refreshOptions['refresh_token_lifetime'] = $options['refresh_token_lifetime'];
             }
 
-            if (isset($options['unset_refresh_token_after_use'])) {
+            if (($options['unset_refresh_token_after_use'] ?? null) !== null) {
                 $refreshOptions['unset_refresh_token_after_use'] = $options['unset_refresh_token_after_use'];
             }
 

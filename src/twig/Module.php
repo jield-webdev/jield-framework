@@ -37,17 +37,17 @@ class Module implements BootstrapListenerInterface, ConfigProviderInterface
         /** @mago-var mixed $extension */
         foreach ($options->getExtensions() as $extension) {
             // Allows modules to override/remove extensions.
-            if (empty($extension)) {
+            if (!($extension ?? null)) {
                 continue;
             }
 
+            // These alternatives are mutually exclusive; the following code consumes the selected state.
+            // @mago-expect lint:no-else-clause(1)
             if (is_string($extension)) {
-                if ($serviceManager->has($extension)) {
-                    /** @mago-var mixed $extension */
-                    $extension = $serviceManager->get($extension);
-                } else {
-                    $extension = Value::instantiate($extension);
-                }
+                /** @mago-var mixed $extension */
+                $extension = $serviceManager->has($extension)
+                    ? $serviceManager->get($extension)
+                    : Value::instantiate($extension);
             } elseif (!is_object($extension)) {
                 throw new InvalidArgumentException('Extensions should be a string or object.');
             }

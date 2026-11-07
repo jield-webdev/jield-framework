@@ -28,6 +28,8 @@ interface ModuleManagerInterface extends EventManagerAwareInterface
      * @param bool $loadModules If true, load modules if they're not already
      * @return array An array of Module objects, keyed by module name
      */
+    // Preserve the existing parameter contract used by callers and inherited interfaces.
+    // @mago-expect lint:no-boolean-flag-parameter(1)
     public function getLoadedModules(bool $loadModules): array;
 
     /**

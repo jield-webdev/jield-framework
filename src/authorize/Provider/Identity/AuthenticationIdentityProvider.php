@@ -32,8 +32,14 @@ class AuthenticationIdentityProvider implements ProviderInterface
         private readonly HasPermitInterface $permitService,
         array $authorizeConfig,
     ) {
-        $this->defaultRole = \Jield\Stdlib\Value::instanceOrString($authorizeConfig['default_role'] ?? self::ACCESS_PUBLIC, \Laminas\Permissions\Acl\Role\RoleInterface::class);
-        $this->authenticatedRole = \Jield\Stdlib\Value::instanceOrString($authorizeConfig['authenticated_role'] ?? self::ACCESS_AUTHENTICATED, \Laminas\Permissions\Acl\Role\RoleInterface::class);
+        $this->defaultRole = \Jield\Stdlib\Value::instanceOrString(
+            $authorizeConfig['default_role'] ?? self::ACCESS_PUBLIC,
+            \Laminas\Permissions\Acl\Role\RoleInterface::class,
+        );
+        $this->authenticatedRole = \Jield\Stdlib\Value::instanceOrString(
+            $authorizeConfig['authenticated_role'] ?? self::ACCESS_AUTHENTICATED,
+            \Laminas\Permissions\Acl\Role\RoleInterface::class,
+        );
     }
 
     public function getIdentityAsRole(): UserAsRole
@@ -56,7 +62,7 @@ class AuthenticationIdentityProvider implements ProviderInterface
             $roles = [$roles];
         }
 
-        return !empty(array_intersect($roles, $this->getIdentityRoles()));
+        return !(array_intersect($roles, $this->getIdentityRoles()) === []);
     }
 
     public function getIdentityRoles(): array
@@ -65,7 +71,10 @@ class AuthenticationIdentityProvider implements ProviderInterface
             return [$this->defaultRole];
         }
 
-        return $this->accessOrUserService->getAccessRolesByUser(user: Assert::isInstanceOf($this->authService->getIdentity(), \Jield\Authorize\Role\UserAsRoleInterface::class));
+        return $this->accessOrUserService->getAccessRolesByUser(user: Assert::isInstanceOf(
+            $this->authService->getIdentity(),
+            \Jield\Authorize\Role\UserAsRoleInterface::class,
+        ));
     }
 
     public function hasPermit(object $resource, string|array $privilege): bool
@@ -83,7 +92,10 @@ class AuthenticationIdentityProvider implements ProviderInterface
             return null;
         }
 
-        return \Jield\Stdlib\Value::nullableInstance($this->authService->getIdentity(), \Jield\Authorize\Role\UserAsRoleInterface::class);
+        return \Jield\Stdlib\Value::nullableInstance(
+            $this->authService->getIdentity(),
+            \Jield\Authorize\Role\UserAsRoleInterface::class,
+        );
     }
 
     public function hasGeneralPermit(string $className, string $privilege): bool
@@ -105,6 +117,6 @@ class AuthenticationIdentityProvider implements ProviderInterface
             $roles = [$roles];
         }
 
-        return !empty(array_intersect($roles, $this->getIdentityRoles()));
+        return !(array_intersect($roles, $this->getIdentityRoles()) === []);
     }
 }

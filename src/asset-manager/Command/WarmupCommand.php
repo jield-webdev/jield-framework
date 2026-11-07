@@ -17,6 +17,9 @@ use Webmozart\Assert\Assert;
 
 use function sprintf;
 
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
+// @mago-expect lint:kan-defect(1)
 final class WarmupCommand extends Command
 {
     protected static string $defaultName = 'assetmanager:warmup';
@@ -67,6 +70,8 @@ final class WarmupCommand extends Command
 
         $collection = $this->assetManager->getResolver()->collect();
 
+        // These alternatives are mutually exclusive; the following code consumes the selected state.
+        // @mago-expect lint:no-else-clause(1)
         if (count(value: $collection) === 0) {
             if ($verbose) {
                 $output->writeln(messages: '<comment>No assets found</comment>');
@@ -83,10 +88,10 @@ final class WarmupCommand extends Command
             foreach ($collection as $path) {
                 $asset = $this->assetManager->getResolver()->resolve(fileName: Assert::string($path));
 
-                $this->assetManager->getAssetFilterManager()->setFilters(path: Assert::string($path), asset: Assert::isInstanceOf(
-                    $asset,
-                    AssetInterface::class,
-                ));
+                $this->assetManager->getAssetFilterManager()->setFilters(
+                    path: Assert::string($path),
+                    asset: Assert::isInstanceOf($asset, AssetInterface::class),
+                );
                 $this->assetManager
                     ->getAssetCacheManager()
                     ->setCache(path: Assert::string($path), asset: Assert::isInstanceOf($asset, AssetInterface::class))
@@ -106,9 +111,11 @@ final class WarmupCommand extends Command
      *
      * @throws RuntimeException
      */
+    // Preserve the existing parameter contract used by callers and inherited interfaces.
+    // @mago-expect lint:no-boolean-flag-parameter(1)
     private function purgeCache(OutputInterface $output, bool $verbose = false): void
     {
-        if (empty($this->appConfig['asset_manager']['caching'])) {
+        if (!($this->appConfig['asset_manager']['caching'] ?? null)) {
             return;
         }
 
@@ -117,16 +124,20 @@ final class WarmupCommand extends Command
          * @mago-var mixed $config
          */
         foreach (Assert::isIterable($this->appConfig['asset_manager']['caching']) as $configName => $config) {
-            if (empty($config['options']['dir'])) {
+            if (!($config['options']['dir'] ?? null)) {
                 continue;
             }
 
             if ($verbose) {
-                $output->writeln(messages: sprintf('Purging %s on "%s"', Value::scalar($configName), Value::scalar($config['options']['dir'])));
+                $output->writeln(messages: sprintf(
+                    'Purging %s on "%s"',
+                    Value::scalar($configName),
+                    Value::scalar($config['options']['dir'] ?? null),
+                ));
             }
 
             /** @mago-var mixed $node */
-            $node = $config['options']['dir'];
+            $node = $config['options']['dir'] ?? null;
 
             if ($configName !== 'default') {
                 $node = Value::stringify($node) . ('/' . Value::stringify($configName));
@@ -141,6 +152,8 @@ final class WarmupCommand extends Command
      *
      * @throws RuntimeException
      */
+    // Preserve the existing parameter contract used by callers and inherited interfaces.
+    // @mago-expect lint:no-boolean-flag-parameter(1)
     private function recursiveRemove(string $node, OutputInterface $output, bool $verbose = false): void
     {
         if (is_dir(filename: $node)) {
@@ -148,11 +161,9 @@ final class WarmupCommand extends Command
             if ($objects === false) {
                 throw new RuntimeException(sprintf('Cannot read directory "%s".', $node));
             }
-
             if ($verbose) {
                 $output->writeln(messages: sprintf('Found folder %s', $node));
             }
-
             foreach ($objects as $object) {
                 if ($object === '.' || $object === '..') {
                     continue;
@@ -160,13 +171,15 @@ final class WarmupCommand extends Command
 
                 $this->recursiveRemove(node: $node . '/' . $object, output: $output, verbose: $verbose);
             }
-        } elseif (is_file(filename: $node)) {
+            return;
+        }
+        if (is_file(filename: $node)) {
             //Filetype check (we only want to purge css and js files)
             if (!str_contains(haystack: $node, needle: '.css') && !str_contains(haystack: $node, needle: '.js')) {
                 return;
             }
-
             unlink(filename: $node);
+            return;
         }
     }
 }

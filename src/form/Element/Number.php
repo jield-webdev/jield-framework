@@ -42,18 +42,18 @@ class Number extends Element implements InputProviderInterface
         $validators[] = new RegexValidator(options: '(^-?\d*(\.\d+)?$)');
 
         $inclusive = true;
-        if (isset($this->attributes['inclusive'])) {
+        if (($this->attributes['inclusive'] ?? null) !== null) {
             $inclusive = $this->attributes['inclusive'];
         }
 
-        if (isset($this->attributes['min'])) {
+        if (($this->attributes['min'] ?? null) !== null) {
             $validators[] = new NumberComparison([
                 'min' => Assert::numeric($this->attributes['min']),
                 'inclusiveMin' => (bool) $inclusive,
                 'inclusiveMax' => (bool) $inclusive,
             ]);
         }
-        if (isset($this->attributes['max'])) {
+        if (($this->attributes['max'] ?? null) !== null) {
             $validators[] = new NumberComparison([
                 'max' => Assert::numeric($this->attributes['max']),
                 'inclusiveMin' => (bool) $inclusive,
@@ -61,7 +61,7 @@ class Number extends Element implements InputProviderInterface
             ]);
         }
 
-        if (!isset($this->attributes['step']) || 'any' !== $this->attributes['step']) {
+        if (($this->attributes['step'] ?? null) === null || 'any' !== $this->attributes['step']) {
             $validators[] = new StepValidator(options: [
                 'baseValue' => Assert::numeric($this->attributes['min'] ?? 0),
                 'step' => Assert::numeric($this->attributes['step'] ?? 1),

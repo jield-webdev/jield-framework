@@ -20,7 +20,8 @@ class Expression implements ExpressionInterface, Stringable
      */
     public function __construct(
         protected ExpressionInterface|string $expr,
-    ) {}
+    ) {
+    }
 
     public function isEqual(string $expr): bool
     {

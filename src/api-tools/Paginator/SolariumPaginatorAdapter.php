@@ -24,7 +24,8 @@ class SolariumPaginatorAdapter implements AdapterInterface
         protected Client $client,
         protected Query $query,
         protected SolariumProviderInterface $provider,
-    ) {}
+    ) {
+    }
 
     #[Override]
     public function count(): int
@@ -54,7 +55,10 @@ class SolariumPaginatorAdapter implements AdapterInterface
         $results = [];
         /** @mago-var mixed $result */
         foreach ($result->getIterator() as $result) {
-            $results[] = $this->provider->generateArrayFromSearchDocument(document: \Webmozart\Assert\Assert::isInstanceOf($result, \Solarium\QueryType\Select\Result\Document::class));
+            $results[] = $this->provider->generateArrayFromSearchDocument(document: \Webmozart\Assert\Assert::isInstanceOf(
+                $result,
+                \Solarium\QueryType\Select\Result\Document::class,
+            ));
         }
 
         return $results;

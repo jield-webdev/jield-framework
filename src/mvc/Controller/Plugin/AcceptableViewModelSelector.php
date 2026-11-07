@@ -24,6 +24,8 @@ use function str_replace;
  * Controller Plugin to assist in selecting an appropriate View Model type based on the
  * User Agent's accept header.
  */
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
 class AcceptableViewModelSelector extends AbstractPlugin
 {
     /**
@@ -94,6 +96,8 @@ class AcceptableViewModelSelector extends AbstractPlugin
      * @param AbstractFieldValuePart|null $resultReference (optional) The object that was matched.
      * @return string|null Returns null if $returnDefault = false and no match could be made
      */
+    // Preserve the existing parameter contract used by callers and inherited interfaces.
+    // @mago-expect lint:no-boolean-flag-parameter(1)
     public function getViewModelName(
         ?array $matchAgainst = null,
         bool $returnDefault = true,
@@ -124,7 +128,8 @@ class AcceptableViewModelSelector extends AbstractPlugin
         $headers = $request->getHeaders();
 
         if (
-            !$matchAgainst && !$this->defaultMatchAgainst
+            !$matchAgainst
+            && !$this->defaultMatchAgainst
             || !Assert::isInstanceOf($headers, Headers::class)->has('accept')
         ) {
             return null;
@@ -201,7 +206,9 @@ class AcceptableViewModelSelector extends AbstractPlugin
     {
         $modelName = str_replace('\\', '|', $modelName);
 
-        $modelAcceptString = is_array($modelAcceptString) ? implode(', ', Value::scalars($modelAcceptString)) : $modelAcceptString;
+        $modelAcceptString = is_array($modelAcceptString)
+            ? implode(', ', Value::scalars($modelAcceptString))
+            : $modelAcceptString;
 
         return $modelAcceptString . '; ' . self::INJECT_VIEWMODEL_NAME . '="' . $modelName . '", ';
     }

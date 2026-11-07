@@ -39,7 +39,10 @@ class OptionsListenerFactory implements FactoryInterface
         /** @mago-var mixed $config */
         $config = $container->get('config');
 
-        if (!array_key_exists(key: 'api-tools-rest', array: \Webmozart\Assert\Assert::isArray($config)) || !is_array(value: $config['api-tools-rest'])) {
+        if (
+            !array_key_exists(key: 'api-tools-rest', array: \Webmozart\Assert\Assert::isArray($config))
+            || !is_array(value: $config['api-tools-rest'])
+        ) {
             return [];
         }
 

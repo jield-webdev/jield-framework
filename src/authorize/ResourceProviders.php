@@ -4,4 +4,6 @@ declare(strict_types=1);
 
 namespace Jield\Authorize;
 
-final class ResourceProviders {}
+final class ResourceProviders
+{
+}

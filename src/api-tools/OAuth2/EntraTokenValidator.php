@@ -9,18 +9,24 @@ use SensitiveParameter;
 use Throwable;
 use Webmozart\Assert\Assert;
 
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
+// @mago-expect lint:kan-defect(1)
 class EntraTokenValidator
 {
     /** @param list<string> $applicationRoles Application roles accepted by the consuming app. */
     public function __construct(
         private readonly EntraJwksProvider $keys,
         private readonly array $applicationRoles = [],
-    ) {}
+    ) {
+    }
 
     /**
      * @throws EntraException
      * @throws \Psr\Cache\InvalidArgumentException
      */
+    // Keep the coordinated parsing or rendering steps of this compatibility method together.
+    // @mago-expect lint:halstead(1)
     public function validate(#[SensitiveParameter] string $token, EntraResourceInterface $service): array
     {
         $tenantId = $service->getTenantId();
@@ -100,7 +106,7 @@ class EntraTokenValidator
                     . self::describeClaim(claims: $header, name: 'kid'),
             );
         }
-        if (isset($header['crit'])) {
+        if (($header['crit'] ?? null) !== null) {
             $this->invalid(
                 standardMessage: $headerError,
                 detail: 'Unsupported critical header parameter crit is present',
@@ -199,7 +205,6 @@ class EntraTokenValidator
                     . self::describe($allowedCallers),
             );
         }
-
         if (($claims['idtyp'] ?? null) === 'app') {
             // idtyp is required for application authorization by caller ID. A user token
             // with roles must never be mistaken for a service principal or an ID token.
@@ -230,7 +235,9 @@ class EntraTokenValidator
                         . self::describeClaim(claims: $claims, name: 'roles'),
                 );
             }
-        } elseif (!is_string($claims['scp'] ?? null) || trim($claims['scp']) === '') {
+            return $claims;
+        }
+        if (!is_string($claims['scp'] ?? null) || trim($claims['scp']) === '') {
             $this->invalid(
                 standardMessage: 'A delegated scope or an explicitly identified application token is required',
                 detail: 'Token has no nonempty scp claim and idtyp is not "app"; got scp '

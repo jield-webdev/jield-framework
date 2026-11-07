@@ -8,7 +8,6 @@ use Jield\Authorize\Service\AuthorizeService;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
-use Psr\Container\NotFoundExceptionInterface;
 
 final class AuthorizeServiceFactory implements FactoryInterface
 {

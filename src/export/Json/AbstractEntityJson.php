@@ -35,7 +35,9 @@ abstract class AbstractEntityJson
     /** @param array<string, mixed> $criteria Field names and values to match. */
     protected function findCount(array $criteria): int
     {
-        return $this->entityManager->getRepository(Value::classString($this->entity))->count(criteria: Value::stringKeyedArray($criteria));
+        return $this->entityManager
+            ->getRepository(Value::classString($this->entity))
+            ->count(criteria: Value::stringKeyedArray($criteria));
     }
 
     /**

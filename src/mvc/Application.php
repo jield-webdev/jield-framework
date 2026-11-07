@@ -80,14 +80,14 @@ class Application implements ApplicationInterface, EventManagerAwareInterface
         protected ?ResponseInterface $response = null,
     ) {
         $this->setEventManager(
-            eventManager: $events ?: Service::get(
+            eventManager: $events ?? Service::get(
                 $serviceManager,
                 \Laminas\EventManager\EventManagerInterface::class,
                 'EventManager',
             ),
         );
-        $this->request = $request ?: Service::get($serviceManager, \Laminas\Stdlib\RequestInterface::class, 'Request');
-        $this->response = $response ?: Service::get(
+        $this->request = $request ?? Service::get($serviceManager, \Laminas\Stdlib\RequestInterface::class, 'Request');
+        $this->response = $response ?? Service::get(
             $serviceManager,
             \Laminas\Stdlib\ResponseInterface::class,
             'Response',
@@ -129,7 +129,8 @@ class Application implements ApplicationInterface, EventManagerAwareInterface
         }
 
         // Setup MVC Event
-        $this->event = $event = new MvcEvent();
+        $event = new MvcEvent();
+        $this->event = $event;
         $event->setName(name: MvcEvent::EVENT_BOOTSTRAP);
         $event->setTarget(target: $this);
         $event->setApplication(application: $this);
@@ -244,7 +245,11 @@ class Application implements ApplicationInterface, EventManagerAwareInterface
         ));
 
         return Assert::isInstanceOf(
-            Service::get($serviceManager, \Jield\Mvc\ApplicationInterface::class, 'Application')->bootstrap(Value::strings($listeners)),
+            Service::get(
+                $serviceManager,
+                \Jield\Mvc\ApplicationInterface::class,
+                'Application',
+            )->bootstrap(Value::strings($listeners)),
             \Jield\Mvc\Application::class,
         );
     }
@@ -264,6 +269,8 @@ class Application implements ApplicationInterface, EventManagerAwareInterface
      *           Typically, a handler should return a populated Response object
      *           that can be returned immediately.
      */
+    // Keep the coordinated parsing or rendering steps of this compatibility method together.
+    // @mago-expect lint:halstead(1)
     public function run(): static
     {
         $events = $this->events;

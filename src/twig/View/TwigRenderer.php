@@ -35,7 +35,8 @@ class TwigRenderer implements RendererInterface
         protected Loader\ChainLoader $loader,
         protected Environment $environment,
         protected TwigResolver $resolver,
-    ) {}
+    ) {
+    }
 
     /**
      * Overloading: proxy to helpers

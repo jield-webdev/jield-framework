@@ -27,10 +27,10 @@ class ViewTemplateMapResolverFactory implements FactoryInterface
         /** @mago-var mixed $config */
         $config = $container->get('config');
         $map = [];
-        if (is_array($config) && isset($config['view_manager'])) {
+        if (is_array($config) && ($config['view_manager'] ?? null) !== null) {
             /** @mago-var mixed $config */
             $config = $config['view_manager'];
-            if (is_array($config) && isset($config['template_map'])) {
+            if (is_array($config) && ($config['template_map'] ?? null) !== null) {
                 $map = Assert::isIterable($config['template_map']);
             }
         }

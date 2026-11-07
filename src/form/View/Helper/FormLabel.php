@@ -9,11 +9,12 @@ use Jield\Form\Exception;
 use Jield\Form\LabelAwareInterface;
 
 use function array_merge;
-use function get_debug_type;
 use function is_array;
 use function sprintf;
 
 /** @final */
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
 class FormLabel extends AbstractHelper
 {
     public const string APPEND = 'append';
@@ -39,6 +40,8 @@ class FormLabel extends AbstractHelper
      * @throws Exception\DomainException
      * @throws \Psr\Container\ContainerExceptionInterface
      */
+    // Keep the coordinated parsing or rendering steps of this compatibility method together.
+    // @mago-expect lint:halstead(1)
     public function __invoke(
         ?ElementInterface $element = null,
         ?string $labelContent = null,
@@ -52,7 +55,7 @@ class FormLabel extends AbstractHelper
         $label = '';
         if ($labelContent === null || $position !== null) {
             $label = $element->getLabel();
-            if (empty($label)) {
+            if (!($label ?? null)) {
                 throw new Exception\DomainException(message: sprintf(
                     '%s expects either label content as the second argument, '
                     . 'or that the element provided has a label attribute; neither found',
@@ -116,7 +119,7 @@ class FormLabel extends AbstractHelper
 
         $attributes = ['for' => $id];
 
-        if (!empty($labelAttributes)) {
+        if (!($labelAttributes === [])) {
             $attributes = array_merge($labelAttributes, $attributes);
         }
 

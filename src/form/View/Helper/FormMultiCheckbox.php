@@ -19,6 +19,9 @@ use function method_exists;
 use function sprintf;
 use function strtolower;
 
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
+// @mago-expect lint:kan-defect(1)
 class FormMultiCheckbox extends FormInput
 {
     public const string LABEL_APPEND = 'append';
@@ -126,6 +129,8 @@ class FormMultiCheckbox extends FormInput
      *
      * @throws \Psr\Container\ContainerExceptionInterface
      */
+    // Keep the coordinated parsing or rendering steps of this compatibility method together.
+    // @mago-expect lint:halstead(1)
     protected function renderOptions(
         MultiCheckboxElement $element,
         array $options,
@@ -140,7 +145,7 @@ class FormMultiCheckbox extends FormInput
 
         $globalLabelAttributes = $element->getLabelAttributes();
 
-        if (empty($globalLabelAttributes)) {
+        if ($globalLabelAttributes === []) {
             $globalLabelAttributes = $this->labelAttributes;
         }
 
@@ -159,10 +164,10 @@ class FormMultiCheckbox extends FormInput
             $inputAttributes = $attributes;
             $labelAttributes = $globalLabelAttributes;
             $selected =
-                isset($inputAttributes['selected'])
+                ($inputAttributes['selected'] ?? null) !== null
                 && $inputAttributes['type'] !== 'radio'
                 && Value::truthy($inputAttributes['selected']);
-            $disabled = isset($inputAttributes['disabled']) && Value::truthy($inputAttributes['disabled']);
+            $disabled = ($inputAttributes['disabled'] ?? null) !== null && Value::truthy($inputAttributes['disabled']);
 
             if (is_scalar(value: $optionSpec)) {
                 $optionSpec = [
@@ -171,29 +176,29 @@ class FormMultiCheckbox extends FormInput
                 ];
             }
 
-            if (isset($optionSpec['value'])) {
+            if (($optionSpec['value'] ?? null) !== null) {
                 /** @mago-var mixed $value */
                 $value = $optionSpec['value'];
             }
-            if (isset($optionSpec['label'])) {
+            if (($optionSpec['label'] ?? null) !== null) {
                 /** @mago-var mixed $label */
                 $label = $optionSpec['label'];
             }
-            if (isset($optionSpec['selected'])) {
+            if (($optionSpec['selected'] ?? null) !== null) {
                 /** @mago-var mixed $selected */
                 $selected = $optionSpec['selected'];
             }
-            if (isset($optionSpec['disabled'])) {
+            if (($optionSpec['disabled'] ?? null) !== null) {
                 /** @mago-var mixed $disabled */
                 $disabled = $optionSpec['disabled'];
             }
-            if (isset($optionSpec['label_attributes'])) {
+            if (($optionSpec['label_attributes'] ?? null) !== null) {
                 /** @mago-var mixed $labelAttributes */
-                $labelAttributes = isset($labelAttributes)
+                $labelAttributes = ($labelAttributes ?? null) !== null
                     ? array_merge($labelAttributes, Assert::isArray($optionSpec['label_attributes']))
                     : $optionSpec['label_attributes'];
             }
-            if (isset($optionSpec['attributes'])) {
+            if (($optionSpec['attributes'] ?? null) !== null) {
                 $inputAttributes = array_merge($inputAttributes, Assert::isArray($optionSpec['attributes']));
             }
 

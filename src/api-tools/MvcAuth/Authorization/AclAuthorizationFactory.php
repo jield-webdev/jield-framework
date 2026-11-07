@@ -54,7 +54,7 @@ abstract class AclAuthorizationFactory
     {
         /** @mago-var mixed $set */
         foreach ($rules as $set) {
-            if (!is_array(value: $set) || !isset($set['resource'])) {
+            if (!is_array(value: $set) || ($set['resource'] ?? null) === null) {
                 continue;
             }
 
@@ -74,7 +74,10 @@ abstract class AclAuthorizationFactory
         // Add new resource to ACL
         /** @mago-var mixed $resource */
         $resource = $ruleSet['resource'];
-        $acl->addResource(Value::instanceOrString($ruleSet['resource'], \Laminas\Permissions\Acl\Resource\ResourceInterface::class));
+        $acl->addResource(Value::instanceOrString(
+            $ruleSet['resource'],
+            \Laminas\Permissions\Acl\Resource\ResourceInterface::class,
+        ));
 
         // Deny guest specified privileges to resource
         /** @mago-var mixed $privileges */

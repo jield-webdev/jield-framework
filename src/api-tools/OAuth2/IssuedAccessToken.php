@@ -14,7 +14,8 @@ final readonly class IssuedAccessToken
         public int $issuedAt,
         public int $expiresAt,
         public string $scope,
-    ) {}
+    ) {
+    }
 
     public function toArray(): array
     {

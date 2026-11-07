@@ -63,11 +63,9 @@ final class IsCurrentModuleNameConstraint extends LaminasConstraint
                 continue;
             }
 
-            if (str_contains($appModules, '\\')) {
-                $match = ltrim(substr($appModules, Assert::integer(strrpos($appModules, '\\'))), '\\');
-            } else {
-                $match = ltrim($appModules);
-            }
+            $match = str_contains($appModules, '\\')
+                ? ltrim(substr($appModules, Assert::integer(strrpos($appModules, '\\'))), '\\')
+                : ltrim($appModules);
         }
 
         return strtolower($match);

@@ -42,11 +42,9 @@ class ControllerManager extends AbstractPluginManager
             $this->injectPluginManager(...),
         ];
 
-        if (isset($config['initializers'])) {
-            $config['initializers'] = [...Assert::isArray($config['initializers']), ...$initializers];
-        } else {
-            $config['initializers'] = $initializers;
-        }
+        $config['initializers'] = ($config['initializers'] ?? null) !== null
+            ? [...Assert::isArray($config['initializers']), ...$initializers]
+            : $initializers;
 
         /** @var ServiceManagerConfiguration $managerConfiguration */
         $managerConfiguration = $config;

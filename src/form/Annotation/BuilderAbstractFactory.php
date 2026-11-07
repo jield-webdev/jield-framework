@@ -38,7 +38,7 @@ final class BuilderAbstractFactory implements AbstractFactoryInterface
     public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): AbstractBuilder
     {
         // resolve aliases used in laminas servicemanager
-        if (isset($this->aliases[$requestedName])) {
+        if (($this->aliases[$requestedName] ?? null) !== null) {
             $requestedName = $this->aliases[$requestedName];
         }
 
@@ -47,10 +47,13 @@ final class BuilderAbstractFactory implements AbstractFactoryInterface
         $eventManager = Service::get($container, \Laminas\EventManager\EventManagerInterface::class, 'EventManager');
         Value::call($annotationBuilder, 'setEventManager', [$eventManager]);
 
-        $this->injectFactory(Assert::isInstanceOf(Value::call($annotationBuilder, 'getFormFactory'), \Jield\Form\Factory::class), $container);
+        $this->injectFactory(
+            Assert::isInstanceOf(Value::call($annotationBuilder, 'getFormFactory'), \Jield\Form\Factory::class),
+            $container,
+        );
 
         $config = $this->marshalConfig($container);
-        if (isset($config['preserve_defined_order'])) {
+        if (($config['preserve_defined_order'] ?? null) !== null) {
             Value::call($annotationBuilder, 'setPreserveDefinedOrder', [$config['preserve_defined_order']]);
         }
 
@@ -64,7 +67,10 @@ final class BuilderAbstractFactory implements AbstractFactoryInterface
      */
     public function canCreate(ContainerInterface $container, $requestedName): bool
     {
-        return isset($this->aliases[$requestedName]) || is_subclass_of($requestedName, AbstractBuilder::class);
+        return (
+            ($this->aliases[$requestedName] ?? null) !== null
+            || is_subclass_of($requestedName, AbstractBuilder::class)
+        );
     }
 
     /**
@@ -108,7 +114,7 @@ final class BuilderAbstractFactory implements AbstractFactoryInterface
      */
     private function injectListeners(array $config, EventManagerInterface $events, ContainerInterface $container): void
     {
-        if (!isset($config['listeners'])) {
+        if (($config['listeners'] ?? null) === null) {
             return;
         }
 
@@ -118,7 +124,10 @@ final class BuilderAbstractFactory implements AbstractFactoryInterface
             $listener = $container->get(Assert::string($listenerName));
 
             if (!$listener instanceof ListenerAggregateInterface) {
-                throw new ServiceNotCreatedException(sprintf('Invalid event listener (%s) provided', Value::scalar($listenerName)));
+                throw new ServiceNotCreatedException(sprintf(
+                    'Invalid event listener (%s) provided',
+                    Value::scalar($listenerName),
+                ));
             }
 
             $listener->attach($events);

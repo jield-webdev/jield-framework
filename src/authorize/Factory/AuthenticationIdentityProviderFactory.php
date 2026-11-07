@@ -29,14 +29,14 @@ final class AuthenticationIdentityProviderFactory implements FactoryInterface
         /** @mago-var mixed $config */
         $config = $container->get('config')['jield_authorize'] ?? [];
 
-        if (!isset($config['access_service'])) {
+        if (($config['access_service'] ?? null) === null) {
             throw new RuntimeException(message: sprintf(
                 'Service access_service implementing interface %s is missing',
                 AccessRolesByUserInterface::class,
             ));
         }
 
-        if (!isset($config['permit_service'])) {
+        if (($config['permit_service'] ?? null) === null) {
             throw new RuntimeException(message: sprintf(
                 'Service permit_service implementing interface %s is missing',
                 HasPermitInterface::class,

@@ -19,6 +19,8 @@ use function stripos;
 use const PREG_SPLIT_DELIM_CAPTURE;
 use const PREG_SPLIT_NO_EMPTY;
 
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
 abstract class AbstractFormDateSelect extends AbstractHelper
 {
     /**
@@ -60,6 +62,8 @@ abstract class AbstractFormDateSelect extends AbstractHelper
     /**
      * Parse the pattern
      */
+    // Preserve the existing parameter contract used by callers and inherited interfaces.
+    // @mago-expect lint:no-boolean-flag-parameter(1)
     protected function parsePattern(bool $renderDelimiters = true): array
     {
         $pattern = $this->getPattern();
@@ -69,19 +73,26 @@ abstract class AbstractFormDateSelect extends AbstractHelper
             limit: -1,
             flags: PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY,
         );
-        assert(assertion: $pregResult !== false);
+        assert(assertion: $pregResult !== false, description: 'Expected $pregResult !== false.');
 
         $result = [];
         foreach ($pregResult as $value) {
             $noDelimiter = stripos(haystack: $value, needle: "'") === false;
             if ($noDelimiter && stripos(haystack: $value, needle: 'd') !== false) {
                 $result['day'] = $value;
-            } elseif ($noDelimiter && stripos(haystack: $value, needle: 'm') !== false) {
+                continue;
+            }
+            if ($noDelimiter && stripos(haystack: $value, needle: 'm') !== false) {
                 $result['month'] = $value;
-            } elseif ($noDelimiter && stripos(haystack: $value, needle: 'y') !== false) {
+                continue;
+            }
+            if ($noDelimiter && stripos(haystack: $value, needle: 'y') !== false) {
                 $result['year'] = $value;
-            } elseif ($renderDelimiters) {
+                continue;
+            }
+            if ($renderDelimiters) {
                 $result[] = str_replace(search: "'", replace: '', subject: $value);
+                continue;
             }
         }
 

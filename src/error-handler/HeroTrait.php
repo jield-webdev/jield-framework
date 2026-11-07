@@ -38,7 +38,7 @@ trait HeroTrait
 
     public function phpError(mixed ...$args): void
     {
-        if (isset($args[0]) && $args[0] instanceof MvcEvent) {
+        if (($args[0] ?? null) !== null && $args[0] instanceof MvcEvent) {
             Assert::count(array: $args, number: 1);
             Assert::isInstanceOf(value: $args[0], class: MvcEvent::class);
 
@@ -47,6 +47,8 @@ trait HeroTrait
 
         if (!Value::accessible($this->getErrorHandlerConfiguration()['display-settings'])['display_errors']) {
             error_reporting(error_level: E_ALL);
+            // This adapter deliberately configures the current process for its documented runtime behavior.
+            // @mago-expect lint:no-ini-set(1)
             ini_set(option: 'display_errors', value: '0');
         }
 
@@ -120,13 +122,15 @@ trait HeroTrait
             && $excludePhpError[1] === $errorMessage
         );
 
-        if (AtLeast::once(
-            data: Assert::isArray(Value::path($this->getErrorHandlerConfiguration(), [
-                'display-settings',
-                'exclude-php-errors',
-            ])),
-            filter: $filter,
-        )) {
+        if (
+            AtLeast::once(
+                data: Assert::isArray(Value::path($this->getErrorHandlerConfiguration(), [
+                    'display-settings',
+                    'exclude-php-errors',
+                ])),
+                filter: $filter,
+            )
+        ) {
             return true;
         }
 

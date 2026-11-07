@@ -6,4 +6,6 @@ namespace Jield\ApiTools\Hal\Exception;
 
 use RuntimeException;
 
-class DomainException extends RuntimeException implements ExceptionInterface {}
+class DomainException extends RuntimeException implements ExceptionInterface
+{
+}

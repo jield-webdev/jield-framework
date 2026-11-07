@@ -21,7 +21,11 @@ final class EntraJwksProviderFactory
 
         return new EntraJwksProvider(
             new Client(),
-            new FilesystemAdapter('entra_jwks', 3600, \Webmozart\Assert\Assert::nullOrString($config['cache_directory'] ?? null)),
+            new FilesystemAdapter(
+                'entra_jwks',
+                3600,
+                \Webmozart\Assert\Assert::nullOrString($config['cache_directory'] ?? null),
+            ),
         );
     }
 }

@@ -21,6 +21,8 @@ use function is_array;
 use function is_bool;
 use function iterator_to_array;
 
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
 class Url extends AbstractPlugin
 {
     /**
@@ -55,6 +57,8 @@ class Url extends AbstractPlugin
         $event = $controller->getEvent();
         $router = null;
         $matches = null;
+        // These alternatives are mutually exclusive; the following code consumes the selected state.
+        // @mago-expect lint:no-else-clause(1)
         if ($event instanceof MvcEvent) {
             $router = $event->getRouter();
             $matches = $event->getRouteMatch();
@@ -87,15 +91,14 @@ class Url extends AbstractPlugin
         }
 
         if ($reuseMatchedParams && Value::truthy($matches)) {
-            /** @mago-var mixed $routeMatchParams */
-            $routeMatchParams = Value::call($matches, 'getParams');
+            $routeMatchParams = Assert::isArray(Value::call($matches, 'getParams'));
 
-            if (isset($routeMatchParams[ModuleRouteListener::ORIGINAL_CONTROLLER])) {
+            if (($routeMatchParams[ModuleRouteListener::ORIGINAL_CONTROLLER] ?? null) !== null) {
                 $routeMatchParams['controller'] = $routeMatchParams[ModuleRouteListener::ORIGINAL_CONTROLLER];
                 unset($routeMatchParams[ModuleRouteListener::ORIGINAL_CONTROLLER]);
             }
 
-            if (isset($routeMatchParams[ModuleRouteListener::MODULE_NAMESPACE])) {
+            if (($routeMatchParams[ModuleRouteListener::MODULE_NAMESPACE] ?? null) !== null) {
                 unset($routeMatchParams[ModuleRouteListener::MODULE_NAMESPACE]);
             }
 

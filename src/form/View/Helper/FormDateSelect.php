@@ -97,9 +97,9 @@ class FormDateSelect extends AbstractFormDateSelect
             // Delimiter
             if (is_numeric(value: $key)) {
                 $markup .= Value::stringify($value);
-            } else {
-                $markup .= $data[$value];
+                continue;
             }
+            $markup .= $data[$value];
         }
 
         return $markup;

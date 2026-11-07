@@ -37,6 +37,9 @@ use function sprintf;
  * @method bool hasCurrentErrorMessages()
  * @method bool hasCurrentWarningMessages()
  */
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
+// @mago-expect lint:too-many-methods(1)
 class FlashMessenger extends AbstractTranslatorHelper
 {
     /**
@@ -115,7 +118,10 @@ class FlashMessenger extends AbstractTranslatorHelper
         if (null === $this->pluginFlashMessenger) {
             $this->setPluginFlashMessenger(new PluginFlashMessenger());
         }
-        assert($this->pluginFlashMessenger instanceof PluginFlashMessenger);
+        assert(
+            $this->pluginFlashMessenger instanceof PluginFlashMessenger,
+            'Expected $this->pluginFlashMessenger instanceof PluginFlashMessenger.',
+        );
 
         return $this->pluginFlashMessenger;
     }
@@ -173,12 +179,12 @@ class FlashMessenger extends AbstractTranslatorHelper
         array $classes = [],
         ?bool $autoEscape = null,
     ) {
-        if (empty($messages)) {
+        if ($messages === []) {
             return '';
         }
 
         // Prepare classes for opening tag
-        if (empty($classes)) {
+        if ($classes === []) {
             $classes = [$this->getClasses($namespace)];
         }
 
@@ -189,27 +195,30 @@ class FlashMessenger extends AbstractTranslatorHelper
         $messagesToPrint = [];
         $translator = $this->getTranslator();
         $translatorTextDomain = $this->getTranslatorTextDomain();
-        array_walk_recursive($messages, /** @throws \ReflectionException */ static function ($item) use (
-            &$messagesToPrint,
-            $escapeHtml,
-            $autoEscape,
-            $translator,
-            $translatorTextDomain,
-        ): void {
-            if ($translator !== null) {
-                /** @mago-var mixed $item */
-                $item = Value::call($translator, 'translate', [$item, $translatorTextDomain]);
-            }
+        array_walk_recursive(
+            $messages,
+            /** @throws \ReflectionException */ static function ($item) use (
+                &$messagesToPrint,
+                $escapeHtml,
+                $autoEscape,
+                $translator,
+                $translatorTextDomain,
+            ): void {
+                if ($translator !== null) {
+                    /** @mago-var mixed $item */
+                    $item = Value::call($translator, 'translate', [$item, $translatorTextDomain]);
+                }
 
-            if ($autoEscape) {
-                $messagesToPrint[] = $escapeHtml($item);
-                return;
-            }
+                if ($autoEscape) {
+                    $messagesToPrint[] = $escapeHtml($item);
+                    return;
+                }
 
-            $messagesToPrint[] = $item;
-        });
+                $messagesToPrint[] = $item;
+            },
+        );
 
-        if (empty($messagesToPrint)) {
+        if ($messagesToPrint === []) {
             return '';
         }
 
@@ -278,9 +287,9 @@ class FlashMessenger extends AbstractTranslatorHelper
         $namespace = $this->getNamespace($namespaceName);
         if ($namespace === null) {
             $this->messageOpenFormat = $messageOpenFormat;
-        } else {
-            $namespace->setMessageOpenFormat($messageOpenFormat);
+            return $this;
         }
+        $namespace->setMessageOpenFormat($messageOpenFormat);
         return $this;
     }
 
@@ -319,9 +328,9 @@ class FlashMessenger extends AbstractTranslatorHelper
         $namespace = $this->getNamespace($namespaceName);
         if ($namespace === null) {
             $this->messageSeparatorString = $messageSeparatorString;
-        } else {
-            $namespace->setMessageSeparatorString($messageSeparatorString);
+            return $this;
         }
+        $namespace->setMessageSeparatorString($messageSeparatorString);
         return $this;
     }
 
@@ -352,9 +361,9 @@ class FlashMessenger extends AbstractTranslatorHelper
         $namespace = $this->getNamespace($namespaceName);
         if ($namespace === null) {
             $this->messageCloseString = $messageCloseString;
-        } else {
-            $namespace->setMessageCloseString($messageCloseString);
+            return $this;
         }
+        $namespace->setMessageCloseString($messageCloseString);
 
         return $this;
     }

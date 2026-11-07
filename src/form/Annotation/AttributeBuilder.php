@@ -5,14 +5,8 @@ declare(strict_types=1);
 namespace Jield\Form\Annotation;
 
 use ArrayObject;
-use Jield\Form\Exception;
 use ReflectionClass;
 use ReflectionException;
-
-use function sprintf;
-
-use const PHP_MAJOR_VERSION;
-use const PHP_VERSION;
 
 /**
  * Parses the properties of a class for PHP attributes in order to create a form
@@ -23,7 +17,9 @@ final class AttributeBuilder extends AbstractBuilder
     /**
      * Initialize the attribute builder
      */
-    public function __construct() {}
+    public function __construct()
+    {
+    }
 
     /**
      * Derive a form specification from PHP attributes for a given entity

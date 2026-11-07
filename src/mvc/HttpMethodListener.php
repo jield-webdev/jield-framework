@@ -37,7 +37,7 @@ class HttpMethodListener extends AbstractListenerAggregate
     {
         $this->setEnabled($enabled);
 
-        if (!empty($allowedMethods)) {
+        if ($allowedMethods) {
             $this->setAllowedMethods($allowedMethods);
         }
     }

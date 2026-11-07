@@ -20,7 +20,8 @@ class QueryString implements Stringable
 
     public function __construct(
         private readonly string $query,
-    ) {}
+    ) {
+    }
 
     /**
      * Add a value for a placeholder
@@ -55,15 +56,12 @@ class QueryString implements Stringable
 
         /** @mago-var mixed $value */
         foreach ($this->placeholders as $placeholder => $value) {
-            if ($value instanceof DateTime) {
-                $value = new DateTimeExpression(date: $value);
-            } elseif (is_array(value: $value)) {
-                $value = new GroupExpression(expressions: $value);
-            } elseif (is_bool(value: $value)) {
-                $value = $value ? 'true' : 'false';
-            } else {
-                $value = Util::sanitize(value: $value);
-            }
+            $value = match (true) {
+                $value instanceof DateTime => new DateTimeExpression(date: $value),
+                is_array(value: $value) => new GroupExpression(expressions: $value),
+                is_bool(value: $value) => $value ? 'true' : 'false',
+                default => Util::sanitize(value: $value),
+            };
 
             $replacements['<' . $placeholder . '>'] = (string) $value;
         }

@@ -14,6 +14,8 @@ use Webmozart\Assert\Assert;
 
 final readonly class ListenerValueObject
 {
+    // Preserve the existing parameter contract used by callers and inherited interfaces.
+    // @mago-expect lint:excessive-parameter-list(1)
     public function __construct(
         private string $listener,
         private string $route,
@@ -115,6 +117,11 @@ final readonly class ListenerValueObject
 
     private function getRouteConfig(): array
     {
+        $privilege = $this->privilege;
+        if (!$privilege) {
+            $privilege = $this->routeMethod === RouteMethodEnum::GET ? 'view' : 'edit';
+        }
+
         return [
             $this->listener => [
                 'type' => str_contains(haystack: $this->route, needle: ':') ? Segment::class : Literal::class,
@@ -122,8 +129,7 @@ final readonly class ListenerValueObject
                     'route' => $this->route,
                     'defaults' => [
                         'controller' => $this->listener,
-                        'privilege' => $this->privilege
-                            ?: ($this->routeMethod === RouteMethodEnum::GET ? 'view' : 'edit'),
+                        'privilege' => $privilege,
                     ],
                 ],
             ],

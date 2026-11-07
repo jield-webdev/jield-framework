@@ -19,7 +19,10 @@ final class EntraIdentity
     public static function scopes(array $claims, array $applicationRoles = []): array
     {
         return self::isApplication($claims)
-            ? array_values(array_intersect($applicationRoles, \Webmozart\Assert\Assert::isArray($claims['roles'] ?? [])))
+            ? array_values(array_intersect(
+                $applicationRoles,
+                \Webmozart\Assert\Assert::isArray($claims['roles'] ?? []),
+            ))
             : Scope::split(\Webmozart\Assert\Assert::nullOrString($claims['scp'] ?? null));
     }
 

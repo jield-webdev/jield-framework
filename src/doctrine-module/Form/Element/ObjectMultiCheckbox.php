@@ -46,13 +46,25 @@ class ObjectMultiCheckbox extends MultiCheckbox
     {
         if ($value instanceof Traversable) {
             $value = ArrayUtils::iteratorToArray(iterator: $value);
-        } elseif ($value === null) {
-            return parent::setValue(value: []);
-        } elseif (!is_array(value: $value)) {
-            $value = Value::toArray($value);
+            return parent::setValue(value: array_map(
+                callback: [$this->getProxy(), 'getValue'],
+                array: Assert::isArray($value),
+            ));
         }
-
-        return parent::setValue(value: array_map(callback: [$this->getProxy(), 'getValue'], array: Assert::isArray($value)));
+        if ($value === null) {
+            return parent::setValue(value: []);
+        }
+        if (!is_array(value: $value)) {
+            $value = Value::toArray($value);
+            return parent::setValue(value: array_map(
+                callback: [$this->getProxy(), 'getValue'],
+                array: Assert::isArray($value),
+            ));
+        }
+        return parent::setValue(value: array_map(
+            callback: [$this->getProxy(), 'getValue'],
+            array: Assert::isArray($value),
+        ));
     }
 
     /**
@@ -71,7 +83,7 @@ class ObjectMultiCheckbox extends MultiCheckbox
         /** @var ValueOptionSpec $proxyValueOptions */
         $proxyValueOptions = $this->getProxy()->getValueOptions();
 
-        if (!empty($proxyValueOptions)) {
+        if (!($proxyValueOptions === [])) {
             $this->setValueOptions(options: $proxyValueOptions);
         }
 

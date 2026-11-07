@@ -24,7 +24,8 @@ final class IsRedirectedRouteNameConstraint extends Constraint
 {
     public function __construct(
         private readonly AbstractHttpControllerTestCase $activeTestCase,
-    ) {}
+    ) {
+    }
 
     #[Override]
     public function toString(): string

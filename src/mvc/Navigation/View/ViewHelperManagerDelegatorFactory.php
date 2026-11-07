@@ -32,7 +32,7 @@ class ViewHelperManagerDelegatorFactory implements DelegatorFactoryInterface
     ): HelperPluginManager {
         /** @mago-var mixed $viewHelpers */
         $viewHelpers = $callback();
-        assert($viewHelpers instanceof HelperPluginManager);
+        assert($viewHelpers instanceof HelperPluginManager, 'Expected $viewHelpers instanceof HelperPluginManager.');
 
         new HelperConfig()->configureServiceManager($viewHelpers, $container);
 

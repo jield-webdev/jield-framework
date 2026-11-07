@@ -14,7 +14,7 @@ findings from the other tools:
 | Composer metadata | `composer package:validate`, including lock-file consistency |
 | PHP syntax | `composer php-lint` on source, tests, configuration, resources, CLI tools, bootstrap, and CI scripts |
 | PHPStan | `composer phpstan`, using level 5 and paths from `phpstan.neon` |
-| Coding standards | `composer cs` and `composer cs-test` |
+| Coding standards | `composer cs` and `composer cs-test`, both using PSR-12 |
 | Mago formatting | `composer mago:format` (read-only check using `mago.toml`) |
 | Mago lint | `composer mago:lint` |
 | Mago analysis | `composer mago:analyze` on all of `src`, with dependency symbols and PDF defaults loaded |
@@ -51,8 +51,18 @@ separate steps to report all findings.
 PHP syntax checks omit analysis stubs, which intentionally redeclare built-in
 symbols. Mago and PHPStan load their configured analysis stubs instead. Mago
 checks the full source tree, including new modules, without maintaining a list
-of individual module directories. Its existing formatter preset uses multiline
-empty declarations to stay compatible with the PHP_CodeSniffer checks.
+of individual module directories. The formatter preserves multiline conditions
+and uses multiline empty declarations to agree with the PSR-12 checks.
+
+Compatibility APIs retain their established method counts, properties, parameter
+lists, boolean options, and mutually exclusive state-selection branches. These
+deliberate exceptions use counted, scoped `@mago-expect` comments with explanations
+in the source. Public protocol names and form field identifiers are also marked
+where security heuristics mistake them for credentials. Generic return annotations
+keep their local variable targets, and navigation result checks retain correlated
+field validation for both analyzers. No linter rule is disabled for these cases;
+additional findings beyond the expected counts remain visible, and stale
+expectations are reported by Mago.
 
 All checks are blocking. Existing lint, formatting, or analysis violations must
 be resolved before the `CI` status can pass; no baseline or automatic source

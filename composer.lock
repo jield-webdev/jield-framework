@@ -9666,16 +9666,16 @@
         },
         {
             "name": "tecnickcom/tc-lib-pdf",
-            "version": "8.83.0",
+            "version": "8.84.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/tecnickcom/tc-lib-pdf.git",
-                "reference": "e64edb9f03988906cefbacddade187fcc59b4fed"
+                "reference": "2be3a522329df9d2941381ce8315b6647d620c69"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/tecnickcom/tc-lib-pdf/zipball/e64edb9f03988906cefbacddade187fcc59b4fed",
-                "reference": "e64edb9f03988906cefbacddade187fcc59b4fed",
+                "url": "https://api.github.com/repos/tecnickcom/tc-lib-pdf/zipball/2be3a522329df9d2941381ce8315b6647d620c69",
+                "reference": "2be3a522329df9d2941381ce8315b6647d620c69",
                 "shasum": ""
             },
             "require": {
@@ -9748,8 +9748,8 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-11-02T17:03:35+00:00",
-            "published-time": "2026-11-02T17:09:01+00:00"
+            "time": "2026-11-07T12:35:02+00:00",
+            "published-time": "2026-11-07T12:41:06+00:00"
         },
         {
             "name": "tecnickcom/tc-lib-pdf-encrypt",
@@ -11611,12 +11611,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/Roave/SecurityAdvisories.git",
-                "reference": "7252ec7fc650313ca2c1ecc1e556da38d93acd56"
+                "reference": "a09945ae024a4cb2be97d080558455b979e3f743"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Roave/SecurityAdvisories/zipball/7252ec7fc650313ca2c1ecc1e556da38d93acd56",
-                "reference": "7252ec7fc650313ca2c1ecc1e556da38d93acd56",
+                "url": "https://api.github.com/repos/Roave/SecurityAdvisories/zipball/a09945ae024a4cb2be97d080558455b979e3f743",
+                "reference": "a09945ae024a4cb2be97d080558455b979e3f743",
                 "shasum": ""
             },
             "conflict": {
@@ -12261,6 +12261,7 @@
                 "pagarme/pagarme-php": "<3",
                 "pagekit/pagekit": "<=1.0.18",
                 "paragonie/ecc": "<2.0.1",
+                "paragonie/halite": ">=5,<5.1.5",
                 "paragonie/random_compat": "<2",
                 "paragonie/sodium_compat": "<1.24.1|>=2,<2.5.1",
                 "passbolt/passbolt_api": "<4.6.2",
@@ -12777,8 +12778,8 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-11-05T19:32:52+00:00",
-            "published-time": "2026-11-05T19:32:58+00:00"
+            "time": "2026-11-07T01:38:18+00:00",
+            "published-time": "2026-11-07T01:38:22+00:00"
         },
         {
             "name": "sebastian/cli-parser",

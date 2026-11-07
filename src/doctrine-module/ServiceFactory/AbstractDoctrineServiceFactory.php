@@ -55,11 +55,13 @@ final class AbstractDoctrineServiceFactory implements AbstractFactoryInterface
     {
         $matches = [];
 
-        if (!preg_match(
-            pattern: '/^doctrine\.((?<mappingType>orm|odm)\.|)(?<serviceType>[a-z0-9_]+)\.(?<serviceName>[a-z0-9_]+)$/',
-            subject: $name,
-            matches: $matches,
-        )) {
+        if (
+            !preg_match(
+                pattern: '/^doctrine\.((?<mappingType>orm|odm)\.|)(?<serviceType>[a-z0-9_]+)\.(?<serviceName>[a-z0-9_]+)$/',
+                subject: $name,
+                matches: $matches,
+            )
+        ) {
             return false;
         }
 
@@ -71,8 +73,8 @@ final class AbstractDoctrineServiceFactory implements AbstractFactoryInterface
 
         if ($mappingType === '') {
             if (
-                !isset($config['doctrine_factories'][$serviceType])
-                || !isset($config['doctrine'][$serviceType][$serviceName])
+                ($config['doctrine_factories'][$serviceType] ?? null) === null
+                || ($config['doctrine'][$serviceType][$serviceName] ?? null) === null
             ) {
                 return false;
             }
@@ -85,9 +87,9 @@ final class AbstractDoctrineServiceFactory implements AbstractFactoryInterface
         }
 
         if (
-            !isset(
-                $config['doctrine_factories'][$mappingType][$serviceType],
-                $config['doctrine'][$mappingType][$serviceType][$serviceName],
+            !(
+                ($config['doctrine_factories'][$mappingType][$serviceType] ?? null) !== null
+                && ($config['doctrine'][$mappingType][$serviceType][$serviceName] ?? null) !== null
             )
         ) {
             return false;

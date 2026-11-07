@@ -57,13 +57,13 @@ class Week extends AbstractDateTime
         }
         $validators = [];
         $validators[] = $this->getDateValidator();
-        if (isset($this->attributes['min']) || isset($this->attributes['max'])) {
+        if (($this->attributes['min'] ?? null) !== null || ($this->attributes['max'] ?? null) !== null) {
             $validators[] = new WeekComparison(
-                isset($this->attributes['min']) ? (string) $this->attributes['min'] : null,
-                isset($this->attributes['max']) ? (string) $this->attributes['max'] : null,
+                ($this->attributes['min'] ?? null) !== null ? (string) $this->attributes['min'] : null,
+                ($this->attributes['max'] ?? null) !== null ? (string) $this->attributes['max'] : null,
             );
         }
-        if (!isset($this->attributes['step']) || 'any' !== $this->attributes['step']) {
+        if (($this->attributes['step'] ?? null) === null || 'any' !== $this->attributes['step']) {
             $validators[] = $this->getStepValidator();
         }
         $this->validators = $validators;

@@ -97,6 +97,8 @@ use Jield\Form\View\Helper\FormWeek;
  * @method string|FormUrl formUrl(ElementInterface|null $element = null)
  * @method string|FormWeek formWeek(ElementInterface|null $element = null)
  */
-trait HelperTrait {}
+trait HelperTrait
+{
+}
 
 // @codingStandardsIgnoreEnd

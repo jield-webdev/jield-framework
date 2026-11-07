@@ -23,7 +23,7 @@ class HttpMethodListenerFactory implements FactoryInterface
         /** @mago-var mixed $config */
         $config = $container->get('config');
 
-        if (!isset($config['http_methods_listener'])) {
+        if (($config['http_methods_listener'] ?? null) === null) {
             return new HttpMethodListener();
         }
 
@@ -31,7 +31,8 @@ class HttpMethodListenerFactory implements FactoryInterface
         $listenerConfig = $config['http_methods_listener'];
         /** @mago-var mixed $enabled */
         $enabled = array_key_exists('enabled', Assert::isArray($listenerConfig)) ? $listenerConfig['enabled'] : true;
-        $allowedMethods = isset($listenerConfig['allowed_methods']) && is_array($listenerConfig['allowed_methods'])
+        $allowedMethods = ($listenerConfig['allowed_methods'] ?? null) !== null
+        && is_array($listenerConfig['allowed_methods'])
             ? $listenerConfig['allowed_methods']
             : null;
 

@@ -53,6 +53,10 @@ use function trigger_error;
 
 use const E_USER_NOTICE;
 
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
+// @mago-expect lint:kan-defect(1)
+// @mago-expect lint:too-many-methods(1)
 abstract class AbstractControllerTestCase extends TestCase
 {
     /** @var ApplicationInterface|null */
@@ -150,7 +154,7 @@ abstract class AbstractControllerTestCase extends TestCase
         }
 
         // do not cache module config on testing environment
-        if (isset($applicationConfig['module_listener_options']['config_cache_enabled'])) {
+        if (($applicationConfig['module_listener_options']['config_cache_enabled'] ?? null) !== null) {
             $applicationConfig['module_listener_options']['config_cache_enabled'] = false;
         }
         $this->applicationConfig = $applicationConfig;
@@ -214,7 +218,7 @@ abstract class AbstractControllerTestCase extends TestCase
     {
         $response = $this->getApplication()->getMvcEvent()->getResponse();
 
-        assert($response instanceof Response);
+        assert($response instanceof Response, 'Expected $response instanceof Response.');
 
         return $response;
     }
@@ -274,8 +278,14 @@ abstract class AbstractControllerTestCase extends TestCase
         WebmozartAssert::isInstanceOf($request, \Laminas\Http\Request::class)->setMethod(WebmozartAssert::string(
             $method,
         ));
-        WebmozartAssert::isInstanceOf($request, \Laminas\Http\Request::class)->setQuery(new Parameters(Value::nullableArray($query)));
-        WebmozartAssert::isInstanceOf($request, \Laminas\Http\Request::class)->setPost(new Parameters(Value::nullableArray($post)));
+        WebmozartAssert::isInstanceOf(
+            $request,
+            \Laminas\Http\Request::class,
+        )->setQuery(new Parameters(Value::nullableArray($query)));
+        WebmozartAssert::isInstanceOf(
+            $request,
+            \Laminas\Http\Request::class,
+        )->setPost(new Parameters(Value::nullableArray($post)));
         WebmozartAssert::isInstanceOf($request, \Laminas\Http\Request::class)->setUri($uri);
         WebmozartAssert::isInstanceOf($request, Request::class)->setRequestUri(
             WebmozartAssert::string($uri->getPath()),
@@ -300,8 +310,13 @@ abstract class AbstractControllerTestCase extends TestCase
      */
     public function dispatch($url, $method = null, $params = [], $isXmlHttpRequest = false)
     {
+        // These alternatives are mutually exclusive; the following code consumes the selected state.
+        // @mago-expect lint:no-else-clause(1)
         if (null === $method && $this->getRequest() instanceof HttpRequest) {
-            $method = \Webmozart\Assert\Assert::isInstanceOf($this->getRequest(), \Laminas\Http\Request::class)->getMethod();
+            $method = \Webmozart\Assert\Assert::isInstanceOf(
+                $this->getRequest(),
+                \Laminas\Http\Request::class,
+            )->getMethod();
         } elseif (null === $method) {
             $method = HttpRequest::METHOD_GET;
         }
@@ -331,6 +346,8 @@ abstract class AbstractControllerTestCase extends TestCase
             // Do not create a global session variable if it doesn't already
             // exist. Otherwise calling this function could mark tests risky,
             // as it changes global state.
+            // Inspect session existence without creating a session global during test reset.
+            // @mago-expect lint:no-global(1)
             if (array_key_exists('_SESSION', $GLOBALS)) {
                 $_SESSION = [];
             }
@@ -386,7 +403,7 @@ abstract class AbstractControllerTestCase extends TestCase
     {
         /** @mago-var mixed $moduleManager */
         $moduleManager = $this->getApplicationServiceLocator()->get('ModuleManager');
-        assert($moduleManager instanceof ModuleManager);
+        assert($moduleManager instanceof ModuleManager, 'Expected $moduleManager instanceof ModuleManager.');
         $modulesLoaded = array_keys($moduleManager->getLoadedModules());
         $list = array_diff(Value::strings($modules), Value::strings($modulesLoaded));
         if ($list) {
@@ -587,7 +604,8 @@ abstract class AbstractControllerTestCase extends TestCase
     public function assertControllerClass($controller)
     {
         $controllerClass = $this->getControllerFullClassName();
-        $match = substr($controllerClass, (strrpos($controllerClass, '\\') ?: -1) + 1);
+        $position = strrpos($controllerClass, '\\');
+        $match = substr($controllerClass, ($position ? $position : -1) + 1);
         $match = strtolower($match);
         $controller = strtolower($controller);
         if ($controller !== $match) {
@@ -611,7 +629,8 @@ abstract class AbstractControllerTestCase extends TestCase
     public function assertNotControllerClass($controller)
     {
         $controllerClass = $this->getControllerFullClassName();
-        $match = substr($controllerClass, (strrpos($controllerClass, '\\') ?: -1) + 1);
+        $position = strrpos($controllerClass, '\\');
+        $match = substr($controllerClass, ($position ? $position : -1) + 1);
         $match = strtolower($match);
         $controller = strtolower($controller);
         if ($controller === $match) {

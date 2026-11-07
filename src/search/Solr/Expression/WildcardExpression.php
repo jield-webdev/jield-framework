@@ -24,7 +24,8 @@ class WildcardExpression extends Expression implements Stringable
         private readonly string $wildcard,
         private readonly ExpressionInterface|string $prefix = '*',
         private readonly ExpressionInterface|string $suffix = '*',
-    ) {}
+    ) {
+    }
 
     public function __toString(): string
     {
@@ -32,6 +33,8 @@ class WildcardExpression extends Expression implements Stringable
             return '*';
         }
 
+        // These alternatives are mutually exclusive; the following code consumes the selected state.
+        // @mago-expect lint:no-else-clause(1)
         if ($this->prefix instanceof PhraseExpression) {
             $prefix = substr(string: (string) $this->prefix, offset: 0, length: -1);
             $phrasePrefix = true;
@@ -40,6 +43,8 @@ class WildcardExpression extends Expression implements Stringable
             $phrasePrefix = false;
         }
 
+        // These alternatives are mutually exclusive; the following code consumes the selected state.
+        // @mago-expect lint:no-else-clause(1)
         if ($this->suffix instanceof PhraseExpression) {
             $suffix = substr(string: (string) $this->suffix, offset: 1);
             $phraseSuffix = true;

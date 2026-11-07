@@ -101,13 +101,25 @@ class AssetManager implements AssetFilterManagerAwareInterface, AssetCacheManage
             );
         }
 
-        if (empty($this->asset->getMimeType())) {
+        if (!($this->asset->getMimeType() ?? null)) {
             throw new Exception\RuntimeException(message: 'Expected property "mimetype" on asset.');
         }
 
-        $this->getAssetFilterManager()->setFilters(path: $this->path, asset: \Webmozart\Assert\Assert::isInstanceOf($this->asset, \Jield\AssetManager\Asset\AssetInterface::class));
+        $this->getAssetFilterManager()->setFilters(
+            path: $this->path,
+            asset: \Webmozart\Assert\Assert::isInstanceOf(
+                $this->asset,
+                \Jield\AssetManager\Asset\AssetInterface::class,
+            ),
+        );
 
-        $this->asset = $this->getAssetCacheManager()->setCache(path: $this->path, asset: \Webmozart\Assert\Assert::isInstanceOf($this->asset, \Jield\AssetManager\Asset\AssetInterface::class));
+        $this->asset = $this->getAssetCacheManager()->setCache(
+            path: $this->path,
+            asset: \Webmozart\Assert\Assert::isInstanceOf(
+                $this->asset,
+                \Jield\AssetManager\Asset\AssetInterface::class,
+            ),
+        );
         $mimeType = $this->asset->getMimetype();
         $assetContents = $this->asset->dump();
         // @codeCoverageIgnoreStart
@@ -118,7 +130,7 @@ class AssetManager implements AssetFilterManagerAwareInterface, AssetCacheManage
         // @codeCoverageIgnoreEnd
         // Only clean the output buffer if it's turned on and something
         // has been buffered.
-        if (!empty($this->config['clear_output_buffer']) && (ob_get_length() ?: 0) > 0) {
+        if (!!($this->config['clear_output_buffer'] ?? null) && (int) ob_get_length() > 0) {
             ob_clean();
         }
 

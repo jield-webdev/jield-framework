@@ -141,7 +141,7 @@ class FormInput extends AbstractHelper
         }
 
         $type = strtolower(string: $type);
-        if (!isset($this->validTypes[$type])) {
+        if (($this->validTypes[$type] ?? null) === null) {
             return 'text';
         }
 

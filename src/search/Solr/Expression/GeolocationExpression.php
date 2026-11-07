@@ -14,7 +14,8 @@ class GeolocationExpression extends Expression implements Stringable
         private readonly float $latitude,
         private readonly float $longitude,
         private readonly int $precision,
-    ) {}
+    ) {
+    }
 
     public function __toString(): string
     {

@@ -52,16 +52,29 @@ final class UpdateIndex extends Command
         /** @mago-var mixed $shallow */
         $shallow = $input->getOption(name: 'shallow');
 
-        $startMessage = sprintf('<info>%s the index of %s</info>', $reset ? 'Reset' : 'Update', \Jield\Stdlib\Value::scalar($index));
+        $startMessage = sprintf(
+            '<info>%s the index of %s</info>',
+            $reset ? 'Reset' : 'Update',
+            \Jield\Stdlib\Value::scalar($index),
+        );
         $output->writeln(messages: $startMessage);
 
         if ($shallow) {
             $output->writeln(messages: '<info>Shallow update enabled</info>');
         }
 
-        $this->consoleService->resetIndex(output: $output, index: \Webmozart\Assert\Assert::string($index), clearIndex: \Webmozart\Assert\Assert::boolean($reset), shallow: \Webmozart\Assert\Assert::boolean($shallow));
+        $this->consoleService->resetIndex(
+            output: $output,
+            index: \Webmozart\Assert\Assert::string($index),
+            clearIndex: \Webmozart\Assert\Assert::boolean($reset),
+            shallow: \Webmozart\Assert\Assert::boolean($shallow),
+        );
 
-        $endMessage = sprintf('<info>%s the index of %s completed</info>', $reset ? 'Reset' : 'Update', \Jield\Stdlib\Value::scalar($index));
+        $endMessage = sprintf(
+            '<info>%s the index of %s completed</info>',
+            $reset ? 'Reset' : 'Update',
+            \Jield\Stdlib\Value::scalar($index),
+        );
         $output->writeln(messages: $endMessage);
 
         return Command::SUCCESS;

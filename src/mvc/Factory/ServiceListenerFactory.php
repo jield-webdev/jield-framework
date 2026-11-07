@@ -27,6 +27,8 @@ use function is_array;
 use function is_string;
 use function sprintf;
 
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
 class ServiceListenerFactory implements FactoryInterface
 {
     public const string MISSING_KEY_ERROR = 'Invalid service listener options detected, %s array must contain %s key.';
@@ -141,7 +143,7 @@ class ServiceListenerFactory implements FactoryInterface
 
         $serviceListener->setDefaultServiceConfig($this->defaultServiceConfig);
 
-        if (isset($configuration['service_listener_options'])) {
+        if (($configuration['service_listener_options'] ?? null) !== null) {
             $this->injectServiceListenerOptions(
                 Assert::isArray($configuration['service_listener_options']),
                 $serviceListener,
@@ -199,7 +201,7 @@ class ServiceListenerFactory implements FactoryInterface
             ));
         }
 
-        if (!isset($options['service_manager'])) {
+        if (($options['service_manager'] ?? null) === null) {
             throw new ServiceNotCreatedException(sprintf(self::MISSING_KEY_ERROR, $name, 'service_manager'));
         }
 
@@ -211,7 +213,7 @@ class ServiceListenerFactory implements FactoryInterface
             ));
         }
 
-        if (!isset($options['config_key'])) {
+        if (($options['config_key'] ?? null) === null) {
             throw new ServiceNotCreatedException(sprintf(self::MISSING_KEY_ERROR, $name, 'config_key'));
         }
 
@@ -223,7 +225,7 @@ class ServiceListenerFactory implements FactoryInterface
             ));
         }
 
-        if (!isset($options['interface'])) {
+        if (($options['interface'] ?? null) === null) {
             throw new ServiceNotCreatedException(sprintf(self::MISSING_KEY_ERROR, $name, 'interface'));
         }
 
@@ -235,7 +237,7 @@ class ServiceListenerFactory implements FactoryInterface
             ));
         }
 
-        if (!isset($options['method'])) {
+        if (($options['method'] ?? null) === null) {
             throw new ServiceNotCreatedException(sprintf(self::MISSING_KEY_ERROR, $name, 'method'));
         }
 

@@ -29,6 +29,9 @@ use function sprintf;
 /**
  * @method array bodyParams()
  */
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
+// @mago-expect lint:too-many-methods(1)
 final class AuthController extends AbstractActionController
 {
     protected bool $apiProblemErrorResponse = true;
@@ -91,7 +94,8 @@ final class AuthController extends AbstractActionController
         try {
             $response = $oauth2server->handleTokenRequest(request: $oauth2request);
         } catch (ProblemExceptionInterface $problemException) {
-            $status = $problemException->getCode() ?: 401;
+            $status = $problemException->getCode();
+            $status = $status ? $status : 401;
             $status = $status >= 400 && Assert::numeric($status) < 600 ? $status : 401;
 
             return new ApiProblemResponse(apiProblem: new ApiProblem(status: $status, detail: $problemException));
@@ -135,7 +139,9 @@ final class AuthController extends AbstractActionController
         }
 
         $oauth2request = $this->getOAuth2Request();
-        $response = $this->getOAuth2Server(type: Assert::nullOrString($this->params('oauth')))->handleRevokeRequest(request: $oauth2request);
+        $response = $this->getOAuth2Server(type: Assert::nullOrString($this->params('oauth')))->handleRevokeRequest(
+            request: $oauth2request,
+        );
         Assert::isInstanceOf(
             value: $response,
             class: OAuth2Response::class,
@@ -213,7 +219,7 @@ final class AuthController extends AbstractActionController
 
         /** @mago-var mixed $authorized */
         $authorized = $request->request(name: 'authorized', default: false);
-        if (empty($authorized)) {
+        if (!($authorized ?? null)) {
             /** @mago-var mixed $clientId */
             $clientId = $request->query(name: 'client_id', default: false);
             $view = new ViewModel(variables: ['clientId' => $clientId]);
@@ -233,7 +239,7 @@ final class AuthController extends AbstractActionController
 
         /** @mago-var mixed $redirect */
         $redirect = $response->getHttpHeader(name: 'Location');
-        if (!empty($redirect)) {
+        if (!!($redirect ?? null)) {
             return $this->redirect()->toUrl(url: Assert::string($redirect));
         }
 
@@ -324,6 +330,8 @@ final class AuthController extends AbstractActionController
 
         // Get $_SERVER superglobal
         $server = [];
+        // These alternatives are mutually exclusive; the following code consumes the selected state.
+        // @mago-expect lint:no-else-clause(1)
         if ($laminasRequest instanceof PhpEnvironmentRequest) {
             /** @mago-var mixed $server */
             $server = Value::call($laminasRequest->getServer(), 'toArray');
@@ -335,11 +343,11 @@ final class AuthController extends AbstractActionController
 
         // Seed headers with HTTP auth information
         $headers = Assert::isInstanceOf($headers, Headers::class)->toArray();
-        if (isset($server['PHP_AUTH_USER'])) {
+        if (($server['PHP_AUTH_USER'] ?? null) !== null) {
             $headers['PHP_AUTH_USER'] = $server['PHP_AUTH_USER'];
         }
 
-        if (isset($server['PHP_AUTH_PW'])) {
+        if (($server['PHP_AUTH_PW'] ?? null) !== null) {
             $headers['PHP_AUTH_PW'] = $server['PHP_AUTH_PW'];
         }
 

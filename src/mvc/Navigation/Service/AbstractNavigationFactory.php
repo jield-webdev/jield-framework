@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Jield\Mvc\Navigation\Service;
 
-use Jield\Stdlib\Value;
 use Jield\Mvc\Application;
 use Jield\Mvc\ApplicationInterface;
 use Jield\Mvc\Navigation\MvcPage;
 use Jield\Mvc\Router\RouteMatch;
 use Jield\Stdlib\Service;
+use Jield\Stdlib\Value;
 use Laminas\Http\Request;
 use Laminas\Navigation\Exception;
 use Laminas\Navigation\Exception\InvalidArgumentException;
@@ -28,6 +28,8 @@ use function sprintf;
 /**
  * Abstract navigation factory
  */
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
 abstract class AbstractNavigationFactory implements FactoryInterface
 {
     /** @var array<array-key, array<string, mixed>>|null */
@@ -59,10 +61,10 @@ abstract class AbstractNavigationFactory implements FactoryInterface
             /** @mago-var mixed $configuration */
             $configuration = $container->get('config');
 
-            if (!isset($configuration['navigation'])) {
+            if (($configuration['navigation'] ?? null) === null) {
                 throw new Exception\InvalidArgumentException('Could not find navigation configuration key');
             }
-            if (!isset($configuration['navigation'][$this->getName()])) {
+            if (($configuration['navigation'][$this->getName()] ?? null) === null) {
                 throw new Exception\InvalidArgumentException(sprintf(
                     'Failed to find a navigation container by the name "%s"',
                     $this->getName(),
@@ -89,7 +91,7 @@ abstract class AbstractNavigationFactory implements FactoryInterface
     protected function preparePages(ContainerInterface $container, array $pages): array
     {
         $application = Service::get($container, ApplicationInterface::class, 'Application');
-        assert($application instanceof Application);
+        assert($application instanceof Application, 'Expected $application instanceof Application.');
 
         $routeMatch = $application->getMvcEvent()->getRouteMatch();
         $router = $application->getMvcEvent()->getRouter();
@@ -111,10 +113,11 @@ abstract class AbstractNavigationFactory implements FactoryInterface
     {
         if ($config instanceof Traversable) {
             $config = ArrayUtils::iteratorToArray($config);
-        } elseif (!is_array($config)) {
+            return Value::maps($config);
+        }
+        if (!is_array($config)) {
             throw new Exception\InvalidArgumentException('Invalid input, expected array or Traversable object');
         }
-
         return Value::maps($config);
     }
 
@@ -129,11 +132,16 @@ abstract class AbstractNavigationFactory implements FactoryInterface
         ?Request $request = null,
     ): array {
         foreach ($pages as &$page) {
-            $hasUri = isset($page['uri']);
-            $hasMvc = isset($page['action']) || isset($page['controller']) || isset($page['route']);
+            $hasUri = ($page['uri'] ?? null) !== null;
+            $hasMvc =
+                ($page['action'] ?? null) !== null
+                || ($page['controller'] ?? null) !== null
+                || ($page['route'] ?? null) !== null;
+            // These alternatives are mutually exclusive; the following code consumes the selected state.
+            // @mago-expect lint:no-else-clause(1)
             if ($hasMvc || in_array($page['type'] ?? null, ['mvc', Mvc::class], true)) {
                 $page['type'] = MvcPage::class;
-                if (!isset($page['routeMatch']) && $routeMatch) {
+                if (($page['routeMatch'] ?? null) === null && $routeMatch) {
                     $page['routeMatch'] = $routeMatch;
                 }
                 $page['router'] ??= $router;
@@ -141,8 +149,13 @@ abstract class AbstractNavigationFactory implements FactoryInterface
                 $page['request'] ??= $request;
             }
 
-            if (isset($page['pages'])) {
-                $page['pages'] = $this->injectComponents(\Jield\Stdlib\Value::maps($page['pages']), $routeMatch, $router, $request);
+            if (($page['pages'] ?? null) !== null) {
+                $page['pages'] = $this->injectComponents(
+                    \Jield\Stdlib\Value::maps($page['pages']),
+                    $routeMatch,
+                    $router,
+                    $request,
+                );
             }
         }
 

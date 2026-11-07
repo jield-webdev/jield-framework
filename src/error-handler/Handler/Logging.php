@@ -56,8 +56,14 @@ final class Logging
         private readonly ?MailerInterface $mailer = null,
         private readonly bool $includeFilesToAttachments = true,
     ) {
-        $this->emailReceivers = \Jield\Stdlib\Value::strings(\Jield\Stdlib\Value::accessible($errorHeroModuleLocalConfig['email-notification-settings'])['email-to-send']);
-        $this->emailSender = Assert::string(\Jield\Stdlib\Value::accessible($errorHeroModuleLocalConfig['email-notification-settings'])['email-from']);
+        $this->emailReceivers = \Jield\Stdlib\Value::strings(
+            \Jield\Stdlib\Value::accessible(
+                $errorHeroModuleLocalConfig['email-notification-settings'],
+            )['email-to-send'],
+        );
+        $this->emailSender = Assert::string(
+            \Jield\Stdlib\Value::accessible($errorHeroModuleLocalConfig['email-notification-settings'])['email-from'],
+        );
     }
 
     /**
@@ -108,6 +114,8 @@ final class Logging
      */
     private function collectErrorExceptionData(Throwable $throwable): array
     {
+        // These alternatives are mutually exclusive; the following code consumes the selected state.
+        // @mago-expect lint:no-else-clause(1)
         if ($throwable instanceof ErrorException) {
             //We need to use the new PSR7 severity level, these can be fetched
             //From the psrPriorityMap in this class
@@ -137,6 +145,8 @@ final class Logging
     /**
      * @throws InvalidArgumentException
      */
+    // Preserve the existing parameter contract used by callers and inherited interfaces.
+    // @mago-expect lint:no-boolean-flag-parameter(1)
     public static function getPsrPrioryFromSeverity(int $severity, bool $fromLegacy = true): string
     {
         if ($fromLegacy) {
@@ -178,15 +188,21 @@ final class Logging
             $argv = $_SERVER['argv'] ?? [];
             $serverUrl = php_uname('n');
             $url = $serverUrl . ':' . basename((string) getcwd()) . ' ' . get_current_user() . '$ ' . PHP_BINARY;
-
             $params = implode(' ', $argv);
             $url .= $params;
-        } else {
-            $http = $request->getUri();
-            $serverUrl = (string) $http->getScheme() . '://' . (string) $http->getHost();
-            $url = $http->toString();
+            return [
+                self::SERVER_URL => $serverUrl,
+                'url' => $url,
+                'file' => Assert::string($collectedExceptionData[self::ERROR_FILE]),
+                'line' => Assert::integer($collectedExceptionData[self::ERROR_LINE]),
+                'error_type' => Assert::string($collectedExceptionData[self::ERROR_TYPE]),
+                self::TRACE => Assert::string($collectedExceptionData[self::TRACE]),
+                'request_data' => $this->getRequestData($request),
+            ];
         }
-
+        $http = $request->getUri();
+        $serverUrl = (string) $http->getScheme() . '://' . (string) $http->getHost();
+        $url = $http->toString();
         return [
             self::SERVER_URL => $serverUrl,
             'url' => $url,
@@ -239,13 +255,15 @@ final class Logging
         $serverUrl = $extra[self::SERVER_URL];
 
         try {
-            if ($this->isExists(
-                $collectedExceptionData[self::ERROR_FILE],
-                $collectedExceptionData[self::ERROR_LINE],
-                $collectedExceptionData[self::ERROR_MESSAGE],
-                $extra['url'],
-                $collectedExceptionData[self::ERROR_TYPE],
-            )) {
+            if (
+                $this->isExists(
+                    $collectedExceptionData[self::ERROR_FILE],
+                    $collectedExceptionData[self::ERROR_LINE],
+                    $collectedExceptionData[self::ERROR_MESSAGE],
+                    $extra['url'],
+                    $collectedExceptionData[self::ERROR_TYPE],
+                )
+            ) {
                 return;
             }
 

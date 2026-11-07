@@ -12,7 +12,8 @@ class UserAsRole implements RoleInterface, Stringable
 {
     public function __construct(
         private readonly mixed $userAsRole,
-    ) {}
+    ) {
+    }
 
     public function hasLoggedinUser(): bool
     {
@@ -30,7 +31,10 @@ class UserAsRole implements RoleInterface, Stringable
             );
         }
 
-        return \Webmozart\Assert\Assert::isInstanceOf($this->userAsRole, \Jield\Authorize\Role\UserAsRoleInterface::class);
+        return \Webmozart\Assert\Assert::isInstanceOf(
+            $this->userAsRole,
+            \Jield\Authorize\Role\UserAsRoleInterface::class,
+        );
     }
 
     public function __toString(): string

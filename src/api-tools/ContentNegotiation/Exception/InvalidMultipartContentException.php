@@ -6,4 +6,6 @@ namespace Jield\ApiTools\ContentNegotiation\Exception;
 
 use DomainException;
 
-class InvalidMultipartContentException extends DomainException implements ExceptionInterface {}
+class InvalidMultipartContentException extends DomainException implements ExceptionInterface
+{
+}

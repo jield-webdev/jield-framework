@@ -6,4 +6,6 @@ namespace Jield\ApiTools\ContentNegotiation;
 
 use Jield\Mvc\View\Model\ViewModel as BaseViewModel;
 
-class ViewModel extends BaseViewModel {}
+class ViewModel extends BaseViewModel
+{
+}

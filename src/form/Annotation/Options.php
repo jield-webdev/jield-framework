@@ -27,7 +27,8 @@ final readonly class Options
      */
     public function __construct(
         private array $options,
-    ) {}
+    ) {
+    }
 
     /**
      * Retrieve the options

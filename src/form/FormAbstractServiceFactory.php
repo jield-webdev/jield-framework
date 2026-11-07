@@ -14,6 +14,8 @@ use Webmozart\Assert\Assert;
 use function is_array;
 use function is_string;
 
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
 final class FormAbstractServiceFactory implements AbstractFactoryInterface
 {
     private ?array $config = null;
@@ -58,14 +60,14 @@ final class FormAbstractServiceFactory implements AbstractFactoryInterface
         }
 
         $config = $this->getConfig(container: $container);
-        if (empty($config)) {
+        if ($config === []) {
             return false;
         }
 
         return (
-            isset($config[$requestedName])
+            ($config[$requestedName] ?? null) !== null
             && is_array(value: $config[$requestedName])
-            && !empty($config[$requestedName])
+            && !!$config[$requestedName]
         );
     }
 
@@ -87,7 +89,7 @@ final class FormAbstractServiceFactory implements AbstractFactoryInterface
 
         /** @mago-var mixed $config */
         $config = $container->get('config');
-        if (!isset($config[$this->configKey]) || !is_array(value: $config[$this->configKey])) {
+        if (($config[$this->configKey] ?? null) === null || !is_array(value: $config[$this->configKey])) {
             $this->config = [];
             return $this->config;
         }
@@ -129,7 +131,7 @@ final class FormAbstractServiceFactory implements AbstractFactoryInterface
      */
     protected function marshalInputFilter(array &$config, ContainerInterface $container, Factory $formFactory): void
     {
-        if (!isset($config['input_filter'])) {
+        if (($config['input_filter'] ?? null) === null) {
             return;
         }
 

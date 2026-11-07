@@ -20,7 +20,10 @@ class AuthControllerFactory implements FactoryInterface
     {
         $authController = new AuthController(
             serverFactory: $this->getOAuth2ServerFactory(container: $container),
-            userIdProvider: \Webmozart\Assert\Assert::isInstanceOf($container->get('Jield\ApiTools\OAuth2\Provider\UserId'), \Jield\ApiTools\OAuth2\Provider\UserId\UserIdProviderInterface::class),
+            userIdProvider: \Webmozart\Assert\Assert::isInstanceOf(
+                $container->get('Jield\ApiTools\OAuth2\Provider\UserId'),
+                \Jield\ApiTools\OAuth2\Provider\UserId\UserIdProviderInterface::class,
+            ),
         );
 
         $authController->setApiProblemErrorResponse(apiProblemErrorResponse: $this->marshalApiProblemErrorResponse(
@@ -64,7 +67,7 @@ class AuthControllerFactory implements FactoryInterface
         $config = $container->get('config');
 
         return (
-            isset($config['api-tools-oauth2']['api_problem_error_response'])
+            ($config['api-tools-oauth2']['api_problem_error_response'] ?? null) !== null
             && $config['api-tools-oauth2']['api_problem_error_response'] === true
         );
     }

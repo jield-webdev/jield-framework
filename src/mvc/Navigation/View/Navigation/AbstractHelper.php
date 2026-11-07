@@ -46,6 +46,11 @@ use const E_USER_ERROR;
  *
  * Duck-types against Laminas\I18n\Translator\TranslatorAwareInterface.
  */
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
+// @mago-expect lint:kan-defect(1)
+// @mago-expect lint:too-many-methods(1)
+// @mago-expect lint:too-many-properties(1)
 abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper implements
     EventManagerAwareInterface,
     HelperInterface
@@ -274,10 +279,14 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
      *                                      is true
      * @return  bool                        Whether page should be accepted
      */
+    // Preserve the existing parameter contract used by callers and inherited interfaces.
+    // @mago-expect lint:no-boolean-flag-parameter(1)
     public function accept(AbstractPage $page, bool $recursive = true): bool
     {
         $accept = true;
 
+        // These alternatives are mutually exclusive; the following code consumes the selected state.
+        // @mago-expect lint:no-else-clause(1)
         if (!$page->isVisible(false) && !$this->getRenderInvisible()) {
             $accept = false;
         } elseif ($this->getUseAcl()) {
@@ -336,9 +345,11 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
         // filter out null values and empty string values
         /** @mago-var mixed $value */
         foreach ($attribs as $key => $value) {
-            if ($value === null || is_string($value) && !strlen($value)) {
-                unset($attribs[$key]);
+            if (!($value === null || is_string($value) && !strlen($value))) {
+                continue;
             }
+
+            unset($attribs[$key]);
         }
 
         $attributes = Assert::isCallable($this->getView()->plugin('htmlAttributes'));
@@ -396,8 +407,8 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
         }
 
         $translator = $this->getTranslator();
-        assert($translator instanceof TranslatorInterface);
-        $textDomain = $textDomain ?: $this->getTranslatorTextDomain();
+        assert($translator instanceof TranslatorInterface, 'Expected $translator instanceof TranslatorInterface.');
+        $textDomain = $textDomain ? $textDomain : $this->getTranslatorTextDomain();
 
         return $translator->translate($message, $textDomain);
     }
@@ -552,11 +563,7 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
      */
     public function setMaxDepth(int|string|null $maxDepth = null): static
     {
-        if (null === $maxDepth || is_int($maxDepth)) {
-            $this->maxDepth = $maxDepth;
-        } else {
-            $this->maxDepth = (int) $maxDepth;
-        }
+        $this->maxDepth = null === $maxDepth || is_int($maxDepth) ? $maxDepth : (int) $maxDepth;
 
         return $this;
     }
@@ -576,11 +583,7 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
      */
     public function setMinDepth(int|string|null $minDepth = null): static
     {
-        if (null === $minDepth || is_int($minDepth)) {
-            $this->minDepth = $minDepth;
-        } else {
-            $this->minDepth = (int) $minDepth;
-        }
+        $this->minDepth = null === $minDepth || is_int($minDepth) ? $minDepth : (int) $minDepth;
 
         return $this;
     }
@@ -626,14 +629,13 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
      */
     public function setRole(mixed $role = null): static
     {
-        if (null === $role || is_string($role) || $role instanceof Acl\Role\RoleInterface) {
-            $this->role = $role;
-        } else {
+        if ($role !== null && !is_string($role) && !$role instanceof Acl\Role\RoleInterface) {
             throw new Exception\InvalidArgumentException(sprintf(
-                '$role must be a string, null, or an instance of ' . 'Laminas\Permissions\Role\RoleInterface; %s given',
+                '$role must be a string, null, or an instance of Laminas\Permissions\Role\RoleInterface; %s given',
                 get_debug_type($role),
             ));
         }
+        $this->role = $role;
 
         return $this;
     }
@@ -738,14 +740,13 @@ abstract class AbstractHelper extends \Jield\Form\View\Helper\AbstractHelper imp
      */
     public static function setDefaultRole(mixed $role = null): void
     {
-        if (null === $role || is_string($role) || $role instanceof Acl\Role\RoleInterface) {
-            static::$defaultRole = $role;
-        } else {
+        if ($role !== null && !is_string($role) && !$role instanceof Acl\Role\RoleInterface) {
             throw new Exception\InvalidArgumentException(sprintf(
                 '$role must be null|string|Laminas\Permissions\Role\RoleInterface; received "%s"',
                 get_debug_type($role),
             ));
         }
+        static::$defaultRole = $role;
     }
 
     /**

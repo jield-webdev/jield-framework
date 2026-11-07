@@ -63,19 +63,18 @@ final class Validator
                 ),
                 E_USER_DEPRECATED,
             );
-
             $this->name = Assert::string($name['name'] ?? null);
             $this->options = Assert::isArray($name['options'] ?? $options);
             /** @mago-var mixed $breakChainOnFailure */
             $breakChainOnFailure = $name['break_chain_on_failure'] ?? $breakChainOnFailure;
             $this->breakChainOnFailure = $breakChainOnFailure === null ? null : Assert::boolean($breakChainOnFailure);
             $this->priority = Assert::nullOrInteger($name['priority'] ?? $priority);
-        } else {
-            $this->name = $name;
-            $this->options = $options;
-            $this->breakChainOnFailure = $breakChainOnFailure;
-            $this->priority = $priority;
+            return;
         }
+        $this->name = $name;
+        $this->options = $options;
+        $this->breakChainOnFailure = $breakChainOnFailure;
+        $this->priority = $priority;
     }
 
     /**
@@ -84,7 +83,7 @@ final class Validator
     public function getValidatorSpecification(): array
     {
         $inputSpec = ['name' => $this->name];
-        if (!empty($this->options)) {
+        if (!!$this->options) {
             $inputSpec['options'] = $this->options;
         }
         if (null !== $this->breakChainOnFailure) {

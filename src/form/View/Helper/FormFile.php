@@ -53,10 +53,21 @@ class FormFile extends FormInput
 
         /** @mago-var mixed $value */
         $value = $element->getValue();
-        if (is_array(value: $value) && isset($value['name']) && !is_array(value: $value['name'])) {
+        if (is_array(value: $value) && ($value['name'] ?? null) !== null && !is_array(value: $value['name'])) {
             $attributes['value'] = $value['name'];
-        } elseif (is_string(value: $value)) {
+            return sprintf(
+                '<input %s%s',
+                $this->createAttributesString(attributes: $attributes),
+                $this->getInlineClosingBracket(),
+            );
+        }
+        if (is_string(value: $value)) {
             $attributes['value'] = $value;
+            return sprintf(
+                '<input %s%s',
+                $this->createAttributesString(attributes: $attributes),
+                $this->getInlineClosingBracket(),
+            );
         }
 
         return sprintf(

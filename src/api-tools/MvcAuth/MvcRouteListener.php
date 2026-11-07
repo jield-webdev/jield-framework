@@ -16,6 +16,8 @@ use Webmozart\Assert\Assert;
 
 use function is_bool;
 
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
 class MvcRouteListener extends AbstractListenerAggregate
 {
     protected EventManagerInterface $events;

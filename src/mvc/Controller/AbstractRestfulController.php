@@ -35,6 +35,10 @@ use function trim;
 /**
  * Abstract RESTful controller
  */
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
+// @mago-expect lint:kan-defect(1)
+// @mago-expect lint:too-many-methods(1)
 abstract class AbstractRestfulController extends AbstractController
 {
     public const string CONTENT_TYPE_JSON = 'json';
@@ -288,6 +292,8 @@ abstract class AbstractRestfulController extends AbstractController
      * @throws Exception\DomainException If no route matches in event or invalid HTTP method.
      * @throws \ReflectionException
      */
+    // Keep the coordinated parsing or rendering steps of this compatibility method together.
+    // @mago-expect lint:halstead(1)
     public function onDispatch(MvcEvent $e): mixed
     {
         $routeMatch = $e->getRouteMatch();
@@ -318,7 +324,7 @@ abstract class AbstractRestfulController extends AbstractController
 
         // RESTful methods
         $method = strtolower(Assert::isInstanceOf($request, \Laminas\Http\Request::class)->getMethod());
-        if (isset($this->customHttpMethodsMap[$method])) {
+        if (($this->customHttpMethodsMap[$method] ?? null) !== null) {
             /** @mago-var mixed $return */
             $return = $this->customHttpMethodsMap[$method]($e);
             $routeMatch->setParam('action', $method);
@@ -393,9 +399,8 @@ abstract class AbstractRestfulController extends AbstractController
                     break;
                 }
 
-                // TODO: This try-catch should be removed in the future, but it
-                // will create a BC break for pre-2.2.0 apps that expect a 405
-                // instead of going to patchList
+                // Preserve the 405 response expected by legacy applications
+                // when patchList is not implemented.
                 try {
                     $action = 'patchList';
                     /** @mago-var mixed $return */
@@ -577,7 +582,12 @@ abstract class AbstractRestfulController extends AbstractController
         $content = Assert::string(Value::call($request, 'getContent'));
 
         // JSON content? decode and return it.
-        if ($this->requestHasContentType(Assert::isInstanceOf($request, \Laminas\Stdlib\RequestInterface::class), self::CONTENT_TYPE_JSON)) {
+        if (
+            $this->requestHasContentType(
+                Assert::isInstanceOf($request, \Laminas\Stdlib\RequestInterface::class),
+                self::CONTENT_TYPE_JSON,
+            )
+        ) {
             return $this->jsonDecode($content);
         }
 

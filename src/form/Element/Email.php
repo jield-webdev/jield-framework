@@ -33,13 +33,11 @@ class Email extends Element implements InputProviderInterface
 
             $multiple = $this->attributes['multiple'] ?? null;
 
-            if (true === $multiple || 'multiple' === $multiple) {
-                $this->validator = new ExplodeValidator(options: [
-                    'validator' => $emailValidator,
-                ]);
-            } else {
-                $this->validator = $emailValidator;
-            }
+            $this->validator =
+                true === $multiple || 'multiple' === $multiple
+                    ? new ExplodeValidator(options: [
+                        'validator' => $emailValidator,
+                    ]) : $emailValidator;
         }
 
         return $this->validator;

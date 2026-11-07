@@ -22,7 +22,7 @@ class PathStackResolverServiceFactory implements FactoryInterface
         $pathStackResolver = new PathStackResolver();
         $paths = [];
 
-        if (isset($config['asset_manager']['resolver_configs']['paths'])) {
+        if (($config['asset_manager']['resolver_configs']['paths'] ?? null) !== null) {
             /** @mago-var mixed $paths */
             $paths = $config['asset_manager']['resolver_configs']['paths'];
         }

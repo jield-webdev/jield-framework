@@ -24,7 +24,8 @@ class DBALConfigurationFactory implements FactoryInterface
 {
     public function __construct(
         protected string $name,
-    ) {}
+    ) {
+    }
 
     /**
      * @throws RuntimeException
@@ -51,7 +52,10 @@ class DBALConfigurationFactory implements FactoryInterface
     public function setupDBALConfiguration(ContainerInterface $container, Configuration $config): void
     {
         $options = $this->getOptions(container: $container);
-        $config->setResultCache(Assert::isInstanceOf($container->get($options->getResultCache()), \Psr\Cache\CacheItemPoolInterface::class));
+        $config->setResultCache(Assert::isInstanceOf(
+            $container->get($options->getResultCache()),
+            \Psr\Cache\CacheItemPoolInterface::class,
+        ));
 
         $middlewares = [];
         foreach ($options->getMiddlewares() as $middlewareName) {
@@ -82,9 +86,9 @@ class DBALConfigurationFactory implements FactoryInterface
             }
             if (Type::hasType(name: Assert::string($name))) {
                 Type::overrideType(name: Assert::string($name), type: $class);
-            } else {
-                Type::addType(name: Assert::string($name), type: $class);
+                continue;
             }
+            Type::addType(name: Assert::string($name), type: $class);
         }
     }
 

@@ -24,7 +24,10 @@ final class EntityManagerFactory extends AbstractFactory
         ?array $options = null,
     ): EntityManager {
         $options = $this->getOptions(container: $container, key: 'entitymanager');
-        assert(assertion: $options instanceof DoctrineORMModuleEntityManager);
+        assert(
+            assertion: $options instanceof DoctrineORMModuleEntityManager,
+            description: 'Expected $options instanceof DoctrineORMModuleEntityManager.',
+        );
         /** @mago-var mixed $connection */
         $connection = $container->get($options->getConnection());
         /** @mago-var mixed $config */
@@ -35,7 +38,10 @@ final class EntityManagerFactory extends AbstractFactory
         //       rely on its factory code
         $container->get($options->getEntityResolver());
 
-        return new EntityManager(\Webmozart\Assert\Assert::isInstanceOf($connection, \Doctrine\DBAL\Connection::class), \Webmozart\Assert\Assert::isInstanceOf($config, \Doctrine\ORM\Configuration::class));
+        return new EntityManager(
+            \Webmozart\Assert\Assert::isInstanceOf($connection, \Doctrine\DBAL\Connection::class),
+            \Webmozart\Assert\Assert::isInstanceOf($config, \Doctrine\ORM\Configuration::class),
+        );
     }
 
     public function getOptionsClass(): string

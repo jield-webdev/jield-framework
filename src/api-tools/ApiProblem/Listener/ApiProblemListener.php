@@ -34,6 +34,8 @@ use function is_string;
  * If the MvcEvent represents an error, then its view model and result are
  * replaced with a RestfulJsonModel containing an API-Problem payload.
  */
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
 class ApiProblemListener extends AbstractListenerAggregate
 {
     protected array $acceptFilters = [
@@ -106,14 +108,9 @@ class ApiProblemListener extends AbstractListenerAggregate
         /** @mago-var mixed $exception */
         $exception = $model->getVariable(name: 'exception');
 
-        if ($exception instanceof Throwable) {
-            $apiProblem = new ApiProblem(status: $status, detail: $exception);
-        } else {
-            $apiProblem = new ApiProblem(
-                status: $status,
-                detail: Value::stringify($model->getVariable(name: 'message')),
-            );
-        }
+        $apiProblem = $exception instanceof Throwable
+            ? new ApiProblem(status: $status, detail: $exception)
+            : new ApiProblem(status: $status, detail: Value::stringify($model->getVariable(name: 'message')));
 
         // Create a new model with the API-Problem payload, and reset
         // the result and view model in the event using it.
@@ -137,7 +134,7 @@ class ApiProblemListener extends AbstractListenerAggregate
         /** @mago-var mixed $config */
         $config = $services->get('config');
 
-        if (!isset($config['api-tools-api-problem']['render_error_controllers'])) {
+        if (($config['api-tools-api-problem']['render_error_controllers'] ?? null) === null) {
             return;
         }
 

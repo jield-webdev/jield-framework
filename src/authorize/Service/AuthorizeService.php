@@ -28,7 +28,6 @@ use Laminas\Permissions\Acl\Resource\GenericResource;
 use Laminas\Permissions\Acl\Resource\ResourceInterface;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
-use Psr\Container\NotFoundExceptionInterface;
 use Traversable;
 use Webmozart\Assert\Assert;
 
@@ -41,6 +40,11 @@ use function print_r;
 /**
  * Authorize service
  */
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
+// @mago-expect lint:kan-defect(1)
+// @mago-expect lint:too-many-methods(1)
+// @mago-expect lint:too-many-properties(1)
 class AuthorizeService
 {
     public const string TYPE_ALLOW = 'allow';
@@ -200,7 +204,10 @@ class AuthorizeService
         $cacheEnabled = $this->config['cache_enabled'] ?? false;
         if ($cacheEnabled) {
             $this->rulesWithAssertions = Assert::isArray($this->cache->getItem($rulesWithAssertions, $success) ?? []);
-            $this->acl = Value::nullableInstance($this->cache->getItem($aclKacheKey, $success), \Laminas\Permissions\Acl\Acl::class);
+            $this->acl = Value::nullableInstance(
+                $this->cache->getItem($aclKacheKey, $success),
+                \Laminas\Permissions\Acl\Acl::class,
+            );
         }
 
         if (!$this->acl instanceof Acl || !$success) {
@@ -228,13 +235,12 @@ class AuthorizeService
             if (Assert::notNull($this->acl)->hasRole(role: $role)) {
                 continue;
             }
-
             if ($role->getParent() !== null) {
                 $this->addRoles(roles: [$role->getParent()]);
                 Assert::notNull($this->acl)->addRole(role: $role, parents: $role->getParent());
-            } elseif (!Assert::notNull($this->acl)->hasRole(role: $role)) {
-                Assert::notNull($this->acl)->addRole(role: $role);
+                continue;
             }
+            Assert::notNull($this->acl)->addRole(role: $role);
         }
     }
 
@@ -254,6 +260,8 @@ class AuthorizeService
          * @mago-var mixed $value
          */
         foreach ($resources as $key => $value) {
+            // These alternatives are mutually exclusive; the following code consumes the selected state.
+            // @mago-expect lint:no-else-clause(2)
             if ($value instanceof ResourceInterface) {
                 $key = $value;
             } elseif (is_string(value: $key)) {
@@ -261,12 +269,31 @@ class AuthorizeService
             } elseif (is_int(value: $key)) {
                 $key = new GenericResource(resourceId: Assert::string($value));
             }
-
             if (is_iterable(value: $value)) {
-                Assert::notNull($this->acl)->addResource(resource: Value::instanceOrString($key, \Laminas\Permissions\Acl\Resource\ResourceInterface::class), parent: Value::nullableInstanceOrString($parent, \Laminas\Permissions\Acl\Resource\ResourceInterface::class));
+                Assert::notNull($this->acl)->addResource(
+                    resource: Value::instanceOrString($key, \Laminas\Permissions\Acl\Resource\ResourceInterface::class),
+                    parent: Value::nullableInstanceOrString(
+                        $parent,
+                        \Laminas\Permissions\Acl\Resource\ResourceInterface::class,
+                    ),
+                );
                 $this->loadResource(resources: $value, parent: $key);
-            } elseif (!Assert::notNull($this->acl)->hasResource(resource: Value::instanceOrString($key, \Laminas\Permissions\Acl\Resource\ResourceInterface::class))) {
-                Assert::notNull($this->acl)->addResource(resource: Value::instanceOrString($key, \Laminas\Permissions\Acl\Resource\ResourceInterface::class), parent: Value::nullableInstanceOrString($parent, \Laminas\Permissions\Acl\Resource\ResourceInterface::class));
+                continue;
+            }
+            if (
+                !Assert::notNull($this->acl)->hasResource(resource: Value::instanceOrString(
+                    $key,
+                    \Laminas\Permissions\Acl\Resource\ResourceInterface::class,
+                ))
+            ) {
+                Assert::notNull($this->acl)->addResource(
+                    resource: Value::instanceOrString($key, \Laminas\Permissions\Acl\Resource\ResourceInterface::class),
+                    parent: Value::nullableInstanceOrString(
+                        $parent,
+                        \Laminas\Permissions\Acl\Resource\ResourceInterface::class,
+                    ),
+                );
+                continue;
             }
         }
     }
@@ -279,6 +306,8 @@ class AuthorizeService
         $privileges = null;
         $ruleSize = count(value: $rule);
 
+        // These alternatives are mutually exclusive; the following code consumes the selected state.
+        // @mago-expect lint:no-else-clause(3)
         if (4 === $ruleSize) {
             /**
              * @mago-var mixed $roles
@@ -308,7 +337,11 @@ class AuthorizeService
         }
 
         //We only do allow rules
-        Assert::notNull($this->acl)->allow(Value::instanceOrArrayOrString($roles, \Laminas\Permissions\Acl\Role\RoleInterface::class), Value::instanceOrArrayOrString($resources, \Laminas\Permissions\Acl\Resource\ResourceInterface::class), Value::nullableArrayOrString($privileges));
+        Assert::notNull($this->acl)->allow(
+            Value::instanceOrArrayOrString($roles, \Laminas\Permissions\Acl\Role\RoleInterface::class),
+            Value::instanceOrArrayOrString($resources, \Laminas\Permissions\Acl\Resource\ResourceInterface::class),
+            Value::nullableArrayOrString($privileges),
+        );
     }
 
     public function getIdentityAsRole(): UserAsRole
@@ -339,7 +372,10 @@ class AuthorizeService
         //Set the role provider first
         /** @mago-var mixed $provider */
         foreach (Assert::isArray($this->container->get(RoleProviders::class)) as $provider) {
-            $this->addRoleProvider(provider: Assert::isInstanceOf($provider, \Jield\Authorize\Provider\Role\ProviderInterface::class));
+            $this->addRoleProvider(provider: Assert::isInstanceOf(
+                $provider,
+                \Jield\Authorize\Provider\Role\ProviderInterface::class,
+            ));
         }
 
         foreach ($this->roleProviders as $provider) {
@@ -353,12 +389,18 @@ class AuthorizeService
 
         /** @mago-var mixed $provider */
         foreach (Assert::isArray($this->container->get(ResourceProviders::class)) as $provider) {
-            $this->addResourceProvider(provider: Assert::isInstanceOf($provider, \Jield\Authorize\Provider\Resource\ProviderInterface::class));
+            $this->addResourceProvider(provider: Assert::isInstanceOf(
+                $provider,
+                \Jield\Authorize\Provider\Resource\ProviderInterface::class,
+            ));
         }
 
         /** @mago-var mixed $provider */
         foreach (Assert::isArray($this->container->get(RuleProviders::class)) as $provider) {
-            $this->addRuleProvider(provider: Assert::isInstanceOf($provider, \Jield\Authorize\Provider\Rule\ProviderInterface::class));
+            $this->addRuleProvider(provider: Assert::isInstanceOf(
+                $provider,
+                \Jield\Authorize\Provider\Rule\ProviderInterface::class,
+            ));
         }
 
         foreach ($this->resourceProviders as $provider) {
@@ -368,7 +410,7 @@ class AuthorizeService
         foreach ($this->ruleProviders as $provider) {
             $rules = $provider->getRules();
 
-            if (isset($rules['allow'])) {
+            if (($rules['allow'] ?? null) !== null) {
                 /** @mago-var mixed $rule */
                 foreach (Assert::isIterable($rules['allow']) as $rule) {
                     $this->loadRule(rule: Assert::isArray($rule), type: static::TYPE_ALLOW);

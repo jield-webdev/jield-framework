@@ -41,7 +41,7 @@ class FormImage extends FormInput
     public function render(ElementInterface $element): string
     {
         $src = $element->getAttribute(key: 'src');
-        if (empty($src)) {
+        if (!($src ?? null)) {
             throw new Exception\DomainException(message: sprintf(
                 '%s requires that the element has an assigned src; none discovered',
                 __METHOD__,

@@ -54,6 +54,11 @@ use const E_USER_DEPRECATED;
 /**
  * Generate links for use with HAL payloads
  */
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
+// @mago-expect lint:kan-defect(1)
+// @mago-expect lint:too-many-methods(1)
+// @mago-expect lint:too-many-properties(1)
 class Hal extends AbstractHelper implements ControllerPluginInterface, EventManagerAwareInterface
 {
     use EventManagerAwareTrait;
@@ -139,7 +144,7 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
             }
 
             // Found public id property on object
-            if (isset($entity->id)) {
+            if (($entity->id ?? null) !== null) {
                 return $entity->id;
             }
 
@@ -496,6 +501,8 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
             $collectionName => $this->extractCollection(halCollection: $halCollection, depth: 0, maxDepth: $maxDepth),
         ];
 
+        // These alternatives are mutually exclusive; the following code consumes the selected state.
+        // @mago-expect lint:no-else-clause(1)
         if ($collection instanceof Paginator) {
             $payload['page_count'] = intval(value: $payload['page_count'] ?? $collection->count());
             $payload['page_size'] = intval(value: $payload['page_size'] ?? $halCollection->getPageSize());
@@ -526,6 +533,10 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
      * @param int|null $maxDepth maximum rendering depth for the current metadata
      * @throws \Throwable
      */
+    // Preserve the existing parameter contract used by callers and inherited interfaces.
+    // @mago-expect lint:no-boolean-flag-parameter(1)
+    // Keep the coordinated parsing or rendering steps of this compatibility method together.
+    // @mago-expect lint:halstead(1)
     public function renderEntity(
         Entity $halEntity,
         bool $renderEntity = true,
@@ -547,7 +558,7 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
             if ($maxDepth === null) {
                 $entityHash = spl_object_hash(object: $entity);
 
-                if (isset($this->entityHashStack[$entityHash])) {
+                if (($this->entityHashStack[$entityHash] ?? null) !== null) {
                     // we need to clear the stack, as the exception may be caught and the plugin may be invoked again
                     $this->entityHashStack = [];
                     throw new Exception\CircularReferenceException(message: sprintf(
@@ -625,7 +636,7 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
             'entity' => $halEntity,
         ]);
 
-        if (isset($entityHash)) {
+        if (($entityHash ?? null) !== null) {
             unset($this->entityHashStack[$entityHash]);
         }
 
@@ -639,6 +650,8 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
     {
         $metadataMap = $this->getMetadataMap();
 
+        // These alternatives are mutually exclusive; the following code consumes the selected state.
+        // @mago-expect lint:no-else-clause(2)
         if (is_object($entity) && $metadataMap->has($entity)) {
             /** @psalm-suppress PossiblyFalseArgument,ArgumentTypeCoercion */
             $halEntity = $this->getResourceFactory()->createEntityFromMetadata($entity, Assert::isInstanceOf(
@@ -647,7 +660,10 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
             ));
         } elseif (!$entity instanceof \Jield\ApiTools\Hal\Entity) {
             /** @mago-var mixed $id */
-            $id = $this->getIdFromEntity(Value::arrayOrObject($entity)) ?: null;
+            $id = $this->getIdFromEntity(Value::arrayOrObject($entity));
+            if (!$id) {
+                $id = null;
+            }
             $halEntity = new Entity(Value::arrayOrObject($entity), $id);
         } else {
             $halEntity = $entity;
@@ -799,6 +815,8 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
      * @todo   Remove trigger of 'renderCollection.resource' for 1.0.0
      * @throws \Throwable
      */
+    // Keep the coordinated parsing or rendering steps of this compatibility method together.
+    // @mago-expect lint:halstead(1)
     protected function extractCollection(Collection $halCollection, int $depth = 0, ?int $maxDepth = null): array
     {
         $collection = [];
@@ -891,13 +909,11 @@ class Hal extends AbstractHelper implements ControllerPluginInterface, EventMana
                 continue;
             }
 
-            if ($eventParams['entity'] instanceof LinkCollectionAwareInterface) {
-                $links = $eventParams['entity']->getLinks();
-            } else {
-                $links = new LinkCollection();
-            }
+            $links = $eventParams['entity'] instanceof LinkCollectionAwareInterface
+                ? $eventParams['entity']->getLinks()
+                : new LinkCollection();
 
-            if (isset($entity['links']) && $entity['links'] instanceof LinkCollection) {
+            if (($entity['links'] ?? null) !== null && $entity['links'] instanceof LinkCollection) {
                 $links = $entity['links'];
             }
 

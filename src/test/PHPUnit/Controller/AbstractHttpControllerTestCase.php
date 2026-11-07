@@ -19,6 +19,10 @@ use function implode;
 use function preg_match;
 use function sprintf;
 
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
+// @mago-expect lint:kan-defect(1)
+// @mago-expect lint:too-many-methods(1)
 abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
 {
     /**
@@ -174,10 +178,12 @@ abstract class AbstractHttpControllerTestCase extends AbstractControllerTestCase
         $values = $this->responseHeaderValues($header);
         $matched = false;
         foreach ($values as $value) {
-            if (preg_match($pattern, $value) === 1) {
-                $matched = true;
-                break;
+            if (preg_match($pattern, $value) !== 1) {
+                continue;
             }
+
+            $matched = true;
+            break;
         }
         $this->assertTrue($matched, sprintf(
             'Failed asserting response header "%s" exists and matches regex "%s", actual content is "%s"',

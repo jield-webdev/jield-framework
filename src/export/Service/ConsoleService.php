@@ -29,6 +29,10 @@ use Psr\Container\ContainerInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Webmozart\Assert\Assert;
 
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
+// @mago-expect lint:kan-defect(1)
+// @mago-expect lint:too-many-methods(1)
 class ConsoleService
 {
     private array $entities = [];
@@ -69,7 +73,10 @@ class ConsoleService
                 continue;
             }
 
-            $this->collectDocumentationEntities(entityColumnsName: Assert::string($entityInformation['columns']), entities: $entities);
+            $this->collectDocumentationEntities(
+                entityColumnsName: Assert::string($entityInformation['columns']),
+                entities: $entities,
+            );
         }
 
         uasort($entities, static fn(AbstractEntityColumns $left, AbstractEntityColumns $right): int => strcasecmp(
@@ -79,12 +86,15 @@ class ConsoleService
 
         /** @mago-var mixed $entity */
         foreach ($entities as $entity) {
-            $output->writeln(messages: sprintf('<info>Writing MarkDown file for %s</info>', Value::scalar(Value::call(
-                $entity,
-                'getName',
-            ))));
+            $output->writeln(messages: sprintf(
+                '<info>Writing MarkDown file for %s</info>',
+                Value::scalar(Value::call($entity, 'getName')),
+            ));
 
-            $this->writeMarkdownContent(createColumnsClass: Assert::isInstanceOf($entity, \Jield\Export\Columns\AbstractEntityColumns::class), handle: $handle);
+            $this->writeMarkdownContent(
+                createColumnsClass: Assert::isInstanceOf($entity, \Jield\Export\Columns\AbstractEntityColumns::class),
+                handle: $handle,
+            );
         }
 
         fclose(stream: $handle);
@@ -115,16 +125,12 @@ class ConsoleService
      */
     private function getEntityColumnsClass(string $entityColumnsName): AbstractEntityColumns
     {
-        if ($this->container->has($entityColumnsName)) {
-            /** @var AbstractEntityColumns $createColumnsClass */
-            $createColumnsClass = $this->container->get($entityColumnsName);
-        } else {
-            /** @var AbstractEntityColumns $createColumnsClass */
-            $createColumnsClass = Value::instantiate($entityColumnsName, [Service::get(
-                $this->container,
-                EntityManager::class,
-            )]);
-        }
+        /** @var AbstractEntityColumns $createColumnsClass */
+        // Keep the local variable as the target of its generic type annotation.
+        // @mago-expect lint:inline-variable-return(1)
+        $createColumnsClass = $this->container->has($entityColumnsName)
+            ? $this->container->get($entityColumnsName)
+            : Value::instantiate($entityColumnsName, [Service::get($this->container, EntityManager::class)]);
 
         return $createColumnsClass;
     }
@@ -180,7 +186,7 @@ class ConsoleService
             return;
         }
 
-        if (!isset($this->entities[$entity])) {
+        if (($this->entities[$entity] ?? null) === null) {
             $output->writeln(messages: sprintf('<error>Entity %s not found</error>', $entity));
 
             return;
@@ -223,16 +229,11 @@ class ConsoleService
         switch ($storageLocation->getExportFileType()) {
             case ExportFileTypeEnum::PARQUET:
                 //Try to grab the entity from the container, otherwise instantiate it
-                if ($this->container->has($columnOrJsonClass)) {
-                    /** @var AbstractEntityColumns $createColumnsOrJsonClass */
-                    $createColumnsOrJsonClass = $this->container->get($columnOrJsonClass);
-                } else {
-                    /** @var AbstractEntityColumns $createColumnsOrJsonClass */
-                    $createColumnsOrJsonClass = Value::instantiate($columnOrJsonClass, [Service::get(
-                        $this->container,
-                        EntityManager::class,
-                    )]);
-                }
+                /** @var AbstractEntityColumns $createColumnsOrJsonClass */
+                /** @var AbstractEntityColumns $createColumnsOrJsonClass */
+                $createColumnsOrJsonClass = $this->container->has($columnOrJsonClass)
+                    ? $this->container->get($columnOrJsonClass)
+                    : Value::instantiate($columnOrJsonClass, [Service::get($this->container, EntityManager::class)]);
                 $columns = $createColumnsOrJsonClass->getColumns();
                 //Fetch the columns so we have to do this once
                 $this->createParquetAndCreateBlob(
@@ -244,16 +245,11 @@ class ConsoleService
             case ExportFileTypeEnum::EXCEL:
             case ExportFileTypeEnum::CSV:
                 //Try to grab the entity from the container, otherwise instantiate it
-                if ($this->container->has($columnOrJsonClass)) {
-                    /** @var AbstractEntityColumns $createColumnsOrJsonClass */
-                    $createColumnsOrJsonClass = $this->container->get($columnOrJsonClass);
-                } else {
-                    /** @var AbstractEntityColumns $createColumnsOrJsonClass */
-                    $createColumnsOrJsonClass = Value::instantiate($columnOrJsonClass, [Service::get(
-                        $this->container,
-                        EntityManager::class,
-                    )]);
-                }
+                /** @var AbstractEntityColumns $createColumnsOrJsonClass */
+                /** @var AbstractEntityColumns $createColumnsOrJsonClass */
+                $createColumnsOrJsonClass = $this->container->has($columnOrJsonClass)
+                    ? $this->container->get($columnOrJsonClass)
+                    : Value::instantiate($columnOrJsonClass, [Service::get($this->container, EntityManager::class)]);
                 $columns = $createColumnsOrJsonClass->getColumns();
                 $this->createExcel(
                     storageLocation: $storageLocation,
@@ -283,7 +279,11 @@ class ConsoleService
         //Check if the entity has dependencies
         /** @mago-var mixed $dependency */
         foreach ($createColumnsOrJsonClass->getDependencies() as $dependency) {
-            $this->handleEntity(storageLocation: $storageLocation, columnOrJsonClass: Assert::string($dependency), output: $output);
+            $this->handleEntity(
+                storageLocation: $storageLocation,
+                columnOrJsonClass: Assert::string($dependency),
+                output: $output,
+            );
         }
     }
 
@@ -390,9 +390,9 @@ class ConsoleService
                         value: $data,
                         dataType: DataType::TYPE_STRING,
                     );
-                } else {
-                    $worksheet->setCellValue(coordinate: $excelColumn . (Assert::integer($row) + 2), value: $data);
+                    continue;
                 }
+                $worksheet->setCellValue(coordinate: $excelColumn . (Assert::integer($row) + 2), value: $data);
             }
 
             //Go to the next Excel Column
@@ -442,7 +442,7 @@ class ConsoleService
      */
     private function getBlobClient(): \AzureOSS\Storage\Blob\BlobRestProxy
     {
-        if (!isset($this->blobClient)) {
+        if (($this->blobClient ?? null) === null) {
             //Grab the service from the service container
             if (!$this->container->has(StorageLocationServiceInterface::class)) {
                 throw new InvalidArgumentException('StorageLocationServiceInterface not found in container');

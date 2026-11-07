@@ -6,4 +6,6 @@ namespace Jield\ApiTools\ContentNegotiation\Exception;
 
 use Throwable;
 
-interface ExceptionInterface extends Throwable {}
+interface ExceptionInterface extends Throwable
+{
+}

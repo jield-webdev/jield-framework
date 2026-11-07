@@ -13,4 +13,6 @@ use Throwable;
  * @package    AssetManager
  * @subpackage Exception
  */
-interface ExceptionInterface extends Throwable {}
+interface ExceptionInterface extends Throwable
+{
+}

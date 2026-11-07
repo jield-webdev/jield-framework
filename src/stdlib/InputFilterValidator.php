@@ -11,6 +11,9 @@ use Laminas\InputFilter\InputFilterValidationResult;
 use Laminas\InputFilter\OptionalInputFilter;
 
 /** Preserve form and PATCH validation groups with the stateless validation API. */
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
+// @mago-expect lint:kan-defect(1)
 final class InputFilterValidator
 {
     /**
@@ -59,7 +62,11 @@ final class InputFilterValidator
             if ($input instanceof InputFilterInterface) {
                 $results[$name] = self::validate(
                     $input,
-                    is_iterable($value) ? (is_array($value) ? $value : iterator_to_array($value)) : [],
+                    match (true) {
+                        is_array($value) => $value,
+                        $value instanceof \Traversable => iterator_to_array($value),
+                        default => [],
+                    },
                     is_array($selection) ? $selection : null,
                     $context,
                 );
@@ -108,7 +115,11 @@ final class InputFilterValidator
                 $value = $data[$key] ?? [];
                 $child = self::preserveCollectionKeys(
                     $input,
-                    is_iterable($value) ? (is_array($value) ? $value : iterator_to_array($value)) : [],
+                    match (true) {
+                        is_array($value) => $value,
+                        $value instanceof \Traversable => iterator_to_array($value),
+                        default => [],
+                    },
                     $child,
                 );
             }
@@ -121,6 +132,8 @@ final class InputFilterValidator
      * @param array<array-key, mixed> $data
      * @return array<array-key, mixed>
      */
+    // Preserve the existing parameter contract used by callers and inherited interfaces.
+    // @mago-expect lint:no-boolean-flag-parameter(1)
     public static function fieldsIn(array $data, bool $collection = false): array
     {
         if (!$collection) {

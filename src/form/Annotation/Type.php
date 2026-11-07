@@ -26,7 +26,8 @@ final readonly class Type
      */
     public function __construct(
         private string $type,
-    ) {}
+    ) {
+    }
 
     /**
      * Retrieve the class type

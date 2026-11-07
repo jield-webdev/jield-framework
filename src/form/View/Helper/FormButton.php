@@ -7,7 +7,6 @@ namespace Jield\Form\View\Helper;
 use Jield\Form\ElementInterface;
 use Jield\Form\Exception;
 
-use function get_debug_type;
 use function is_array;
 use function is_string;
 use function sprintf;
@@ -143,7 +142,7 @@ class FormButton extends FormInput
         }
 
         $type = strtolower(string: $type);
-        if (!isset($this->validTypes[$type])) {
+        if (($this->validTypes[$type] ?? null) === null) {
             return 'submit';
         }
 

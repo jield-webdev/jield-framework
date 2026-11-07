@@ -6,4 +6,6 @@ namespace Jield\ApiTools\OAuth2;
 
 use Throwable;
 
-interface ExceptionInterface extends Throwable {}
+interface ExceptionInterface extends Throwable
+{
+}

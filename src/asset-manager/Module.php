@@ -11,7 +11,6 @@ use Jield\Mvc\MvcEvent;
 use Jield\Stdlib\Service;
 use Jield\Stdlib\Value;
 use Laminas\EventManager\EventInterface;
-use Laminas\EventManager\EventManagerInterface;
 use Laminas\Http\Response;
 use Override;
 use Webmozart\Assert\Assert;
@@ -26,7 +25,7 @@ class Module implements ConfigProviderInterface, BootstrapListenerInterface
     {
         /** @var array<array-key, mixed> $config */
         $config = include __DIR__ . '/../../config/asset-manager/module.config.php';
-        return $config;
+        return \Webmozart\Assert\Assert::isArray($config);
     }
 
     /**

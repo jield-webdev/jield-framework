@@ -71,9 +71,9 @@ class Form extends AbstractHelper
         foreach ($form as $element) {
             if ($element instanceof FieldsetInterface) {
                 $formContent .= Value::stringify(Value::call($renderer, 'formCollection', [$element]));
-            } else {
-                $formContent .= Value::stringify(Value::call($renderer, 'formRow', [$element]));
+                continue;
             }
+            $formContent .= Value::stringify(Value::call($renderer, 'formRow', [$element]));
         }
 
         return $this->openTag(form: $form) . $formContent . $this->closeTag();

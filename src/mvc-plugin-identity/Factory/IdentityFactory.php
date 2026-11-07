@@ -16,11 +16,13 @@ class IdentityFactory implements FactoryInterface
     public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): Identity
     {
         $plugin = new Identity();
-
         if ($container->has(AuthenticationService::class)) {
             $plugin->setAuthenticationService(Service::get($container, AuthenticationService::class));
-        } elseif ($container->has(AuthenticationServiceInterface::class)) {
+            return $plugin;
+        }
+        if ($container->has(AuthenticationServiceInterface::class)) {
             $plugin->setAuthenticationService(Service::get($container, AuthenticationServiceInterface::class));
+            return $plugin;
         }
 
         return $plugin;

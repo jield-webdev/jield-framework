@@ -115,7 +115,7 @@ class ConcatResolver implements
     #[Override]
     public function resolve(string $fileName): ?\Assetic\Contracts\Asset\AssetInterface
     {
-        if (!isset($this->concats[$fileName])) {
+        if (($this->concats[$fileName] ?? null) === null) {
             return null;
         }
 

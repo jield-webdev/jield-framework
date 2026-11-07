@@ -21,7 +21,7 @@ class ConcatResolverServiceFactory implements FactoryInterface
         $config = $container->get('config');
         $files = [];
 
-        if (isset($config['asset_manager']['resolver_configs']['concat'])) {
+        if (($config['asset_manager']['resolver_configs']['concat'] ?? null) !== null) {
             /** @mago-var mixed $files */
             $files = $config['asset_manager']['resolver_configs']['concat'];
         }

@@ -19,7 +19,8 @@ class LaminasCacheAdapter implements CacheInterface
      */
     public function __construct(
         protected StorageInterface $jieldCache,
-    ) {}
+    ) {
+    }
 
     /**
      * {@inheritDoc}

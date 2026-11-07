@@ -57,10 +57,12 @@ class LinkCollection implements Countable, IteratorAggregate
      * @throws Exception\DomainException
      *@deprecated Since 1.5.0; use idempotentAdd() for PSR-13 and RFC 5988 compliance.
      */
+    // Preserve the existing parameter contract used by callers and inherited interfaces.
+    // @mago-expect lint:no-boolean-flag-parameter(1)
     public function add(Link $link, bool $overwrite = false): static
     {
         $relation = $link->getRelation();
-        if (!isset($this->links[$relation]) || $overwrite || 'self' === $relation) {
+        if (($this->links[$relation] ?? null) === null || $overwrite || 'self' === $relation) {
             $this->links[$relation] = $link;
             return $this;
         }

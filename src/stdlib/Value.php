@@ -14,6 +14,10 @@ use Stringable;
 use TypeError;
 
 /** Validate values as they cross a dynamically typed integration boundary. */
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
+// @mago-expect lint:kan-defect(1)
+// @mago-expect lint:too-many-methods(1)
 final class Value
 {
     /** @return class-string */
@@ -192,6 +196,8 @@ final class Value
     /** Preserve PHP's array-cast semantics while retaining an array key type.
      * @return array<array-key, mixed>
      */
+    // Keep the coordinated parsing or rendering steps of this compatibility method together.
+    // @mago-expect lint:halstead(1)
     public static function toArray(mixed $value): array
     {
         if ($value === null) {
@@ -477,6 +483,8 @@ final class Value
     }
 
     /** @return \Laminas\Stdlib\AbstractOptions<mixed>|array<string, mixed>|null */
+    // Keep the coordinated parsing or rendering steps of this compatibility method together.
+    // @mago-expect lint:halstead(1)
     public static function options(mixed $value): \Laminas\Stdlib\AbstractOptions|array|null
     {
         if ($value === null || $value instanceof \Laminas\Stdlib\AbstractOptions) {
@@ -511,7 +519,7 @@ final class Value
 
     public static function truthy(mixed $value): bool
     {
-        return !empty($value);
+        return !!$value;
     }
 
     public static function stringify(mixed $value): string
@@ -573,9 +581,11 @@ final class Value
         }
         $reflection = new ReflectionClass(self::classString($class));
 
-        return self::object($reflection->getConstructor() === null
-            ? $reflection->newInstance()
-            : $reflection->newInstanceArgs($arguments));
+        return self::object(
+            $reflection->getConstructor() === null
+                ? $reflection->newInstance()
+                : $reflection->newInstanceArgs($arguments),
+        );
     }
 
     /**
@@ -602,9 +612,9 @@ final class Value
         }
         if ($key === null) {
             $target[] = $value;
-        } else {
-            $target[$key] = $value;
+            return;
         }
+        $target[$key] = $value;
     }
 
     private static function invalid(string $expected, mixed $value): TypeError

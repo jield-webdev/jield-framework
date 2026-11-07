@@ -16,6 +16,7 @@ class FormFileSessionProgress extends FormFileUploadProgress
 {
     protected function getName(): string
     {
-        return ini_get(option: 'session.upload_progress.name') ?: '';
+        $name = ini_get(option: 'session.upload_progress.name');
+        return $name ? $name : '';
     }
 }

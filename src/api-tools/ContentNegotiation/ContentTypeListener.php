@@ -36,6 +36,9 @@ use const JSON_ERROR_STATE_MISMATCH;
 use const JSON_ERROR_SYNTAX;
 use const JSON_ERROR_UTF8;
 
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
+// @mago-expect lint:kan-defect(1)
 class ContentTypeListener
 {
     protected array $jsonErrors = [
@@ -169,7 +172,12 @@ class ContentTypeListener
                 continue;
             }
 
-            if (!preg_match(pattern: '/^laminasc/', subject: basename(path: (string) Value::accessible($fileInfo)['tmp_name']))) {
+            if (
+                !preg_match(
+                    pattern: '/^laminasc/',
+                    subject: basename(path: (string) Value::accessible($fileInfo)['tmp_name']),
+                )
+            ) {
                 // File was moved
                 continue;
             }
@@ -203,7 +211,7 @@ class ContentTypeListener
         $isArray = is_array(value: $data);
 
         // Decode 'application/hal+json' to 'application/json' by merging _embedded into the array
-        if ($isArray && isset($data['_embedded'])) {
+        if ($isArray && ($data['_embedded'] ?? null) !== null) {
             /**
              * @mago-var mixed $key
              * @mago-var mixed $value

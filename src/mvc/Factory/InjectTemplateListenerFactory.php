@@ -27,7 +27,10 @@ class InjectTemplateListenerFactory implements FactoryInterface
         /** @mago-var mixed $config */
         $config = $container->get('config');
 
-        if (isset($config['view_manager']['controller_map']) && is_array($config['view_manager']['controller_map'])) {
+        if (
+            ($config['view_manager']['controller_map'] ?? null) !== null
+            && is_array($config['view_manager']['controller_map'])
+        ) {
             $listener->setControllerMap($config['view_manager']['controller_map']);
         }
 

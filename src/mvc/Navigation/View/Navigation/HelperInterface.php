@@ -12,6 +12,8 @@ use Laminas\View\Helper\HelperInterface as BaseHelperInterface;
 /**
  * Interface for navigational helpers
  */
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:too-many-methods(1)
 interface HelperInterface extends BaseHelperInterface
 {
     /**
@@ -88,6 +90,8 @@ interface HelperInterface extends BaseHelperInterface
      * @param bool $renderInvisible [optional] boolean flag
      * @return HelperInterface
      */
+    // Preserve the existing parameter contract used by callers and inherited interfaces.
+    // @mago-expect lint:no-boolean-flag-parameter(1)
     public function setRenderInvisible(bool $renderInvisible = true);
 
     /**
@@ -128,6 +132,8 @@ interface HelperInterface extends BaseHelperInterface
      * @param bool $useAcl [optional] whether ACL should be used. Default is true.
      * @return HelperInterface
      */
+    // Preserve the existing parameter contract used by callers and inherited interfaces.
+    // @mago-expect lint:no-boolean-flag-parameter(1)
     public function setUseAcl(bool $useAcl = true);
 
     /**

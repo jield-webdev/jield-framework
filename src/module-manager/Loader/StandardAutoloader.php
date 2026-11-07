@@ -31,6 +31,10 @@ require_once __DIR__ . '/SplAutoloader.php';
  * lookups are performed on the filesystem. If a class file for the referenced
  * class is not found, a PHP warning will be raised by include().
  */
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
+// @mago-expect lint:kan-defect(1)
+// @mago-expect lint:too-many-methods(1)
 class StandardAutoloader implements SplAutoloader
 {
     public const NS_SEPARATOR = '\\';
@@ -231,7 +235,8 @@ class StandardAutoloader implements SplAutoloader
         if (str_contains($class, self::NS_SEPARATOR)) {
             if ($this->loadClass($class, self::LOAD_NS)) {
                 return $class;
-            } elseif ($isFallback) {
+            }
+            if ($isFallback) {
                 return $this->loadClass($class, self::ACT_AS_FALLBACK);
             }
             return false;
@@ -239,7 +244,8 @@ class StandardAutoloader implements SplAutoloader
         if (str_contains($class, self::PREFIX_SEPARATOR)) {
             if ($this->loadClass($class, self::LOAD_PREFIX)) {
                 return $class;
-            } elseif ($isFallback) {
+            }
+            if ($isFallback) {
                 return $this->loadClass($class, self::ACT_AS_FALLBACK);
             }
             return false;

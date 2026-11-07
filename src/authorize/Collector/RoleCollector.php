@@ -26,7 +26,8 @@ class RoleCollector implements Serializable
 
     public function __construct(
         protected ProviderInterface $identityProvider,
-    ) {}
+    ) {
+    }
 
     /**
      * {@inheritDoc}
@@ -72,7 +73,7 @@ class RoleCollector implements Serializable
 
     /**
      * {@inheritDoc}
-     * TODO remove with php74+
+     * Retained for callers using the legacy Serializable methods.
      */
     public function serialize(): ?string
     {
@@ -81,7 +82,7 @@ class RoleCollector implements Serializable
 
     /**
      * {@inheritDoc}
-     * TODO remove with php74+
+     * Retained for callers using the legacy Serializable methods.
      */
     public function unserialize($data): void
     {

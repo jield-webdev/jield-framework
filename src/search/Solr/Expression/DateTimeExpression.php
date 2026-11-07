@@ -24,7 +24,7 @@ class DateTimeExpression extends Expression implements Stringable
         private readonly DateTimeZone|string $timezone = 'UTC',
     ) {
         $this->date = clone $date;
-        $this->format = $format ?: static::FORMAT_DEFAULT;
+        $this->format = $format ? $format : static::FORMAT_DEFAULT;
     }
 
     /**
@@ -33,19 +33,16 @@ class DateTimeExpression extends Expression implements Stringable
     public function __toString(): string
     {
         $date = $this->date;
-
         if ($this->timezone === 'UTC') {
             if (!self::$utcTimezone) {
                 self::$utcTimezone = new DateTimeZone(timezone: 'UTC');
             }
             $date = $date->setTimeZone(timezone: self::$utcTimezone);
-        } else {
-            if ($this->timezone instanceof DateTimeZone) {
-                $date = $date->setTimeZone(timezone: $this->timezone);
-            } else {
-                $date = $date->setTimeZone(timezone: new DateTimeZone(timezone: $this->timezone));
-            }
+            return $date->format(format: $this->format);
         }
+        $date = $this->timezone instanceof DateTimeZone
+            ? $date->setTimeZone(timezone: $this->timezone)
+            : $date->setTimeZone(timezone: new DateTimeZone(timezone: $this->timezone));
 
         return $date->format(format: $this->format);
     }

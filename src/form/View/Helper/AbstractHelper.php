@@ -29,6 +29,11 @@ use function strtolower;
 /**
  * Base functionality for all form view helpers
  */
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
+// @mago-expect lint:kan-defect(1)
+// @mago-expect lint:too-many-methods(1)
+// @mago-expect lint:too-many-properties(1)
 abstract class AbstractHelper extends BaseAbstractHelper
 {
     protected string $encoding = 'utf-8';
@@ -249,7 +254,9 @@ abstract class AbstractHelper extends BaseAbstractHelper
         foreach ($attributes as $key => $value) {
             $key = strtolower(string: (string) $key);
 
-            if (isset($this->booleanAttributes[$key])) {
+            if (($this->booleanAttributes[$key] ?? null) !== null) {
+                // These alternatives are mutually exclusive; the following code consumes the selected state.
+                // @mago-expect lint:no-else-clause(1)
                 if (!$value) {
                     // Skip boolean attributes that expect empty string as false value
                     if ('' === Value::accessible($this->booleanAttributes[$key])['off']) {
@@ -388,6 +395,8 @@ abstract class AbstractHelper extends BaseAbstractHelper
      *
      * Removes any invalid attributes
      */
+    // Keep the coordinated parsing or rendering steps of this compatibility method together.
+    // @mago-expect lint:halstead(1)
     protected function prepareAttributes(array $attributes): array
     {
         /** @mago-var mixed $value */
@@ -395,8 +404,8 @@ abstract class AbstractHelper extends BaseAbstractHelper
             $attribute = strtolower(string: (string) $key);
 
             if (
-                !isset($this->validGlobalAttributes[$attribute])
-                && !isset($this->validTagAttributes[$attribute])
+                ($this->validGlobalAttributes[$attribute] ?? null) === null
+                && ($this->validTagAttributes[$attribute] ?? null) === null
                 && !$this->hasAllowedPrefix(attribute: $attribute)
             ) {
                 unset($attributes[$key]);
@@ -408,12 +417,14 @@ abstract class AbstractHelper extends BaseAbstractHelper
                 unset($attributes[$key]);
                 $attributes[$attribute] = $value;
             }
-
             // Normalize boolean attribute values
-            if (isset($this->booleanAttributes[$attribute])) {
+            if (($this->booleanAttributes[$attribute] ?? null) !== null) {
                 $attributes[$attribute] = $this->prepareBooleanAttributeValue(attribute: $attribute, value: $value);
-            } elseif (!is_string(value: $value)) {
+                continue;
+            }
+            if (!is_string(value: $value)) {
                 $attributes[$attribute] = (string) $value;
+                continue;
             }
         }
 
@@ -435,7 +446,11 @@ abstract class AbstractHelper extends BaseAbstractHelper
         }
 
         $value = Value::truthy($value);
-        return Assert::string($value ? Value::accessible($this->booleanAttributes[$attribute])['on'] : Value::accessible($this->booleanAttributes[$attribute])['off']);
+        return Assert::string(
+            $value
+                ? Value::accessible($this->booleanAttributes[$attribute])['on']
+                : Value::accessible($this->booleanAttributes[$attribute])['off'],
+        );
     }
 
     /**
@@ -444,26 +459,28 @@ abstract class AbstractHelper extends BaseAbstractHelper
     protected function translateHtmlAttributeValue(string $key, ?string $value): ?string
     {
         $translator = $this->getTranslator();
-        if (empty($value) || $translator === null) {
+        if (!($value ?? null) || $translator === null) {
             return $value;
         }
 
-        if (isset($this->translatableAttributes[$key]) || isset(self::$defaultTranslatableHtmlAttributes[$key])) {
+        if (
+            ($this->translatableAttributes[$key] ?? null) !== null
+            || (self::$defaultTranslatableHtmlAttributes[$key] ?? null) !== null
+        ) {
             return $translator->translate($value, $this->getTranslatorTextDomain());
-        } else {
-            /** @mago-var mixed $prefix */
-            foreach ($this->translatableAttributePrefixes as $prefix) {
-                if (0 === mb_strpos($key, (string) $prefix)) {
-                    // prefix matches => return translated $value
-                    return $translator->translate($value, $this->getTranslatorTextDomain());
-                }
+        }
+        /** @mago-var mixed $prefix */
+        foreach ($this->translatableAttributePrefixes as $prefix) {
+            if (0 === mb_strpos($key, (string) $prefix)) {
+                // prefix matches => return translated $value
+                return $translator->translate($value, $this->getTranslatorTextDomain());
             }
-            /** @mago-var mixed $prefix */
-            foreach (self::$defaultTranslatableHtmlAttributePrefixes as $prefix) {
-                if (0 === mb_strpos($key, (string) $prefix)) {
-                    // default prefix matches => return translated $value
-                    return $translator->translate($value, $this->getTranslatorTextDomain());
-                }
+        }
+        /** @mago-var mixed $prefix */
+        foreach (self::$defaultTranslatableHtmlAttributePrefixes as $prefix) {
+            if (0 === mb_strpos($key, (string) $prefix)) {
+                // default prefix matches => return translated $value
+                return $translator->translate($value, $this->getTranslatorTextDomain());
             }
         }
 
@@ -553,7 +570,7 @@ abstract class AbstractHelper extends BaseAbstractHelper
      */
     protected function hasAllowedPrefix(string $attribute): bool
     {
-        return array_any($this->validTagAttributePrefixes, fn($prefix) => str_starts_with(
+        return array_any($this->validTagAttributePrefixes, static fn($prefix) => str_starts_with(
             haystack: $attribute,
             needle: (string) $prefix,
         ));

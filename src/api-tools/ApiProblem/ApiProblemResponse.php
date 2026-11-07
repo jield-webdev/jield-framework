@@ -50,7 +50,8 @@ class ApiProblemResponse extends Response
     #[Override]
     public function getContent(): string
     {
-        return json_encode(value: $this->apiProblem->toArray(), flags: $this->jsonFlags) ?: '{}';
+        $content = json_encode(value: $this->apiProblem->toArray(), flags: $this->jsonFlags);
+        return $content === false ? '{}' : $content;
     }
 
     /**
@@ -79,7 +80,7 @@ class ApiProblemResponse extends Response
     #[Override]
     public function getReasonPhrase(): string
     {
-        if (!empty($this->reasonPhrase)) {
+        if (!!($this->reasonPhrase ?? null)) {
             return $this->reasonPhrase;
         }
 

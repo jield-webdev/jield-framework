@@ -28,9 +28,9 @@ class AssetCacheManagerServiceFactory implements FactoryInterface
         /** @mago-var mixed $globalConfig */
         $globalConfig = $container->get('config');
 
-        if (!empty($globalConfig['asset_manager']['caching'])) {
+        if (!!($globalConfig['asset_manager']['caching'] ?? null)) {
             /** @mago-var mixed $config */
-            $config = $globalConfig['asset_manager']['caching'];
+            $config = $globalConfig['asset_manager']['caching'] ?? null;
         }
 
         return new AssetCacheManager(

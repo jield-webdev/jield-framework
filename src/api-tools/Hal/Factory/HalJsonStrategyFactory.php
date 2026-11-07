@@ -8,7 +8,6 @@ use Jield\ApiTools\Hal\View\HalJsonRenderer;
 use Jield\ApiTools\Hal\View\HalJsonStrategy;
 use Jield\Stdlib\Service;
 use Psr\Container\ContainerInterface;
-use Webmozart\Assert\Assert;
 
 class HalJsonStrategyFactory
 {

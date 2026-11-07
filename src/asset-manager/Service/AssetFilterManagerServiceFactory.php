@@ -21,9 +21,9 @@ class AssetFilterManagerServiceFactory implements FactoryInterface
         /** @mago-var mixed $config */
         $config = $container->get('config');
 
-        if (!empty($config['asset_manager']['filters'])) {
+        if (!!($config['asset_manager']['filters'] ?? null)) {
             /** @mago-var mixed $filters */
-            $filters = $config['asset_manager']['filters'];
+            $filters = $config['asset_manager']['filters'] ?? null;
         }
 
         $assetFilterManager = new AssetFilterManager(config: \Webmozart\Assert\Assert::isArray($filters));

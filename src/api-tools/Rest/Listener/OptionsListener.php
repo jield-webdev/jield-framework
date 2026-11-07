@@ -28,7 +28,8 @@ class OptionsListener implements ListenerAggregateInterface
 
     public function __construct(
         protected array $config,
-    ) {}
+    ) {
+    }
 
     /**
      * @param int $priority
@@ -69,7 +70,10 @@ class OptionsListener implements ListenerAggregateInterface
             return null;
         }
 
-        $config = $this->getConfigForControllerAndMatches(config: Assert::isArray($this->config[$controller]), matches: $matches);
+        $config = $this->getConfigForControllerAndMatches(
+            config: Assert::isArray($this->config[$controller]),
+            matches: $matches,
+        );
         $methods = $this->normalizeMethods(methods: $config);
 
         $method = $request->getMethod();
@@ -112,7 +116,10 @@ class OptionsListener implements ListenerAggregateInterface
     protected function createAllowHeader(array $options, Response $response): void
     {
         $headers = $response->getHeaders();
-        $headers->addHeaderLine(headerFieldNameOrLine: 'Allow', fieldValue: implode(separator: ',', array: \Jield\Stdlib\Value::scalars($options)));
+        $headers->addHeaderLine(headerFieldNameOrLine: 'Allow', fieldValue: implode(
+            separator: ',',
+            array: \Jield\Stdlib\Value::scalars($options),
+        ));
     }
 
     /**

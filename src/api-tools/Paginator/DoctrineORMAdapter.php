@@ -31,10 +31,15 @@ class DoctrineORMAdapter extends AbstractDoctrinePaginator implements AdapterInt
      * @param int $offset
      * @param int $itemCountPerPage
      */
+    // Keep the coordinated parsing or rendering steps of this compatibility method together.
+    // @mago-expect lint:halstead(1)
     #[Override]
     public function getItems($offset, $itemCountPerPage): array
     {
-        if (array_key_exists($offset, $this->cache) && array_key_exists($itemCountPerPage, \Webmozart\Assert\Assert::isArray($this->cache[$offset]))) {
+        if (
+            array_key_exists($offset, $this->cache)
+            && array_key_exists($itemCountPerPage, \Webmozart\Assert\Assert::isArray($this->cache[$offset]))
+        ) {
             return \Webmozart\Assert\Assert::isArray($this->cache[$offset][$itemCountPerPage]);
         }
 

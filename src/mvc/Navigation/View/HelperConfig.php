@@ -28,6 +28,8 @@ use function iterator_to_array;
  * @final
  * @psalm-import-type ServiceManagerConfiguration from ServiceManager
  */
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
 class HelperConfig
 {
     /**
@@ -79,7 +81,9 @@ class HelperConfig
         if ($appContainer->has('config')) {
             /** @mago-var mixed $config */
             $config = $appContainer->get('config');
-            $this->mergeHelpersFromConfiguration(Value::stringKeyedArray($config instanceof Traversable ? iterator_to_array($config) : $config));
+            $this->mergeHelpersFromConfiguration(Value::stringKeyedArray(
+                $config instanceof Traversable ? iterator_to_array($config) : $config,
+            ));
         }
 
         $this->injectNavigationDelegatorFactory();
@@ -98,7 +102,7 @@ class HelperConfig
      */
     private function mergeConfig(array $config): void
     {
-        if (isset($config['invokables'])) {
+        if (($config['invokables'] ?? null) !== null) {
             $config = $this->processInvokables(Value::stringMap($config['invokables']), $config);
         }
 
@@ -108,7 +112,7 @@ class HelperConfig
                 continue;
             }
 
-            $this->config[$type] = isset($this->config[$type]) && is_array($this->config[$type])
+            $this->config[$type] = ($this->config[$type] ?? null) !== null && is_array($this->config[$type])
                 ? ArrayUtils::merge($this->config[$type], $services)
                 : $services;
         }
@@ -126,8 +130,9 @@ class HelperConfig
         }
 
         if (
-            !isset($config['navigation_helpers'])
-            || !is_array($config['navigation_helpers']) && !$config['navigation_helpers'] instanceof Traversable
+            ($config['navigation_helpers'] ?? null) === null
+            || !is_array($config['navigation_helpers'])
+            && !$config['navigation_helpers'] instanceof Traversable
         ) {
             return;
         }
@@ -173,7 +178,7 @@ class HelperConfig
         $factory = $this->prepareNavigationDelegatorFactory();
 
         if (
-            isset($this->config['delegators'][NavigationHelper::class])
+            ($this->config['delegators'][NavigationHelper::class] ?? null) !== null
             && in_array($factory, Assert::isArray($this->config['delegators'][NavigationHelper::class]), true)
         ) {
             // Already present.

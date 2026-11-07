@@ -36,7 +36,8 @@ class UnauthorizedStrategy implements ListenerAggregateInterface
     public function __construct(
         private readonly AuthenticationService $authenticationService,
         private array $config,
-    ) {}
+    ) {
+    }
 
     /**
      * {@inheritDoc}
@@ -111,16 +112,23 @@ class UnauthorizedStrategy implements ListenerAggregateInterface
                     /** @var TreeRouteStack $router */
                     $router = $event->getRouter();
 
-                    $redirect = $router->assemble(params: Value::routeParams($event->getRouteMatch()?->getParams()), options: [
-                        'name' => $event->getParam(name: 'route'),
-                    ])->toString();
+                    $redirect = $router->assemble(
+                        params: Value::routeParams($event->getRouteMatch()?->getParams()),
+                        options: [
+                            'name' => $event->getParam(name: 'route'),
+                        ],
+                    )->toString();
 
                     //Store the referrer in a session
                     if ($redirect) {
                         //Grab the query and append it to the URL
                         $query = Assert::isInstanceOf($event->getRequest(), Request::class)->getUri()->getQuery();
                         $session = new Container('session');
-                        $session['redirect'] = $redirect . (empty($query) ? '' : '?' . Value::stringify($query));
+                        $session['redirect'] =
+                            $redirect
+                            . (
+                                $query === null || $query === '' || $query === '0' ? '' : '?' . Value::stringify($query)
+                            );
                     }
 
                     $response->getHeaders()->addHeaderLine(headerFieldNameOrLine: 'Location', fieldValue: $url);

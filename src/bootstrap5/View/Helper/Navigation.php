@@ -23,7 +23,8 @@ final class Navigation
     public function __construct(
         private readonly Menu $menuHelper,
         private readonly ContainerInterface $services,
-    ) {}
+    ) {
+    }
 
     /**
      * @throws \Psr\Container\ContainerExceptionInterface
@@ -78,11 +79,17 @@ final class Navigation
         }
 
         if (is_string($container)) {
-            return Value::nullableInstance($this->services->get($container), \Laminas\Navigation\AbstractContainer::class);
+            return Value::nullableInstance(
+                $this->services->get($container),
+                \Laminas\Navigation\AbstractContainer::class,
+            );
         }
 
         if ($this->services->has('navigation')) {
-            return Value::nullableInstance($this->services->get('navigation'), \Laminas\Navigation\AbstractContainer::class);
+            return Value::nullableInstance(
+                $this->services->get('navigation'),
+                \Laminas\Navigation\AbstractContainer::class,
+            );
         }
 
         if ($this->services->has(NavigationContainer::class)) {
@@ -90,7 +97,10 @@ final class Navigation
         }
 
         if ($this->services->has('Navigation')) {
-            return Value::nullableInstance($this->services->get('Navigation'), \Laminas\Navigation\AbstractContainer::class);
+            return Value::nullableInstance(
+                $this->services->get('Navigation'),
+                \Laminas\Navigation\AbstractContainer::class,
+            );
         }
 
         return null;

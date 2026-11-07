@@ -570,10 +570,11 @@ class MimeResolver
      */
     public function getExtension(string $mimetype): mixed
     {
-        if (!($extension = array_search(needle: $mimetype, haystack: $this->mainMimeTypes, strict: true))) {
+        $extension = array_search(needle: $mimetype, haystack: $this->mainMimeTypes, strict: true);
+        if (!$extension) {
             $extension = array_search(needle: $mimetype, haystack: $this->mimeTypes, strict: true);
         }
 
-        return $extension ?: null;
+        return $extension ? $extension : null;
     }
 }

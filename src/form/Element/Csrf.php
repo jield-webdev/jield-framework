@@ -39,7 +39,7 @@ class Csrf extends Element implements InputProviderInterface, ElementPrepareAwar
     {
         parent::setOptions(options: $options);
 
-        if (isset($this->options['csrf_options'])) {
+        if (($this->options['csrf_options'] ?? null) !== null) {
             $this->setCsrfValidatorOptions(options: Assert::isArray($this->options['csrf_options']));
         }
 
@@ -67,14 +67,16 @@ class Csrf extends Element implements InputProviderInterface, ElementPrepareAwar
             $csrfOptions = array_merge(['name' => Assert::stringNotEmpty($this->getName())], $csrfOptions);
             $csrfOptions = Options::normalize($csrfOptions);
             foreach (['name', 'hash', 'salt'] as $key) {
-                if (isset($csrfOptions[$key])) {
-                    $csrfOptions[$key] = Assert::stringNotEmpty($csrfOptions[$key]);
+                if (($csrfOptions[$key] ?? null) === null) {
+                    continue;
                 }
+
+                $csrfOptions[$key] = Assert::stringNotEmpty($csrfOptions[$key]);
             }
-            if (isset($csrfOptions['timeout'])) {
+            if (($csrfOptions['timeout'] ?? null) !== null) {
                 $csrfOptions['timeout'] = Assert::positiveInteger($csrfOptions['timeout']);
             }
-            if (isset($csrfOptions['session'])) {
+            if (($csrfOptions['session'] ?? null) !== null) {
                 $csrfOptions['session'] = Assert::isInstanceOf($csrfOptions['session'], Container::class);
             }
             /** @var OptionsArgument $csrfOptions */

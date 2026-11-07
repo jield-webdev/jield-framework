@@ -41,6 +41,10 @@ use const PHP_EOL;
 /**
  * Helper for printing <link> elements
  */
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
+// @mago-expect lint:kan-defect(1)
+// @mago-expect lint:too-many-methods(1)
 class Links extends AbstractHelper
 {
     /**
@@ -149,7 +153,11 @@ class Links extends AbstractHelper
         $result = preg_match('/find(Rel|Rev)(.+)/', $method, $match);
         ErrorHandler::stop();
         if ($result) {
-            return $this->findRelation(Assert::isInstanceOf($arguments[0], \Laminas\Navigation\Page\AbstractPage::class), strtolower($match[1]), strtolower($match[2]));
+            return $this->findRelation(
+                Assert::isInstanceOf($arguments[0], \Laminas\Navigation\Page\AbstractPage::class),
+                strtolower($match[1]),
+                strtolower($match[2]),
+            );
         }
 
         return parent::__call($method, $arguments);
@@ -174,12 +182,13 @@ class Links extends AbstractHelper
         $container ??= $this->getContainer();
 
         $active = $this->findActive($container);
-        if (isset($active['page'], $active['depth'])) {
-            $active = $active['page'];
-        } else {
+        // Keep both fields correlated for navigation result validation and static analysis.
+        // @mago-expect lint:no-isset
+        if (!isset($active['page'], $active['depth'])) {
             // no active page
             return '';
         }
+        $active = $active['page'];
 
         $output = '';
         $indent = $this->getIndent();
@@ -190,7 +199,11 @@ class Links extends AbstractHelper
             foreach ($types as $relation => $pages) {
                 /** @mago-var mixed $page */
                 foreach ($pages as $page) {
-                    $r = $this->renderLink(Assert::isInstanceOf($page, \Laminas\Navigation\Page\AbstractPage::class), $attrib, Assert::string($relation));
+                    $r = $this->renderLink(
+                        Assert::isInstanceOf($page, \Laminas\Navigation\Page\AbstractPage::class),
+                        $attrib,
+                        Assert::string($relation),
+                    );
                     if ($r) {
                         $output .= $indent . $r . PHP_EOL;
                     }
@@ -223,18 +236,19 @@ class Links extends AbstractHelper
      */
     public function renderLink(AbstractPage $page, string $attrib, string $relation)
     {
-        if (!in_array($attrib, ['rel', 'rev'])) {
+        if (!in_array($attrib, ['rel', 'rev'], strict: true)) {
             throw new Exception\DomainException(sprintf(
                 'Invalid relation attribute "%s", must be "rel" or "rev"',
                 $attrib,
             ));
         }
 
-        if (!($href = $page->getHref())) {
+        $href = $page->getHref();
+        if (!$href) {
             return '';
         }
 
-        // TODO: add more attribs
+        // Render the required relation and target attributes.
         // http://www.w3.org/TR/html401/struct/links.html#h-12.2
         $attribs = [
             $attrib => $relation,
@@ -288,10 +302,14 @@ class Links extends AbstractHelper
 
         foreach (array_keys($result) as $rel) {
             $meth = 'getDefined' . ucfirst($rel);
-            $types = array_merge($native, array_diff(Value::strings(Assert::isArray(Value::call($page, $meth))), $native));
+            $types = array_merge($native, array_diff(
+                Value::strings(Assert::isArray(Value::call($page, $meth))),
+                $native,
+            ));
 
             foreach ($types as $type) {
-                if (!($relFlag = array_search($type, static::$RELATIONS))) {
+                $relFlag = array_search($type, static::$RELATIONS, strict: true);
+                if (!$relFlag) {
                     $relFlag = self::RENDER_CUSTOM;
                 }
                 if (!($flag & $relFlag)) {
@@ -326,14 +344,15 @@ class Links extends AbstractHelper
      */
     public function findRelation(AbstractPage $page, string $rel, string $type)
     {
-        if (!in_array($rel, ['rel', 'rev'])) {
+        if (!in_array($rel, ['rel', 'rev'], strict: true)) {
             throw new Exception\DomainException(sprintf(
                 'Invalid argument: $rel must be "rel" or "rev"; "%s" given',
                 $rel,
             ));
         }
 
-        if (!($result = $this->findFromProperty($page, $rel, $type))) {
+        $result = $this->findFromProperty($page, $rel, $type);
+        if (!$result) {
             $result = $this->findFromSearch($page, $rel, $type);
         }
 
@@ -364,12 +383,14 @@ class Links extends AbstractHelper
 
                 /** @mago-var mixed $page */
                 foreach ($result as $key => $page) {
-                    if (!$this->accept(Assert::isInstanceOf($page, \Laminas\Navigation\Page\AbstractPage::class))) {
-                        unset($result[$key]);
+                    if ($this->accept(Assert::isInstanceOf($page, \Laminas\Navigation\Page\AbstractPage::class))) {
+                        continue;
                     }
+
+                    unset($result[$key]);
                 }
 
-                return count($result) === 1 ? $result[0] : $result;
+                return count($result) === 1 ? Assert::isInstanceOf($result[0], AbstractPage::class) : $result;
             }
         }
         return null;
@@ -514,9 +535,11 @@ class Links extends AbstractHelper
 
         foreach ($root as $chapter) {
             // exclude self and start page from chapters
-            if ($chapter !== $page && !in_array($chapter, $start) && $this->accept($chapter)) {
-                $found[] = $chapter;
+            if (!($chapter !== $page && !in_array($chapter, $start, strict: true) && $this->accept($chapter))) {
+                continue;
             }
+
+            $found[] = $chapter;
         }
 
         switch (count($found)) {
@@ -545,9 +568,11 @@ class Links extends AbstractHelper
         // check if given page has pages and is a chapter page
         if ($page->hasPages() && $this->findRoot($page)->hasPage($page)) {
             foreach ($page as $section) {
-                if ($this->accept($section)) {
-                    $found[] = $section;
+                if (!$this->accept($section)) {
+                    continue;
                 }
+
+                $found[] = $section;
             }
         }
 
@@ -579,12 +604,16 @@ class Links extends AbstractHelper
             // given page has child pages, loop chapters
             foreach ($this->findRoot($page) as $chapter) {
                 // is page a section?
-                if ($chapter->hasPage($page)) {
-                    foreach ($page as $subsection) {
-                        if ($this->accept($subsection)) {
-                            $found[] = $subsection;
-                        }
+                if (!$chapter->hasPage($page)) {
+                    continue;
+                }
+
+                foreach ($page as $subsection) {
+                    if (!$this->accept($subsection)) {
+                        continue;
                     }
+
+                    $found[] = $subsection;
                 }
             }
         }
@@ -639,10 +668,12 @@ class Links extends AbstractHelper
             if ($parent instanceof AbstractPage) {
                 $root = $this->findRoot($page);
                 foreach ($root as $chapter) {
-                    if ($chapter->hasPage($parent)) {
-                        $found = $parent;
-                        break;
+                    if (!$chapter->hasPage($parent)) {
+                        continue;
                     }
+
+                    $found = $parent;
+                    break;
                 }
             }
         }
@@ -670,13 +701,12 @@ class Links extends AbstractHelper
 
         $root = $page;
 
-        while ($parent = $page->getParent()) {
+        for ($parent = $page->getParent(); $parent; $parent = $page->getParent()) {
             $root = $parent;
-            if ($parent instanceof AbstractPage) {
-                $page = $parent;
-            } else {
+            if (!$parent instanceof AbstractPage) {
                 break;
             }
+            $page = $parent;
         }
 
         return $root;
@@ -690,19 +720,27 @@ class Links extends AbstractHelper
      *                          if it is an array or a config
      * @return AbstractPage|array|null
      */
+    // Preserve the existing parameter contract used by callers and inherited interfaces.
+    // @mago-expect lint:no-boolean-flag-parameter(1)
+    // Keep the coordinated parsing or rendering steps of this compatibility method together.
+    // @mago-expect lint:halstead(1)
     protected function convertToPages(mixed $mixed, bool $recursive = true)
     {
         if ($mixed instanceof AbstractPage) {
             // value is a page instance; return directly
             return $mixed;
-        } elseif ($mixed instanceof AbstractContainer) {
+        }
+        if ($mixed instanceof AbstractContainer) {
             // value is a container; return pages in it
             $pages = [];
             foreach ($mixed as $page) {
                 $pages[] = $page;
             }
             return $pages;
-        } elseif ($mixed instanceof Traversable) {
+        }
+        // These alternatives are mutually exclusive; the following code consumes the selected state.
+        // @mago-expect lint:no-else-clause(1)
+        if ($mixed instanceof Traversable) {
             $mixed = ArrayUtils::iteratorToArray($mixed);
         } elseif (is_string($mixed)) {
             // value is a string; make a URI page
@@ -712,7 +750,7 @@ class Links extends AbstractHelper
             ]);
         }
 
-        if (is_array($mixed) && !empty($mixed)) {
+        if (is_array($mixed) && !!$mixed) {
             if ($recursive && is_numeric(key($mixed))) {
                 // first key is numeric; assume several pages
                 $pages = [];
@@ -724,12 +762,13 @@ class Links extends AbstractHelper
                     }
                 }
                 return $pages;
-            } else {
-                // pass array to factory directly
-                try {
-                    return AbstractPage::factory(new ArrayIterator(Value::stringKeyedArray($mixed)));
-                } catch (\Exception) {
-                }
+            }
+            // pass array to factory directly
+            try {
+                return AbstractPage::factory(new ArrayIterator(Value::stringKeyedArray($mixed)));
+            } catch (\Exception) {
+                // Invalid page specifications have no link target.
+                return null;
             }
         }
 

@@ -15,7 +15,8 @@ class TwigStrategy implements ListenerAggregateInterface
 
     public function __construct(
         protected TwigRenderer $renderer,
-    ) {}
+    ) {
+    }
 
     /**
      * Attach one or more listeners

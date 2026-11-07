@@ -31,7 +31,8 @@ class EnvironmentFactory implements FactoryInterface
             ? Service::get($container, ModuleOptions::class)
             : new ModuleOptions(Value::options($options));
 
-        $envClass = $moduleOptions->getEnvironmentClass() ?: Environment::class;
+        $envClass = $moduleOptions->getEnvironmentClass();
+        $envClass = $envClass ? $envClass : Environment::class;
 
         if (!$container->has($moduleOptions->getEnvironmentLoader())) {
             throw new RuntimeException(sprintf(
@@ -47,14 +48,21 @@ class EnvironmentFactory implements FactoryInterface
 
         if ($moduleOptions->enableFallbackFunctions()) {
             $helperPluginManager = Service::get($container, HelperPluginManager::class, 'ViewHelperManager');
-            $env->registerUndefinedFunctionCallback(/** @throws \Psr\Container\ContainerExceptionInterface */ static function ($name) use ($helperPluginManager) {
-                if ($helperPluginManager->has($name)) {
-                    return new TwigFunction($name, Assert::isCallable($helperPluginManager->get($name)), ['is_safe' => [
-                        'all',
-                    ]]);
-                }
-                return false;
-            });
+            $env->registerUndefinedFunctionCallback(
+                /** @throws \Psr\Container\ContainerExceptionInterface */
+                static function ($name) use ($helperPluginManager) {
+                    if ($helperPluginManager->has($name)) {
+                        return new TwigFunction(
+                            $name,
+                            Assert::isCallable($helperPluginManager->get($name)),
+                            ['is_safe' => [
+                                'all',
+                            ]],
+                        );
+                    }
+                    return false;
+                },
+            );
         }
 
         /** @mago-var mixed $value */

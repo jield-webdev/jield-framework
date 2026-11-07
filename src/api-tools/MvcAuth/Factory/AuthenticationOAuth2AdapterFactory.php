@@ -15,7 +15,9 @@ final class AuthenticationOAuth2AdapterFactory
     /**
      * Intentionally empty and private to prevent instantiation
      */
-    private function __construct() {}
+    private function __construct()
+    {
+    }
 
     /**
      * Create and return an OAuth2Adapter instance.
@@ -24,7 +26,7 @@ final class AuthenticationOAuth2AdapterFactory
      */
     public static function factory(array|string $type, array $config, ContainerInterface $container): OAuth2Adapter
     {
-        if (!isset($config['storage']) || !is_array(value: $config['storage'])) {
+        if (($config['storage'] ?? null) === null || !is_array(value: $config['storage'])) {
             throw new ServiceNotCreatedException(message: 'Missing storage details for OAuth2 server');
         }
 

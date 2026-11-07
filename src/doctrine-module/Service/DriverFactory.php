@@ -102,7 +102,11 @@ final class DriverFactory extends AbstractFactory
                     continue;
                 }
 
-                $options = $this->getOptions(container: $container, key: 'driver', name: Assert::nullOrString($driverName));
+                $options = $this->getOptions(
+                    container: $container,
+                    key: 'driver',
+                    name: Assert::nullOrString($driverName),
+                );
 
                 if (!$options instanceof Driver) {
                     throw new RuntimeException(message: sprintf(

@@ -9,6 +9,8 @@ use DateTimeInterface;
 use Jield\ApiTools\ApiProblem\ApiProblem;
 use Jield\ApiTools\Rest\AbstractResourceListener;
 
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:too-many-methods(1)
 abstract class AbstractRoutedListener extends AbstractResourceListener
 {
     protected static string $route;
@@ -91,7 +93,7 @@ abstract class AbstractRoutedListener extends AbstractResourceListener
 
     protected function convertJSDateTimeToPHPDateTime(?string $dateTimeString): DateTime|ApiProblem|null
     {
-        if (empty($dateTimeString)) {
+        if (!($dateTimeString ?? null)) {
             return null;
         }
 

@@ -82,11 +82,9 @@ class FilterColumnElement extends FormElement
         }
 
         $facets = [];
+        $facetFieldset = Assert::isInstanceOf($form->get(elementOrFieldset: 'facet'), FieldsetInterface::class);
         /** @var Fieldset $facet */
-        foreach (Assert::isInstanceOf(
-            $form->get(elementOrFieldset: 'facet'),
-            FieldsetInterface::class,
-        )->getFieldsets() as $facet) {
+        foreach ($facetFieldset->getFieldsets() as $facet) {
             $facets[] = '<div class="simple-load-more">';
             $facets[] = sprintf('<strong>%s</strong>', $facet->get(elementOrFieldset: 'values')->getLabel());
 

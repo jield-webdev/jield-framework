@@ -26,7 +26,7 @@ final class LoggerAbstractFactory implements AbstractFactoryInterface
             return false;
         }
 
-        return isset($monologConfig['loggers'][$loggerName]);
+        return ($monologConfig['loggers'][$loggerName] ?? null) !== null;
     }
 
     public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): Logger

@@ -17,18 +17,23 @@ use function is_callable;
 use function is_object;
 use function sprintf;
 
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
 class ResourceFactory
 {
     public function __construct(
         protected EntityHydratorManager $entityHydratorManager,
         protected EntityExtractor $entityExtractor,
-    ) {}
+    ) {
+    }
 
     /**
      * Create a entity and/or collection based on a metadata map
      *
      * @throws \Throwable
      */
+    // Preserve the existing parameter contract used by callers and inherited interfaces.
+    // @mago-expect lint:no-boolean-flag-parameter(1)
     public function createEntityFromMetadata(
         object|array $object,
         Metadata $metadata,
@@ -42,7 +47,7 @@ class ResourceFactory
         $data = $this->entityExtractor->extract(object: Assert::object($object));
 
         $entityIdentifierName = $metadata->getEntityIdentifierName();
-        if ($entityIdentifierName && !isset($data[$entityIdentifierName])) {
+        if ($entityIdentifierName && ($data[$entityIdentifierName] ?? null) === null) {
             throw new Exception\RuntimeException(message: sprintf(
                 'Unable to determine entity identifier for object of type "%s"; no fields matching "%s"',
                 get_debug_type(value: $object),
@@ -93,7 +98,10 @@ class ResourceFactory
 
         $forceSelfLink = $metadata->getForceSelfLink();
         if ($forceSelfLink && !$links->has(relation: 'self') && ($metadata->hasUrl() || $metadata->hasRoute())) {
-            $link = $this->marshalLinkFromMetadata(metadata: $metadata, object: \Jield\Stdlib\Value::arrayOrObject($object));
+            $link = $this->marshalLinkFromMetadata(
+                metadata: $metadata,
+                object: \Jield\Stdlib\Value::arrayOrObject($object),
+            );
             $links->idempotentAdd(link: $link);
         }
 

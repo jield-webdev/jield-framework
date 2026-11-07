@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Jield\ApiTools\MvcAuth\Factory;
 
-use Jield\Stdlib\Value;
 use Jield\ApiTools\MvcAuth\Authentication\DefaultAuthenticationListener;
 use Jield\ApiTools\MvcAuth\Authentication\HttpAdapter;
 use Jield\ApiTools\MvcAuth\Authentication\OAuth2Adapter;
 use Jield\ApiTools\OAuth2\Factory\OAuth2ServerFactory as LaminasOAuth2ServerFactory;
 use Jield\Stdlib\Service;
+use Jield\Stdlib\Value;
 use Laminas\Authentication\Adapter\Http;
 use Laminas\Authentication\AuthenticationServiceInterface;
 use Laminas\ServiceManager\Factory\FactoryInterface;
@@ -25,6 +25,8 @@ use function is_string;
 /**
  * Factory for creating the DefaultAuthenticationListener from configuration.
  */
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
 class DefaultAuthenticationListenerFactory implements FactoryInterface
 {
     /**
@@ -104,7 +106,7 @@ class DefaultAuthenticationListenerFactory implements FactoryInterface
         /** @mago-var mixed $config */
         $config = $container->get('config');
         if (
-            !isset($config['api-tools-oauth2']['storage'])
+            ($config['api-tools-oauth2']['storage'] ?? null) === null
             || !is_string(value: $config['api-tools-oauth2']['storage'])
             || !$container->has($config['api-tools-oauth2']['storage'])
         ) {
@@ -120,7 +122,10 @@ class DefaultAuthenticationListenerFactory implements FactoryInterface
                 ...Value::strings($config['api-tools-mvc-auth']['authentication']['map'] ?? []),
             ]));
 
-            return new OAuth2Adapter(oauth2Server: Assert::isInstanceOf($factory(), \OAuth2\Server::class), types: $types);
+            return new OAuth2Adapter(
+                oauth2Server: Assert::isInstanceOf($factory(), \OAuth2\Server::class),
+                types: $types,
+            );
         }
 
         $factory = new LaminasOAuth2ServerFactory();
@@ -132,8 +137,9 @@ class DefaultAuthenticationListenerFactory implements FactoryInterface
             // Jield\ApiTools\OAuth2\Factory\OAuth2ServerFactory when essential
             // configuration is missing.
             return match (true) {
-                str_contains($runtimeException->getMessage(), 'missing') => false,
-                str_contains($runtimeException->getMessage(), 'string or array') => false,
+                str_contains($runtimeException->getMessage(), 'missing'),
+                str_contains($runtimeException->getMessage(), 'string or array'),
+                    => false,
                 default => throw $runtimeException,
             };
         }
@@ -155,7 +161,7 @@ class DefaultAuthenticationListenerFactory implements FactoryInterface
         /** @mago-var mixed $config */
         $config = $container->get('config');
         if (
-            !isset($config['api-tools-mvc-auth']['authentication']['types'])
+            ($config['api-tools-mvc-auth']['authentication']['types'] ?? null) === null
             || !is_array(value: $config['api-tools-mvc-auth']['authentication']['types'])
         ) {
             return false;
@@ -176,7 +182,7 @@ class DefaultAuthenticationListenerFactory implements FactoryInterface
         /** @mago-var mixed $config */
         $config = $container->get('config');
         if (
-            !isset($config['api-tools-mvc-auth']['authentication']['map'])
+            ($config['api-tools-mvc-auth']['authentication']['map'] ?? null) === null
             || !is_array(value: $config['api-tools-mvc-auth']['authentication']['map'])
         ) {
             return [];

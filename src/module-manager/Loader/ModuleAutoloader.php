@@ -38,6 +38,10 @@ use function substr;
 
 use const DIRECTORY_SEPARATOR;
 
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
+// @mago-expect lint:kan-defect(1)
+// @mago-expect lint:too-many-methods(1)
 class ModuleAutoloader implements SplAutoloader
 {
     /** @var array An array of module paths to scan */
@@ -142,6 +146,8 @@ class ModuleAutoloader implements SplAutoloader
      *          get_class($class) [if $class is successfully loaded]
      * @throws \UnexpectedValueException
      */
+    // Keep the coordinated parsing or rendering steps of this compatibility method together.
+    // @mago-expect lint:halstead(1)
     public function autoload($class)
     {
         // Limit scope of this autoloader
@@ -149,13 +155,13 @@ class ModuleAutoloader implements SplAutoloader
             return false;
         }
 
-        if (isset($this->moduleClassMap[$class])) {
+        if (($this->moduleClassMap[$class] ?? null) !== null) {
             require_once Assert::string($this->moduleClassMap[$class]);
             return $class;
         }
 
         $moduleName = substr($class, 0, -7);
-        if (isset($this->explicitPaths[$moduleName])) {
+        if (($this->explicitPaths[$moduleName] ?? null) !== null) {
             /** @mago-var mixed $classLoaded */
             $classLoaded = $this->loadModuleFromDir(Assert::string($this->explicitPaths[$moduleName]), $class);
             if ($classLoaded) {
@@ -205,7 +211,8 @@ class ModuleAutoloader implements SplAutoloader
             $path = Value::stringify($path) . $moduleClassPath;
 
             if ($path === '.' || str_starts_with($path, './') || str_starts_with($path, '.\\')) {
-                if (!($basePath = $this->pharBasePath)) {
+                $basePath = $this->pharBasePath;
+                if (!$basePath) {
                     $basePath = realpath('.');
                 }
 
@@ -259,11 +266,7 @@ class ModuleAutoloader implements SplAutoloader
     protected function loadModuleFromDir($dirPath, $class)
     {
         $modulePath = $dirPath . '/Module.php';
-        if (str_starts_with($modulePath, 'phar://')) {
-            $file = new PharFileInfo($modulePath);
-        } else {
-            $file = new SplFileInfo($modulePath);
-        }
+        $file = str_starts_with($modulePath, 'phar://') ? new PharFileInfo($modulePath) : new SplFileInfo($modulePath);
 
         if ($file->isReadable() && $file->isFile()) {
             // Found directory with Module.php in it
@@ -383,9 +386,9 @@ class ModuleAutoloader implements SplAutoloader
         foreach ($paths as $module => $path) {
             if (is_string($module)) {
                 $this->registerPath(Assert::string($path), $module);
-            } else {
-                $this->registerPath(Assert::string($path));
+                continue;
             }
+            $this->registerPath(Assert::string($path));
         }
 
         return $this;
@@ -409,14 +412,16 @@ class ModuleAutoloader implements SplAutoloader
             ));
         }
         if ($moduleName) {
+            // These alternatives are mutually exclusive; the following code consumes the selected state.
+            // @mago-expect lint:no-else-clause(1)
             if (in_array(substr(Assert::string($moduleName), -2), ['\\*', '\\%'], strict: true)) {
                 $this->namespacedPaths[substr(Assert::string($moduleName), 0, -2)] = static::normalizePath($path);
             } else {
                 $this->explicitPaths[$moduleName] = static::normalizePath($path);
             }
-        } else {
-            $this->paths[] = static::normalizePath($path);
+            return $this;
         }
+        $this->paths[] = static::normalizePath($path);
         return $this;
     }
 
@@ -443,7 +448,7 @@ class ModuleAutoloader implements SplAutoloader
         do {
             $pathinfo = pathinfo($pharPath);
             $pharPath = $pathinfo['filename'];
-        } while (isset($pathinfo['extension']));
+        } while (($pathinfo['extension'] ?? null) !== null);
         return $pathinfo['filename'];
     }
 

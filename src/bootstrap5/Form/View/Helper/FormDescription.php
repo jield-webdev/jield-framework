@@ -36,23 +36,31 @@ final class FormDescription extends AbstractHelper
         ?string $blockWrapper = null,
         ?string $inlineWrapper = null,
     ): string {
-        $blockWrapper = $blockWrapper ?: $this->blockWrapper;
-        $inlineWrapper = $inlineWrapper ?: $this->inlineWrapper;
+        $blockWrapper = $blockWrapper ? $blockWrapper : $this->blockWrapper;
+        $inlineWrapper = $inlineWrapper ? $inlineWrapper : $this->inlineWrapper;
 
         $html = '';
         /** @mago-var mixed $inline */
-        if ($inline = $element->getOption(option: 'help-inline')) {
+        $inline = $element->getOption(option: 'help-inline');
+        if ($inline) {
             if (null !== ($translator = $this->getTranslator())) {
-                $inline = $translator->translate(\Webmozart\Assert\Assert::string($inline), $this->getTranslatorTextDomain());
+                $inline = $translator->translate(
+                    \Webmozart\Assert\Assert::string($inline),
+                    $this->getTranslatorTextDomain(),
+                );
             }
 
             $html .= sprintf($inlineWrapper, \Jield\Stdlib\Value::scalar($inline));
         }
 
         /** @mago-var mixed $block */
-        if ($block = $element->getOption(option: 'help-block')) {
+        $block = $element->getOption(option: 'help-block');
+        if ($block) {
             if (null !== ($translator = $this->getTranslator())) {
-                $block = $translator->translate(\Webmozart\Assert\Assert::string($block), $this->getTranslatorTextDomain());
+                $block = $translator->translate(
+                    \Webmozart\Assert\Assert::string($block),
+                    $this->getTranslatorTextDomain(),
+                );
             }
 
             $html .= sprintf($blockWrapper, \Jield\Stdlib\Value::scalar($block));

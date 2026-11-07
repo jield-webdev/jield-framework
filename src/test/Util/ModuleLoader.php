@@ -23,7 +23,7 @@ class ModuleLoader
      */
     public function __construct(array $configuration)
     {
-        if (!isset($configuration['modules'])) {
+        if (($configuration['modules'] ?? null) === null) {
             $modules = $configuration;
             $configuration = [
                 'module_listener_options' => [
@@ -48,7 +48,9 @@ class ModuleLoader
         /** @mago-var mixed $smConfig */
         $smConfig = $configuration['service_manager'] ?? [];
         $this->serviceManager = new ServiceManager();
-        new Service\ServiceManagerConfig(\Webmozart\Assert\Assert::isArray($smConfig))->configureServiceManager($this->serviceManager);
+        new Service\ServiceManagerConfig(\Webmozart\Assert\Assert::isArray(
+            $smConfig,
+        ))->configureServiceManager($this->serviceManager);
         $this->serviceManager->setService('ApplicationConfig', $configuration);
         \Jield\Stdlib\Service::get(
             $this->serviceManager,

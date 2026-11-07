@@ -33,13 +33,16 @@ final class DBALConnectionFactory extends AbstractFactory
     public function __invoke(ContainerInterface $container, string $requestedName, ?array $options = null): Connection
     {
         $options = $this->getOptions(container: $container, key: 'connection');
-        assert(assertion: $options instanceof DBALConnection);
+        assert(
+            assertion: $options instanceof DBALConnection,
+            description: 'Expected $options instanceof DBALConnection.',
+        );
         $pdo = $options->getPdo();
 
         if (is_string(value: $pdo)) {
             /** @mago-var mixed $pdo */
             $pdo = $container->get($pdo);
-            assert(assertion: $pdo instanceof PDO);
+            assert(assertion: $pdo instanceof PDO, description: 'Expected $pdo instanceof PDO.');
         }
 
         $params = [

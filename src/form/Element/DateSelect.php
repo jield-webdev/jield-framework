@@ -17,6 +17,8 @@ use function is_array;
 use function is_string;
 use function sprintf;
 
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:too-many-methods(1)
 class DateSelect extends MonthSelect
 {
     /**
@@ -47,7 +49,7 @@ class DateSelect extends MonthSelect
     {
         parent::setOptions(options: $options);
 
-        if (isset($this->options['day_attributes'])) {
+        if (($this->options['day_attributes'] ?? null) !== null) {
             $this->setDayAttributes(dayAttributes: \Jield\Stdlib\Value::scalarMap($this->options['day_attributes']));
         }
 
@@ -117,16 +119,15 @@ class DateSelect extends MonthSelect
                 'day' => $value->format(format: 'd'),
             ];
         }
-
         if (is_array(value: $value)) {
             $this->yearElement->setValue(value: $value['year']);
             $this->monthElement->setValue(value: $value['month']);
             $this->dayElement->setValue(value: $value['day']);
-        } else {
-            $this->yearElement->setValue(value: null);
-            $this->monthElement->setValue(value: null);
-            $this->dayElement->setValue(value: null);
+            return $this;
         }
+        $this->yearElement->setValue(value: null);
+        $this->monthElement->setValue(value: null);
+        $this->dayElement->setValue(value: null);
 
         return $this;
     }
@@ -144,7 +145,12 @@ class DateSelect extends MonthSelect
             return null;
         }
 
-        return sprintf('%04d-%02d-%02d', \Jield\Stdlib\Value::scalar($year), \Jield\Stdlib\Value::scalar($month), \Jield\Stdlib\Value::scalar($day));
+        return sprintf(
+            '%04d-%02d-%02d',
+            \Jield\Stdlib\Value::scalar($year),
+            \Jield\Stdlib\Value::scalar($month),
+            \Jield\Stdlib\Value::scalar($day),
+        );
     }
 
     /**

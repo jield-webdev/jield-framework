@@ -67,7 +67,18 @@ class ModuleRouteListener extends AbstractListenerAggregate
 
         // Prepend the controllername with the module, and replace it in the
         // matches
-        $controller = $module . '\\' . str_replace(' ', '', ucwords(\Webmozart\Assert\Assert::string(str_replace('-', ' ', \Jield\Stdlib\Value::stringsOrString(\Jield\Stdlib\Value::arrayOrString($controller))))));
+        $controller =
+            $module
+            . '\\'
+            . str_replace(
+                ' ',
+                '',
+                ucwords(\Webmozart\Assert\Assert::string(str_replace(
+                    '-',
+                    ' ',
+                    \Jield\Stdlib\Value::stringsOrString(\Jield\Stdlib\Value::arrayOrString($controller)),
+                ))),
+            );
         $matches->setParam('controller', $controller);
     }
 }

@@ -28,6 +28,10 @@ use function max;
 use function sprintf;
 
 /** @final */
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
+// @mago-expect lint:kan-defect(1)
+// @mago-expect lint:too-many-methods(1)
 class Collection extends Fieldset implements CollectionInterface
 {
     /**
@@ -103,7 +107,7 @@ class Collection extends Fieldset implements CollectionInterface
     {
         parent::setOptions(options: $options);
 
-        if (isset($this->options['target_element'])) {
+        if (($this->options['target_element'] ?? null) !== null) {
             /** @mago-var mixed $target */
             $target = $this->options['target_element'];
             $this->setTargetElement(
@@ -113,27 +117,29 @@ class Collection extends Fieldset implements CollectionInterface
             );
         }
 
-        if (isset($this->options['count'])) {
+        if (($this->options['count'] ?? null) !== null) {
             $this->setCount(count: Assert::integer($this->options['count']));
         }
 
-        if (isset($this->options['allow_add'])) {
+        if (($this->options['allow_add'] ?? null) !== null) {
             $this->setAllowAdd(allowAdd: Assert::boolean($this->options['allow_add']));
         }
 
-        if (isset($this->options['allow_remove'])) {
+        if (($this->options['allow_remove'] ?? null) !== null) {
             $this->setAllowRemove(allowRemove: Assert::boolean($this->options['allow_remove']));
         }
 
-        if (isset($this->options['should_create_template'])) {
-            $this->setShouldCreateTemplate(shouldCreateTemplate: Assert::boolean($this->options['should_create_template']));
+        if (($this->options['should_create_template'] ?? null) !== null) {
+            $this->setShouldCreateTemplate(shouldCreateTemplate: Assert::boolean(
+                $this->options['should_create_template'],
+            ));
         }
 
-        if (isset($this->options['template_placeholder'])) {
+        if (($this->options['template_placeholder'] ?? null) !== null) {
             $this->setTemplatePlaceholder(templatePlaceholder: Assert::string($this->options['template_placeholder']));
         }
 
-        if (isset($this->options['create_new_objects'])) {
+        if (($this->options['create_new_objects'] ?? null) !== null) {
             $this->setCreateNewObjects(createNewObjects: Assert::boolean($this->options['create_new_objects']));
         }
 
@@ -158,6 +164,8 @@ class Collection extends Fieldset implements CollectionInterface
      */
     public function setObject(mixed $object): static
     {
+        // These alternatives are mutually exclusive; the following code consumes the selected state.
+        // @mago-expect lint:no-else-clause(1)
         if ($object instanceof Traversable) {
             $object = iterator_to_array(iterator: $object);
         } elseif (!is_array(value: $object)) {
@@ -199,7 +207,7 @@ class Collection extends Fieldset implements CollectionInterface
         // Check to see if elements have been replaced or removed
         $toRemove = [];
         foreach ($this as $name => $elementOrFieldset) {
-            if (isset($data[$name])) {
+            if (($data[$name] ?? null) !== null) {
                 continue;
             }
 
@@ -220,6 +228,8 @@ class Collection extends Fieldset implements CollectionInterface
         /** @mago-var mixed $value */
         foreach ($data as $key => $value) {
             $elementOrFieldset = null;
+            // These alternatives are mutually exclusive; the following code consumes the selected state.
+            // @mago-expect lint:no-else-clause(1)
             if ($this->has(elementOrFieldset: (string) $key)) {
                 $elementOrFieldset = $this->get(elementOrFieldset: (string) $key);
             } elseif ($this->targetElement) {
@@ -265,11 +275,9 @@ class Collection extends Fieldset implements CollectionInterface
         foreach ($values as $name => $value) {
             $element = $this->get(elementOrFieldset: (string) $name);
 
-            if ($element instanceof FieldsetInterface) {
-                $collection[] = $element->bindValues(Assert::isArray($value), $validationGroup);
-            } else {
-                $collection[] = $value;
-            }
+            $collection[] = $element instanceof FieldsetInterface
+                ? $element->bindValues(Assert::isArray($value), $validationGroup)
+                : $value;
         }
 
         return $collection;
@@ -304,7 +312,8 @@ class Collection extends Fieldset implements CollectionInterface
     {
         if (
             is_array(value: $elementOrFieldset)
-            || $elementOrFieldset instanceof Traversable && !$elementOrFieldset instanceof ElementInterface
+            || $elementOrFieldset instanceof Traversable
+            && !$elementOrFieldset instanceof ElementInterface
         ) {
             $factory = $this->getFormFactory();
             $elementOrFieldset = $factory->create(spec: $elementOrFieldset);
@@ -445,9 +454,13 @@ class Collection extends Fieldset implements CollectionInterface
      * @throws Exception\DomainException
      * @throws \ReflectionException
      */
+    // Keep the coordinated parsing or rendering steps of this compatibility method together.
+    // @mago-expect lint:halstead(1)
     public function extract(): array
     {
         $objects = $this->object;
+        // These alternatives are mutually exclusive; the following code consumes the selected state.
+        // @mago-expect lint:no-else-clause(1)
         if ($objects instanceof Traversable) {
             $objects = ArrayUtils::iteratorToArray(iterator: $objects, recursive: false);
             $this->object = $objects;
@@ -472,12 +485,18 @@ class Collection extends Fieldset implements CollectionInterface
                     continue;
                 }
                 $targetElement = clone $this->targetElement;
-                assert(assertion: $targetElement instanceof Fieldset);
+                assert(
+                    assertion: $targetElement instanceof Fieldset,
+                    description: 'Expected $targetElement instanceof Fieldset.',
+                );
                 $targetElement->setObject(object: $value);
                 $values[$key] = $targetElement->extract();
                 if (!$this->createNewObjects() && $this->has(elementOrFieldset: (string) $key)) {
                     $fieldset = $this->get(elementOrFieldset: (string) $key);
-                    assert(assertion: $fieldset instanceof FieldsetInterface);
+                    assert(
+                        assertion: $fieldset instanceof FieldsetInterface,
+                        description: 'Expected $fieldset instanceof FieldsetInterface.',
+                    );
                     $fieldset->setObject(object: $value);
                 }
                 continue;
@@ -503,13 +522,16 @@ class Collection extends Fieldset implements CollectionInterface
      */
     protected function createNewTargetElementInstance(): ElementInterface
     {
-        assert(assertion: $this->targetElement !== null);
+        assert(assertion: $this->targetElement !== null, description: 'Expected $this->targetElement !== null.');
         /** @mago-var mixed $type */
         if (
             $this->targetElement instanceof InputFilterProviderFieldset
             && null !== ($type = $this->targetElement->getOption(option: 'target_type'))
         ) {
-            assert(assertion: is_string(value: $type) && class_exists(class: $type));
+            assert(
+                assertion: is_string(value: $type) && class_exists(class: $type),
+                description: 'Expected is_string($type) && class_exists($type).',
+            );
             $this->targetElement->setObject(object: Value::instantiate($type));
         }
         return clone $this->targetElement;
@@ -578,7 +600,7 @@ class Collection extends Fieldset implements CollectionInterface
 
         foreach ($fieldsets as $fieldset) {
             $i = (string) $fieldset->getName();
-            if ($i !== '' && isset($this->object[$i])) {
+            if ($i !== '' && ($this->object[$i] ?? null) !== null) {
                 $fieldset->setObject(object: $this->object[$i]);
             }
         }

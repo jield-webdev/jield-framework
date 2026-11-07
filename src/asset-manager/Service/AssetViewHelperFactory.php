@@ -42,7 +42,7 @@ class AssetViewHelperFactory implements FactoryInterface
     private function loadCache(ContainerInterface $container, array $config): ?AbstractCacheAdapter
     {
         // check if the cache is configured
-        if (!isset($config['view_helper']['cache'])) {
+        if (($config['view_helper']['cache'] ?? null) === null) {
             return null;
         }
 

@@ -23,7 +23,8 @@ class DoctrinePaginator implements AdapterInterface, JsonSerializable
      */
     public function __construct(
         protected Paginator $paginator,
-    ) {}
+    ) {
+    }
 
     /** @param Paginator<T> $paginator */
     public function setPaginator(Paginator $paginator): self

@@ -32,7 +32,7 @@ class Range extends NumberElement
         $validators = [];
 
         $inclusive = true;
-        if (!empty($this->attributes['inclusive'])) {
+        if (!!($this->attributes['inclusive'] ?? null)) {
             $inclusive = $this->attributes['inclusive'];
         }
 
@@ -43,7 +43,7 @@ class Range extends NumberElement
             'inclusiveMax' => (bool) $inclusive,
         ]);
 
-        if (!isset($this->attributes['step']) || 'any' !== $this->attributes['step']) {
+        if (($this->attributes['step'] ?? null) === null || 'any' !== $this->attributes['step']) {
             $validators[] = new StepValidator(options: [
                 'baseValue' => Assert::numeric($this->attributes['min'] ?? 0),
                 'step' => Assert::numeric($this->attributes['step'] ?? 1),

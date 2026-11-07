@@ -7,9 +7,7 @@ namespace Jield\Search\Solr\Expression\Exception;
 use InvalidArgumentException as BaseInvalidArgumentException;
 
 use function array_pop;
-use function gettype;
 use function implode;
-use function is_object;
 use function sprintf;
 
 class InvalidArgumentException extends BaseInvalidArgumentException implements ExceptionInterface

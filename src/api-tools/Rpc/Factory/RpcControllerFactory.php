@@ -50,13 +50,13 @@ class RpcControllerFactory implements AbstractFactoryInterface
 
         /** @mago-var mixed $config */
         $config = $container->get('config');
-        if (!isset($config['api-tools-rpc'][$requestedName])) {
+        if (($config['api-tools-rpc'][$requestedName] ?? null) === null) {
             return false;
         }
 
         /** @mago-var mixed $config */
         $config = $config['api-tools-rpc'][$requestedName];
-        return isset($config['callable']);
+        return ($config['callable'] ?? null) !== null;
     }
 
     /**

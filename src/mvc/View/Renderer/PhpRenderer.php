@@ -19,7 +19,8 @@ final readonly class PhpRenderer implements RendererInterface
     public function __construct(
         private NativeRenderer $renderer,
         private HelperPluginManagerInterface $plugins,
-    ) {}
+    ) {
+    }
 
     public function render(string|ModelInterface $templateNameOrModel, ?iterable $variables = null): string
     {

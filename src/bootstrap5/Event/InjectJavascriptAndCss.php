@@ -14,7 +14,8 @@ class InjectJavascriptAndCss extends AbstractListenerAggregate
     public function __construct(
         private readonly array $config,
         private readonly PhpRenderer $renderer,
-    ) {}
+    ) {
+    }
 
     public function attach(EventManagerInterface $events, $priority = 1): void
     {

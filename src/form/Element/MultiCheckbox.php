@@ -66,7 +66,7 @@ class MultiCheckbox extends Checkbox
      */
     public function unsetValueOption(string $key): static
     {
-        if (isset($this->valueOptions[$key])) {
+        if (($this->valueOptions[$key] ?? null) !== null) {
             unset($this->valueOptions[$key]);
             $this->validator = null;
         }
@@ -86,19 +86,21 @@ class MultiCheckbox extends Checkbox
     {
         parent::setOptions(options: $options);
 
-        if (isset($this->options['value_options'])) {
+        if (($this->options['value_options'] ?? null) !== null) {
             /** @var ValueOptionSpec $valueOptions */
             $valueOptions = $this->options['value_options'];
             $this->setValueOptions(options: $valueOptions);
         }
         // Alias for 'value_options'
-        if (isset($this->options['options'])) {
+        if (($this->options['options'] ?? null) !== null) {
             /** @var ValueOptionSpec $valueOptions */
             $valueOptions = $this->options['options'];
             $this->setValueOptions(options: $valueOptions);
         }
-        if (isset($this->options['disable_inarray_validator'])) {
-            $this->setDisableInArrayValidator(disableOption: \Webmozart\Assert\Assert::boolean($this->options['disable_inarray_validator']));
+        if (($this->options['disable_inarray_validator'] ?? null) !== null) {
+            $this->setDisableInArrayValidator(disableOption: \Webmozart\Assert\Assert::boolean(
+                $this->options['disable_inarray_validator'],
+            ));
         }
 
         return $this;

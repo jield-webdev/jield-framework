@@ -33,13 +33,11 @@ class ViewPrefixPathStackResolverFactory implements FactoryInterface
          * @mago-var mixed $path
          */
         foreach ($prefixes as $prefix => $path) {
-            $paths[Assert::stringNotEmpty($prefix)] = $path instanceof ResolverInterface
-                ? $path
-                : (
-                    is_array($path)
-                        ? array_values(array_map(Assert::stringNotEmpty(...), $path))
-                        : Assert::stringNotEmpty($path)
-                );
+            $paths[Assert::stringNotEmpty($prefix)] = match (true) {
+                $path instanceof ResolverInterface => $path,
+                is_array($path) => array_values(array_map(Assert::stringNotEmpty(...), $path)),
+                default => Assert::stringNotEmpty($path),
+            };
         }
         return new PrefixPathStackResolver($paths, Configuration::defaultTemplateSuffix($container));
     }

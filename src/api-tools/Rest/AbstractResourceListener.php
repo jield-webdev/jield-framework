@@ -19,6 +19,8 @@ use Webmozart\Assert\Assert;
 
 use function sprintf;
 
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:too-many-methods(1)
 abstract class AbstractResourceListener implements ListenerAggregateInterface
 {
     use ListenerAggregateTrait;
@@ -150,7 +152,7 @@ abstract class AbstractResourceListener implements ListenerAggregateInterface
                 $id = $event->getParam(name: 'id');
                 return $this->fetch(id: Assert::string($id));
             case 'fetchAll':
-                $queryParams = $event->getQueryParams() ?: [];
+                $queryParams = $event->getQueryParams() ?? [];
                 return $this->fetchAll(params: Assert::isInstanceOf($queryParams, \Laminas\Stdlib\Parameters::class));
             case 'patch':
                 $id = (int) $event->getParam(name: 'id');

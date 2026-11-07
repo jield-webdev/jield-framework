@@ -44,7 +44,8 @@ class DispatchListener extends AbstractListenerAggregate
 {
     public function __construct(
         private readonly ControllerManager $controllerManager,
-    ) {}
+    ) {
+    }
 
     /**
      * Attach listeners to an event manager

@@ -13,6 +13,8 @@ use Doctrine\ORM\Repository\RepositoryFactory;
 /**
  * Configuration options for an ORM Configuration
  */
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:too-many-properties(1)
 final class Configuration extends DBALConfiguration
 {
     /**
@@ -464,14 +466,16 @@ final class Configuration extends DBALConfiguration
     /** @param  mixed[] $secondLevelCache */
     public function setSecondLevelCache(array $secondLevelCache): self
     {
-        $this->secondLevelCache = new SecondLevelCacheConfiguration(options: \Jield\Stdlib\Value::options($secondLevelCache));
+        $this->secondLevelCache = new SecondLevelCacheConfiguration(options: \Jield\Stdlib\Value::options(
+            $secondLevelCache,
+        ));
 
         return $this;
     }
 
     public function getSecondLevelCache(): SecondLevelCacheConfiguration
     {
-        return $this->secondLevelCache ?: new SecondLevelCacheConfiguration();
+        return $this->secondLevelCache ?? new SecondLevelCacheConfiguration();
     }
 
     public function setFilterSchemaAssetsExpression(string $filterSchemaAssetsExpression): self

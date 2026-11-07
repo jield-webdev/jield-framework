@@ -25,7 +25,10 @@ class AuthenticationServiceFactory
             );
         }
 
-        return new AuthenticationService(authenticationService: null, config: \Webmozart\Assert\Assert::isArray($config));
+        return new AuthenticationService(
+            authenticationService: null,
+            config: \Webmozart\Assert\Assert::isArray($config),
+        );
     }
 
     /**

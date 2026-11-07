@@ -21,7 +21,8 @@ class Tracker
     public function __construct(
         protected string $id,
         protected bool $enableTracking = true,
-    ) {}
+    ) {
+    }
 
     public function getId(): string
     {

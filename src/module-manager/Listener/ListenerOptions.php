@@ -7,14 +7,14 @@ namespace Jield\ModuleManager\Listener;
 use Laminas\Stdlib\AbstractOptions;
 use Traversable;
 
-use function gettype;
 use function is_array;
 use function rtrim;
-use function sprintf;
 
 /**
  * @extends \Laminas\Stdlib\AbstractOptions<mixed>
  */
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:too-many-properties(1)
 class ListenerOptions extends AbstractOptions
 {
     protected array $modulePaths = [];

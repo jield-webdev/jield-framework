@@ -12,6 +12,9 @@ use function array_key_exists;
 use function assert;
 use function is_string;
 
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
+// @mago-expect lint:too-many-methods(1)
 class Element implements ElementAttributeRemovalInterface, ElementInterface, InitializableInterface, LabelAwareInterface
 {
     use LabelAwareTrait;
@@ -42,7 +45,7 @@ class Element implements ElementAttributeRemovalInterface, ElementInterface, Ini
             $this->setName(name: (string) $name);
         }
 
-        if (!empty($options)) {
+        if ($options) {
             $this->setOptions(options: $options);
         }
     }
@@ -51,7 +54,9 @@ class Element implements ElementAttributeRemovalInterface, ElementInterface, Ini
      * This function is automatically called when creating element with factory. It
      * allows to perform various operations (add elements...)
      */
-    public function init(): void {}
+    public function init(): void
+    {
+    }
 
     /** @inheritDoc */
     public function setName(string $name): static
@@ -64,7 +69,10 @@ class Element implements ElementAttributeRemovalInterface, ElementInterface, Ini
     public function getName(): ?string
     {
         $name = $this->getAttribute(key: 'name');
-        assert(assertion: is_string(value: $name) || $name === null);
+        assert(
+            assertion: is_string(value: $name) || $name === null,
+            description: 'Expected is_string($name) || $name === null.',
+        );
 
         return $name;
     }
@@ -83,15 +91,15 @@ class Element implements ElementAttributeRemovalInterface, ElementInterface, Ini
             $options = ArrayUtils::iteratorToArray(iterator: $options);
         }
 
-        if (isset($options['label'])) {
+        if (($options['label'] ?? null) !== null) {
             $this->setLabel(label: \Webmozart\Assert\Assert::nullOrString($options['label']));
         }
 
-        if (isset($options['label_attributes'])) {
+        if (($options['label_attributes'] ?? null) !== null) {
             $this->setLabelAttributes(labelAttributes: \Webmozart\Assert\Assert::isArray($options['label_attributes']));
         }
 
-        if (isset($options['label_options'])) {
+        if (($options['label_options'] ?? null) !== null) {
             $this->setLabelOptions(arrayOrTraversable: \Webmozart\Assert\Assert::isIterable($options['label_options']));
         }
 
@@ -113,7 +121,7 @@ class Element implements ElementAttributeRemovalInterface, ElementInterface, Ini
      */
     public function getOption(string $option): mixed
     {
-        if (!isset($this->options[$option])) {
+        if (($this->options[$option] ?? null) === null) {
             return null;
         }
 
@@ -144,7 +152,7 @@ class Element implements ElementAttributeRemovalInterface, ElementInterface, Ini
     /** @inheritDoc */
     public function getAttribute(string $key): mixed
     {
-        if (!isset($this->attributes[$key])) {
+        if (($this->attributes[$key] ?? null) === null) {
             return null;
         }
 
@@ -243,7 +251,7 @@ class Element implements ElementAttributeRemovalInterface, ElementInterface, Ini
     /** @inheritDoc */
     public function getLabelOption(int|string $key): mixed
     {
-        if (!isset($this->labelOptions[$key])) {
+        if (($this->labelOptions[$key] ?? null) === null) {
             return null;
         }
 

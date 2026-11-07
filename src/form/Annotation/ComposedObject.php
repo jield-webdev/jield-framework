@@ -55,15 +55,14 @@ final class ComposedObject
                 ),
                 E_USER_DEPRECATED,
             );
-
             $this->targetObject = Assert::nullOrString($targetObject['target_object'] ?? null);
             $this->isCollection = Assert::boolean($targetObject['is_collection'] ?? $isCollection);
             $this->options = Assert::isArray($targetObject['options'] ?? $options);
-        } else {
-            $this->targetObject = $targetObject;
-            $this->isCollection = $isCollection;
-            $this->options = $options;
+            return;
         }
+        $this->targetObject = $targetObject;
+        $this->isCollection = $isCollection;
+        $this->options = $options;
     }
 
     /**

@@ -30,6 +30,8 @@ use function sprintf;
  * @psalm-import-type FactoriesConfiguration from ServiceManager
  * @psalm-import-type ServiceManagerConfiguration from ServiceManager
  */
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
 class FormElementManager extends AbstractPluginManager
 {
     /**
@@ -223,7 +225,7 @@ class FormElementManager extends AbstractPluginManager
      */
     public function setInvokableClass(string $name, ?string $class = null): void
     {
-        $class = $class ?: $name;
+        $class = $class ? $class : $name;
 
         if (!$this->has($class)) {
             $this->configure(['factories' => [$class => ElementFactory::class]]);
@@ -303,6 +305,8 @@ class FormElementManager extends AbstractPluginManager
             $this->setInvokableClass(name: $id, class: $id);
         }
         /** @var ($id is class-string<ElementInterface> ? T : ElementInterface) $element */
+        // Keep the local variable as the target of its generic type annotation.
+        // @mago-expect lint:inline-variable-return(1)
         $element = $options === null ? parent::get($id) : parent::build($id, $options);
         return $element;
     }

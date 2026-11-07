@@ -25,7 +25,8 @@ final readonly class Instance
      */
     public function __construct(
         private string $instance,
-    ) {}
+    ) {
+    }
 
     /**
      * Retrieve the instance

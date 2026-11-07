@@ -48,12 +48,14 @@ final class ReservedWordsCommand extends Command
                 $rows[] = ['Table', $table->getObjectName()->toString()];
             }
             foreach ($table->getColumns() as $column) {
-                if (SqlKeywords::contains($platform, $column->getObjectName()->getIdentifier()->getValue())) {
-                    $rows[] = [
-                        'Column',
-                        $table->getObjectName()->toString() . '.' . $column->getObjectName()->toString(),
-                    ];
+                if (!SqlKeywords::contains($platform, $column->getObjectName()->getIdentifier()->getValue())) {
+                    continue;
                 }
+
+                $rows[] = [
+                    'Column',
+                    $table->getObjectName()->toString() . '.' . $column->getObjectName()->toString(),
+                ];
             }
         }
         $io = new SymfonyStyle($input, $output);

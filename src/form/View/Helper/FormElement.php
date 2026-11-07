@@ -48,6 +48,8 @@ class FormElement extends AbstractHelper
         'month' => 'formmonth',
         'multi_checkbox' => 'formmulticheckbox',
         'number' => 'formnumber',
+        // This is a public protocol or form identifier, not a credential.
+        // @mago-expect lint:no-literal-password(1)
         'password' => 'formpassword',
         'radio' => 'formradio',
         'range' => 'formrange',
@@ -70,7 +72,8 @@ class FormElement extends AbstractHelper
 
     public function __construct(
         private readonly HelperPluginManagerInterface $helpers,
-    ) {}
+    ) {
+    }
 
     /**
      * Invoke helper as function
@@ -157,7 +160,7 @@ class FormElement extends AbstractHelper
     {
         /** @mago-var mixed $helper */
         $helper = $this->helpers->get($name);
-        assert(assertion: is_callable(value: $helper));
+        assert(assertion: is_callable(value: $helper), description: 'Expected is_callable($helper).');
         return \Webmozart\Assert\Assert::string($helper($element));
     }
 
@@ -186,7 +189,7 @@ class FormElement extends AbstractHelper
     {
         $type = $element->getAttribute(key: 'type');
 
-        if (isset($this->typeMap[(string) $type])) {
+        if (($this->typeMap[(string) $type] ?? null) !== null) {
             return $this->renderHelper(name: $this->typeMap[(string) $type], element: $element);
         }
 

@@ -71,7 +71,10 @@ final class Module implements ConfigProviderInterface, BootstrapListenerInterfac
      */
     public function init($moduleManager): void
     {
-        $this->getPrototypeRouteListener()->attach(events: Assert::isInstanceOf(Value::call($moduleManager, 'getEventManager'), \Laminas\EventManager\EventManagerInterface::class));
+        $this->getPrototypeRouteListener()->attach(events: Assert::isInstanceOf(
+            Value::call($moduleManager, 'getEventManager'),
+            \Laminas\EventManager\EventManagerInterface::class,
+        ));
     }
 
     /**
@@ -186,7 +189,10 @@ final class Module implements ConfigProviderInterface, BootstrapListenerInterfac
 
         // Attach OptionsListener
         $optionsListener = Service::get($serviceManager, OptionsListener::class);
-        $optionsListener->attach(Assert::isInstanceOf(Value::call($app, 'getEventManager'), \Laminas\EventManager\EventManagerInterface::class));
+        $optionsListener->attach(Assert::isInstanceOf(
+            Value::call($app, 'getEventManager'),
+            \Laminas\EventManager\EventManagerInterface::class,
+        ));
 
         // Setup json strategy
         $strategy = Service::get($serviceManager, JsonStrategy::class, 'ViewJsonStrategy');

@@ -38,7 +38,7 @@ class AggregateResolverServiceFactory implements FactoryInterface
 
         $resolver = new AggregateResolver();
 
-        if (empty($config['resolvers'])) {
+        if (!($config['resolvers'] ?? null)) {
             return $resolver;
         }
 

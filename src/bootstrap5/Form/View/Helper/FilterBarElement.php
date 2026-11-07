@@ -111,11 +111,9 @@ class FilterBarElement extends FormElement
                                                                         
                     </li>';
 
+        $facetFieldset = Assert::isInstanceOf($form->get(elementOrFieldset: 'facet'), FieldsetInterface::class);
         /** @var Fieldset $facet */
-        foreach (Assert::isInstanceOf(
-            $form->get(elementOrFieldset: 'facet'),
-            FieldsetInterface::class,
-        )->getFieldsets() as $counter => $facet) {
+        foreach ($facetFieldset->getFieldsets() as $counter => $facet) {
             $yesNo = '';
             if ($facet->has(elementOrFieldset: 'yesNo')) {
                 $facet->get(elementOrFieldset: 'yesNo')->setAttribute(

@@ -14,7 +14,8 @@ class DefaultAuthorizationListener
 {
     public function __construct(
         protected AuthorizationInterface $authorization,
-    ) {}
+    ) {
+    }
 
     /**
      * @throws \ReflectionException
@@ -52,7 +53,10 @@ class DefaultAuthorizationListener
         /** @mago-var mixed $identity */
         $identity = $mvcAuthEvent->getIdentity();
         return $this->authorization->isAuthorized(
-            identity: \Webmozart\Assert\Assert::isInstanceOf($identity, \Jield\ApiTools\MvcAuth\Identity\IdentityInterface::class),
+            identity: \Webmozart\Assert\Assert::isInstanceOf(
+                $identity,
+                \Jield\ApiTools\MvcAuth\Identity\IdentityInterface::class,
+            ),
             resource: $resource,
             privilege: $request->getMethod(),
         );

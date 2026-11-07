@@ -34,7 +34,8 @@ final class FailureMessage
                 $exception->getFile(),
                 $exception->getLine(),
             );
-        } while ($exception = $exception->getPrevious());
+            $exception = $exception->getPrevious();
+        } while ($exception !== null);
 
         return sprintf("%s\n\nExceptions raised:\n%s\n", $message, implode("\n\n", $messages));
     }

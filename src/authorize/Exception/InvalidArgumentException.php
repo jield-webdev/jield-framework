@@ -9,4 +9,6 @@ use InvalidArgumentException as BaseInvalidArgumentException;
 /**
  * Invalid argument exception for BjyAuthorize
  */
-class InvalidArgumentException extends BaseInvalidArgumentException {}
+class InvalidArgumentException extends BaseInvalidArgumentException
+{
+}

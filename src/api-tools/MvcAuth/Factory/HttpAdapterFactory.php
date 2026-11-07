@@ -21,12 +21,16 @@ use function is_string;
  * Create and return a Laminas\Authentication\Adapter\Http instance based on the
  * configuration provided.
  */
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
 final class HttpAdapterFactory
 {
     /**
      * Only defined in order to prevent instantiation.
      */
-    private function __construct() {}
+    private function __construct()
+    {
+    }
 
     /**
      * Create an HttpAuth instance based on the configuration passed.
@@ -35,13 +39,13 @@ final class HttpAdapterFactory
      */
     public static function factory(array $config, ?ContainerInterface $container = null): HttpAuth
     {
-        if (!isset($config['accept_schemes']) || !is_array(value: $config['accept_schemes'])) {
+        if (($config['accept_schemes'] ?? null) === null || !is_array(value: $config['accept_schemes'])) {
             throw new ServiceNotCreatedException(
                 message: '"accept_schemes" is required when configuring an HTTP authentication adapter',
             );
         }
 
-        if (!isset($config['realm'])) {
+        if (($config['realm'] ?? null) === null) {
             throw new ServiceNotCreatedException(
                 message: '"realm" is required when configuring an HTTP authentication adapter',
             );
@@ -49,7 +53,10 @@ final class HttpAdapterFactory
 
         if (
             in_array(needle: 'digest', haystack: $config['accept_schemes'], strict: true)
-            && (!isset($config['digest_domains']) || !isset($config['nonce_timeout']))
+            && (
+                ($config['digest_domains'] ?? null) === null
+                || ($config['nonce_timeout'] ?? null) === null
+            )
         ) {
             throw new ServiceNotCreatedException(message: 'Both "digest_domains" and "nonce_timeout" are required '
             . 'when configuring an HTTP digest authentication adapter');
@@ -60,27 +67,33 @@ final class HttpAdapterFactory
         ]));
 
         if (in_array(needle: 'basic', haystack: $config['accept_schemes'], strict: true)) {
+            // These alternatives are mutually exclusive; the following code consumes the selected state.
+            // @mago-expect lint:no-else-clause(1)
             if (
-                isset($config['basic_resolver_factory'])
+                ($config['basic_resolver_factory'] ?? null) !== null
                 && self::containerHasKey(container: $container, key: $config['basic_resolver_factory'])
             ) {
-                $httpAdapter->setBasicResolver(resolver: Assert::isInstanceOf(Assert::notNull($container)->get(
-                    Assert::string($config['basic_resolver_factory']),
-                ), \Laminas\Authentication\Adapter\Http\ResolverInterface::class));
-            } elseif (isset($config['htpasswd'])) {
+                $httpAdapter->setBasicResolver(resolver: Assert::isInstanceOf(
+                    Assert::notNull($container)->get(Assert::string($config['basic_resolver_factory'])),
+                    \Laminas\Authentication\Adapter\Http\ResolverInterface::class,
+                ));
+            } elseif (($config['htpasswd'] ?? null) !== null) {
                 $httpAdapter->setBasicResolver(resolver: new ApacheResolver(path: Assert::string($config['htpasswd'])));
             }
         }
 
         if (in_array(needle: 'digest', haystack: $config['accept_schemes'], strict: true)) {
+            // These alternatives are mutually exclusive; the following code consumes the selected state.
+            // @mago-expect lint:no-else-clause(1)
             if (
-                isset($config['digest_resolver_factory'])
+                ($config['digest_resolver_factory'] ?? null) !== null
                 && self::containerHasKey(container: $container, key: $config['digest_resolver_factory'])
             ) {
-                $httpAdapter->setDigestResolver(resolver: Assert::isInstanceOf(Assert::notNull($container)->get(
-                    Assert::string($config['digest_resolver_factory']),
-                ), \Laminas\Authentication\Adapter\Http\ResolverInterface::class));
-            } elseif (isset($config['htdigest'])) {
+                $httpAdapter->setDigestResolver(resolver: Assert::isInstanceOf(
+                    Assert::notNull($container)->get(Assert::string($config['digest_resolver_factory'])),
+                    \Laminas\Authentication\Adapter\Http\ResolverInterface::class,
+                ));
+            } elseif (($config['htdigest'] ?? null) !== null) {
                 $httpAdapter->setDigestResolver(resolver: new FileResolver(path: Assert::string($config['htdigest'])));
             }
         }

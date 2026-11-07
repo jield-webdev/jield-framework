@@ -18,7 +18,8 @@ class FlashMessengerNamespace
     public function __construct(
         private readonly string $name,
         private readonly string $classes = '',
-    ) {}
+    ) {
+    }
 
     public function getName(): string
     {

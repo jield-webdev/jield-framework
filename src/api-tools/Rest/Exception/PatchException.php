@@ -10,4 +10,6 @@ use Jield\ApiTools\ApiProblem\Exception\DomainException;
  * Throw this exception from a "patch" resource listener in order to indicate
  * an inability to patch an item and automatically report it.
  */
-class PatchException extends DomainException {}
+class PatchException extends DomainException
+{
+}

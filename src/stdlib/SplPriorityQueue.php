@@ -142,11 +142,11 @@ class SplPriorityQueue extends \SplPriorityQueue implements Serializable
             }
 
             if (
-                !isset($item['priority'])
+                ($item['priority'] ?? null) === null
                 || !is_array($item['priority'])
                 || count($item['priority']) !== 2
                 || !array_key_exists(0, $item['priority'])
-                || !isset($item['priority'][1])
+                || ($item['priority'][1] ?? null) === null
                 || !is_int($item['priority'][1])
             ) {
                 throw new UnexpectedValueException(sprintf(

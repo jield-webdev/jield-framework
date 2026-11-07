@@ -16,6 +16,8 @@ final class Alert
         return $this->render(alert: $alert, class: 'info', isDismissible: $isDismissible);
     }
 
+    // Preserve the existing parameter contract used by callers and inherited interfaces.
+    // @mago-expect lint:no-boolean-flag-parameter(1)
     public function render(string $alert, string $class = '', bool $isDismissible = false): string
     {
         $closeButton = '';

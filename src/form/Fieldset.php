@@ -26,6 +26,10 @@ use function is_string;
 use function ltrim;
 use function sprintf;
 
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
+// @mago-expect lint:kan-defect(1)
+// @mago-expect lint:too-many-methods(1)
 class Fieldset extends Element implements FieldsetInterface
 {
     use FormFactoryAwareTrait;
@@ -89,14 +93,14 @@ class Fieldset extends Element implements FieldsetInterface
     {
         parent::setOptions(options: $options);
 
-        if (isset($this->options['use_as_base_fieldset'])) {
+        if (($this->options['use_as_base_fieldset'] ?? null) !== null) {
             $this->setUseAsBaseFieldset(useAsBaseFieldset: Assert::boolean($this->options['use_as_base_fieldset']));
         }
 
-        if (isset($this->options['allowed_object_binding_class'])) {
-            $this->setAllowedObjectBindingClass(
-                allowObjectBindingClass: \Jield\Stdlib\Value::classString($this->options['allowed_object_binding_class']),
-            );
+        if (($this->options['allowed_object_binding_class'] ?? null) !== null) {
+            $this->setAllowedObjectBindingClass(allowObjectBindingClass: \Jield\Stdlib\Value::classString(
+                $this->options['allowed_object_binding_class'],
+            ));
         }
 
         return $this;
@@ -127,14 +131,15 @@ class Fieldset extends Element implements FieldsetInterface
     {
         if (
             is_array(value: $elementOrFieldset)
-            || $elementOrFieldset instanceof Traversable && !$elementOrFieldset instanceof ElementInterface
+            || $elementOrFieldset instanceof Traversable
+            && !$elementOrFieldset instanceof ElementInterface
         ) {
             $factory = $this->getFormFactory();
             $elementOrFieldset = $factory->create(spec: $elementOrFieldset);
         }
 
         $name = $elementOrFieldset->getName();
-        if (isset($flags['name']) && is_string(value: $flags['name']) && $flags['name'] !== '') {
+        if (($flags['name'] ?? null) !== null && is_string(value: $flags['name']) && $flags['name'] !== '') {
             $name = $flags['name'];
 
             // Rename the element or fieldset to the specified alias
@@ -148,7 +153,7 @@ class Fieldset extends Element implements FieldsetInterface
             ));
         }
         $order = 0;
-        if (isset($flags['priority']) && is_numeric(value: $flags['priority'])) {
+        if (($flags['priority'] ?? null) !== null && is_numeric(value: $flags['priority'])) {
             $order = (int) $flags['priority'];
         }
 
@@ -195,7 +200,7 @@ class Fieldset extends Element implements FieldsetInterface
 
         $this->iterator->remove(name: $elementOrFieldset);
 
-        if (isset($this->fieldsets[$elementOrFieldset])) {
+        if (($this->fieldsets[$elementOrFieldset] ?? null) !== null) {
             unset($this->fieldsets[$elementOrFieldset]);
             return $this;
         }
@@ -443,12 +448,10 @@ class Fieldset extends Element implements FieldsetInterface
      */
     public function setHydratorByName(string $hydratorName): void
     {
-        $this->setHydrator(
-            hydrator: Assert::isInstanceOf($this
-                ->getFormFactory()
-                ->getFormElementManager()
-                ->getHydratorFromName(hydratorName: $hydratorName), \Laminas\Hydrator\HydratorInterface::class),
-        );
+        $this->setHydrator(hydrator: Assert::isInstanceOf(
+            $this->getFormFactory()->getFormElementManager()->getHydratorFromName(hydratorName: $hydratorName),
+            \Laminas\Hydrator\HydratorInterface::class,
+        ));
     }
 
     /**
@@ -462,9 +465,11 @@ class Fieldset extends Element implements FieldsetInterface
     public function getHydrator(): HydratorInterface
     {
         if (!$this->hydrator instanceof HydratorInterface) {
+            // These alternatives are mutually exclusive; the following code consumes the selected state.
+            // @mago-expect lint:no-else-clause(1)
             if ($this->object instanceof HydratorAwareInterface) {
                 $hydrator = $this->object->getHydrator();
-                assert(assertion: $hydrator !== null);
+                assert(assertion: $hydrator !== null, description: 'Expected $hydrator !== null.');
                 $this->setHydrator(hydrator: $hydrator);
             } else {
                 $this->setHydrator(hydrator: new Hydrator\ArraySerializableHydrator());
@@ -516,14 +521,21 @@ class Fieldset extends Element implements FieldsetInterface
 
             if ($element instanceof FieldsetInterface && $element->allowValueBinding()) {
                 /** @mago-var mixed $value */
-                $value = $element->bindValues(Assert::isArray($value), \Jield\Stdlib\Value::nullableArray(empty($validationGroup[$name]) ? null : $validationGroup[$name]));
+                $value = $element->bindValues(
+                    Assert::isArray($value),
+                    \Jield\Stdlib\Value::nullableArray(
+                        !($validationGroup[$name] ?? null) ? null : $validationGroup[$name],
+                    ),
+                );
             }
-
             // skip post values for disabled elements, get old value from object
             if (!$element->getAttribute(key: 'disabled')) {
                 $hydratableData[$name] = $value;
-            } elseif (array_key_exists(key: $name, array: $objectData)) {
+                continue;
+            }
+            if (array_key_exists(key: $name, array: $objectData)) {
                 $hydratableData[$name] = $objectData[$name];
+                continue;
             }
         }
 
@@ -568,11 +580,14 @@ class Fieldset extends Element implements FieldsetInterface
         foreach ($this->fieldsets as $fieldset) {
             $name = (string) $fieldset->getName();
 
-            if (isset($values[$name])) {
+            if (($values[$name] ?? null) !== null) {
                 /** @mago-var mixed $object */
                 $object = $values[$name];
 
-                if ($fieldset instanceof Fieldset && $fieldset->allowObjectBinding(object: \Jield\Stdlib\Value::arrayOrObject($object))) {
+                if (
+                    $fieldset instanceof Fieldset
+                    && $fieldset->allowObjectBinding(object: \Jield\Stdlib\Value::arrayOrObject($object))
+                ) {
                     $fieldset->setObject(object: $object);
                     $values[$name] = $fieldset->extract();
                 }
@@ -599,15 +614,21 @@ class Fieldset extends Element implements FieldsetInterface
         /** @mago-var mixed $item */
         foreach ($items as $name => $item) {
             $item = Assert::isArray($item);
-            $elementOrFieldset = clone Assert::isInstanceOf(\Jield\Stdlib\Value::accessible($item)['data'], ElementInterface::class);
+            $elementOrFieldset = clone Assert::isInstanceOf(
+                \Jield\Stdlib\Value::accessible($item)['data'],
+                ElementInterface::class,
+            );
 
-            $this->iterator->insert(name: (string) $name, value: $elementOrFieldset, priority: Assert::integer($item['priority']));
-
+            $this->iterator->insert(
+                name: (string) $name,
+                value: $elementOrFieldset,
+                priority: Assert::integer($item['priority']),
+            );
             if ($elementOrFieldset instanceof FieldsetInterface) {
                 $this->fieldsets[$name] = $elementOrFieldset;
-            } else {
-                $this->elements[$name] = $elementOrFieldset;
+                continue;
             }
+            $this->elements[$name] = $elementOrFieldset;
         }
         $this->iterator->rewind();
         // Also make a deep copy of the object in case it's used within a collection

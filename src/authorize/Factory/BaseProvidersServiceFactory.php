@@ -35,11 +35,9 @@ abstract class BaseProvidersServiceFactory implements FactoryInterface
          * @mago-var mixed $providerConfig
          */
         foreach (Assert::isIterable($config[static::PROVIDER_SETTING]) as $providerName => $providerConfig) {
-            if ($container->has(Assert::string($providerName))) {
-                $providers[] = $container->get(Assert::string($providerName));
-            } else {
-                $providers[] = Value::instantiate($providerName, [$providerConfig, $container]);
-            }
+            $providers[] = $container->has(Assert::string($providerName))
+                ? $container->get(Assert::string($providerName))
+                : Value::instantiate($providerName, [$providerConfig, $container]);
         }
 
         return $providers;

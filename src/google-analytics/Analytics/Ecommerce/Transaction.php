@@ -24,7 +24,8 @@ class Transaction
     public function __construct(
         protected int $id,
         protected float $total,
-    ) {}
+    ) {
+    }
 
     public function getId(): int
     {
@@ -132,11 +133,10 @@ class Transaction
         $sku = $item->getSku();
         if (array_key_exists(key: $sku, array: $this->items)) {
             $quantity = ($this->items[$sku]->getQuantity() ?? 0) + ($item->getQuantity() ?? 0);
-
             $this->items[$sku]->setQuantity($quantity);
-        } else {
-            $this->items[$sku] = $item;
+            return $this;
         }
+        $this->items[$sku] = $item;
 
         return $this;
     }

@@ -23,7 +23,10 @@ class ControllerGuardServiceFactory implements FactoryInterface
     public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): Controller
     {
         return new Controller(
-            rules: \Webmozart\Assert\Assert::isArray(Value::path($container->get(Config::class), ['guards', Controller::class])),
+            rules: \Webmozart\Assert\Assert::isArray(Value::path(
+                $container->get(Config::class),
+                ['guards', Controller::class],
+            )),
             container: $container,
         );
     }

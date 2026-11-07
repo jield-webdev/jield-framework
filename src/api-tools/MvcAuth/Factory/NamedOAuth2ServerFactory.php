@@ -37,24 +37,32 @@ class NamedOAuth2ServerFactory
             /** @var array<array-key, Server> */
             public array $api = [];
         };
-        return /** @throws \Jield\ApiTools\OAuth2\Controller\Exception\RuntimeException|\Psr\Container\ContainerExceptionInterface */ static function ($type = null) use ($oauth2Config, $mvcAuthConfig, $container, $servers) {
+        return /** @throws \Jield\ApiTools\OAuth2\Controller\Exception\RuntimeException|\Psr\Container\ContainerExceptionInterface */ static function ($type = null) use (
+            $oauth2Config,
+            $mvcAuthConfig,
+            $container,
+            $servers,
+        ) {
             // Empty type == legacy configuration.
-            if (empty($type)) {
+            if (!($type ?? null)) {
                 if (null !== $servers->application) {
                     return $servers->application;
                 }
 
-                $factory = new OAuth2ServerInstanceFactory(config: Assert::isArray($oauth2Config), services: $container);
+                $factory = new OAuth2ServerInstanceFactory(
+                    config: Assert::isArray($oauth2Config),
+                    services: $container,
+                );
                 return $servers->application = $factory();
             }
 
-            if (isset($servers->api[$type])) {
+            if (($servers->api[$type] ?? null) !== null) {
                 return $servers->api[$type];
             }
 
             /** @mago-var mixed $adapterConfig */
             foreach (Assert::isIterable($mvcAuthConfig) as $adapterConfig) {
-                if (!isset($adapterConfig['storage']['route'])) {
+                if (($adapterConfig['storage']['route'] ?? null) === null) {
                     // Not a api-tools-oauth2 config
                     continue;
                 }

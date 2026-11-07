@@ -17,6 +17,8 @@ use SensitiveParameter;
 use Throwable;
 use Webmozart\Assert\Assert;
 
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
 abstract class AbstractEntraBearerAuthenticationListener
 {
     abstract protected function supports(MvcAuthEvent $event): bool;
@@ -46,11 +48,7 @@ abstract class AbstractEntraBearerAuthenticationListener
         $header = Assert::isInstanceOf($request->getHeaders(), Headers::class)->get('Authorization');
         if (
             !$header
-            || !preg_match(
-                '/^Bearer (\S+)$/iD',
-                Assert::isInstanceOf($header, HeaderInterface::class)->getFieldValue(),
-                $matches,
-            )
+            || !preg_match('/^Bearer (\S+)$/iD', Assert::isInstanceOf($header, HeaderInterface::class)->getFieldValue(), $matches)
         ) {
             return null;
         }

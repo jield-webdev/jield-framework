@@ -28,6 +28,11 @@ use function strlen;
  *
  * Adapted from laminas-navigation for laminas-router 4 URL objects.
  */
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
+// @mago-expect lint:kan-defect(1)
+// @mago-expect lint:too-many-methods(1)
+// @mago-expect lint:too-many-properties(1)
 class MvcPage extends AbstractPage
 {
     public const MODULE_NAMESPACE = '__NAMESPACE__';
@@ -144,7 +149,7 @@ class MvcPage extends AbstractPage
             if ($routeMatch instanceof RouteMatch) {
                 $reqParams = $routeMatch->getParams();
 
-                if (isset($reqParams[self::ORIGINAL_CONTROLLER])) {
+                if (($reqParams[self::ORIGINAL_CONTROLLER] ?? null) !== null) {
                     /** @psalm-suppress MixedAssignment */
                     $reqParams['controller'] = $reqParams[self::ORIGINAL_CONTROLLER];
                 }
@@ -164,31 +169,22 @@ class MvcPage extends AbstractPage
                     ) {
                         $this->active = true;
                         return $this->active;
-                    } else {
-                        return parent::isActive($recursive);
                     }
+                    return parent::isActive($recursive);
                 }
             }
 
             $pageParams = $this->params;
 
-            if (null !== $this->controller) {
-                $pageParams['controller'] = $this->controller;
-            } else {
-                /**
-                 * @todo In Laminas1, this was configurable and pulled from the front controller
-                 */
-                $pageParams['controller'] = 'index';
-            }
+            /**
+             * @todo In Laminas1, this was configurable and pulled from the front controller
+             */
+            $pageParams['controller'] = null !== $this->controller ? $this->controller : 'index';
 
-            if (null !== $this->action) {
-                $pageParams['action'] = $this->action;
-            } else {
-                /**
-                 * @todo In Laminas1, this was configurable and pulled from the front controller
-                 */
-                $pageParams['action'] = 'index';
-            }
+            /**
+             * @todo In Laminas1, this was configurable and pulled from the front controller
+             */
+            $pageParams['action'] = null !== $this->action ? $this->action : 'index';
 
             if (count(array_intersect_assoc($reqParams, $pageParams)) === count($pageParams)) {
                 $this->active = true;
@@ -225,16 +221,18 @@ class MvcPage extends AbstractPage
         }
 
         $routeMatch = $this->getRouteMatch();
+        // These alternatives are mutually exclusive; the following code consumes the selected state.
+        // @mago-expect lint:no-else-clause(1)
         if ($this->useRouteMatch() && $routeMatch !== null) {
             $rmParams = $routeMatch->getParams();
 
-            if (isset($rmParams[self::ORIGINAL_CONTROLLER])) {
+            if (($rmParams[self::ORIGINAL_CONTROLLER] ?? null) !== null) {
                 /** @psalm-suppress MixedAssignment */
                 $rmParams['controller'] = $rmParams[self::ORIGINAL_CONTROLLER];
                 unset($rmParams[self::ORIGINAL_CONTROLLER]);
             }
 
-            if (isset($rmParams[self::MODULE_NAMESPACE])) {
+            if (($rmParams[self::MODULE_NAMESPACE] ?? null) !== null) {
                 unset($rmParams[self::MODULE_NAMESPACE]);
             }
 

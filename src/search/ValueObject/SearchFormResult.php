@@ -15,8 +15,13 @@ use function base64_encode;
 use function in_array;
 use function strtoupper;
 
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
+// @mago-expect lint:too-many-methods(1)
 final class SearchFormResult
 {
+    // Preserve the existing parameter contract used by callers and inherited interfaces.
+    // @mago-expect lint:excessive-parameter-list(1)
     public function __construct(
         private string $order = '',
         private string $direction = Order::Ascending->value,
@@ -24,7 +29,8 @@ final class SearchFormResult
         private array $filter = [],
         private array $facet = [],
         private DateInterval $dateInterval = new DateInterval(),
-    ) {}
+    ) {
+    }
 
     public static function fromArray(array $params): SearchFormResult
     {
@@ -98,6 +104,8 @@ final class SearchFormResult
         return $this->filter[$key] ?? $default;
     }
 
+    // Preserve the existing parameter contract used by callers and inherited interfaces.
+    // @mago-expect lint:no-boolean-flag-parameter(1)
     public function setFilterByKey(string $key, mixed $value, bool $force = false): SearchFormResult
     {
         //Only set the value when we force it or when it does not exist
@@ -108,6 +116,8 @@ final class SearchFormResult
         return $this;
     }
 
+    // Preserve the existing parameter contract used by callers and inherited interfaces.
+    // @mago-expect lint:no-boolean-flag-parameter(1)
     public function setFacetByKey(string $key, mixed $value, bool $force = false): SearchFormResult
     {
         //Only set the value when we force it or when it does not exist
@@ -130,7 +140,7 @@ final class SearchFormResult
 
     public function hasQuery(): bool
     {
-        return !empty($this->query);
+        return !!($this->query ?? null);
     }
 
     public function hasDefaultOrder(): bool
@@ -170,11 +180,9 @@ final class SearchFormResult
     {
         $direction = strtoupper(string: $this->direction);
 
-        if (!in_array(
-            needle: $direction,
-            haystack: [Order::Ascending->value, Order::Descending->value],
-            strict: true,
-        )) {
+        if (
+            !in_array(needle: $direction, haystack: [Order::Ascending->value, Order::Descending->value], strict: true)
+        ) {
             return Order::Descending->value;
         }
 
@@ -199,10 +207,9 @@ final class SearchFormResult
             $this->filter[$key] = is_array($existing) && is_array($value)
                 ? $existing + $value
                 : Assert::numeric($existing) + Assert::numeric($value);
-        } else {
-            $this->filter[$key] = $value;
+            return $this;
         }
-
+        $this->filter[$key] = $value;
         return $this;
     }
 

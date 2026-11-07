@@ -8,12 +8,13 @@ use InvalidArgumentException;
 use Stringable;
 
 use function defined;
-use function gettype;
 use function ini_get;
 use function is_string;
 use function number_format;
 use function str_replace;
 
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
 final class Util
 {
     /** @var list<string> */

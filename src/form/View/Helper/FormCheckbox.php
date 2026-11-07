@@ -55,12 +55,12 @@ class FormCheckbox extends FormInput
                 'value' => $element->getUncheckedValue(),
             ];
 
-            $rendered =
-                sprintf(
-                    '<input type="hidden" %s%s',
-                    $this->createAttributesString(attributes: $hiddenAttributes),
-                    $closingBracket,
-                ) . $rendered;
+            $rendered = sprintf(
+                '<input type="hidden" %s%s%s',
+                $this->createAttributesString(attributes: $hiddenAttributes),
+                $closingBracket,
+                $rendered,
+            );
         }
 
         return $rendered;

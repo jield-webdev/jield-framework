@@ -28,7 +28,7 @@ class ObjectRepositoryRoleProviderFactory implements FactoryInterface
     ): ObjectRepositoryProvider {
         $config = Assert::isArray($container->get(Config::class));
 
-        if (!isset($config['role_providers'][ObjectRepositoryProvider::class])) {
+        if (($config['role_providers'][ObjectRepositoryProvider::class] ?? null) === null) {
             throw new InvalidArgumentException(
                 message: 'Config for "Jield\Authorize\Provider\Role\ObjectRepositoryProvider" not set',
             );
@@ -37,13 +37,13 @@ class ObjectRepositoryRoleProviderFactory implements FactoryInterface
         /** @mago-var mixed $providerConfig */
         $providerConfig = $config['role_providers'][ObjectRepositoryProvider::class];
 
-        if (!isset($providerConfig['role_entity_class'])) {
+        if (($providerConfig['role_entity_class'] ?? null) === null) {
             throw new InvalidArgumentException(
                 message: 'role_entity_class not set in the bjyauthorize role_providers config.',
             );
         }
 
-        if (!isset($providerConfig['object_manager'])) {
+        if (($providerConfig['object_manager'] ?? null) === null) {
             throw new InvalidArgumentException(
                 message: 'object_manager not set in the bjyauthorize role_providers config.',
             );
@@ -52,8 +52,8 @@ class ObjectRepositoryRoleProviderFactory implements FactoryInterface
         /** @var ObjectManager $objectManager */
         $objectManager = $container->get(Assert::string($providerConfig['object_manager']));
 
-        return new ObjectRepositoryProvider(objectRepository: $objectManager->getRepository(
-            className: \Jield\Stdlib\Value::classString($providerConfig['role_entity_class']),
-        ));
+        return new ObjectRepositoryProvider(objectRepository: $objectManager->getRepository(className: \Jield\Stdlib\Value::classString(
+            $providerConfig['role_entity_class'],
+        )));
     }
 }

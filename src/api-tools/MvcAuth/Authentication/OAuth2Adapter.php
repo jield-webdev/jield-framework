@@ -24,6 +24,8 @@ use function is_array;
 use function is_string;
 use function method_exists;
 
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
 class OAuth2Adapter extends AbstractAdapter
 {
     /**
@@ -118,7 +120,9 @@ class OAuth2Adapter extends AbstractAdapter
      * @return void
      */
     #[Override]
-    public function preAuth(Request $request, Response $response) {}
+    public function preAuth(Request $request, Response $response)
+    {
+    }
 
     /**
      * Attempt to authenticate the current request.
@@ -137,9 +141,11 @@ class OAuth2Adapter extends AbstractAdapter
             attributes: [],
             cookies: ($cookie = $request->getCookie()) instanceof Cookie ? $cookie->getArrayCopy() : [],
             files: Assert::isArray($request->getFiles()->toArray()),
-            server: Assert::isArray(method_exists(object_or_class: $request, method: 'getServer')
-                ? Value::call($request->getServer(), 'toArray')
-                : $_SERVER),
+            server: Assert::isArray(
+                method_exists(object_or_class: $request, method: 'getServer')
+                    ? Value::call($request->getServer(), 'toArray')
+                    : $_SERVER,
+            ),
             content: Assert::nullOrString($request->getContent()),
             headers: Assert::isInstanceOf($request->getHeaders(), Headers::class)->toArray(),
         );
@@ -193,14 +199,18 @@ class OAuth2Adapter extends AbstractAdapter
             in_array(needle: $status, haystack: [401, 403], strict: true)
             && null !== Value::call($oauth2Response, 'getParameter', ['name' => 'error'])
         ) {
-            return $this->mergeOAuth2Response(status: $status, response: $response, oauth2Response: Assert::isInstanceOf($oauth2Response, \OAuth2\Response::class));
+            return $this->mergeOAuth2Response(
+                status: $status,
+                response: $response,
+                oauth2Response: Assert::isInstanceOf($oauth2Response, \OAuth2\Response::class),
+            );
         }
 
         // Merge in any headers; typically sets a WWW-Authenticate header.
-        $this->mergeOAuth2ResponseHeaders(response: $response, oauth2Headers: Assert::isArray(Value::call(
-            $oauth2Response,
-            'getHttpHeaders',
-        )));
+        $this->mergeOAuth2ResponseHeaders(
+            response: $response,
+            oauth2Headers: Assert::isArray(Value::call($oauth2Response, 'getHttpHeaders')),
+        );
 
         // Otherwise, no credentials were present at all, so we just return a guest identity.
         return new Identity\GuestIdentity();

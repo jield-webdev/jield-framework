@@ -76,7 +76,7 @@ class FormElementErrors extends AbstractHelper
         // Prepare attributes for opening tag
         $attributes = array_merge($this->attributes, $attributes);
         $attributes = $this->createAttributesString(attributes: $attributes);
-        if (!empty($attributes)) {
+        if ($attributes !== '') {
             $attributes = ' ' . $attributes;
         }
 
@@ -88,7 +88,10 @@ class FormElementErrors extends AbstractHelper
 
         // Generate markup
         $markup = sprintf($this->getMessageOpenFormat(), $attributes);
-        $markup .= implode(separator: $this->getMessageSeparatorString(), array: \Jield\Stdlib\Value::scalars($messages));
+        $markup .= implode(
+            separator: $this->getMessageSeparatorString(),
+            array: \Jield\Stdlib\Value::scalars($messages),
+        );
         $markup .= $this->getMessageCloseString();
 
         return $markup;

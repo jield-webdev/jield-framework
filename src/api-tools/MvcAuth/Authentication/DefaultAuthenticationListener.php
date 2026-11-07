@@ -19,6 +19,9 @@ use function count;
 use function rtrim;
 use function strlen;
 
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
+// @mago-expect lint:kan-defect(1)
 class DefaultAuthenticationListener
 {
     /**
@@ -90,7 +93,7 @@ class DefaultAuthenticationListener
             return $identity;
         }
 
-        $type = $type ?: $this->getTypeFromRequest(request: $request);
+        $type = $type ? $type : $this->getTypeFromRequest(request: $request);
         if (false === $type) {
             // No authentication type known; trigger any pre-flight actions,
             // and return a guest identity.

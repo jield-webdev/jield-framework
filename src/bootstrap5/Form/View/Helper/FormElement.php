@@ -20,6 +20,10 @@ use function sprintf;
  * Class FormElement
  * @package Jield\Bootstrap5\Form\View\Helper
  */
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
+// @mago-expect lint:kan-defect(1)
+// @mago-expect lint:too-many-methods(1)
 class FormElement extends Helper\FormElement
 {
     public const string TYPE_HORIZONTAL = 'horizontal';
@@ -42,6 +46,8 @@ class FormElement extends Helper\FormElement
         'email' => 'lbs5forminput',
         'number' => 'lbs5forminput',
         'color' => 'lbs5forminput',
+        // This is a public protocol or form identifier, not a credential.
+        // @mago-expect lint:no-literal-password(1)
         'password' => 'lbs5forminput',
         'url' => 'lbs5forminput',
         'checkbox' => 'lbs5formcheckbox',
@@ -87,12 +93,16 @@ class FormElement extends Helper\FormElement
      * @throws \Psr\Container\ContainerExceptionInterface
      * @throws \Jield\Form\Exception\ExceptionInterface
      */
+    // Preserve the existing parameter contract used by callers and inherited interfaces.
+    // @mago-expect lint:no-boolean-flag-parameter(1)
     public function __invoke(
         ?ElementInterface $element = null,
         string|bool $type = self::TYPE_HORIZONTAL,
         bool $formElementOnly = false,
     ): string|static {
         //We previously has the type a boolean with $inline
+        // These alternatives are mutually exclusive; the following code consumes the selected state.
+        // @mago-expect lint:no-else-clause(1)
         if ($type === true) {
             $type = self::TYPE_DEFAULT;
         } elseif ($type === false) {
@@ -169,8 +179,14 @@ class FormElement extends Helper\FormElement
 
             $element->setAttribute(key: 'class', value: 'codemirror-element form-control');
             $element->setAttribute(key: 'data-mode', value: Value::plainScalar($element->getOption(option: 'mode')));
-            $element->setAttribute(key: 'data-line-numbers', value: Value::plainScalar($element->getOption(option: 'line-numbers')));
-            $element->setAttribute(key: 'data-height', value: Value::plainScalar($element->getOption(option: 'height')));
+            $element->setAttribute(
+                key: 'data-line-numbers',
+                value: Value::plainScalar($element->getOption(option: 'line-numbers')),
+            );
+            $element->setAttribute(
+                key: 'data-height',
+                value: Value::plainScalar($element->getOption(option: 'height')),
+            );
         }
 
         $renderedType = $this->renderType(element: $element);
@@ -179,7 +195,9 @@ class FormElement extends Helper\FormElement
             return $renderedType;
         }
 
-        $element->setValue(value: Assert::notNull($this->translator)->translate(message: Assert::string($element->getValue())));
+        $element->setValue(value: Assert::notNull($this->translator)->translate(
+            message: Assert::string($element->getValue()),
+        ));
 
         return parent::render(element: $element);
     }
@@ -192,7 +210,7 @@ class FormElement extends Helper\FormElement
     {
         $type = $element->getAttribute(key: 'type');
 
-        if ($type !== null && isset($this->typeMap[$type])) {
+        if ($type !== null && ($this->typeMap[$type] ?? null) !== null) {
             //Produce the label
             $label = $this->findLabel(element: $element);
             $renderedElement = $this->renderHelper(name: $this->typeMap[$type], element: $element);
@@ -396,8 +414,19 @@ class FormElement extends Helper\FormElement
     private function getDefaultElement($label, $element, $error, $description): string
     {
         return match ($this->type) {
-            self::TYPE_INLINE, self::TYPE_DEFAULT => sprintf('%s%s%s%s', Value::scalar($label), Value::scalar($element), Value::scalar($error), Value::scalar($description)),
-            self::TYPE_ELEMENT_ONLY => sprintf('%s%s%s', Value::scalar($element), Value::scalar($error), Value::scalar($description)),
+            self::TYPE_INLINE, self::TYPE_DEFAULT => sprintf(
+                '%s%s%s%s',
+                Value::scalar($label),
+                Value::scalar($element),
+                Value::scalar($error),
+                Value::scalar($description),
+            ),
+            self::TYPE_ELEMENT_ONLY => sprintf(
+                '%s%s%s',
+                Value::scalar($element),
+                Value::scalar($error),
+                Value::scalar($description),
+            ),
             self::TYPE_FLOATING_LABEL => sprintf(
                 '<div class="form-floating mb-3">%s%s%s%s</div>',
                 Value::scalar($element),

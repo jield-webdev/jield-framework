@@ -23,6 +23,9 @@ use function spl_object_hash;
 use function sprintf;
 
 /** @psalm-import-type ServiceManagerConfiguration from \Laminas\ServiceManager\ServiceManager */
+// Preserve the existing public API and the state and operations that implement it.
+// @mago-expect lint:cyclomatic-complexity(1)
+// @mago-expect lint:kan-defect(1)
 class ServiceListener implements ServiceListenerInterface
 {
     protected array $listeners = [];
@@ -138,6 +141,8 @@ class ServiceListener implements ServiceListenerInterface
             $config = Value::call($module, Assert::string($sm['module_class_method']));
 
             if (is_object(value: $config)) {
+                // These alternatives are mutually exclusive; the following code consumes the selected state.
+                // @mago-expect lint:no-else-clause(2)
                 if (method_exists(object_or_class: $config, method: '__invoke')) {
                     /** @mago-var mixed $config */
                     $config = $config();
@@ -188,7 +193,11 @@ class ServiceListener implements ServiceListenerInterface
         /** @mago-var mixed $sm */
         foreach ($this->serviceManagers as $key => $sm) {
             $sm = Assert::isArray($sm);
-            $smConfig = $this->mergeServiceConfiguration(key: Assert::string($key), metadata: Assert::isArray($sm), config: Assert::isArray($config));
+            $smConfig = $this->mergeServiceConfiguration(
+                key: Assert::string($key),
+                metadata: Assert::isArray($sm),
+                config: Assert::isArray($config),
+            );
 
             /** @mago-var mixed $manager */
             $manager = $sm['service_manager'];
@@ -245,20 +254,17 @@ class ServiceListener implements ServiceListenerInterface
 
         $instance = Value::instantiate($className);
 
-        if (method_exists(object_or_class: $instance, method: '__invoke')) {
+        /** @mago-var mixed $config */
+        $config = match (true) {
             /** @mago-var mixed $config */
-            $config = $instance();
-        } elseif (method_exists(object_or_class: $instance, method: 'getConfig')) {
+            method_exists(object_or_class: $instance, method: '__invoke') => $instance(),
             /** @mago-var mixed $config */
-            $config = $instance->getConfig();
-        } elseif (method_exists(object_or_class: $instance, method: 'toArray')) {
+            method_exists(object_or_class: $instance, method: 'getConfig') => $instance->getConfig(),
             /** @mago-var mixed $config */
-            $config = $instance->toArray();
-        } elseif ($instance instanceof Traversable) {
-            $config = ArrayUtils::iteratorToArray(iterator: $instance);
-        } else {
-            $config = null;
-        }
+            method_exists(object_or_class: $instance, method: 'toArray') => $instance->toArray(),
+            $instance instanceof Traversable => ArrayUtils::iteratorToArray(iterator: $instance),
+            default => null,
+        };
 
         if (!is_array(value: $config)) {
             throw new Exception\RuntimeException(message: sprintf(
@@ -283,9 +289,9 @@ class ServiceListener implements ServiceListenerInterface
     private function mergeServiceConfiguration(string $key, array $metadata, array $config): array
     {
         if (
-            isset($config[$metadata['config_key']])
+            ($config[$metadata['config_key']] ?? null) !== null
             && is_array(value: $config[$metadata['config_key']])
-            && !empty($config[$metadata['config_key']])
+            && !!$config[$metadata['config_key']]
         ) {
             Value::setPath(
                 $this->serviceManagers,
@@ -298,10 +304,13 @@ class ServiceListener implements ServiceListenerInterface
         $serviceConfig = [];
         /** @mago-var mixed $configs */
         foreach (Assert::isIterable(Value::accessible($this->serviceManagers[$key])['configuration']) as $configs) {
-            if (isset($configs['configuration_classes'])) {
+            if (($configs['configuration_classes'] ?? null) !== null) {
                 /** @mago-var mixed $class */
                 foreach (Assert::isIterable($configs['configuration_classes']) as $class) {
-                    $configs = ArrayUtils::merge(a: $configs, b: $this->serviceConfigToArray(config: Assert::string($class)));
+                    $configs = ArrayUtils::merge(
+                        a: $configs,
+                        b: $this->serviceConfigToArray(config: Assert::string($class)),
+                    );
                 }
             }
             $serviceConfig = ArrayUtils::merge(a: $serviceConfig, b: Assert::isArray($configs));
