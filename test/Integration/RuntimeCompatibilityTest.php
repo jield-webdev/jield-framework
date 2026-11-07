@@ -99,7 +99,9 @@ final class RuntimeCompatibilityTest extends TestCase
     {
         self::assertInstanceOf(MappingDriverChain::class, Value::instantiate(MappingDriverChain::class, [[]]));
         $class = new class ('initial') {
-            public function __construct(public string $name) {}
+            public function __construct(public string $name)
+            {
+            }
         };
         self::assertSame('configured', Value::instantiate($class, ['name' => 'configured'])->name);
     }
@@ -146,9 +148,13 @@ final class RuntimeCompatibilityTest extends TestCase
 
     public function testAnalyticsFactoriesHandleMissingIdsAndHonorDisabledTracking(): void
     {
-        foreach ([[false, true, false], ['G-TEST', false, false], ['G-TEST', true, true]] as [$id, $enabled, $expected]) {
+        $configurations = [[false, true, false], ['G-TEST', false, false], ['G-TEST', true, true]];
+        foreach ($configurations as [$id, $enabled, $expected]) {
             $services = new ServiceManager([
-                'services' => ['config' => ['google_analytics' => ['id' => $id, 'enable' => $enabled]], Gajs::class => new Gajs()],
+                'services' => [
+                    'config' => ['google_analytics' => ['id' => $id, 'enable' => $enabled]],
+                    Gajs::class => new Gajs(),
+                ],
                 'factories' => [Tracker::class => TrackerFactory::class, ScriptFactory::class => ScriptFactory::class],
             ]);
             self::assertSame($expected, $services->get(Tracker::class)->isEnabled());

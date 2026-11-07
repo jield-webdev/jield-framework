@@ -13,6 +13,7 @@ use Laminas\EventManager\EventInterface;
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\InputFilter\InputFilter;
 use Laminas\Stdlib\ArrayObject;
+use Laminas\Stdlib\ArrayUtils;
 use Webmozart\Assert\Assert;
 
 use function array_merge;
@@ -134,8 +135,9 @@ final class ElementAnnotationsListener extends AbstractAnnotationsListener
 
         $class = $annotation->getComposedObject();
         $annotationManager = $e->getTarget();
-        /** @mago-var mixed $specification */
-        $specification = Value::call(Assert::object($annotationManager), 'getFormSpecification', [$class]);
+        $specification = ArrayUtils::iteratorToArray(
+            Assert::isIterable(Value::call(Assert::object($annotationManager), 'getFormSpecification', [$class])),
+        );
 
         /** @mago-var mixed $name */
         $name = $e->getParam('name');
@@ -181,7 +183,6 @@ final class ElementAnnotationsListener extends AbstractAnnotationsListener
             }
         } else {
             // Compose input filter into parent input filter
-            $specification = Assert::isArray($specification);
             /** @mago-var mixed $inputFilter */
             $inputFilter = $specification['input_filter'];
             if (!isset($inputFilter['type'])) {

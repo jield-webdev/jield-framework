@@ -44,7 +44,7 @@ final class ControllerAssertionsTest extends TestCase
 
     private function helper(Response $response): AbstractHttpControllerTestCase
     {
-        $helper = new class('fixture') extends AbstractHttpControllerTestCase {
+        $helper = new class ('fixture') extends AbstractHttpControllerTestCase {
             public Response $fixture;
 
             public function getResponse(): Response

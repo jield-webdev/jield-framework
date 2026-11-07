@@ -2,13 +2,17 @@
 
 declare(strict_types=1);
 
-namespace Jield\ApiTools\OAuth2;
+namespace JieldTest\ApiTools\OAuth2;
 
 use Firebase\JWT\JWT;
 use GuzzleHttp\Client;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Response;
+use Jield\ApiTools\OAuth2\EntraException;
+use Jield\ApiTools\OAuth2\EntraJwksProvider;
+use Jield\ApiTools\OAuth2\EntraResourceInterface;
+use Jield\ApiTools\OAuth2\EntraTokenValidator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Cache\Adapter\ArrayAdapter;
@@ -96,7 +100,11 @@ final class EntraTokenValidatorTest extends TestCase
     {
         $http = new Client([
             'handler' => HandlerStack::create(new MockHandler([
-                new Response(200, ['Content-Type' => 'application/json'], json_encode(['keys' => [self::$jwk]], JSON_THROW_ON_ERROR)),
+                new Response(
+                    200,
+                    ['Content-Type' => 'application/json'],
+                    json_encode(['keys' => [self::$jwk]], JSON_THROW_ON_ERROR),
+                ),
             ])),
         ]);
 
@@ -128,13 +136,35 @@ final class EntraTokenValidatorTest extends TestCase
 
     private function resource(): EntraResourceInterface
     {
-        return new class(self::TENANT, self::API, self::CALLER) implements EntraResourceInterface {
-            public function __construct(private string $tenant, private string $api, private string $caller) {}
-            public function serviceIsMicrosoft(): bool { return true; }
-            public function isEntraTokenExchangeEnabled(): bool { return true; }
-            public function getTenantId(): string { return $this->tenant; }
-            public function getClientId(): string { return $this->api; }
-            public function getEntraAllowedClientIds(): string { return $this->caller; }
+        return new class (self::TENANT, self::API, self::CALLER) implements EntraResourceInterface {
+            public function __construct(private string $tenant, private string $api, private string $caller)
+            {
+            }
+
+            public function serviceIsMicrosoft(): bool
+            {
+                return true;
+            }
+
+            public function isEntraTokenExchangeEnabled(): bool
+            {
+                return true;
+            }
+
+            public function getTenantId(): string
+            {
+                return $this->tenant;
+            }
+
+            public function getClientId(): string
+            {
+                return $this->api;
+            }
+
+            public function getEntraAllowedClientIds(): string
+            {
+                return $this->caller;
+            }
         };
     }
 }

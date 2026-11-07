@@ -113,7 +113,8 @@ final class CompatibilityTest extends TestCase
     {
         $connection = DriverManager::getConnection(['driver' => 'pdo_sqlite', 'memory' => true]);
         $connection->executeStatement(
-            'CREATE TABLE application_log (channel TEXT, level INTEGER, level_name TEXT, message TEXT, context TEXT, extra TEXT, created_at TEXT)',
+            'CREATE TABLE application_log (channel TEXT, level INTEGER, level_name TEXT, message TEXT, '
+            . 'context TEXT, extra TEXT, created_at TEXT)',
         );
         $handler = new DoctrineDbalHandler($connection, level: 'wArNiNg');
         self::assertSame(Level::Warning, $handler->getLevel());
@@ -165,7 +166,9 @@ final class CompatibilityTest extends TestCase
                 return ['display-settings' => ['exclude-php-errors' => [[E_USER_WARNING, 'ignored']]]];
             }
 
-            protected function handleShutdownException(\ErrorException $exception): void {}
+            protected function handleShutdownException(\ErrorException $exception): void
+            {
+            }
         };
 
         $previousReporting = error_reporting(E_ALL);

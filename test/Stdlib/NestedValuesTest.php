@@ -2,9 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Jield\Stdlib;
+namespace JieldTest\Stdlib;
 
 use ArrayObject;
+use Jield\Stdlib\Value;
 use PHPUnit\Framework\TestCase;
 
 final class NestedValuesTest extends TestCase
@@ -29,7 +30,10 @@ final class NestedValuesTest extends TestCase
     public function testCheckedCallsPreserveNamedArguments(): void
     {
         $object = new class {
-            public function combine(string $first, string $second): string { return $first . $second; }
+            public function combine(string $first, string $second): string
+            {
+                return $first . $second;
+            }
         };
         self::assertSame('AB', Value::call($object, 'combine', ['second' => 'B', 'first' => 'A']));
     }
@@ -41,7 +45,11 @@ final class NestedValuesTest extends TestCase
             {
                 return Value::call($this, 'hidden', ['value' => 'ok'], scope: self::class);
             }
-            protected function hidden(string $value): string { return $value; }
+
+            protected function hidden(string $value): string
+            {
+                return $value;
+            }
         };
         self::assertSame('ok', $object->dispatch());
         $this->expectException(\TypeError::class);

@@ -2,8 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Jield\Form;
+namespace JieldTest\Form;
 
+use Jield\Form\Element;
+use Jield\Form\Form;
+use Jield\Form\FormInterface;
+use Jield\Form\InputFilterFactory;
 use Jield\Stdlib\InputFilterValidator;
 use Laminas\Filter\StringTrim;
 use Laminas\InputFilter\CollectionInputFilter;

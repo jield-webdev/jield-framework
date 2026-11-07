@@ -2,8 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Jield\Form;
+namespace JieldTest\Form;
 
+use Jield\Form\Element;
 use Laminas\Validator\ValidatorInterface;
 use PHPUnit\Framework\TestCase;
 

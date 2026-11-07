@@ -84,7 +84,8 @@ final class CompatibilityTest extends TestCase
     public function testMetadataCanBeInheritedAndMissingMetadataReturnsFalse(): void
     {
         $map = new MetadataMap([\stdClass::class => []]);
-        self::assertTrue($map->has(new class extends \stdClass {}));
+        self::assertTrue($map->has(new class extends \stdClass {
+        }));
         self::assertFalse($map->has(new ArrayObject()));
         self::assertFalse($map->get(new ArrayObject()));
     }
@@ -117,7 +118,7 @@ final class CompatibilityTest extends TestCase
     public function testFetchAllCanBeCalledWithoutArguments(): void
     {
         $resource = new Resource();
-        $resource->getEventManager()->attach('fetchAll', static fn(): array => ['item']);
+        $resource->getEventManager()->attach('fetchAll', static fn (): array => ['item']);
         self::assertSame(['item'], $resource->fetchAll());
         self::assertSame(0, new \ReflectionMethod($resource, 'fetchAll')->getNumberOfRequiredParameters());
     }

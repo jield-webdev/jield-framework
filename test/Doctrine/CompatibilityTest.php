@@ -7,12 +7,12 @@ namespace JieldTest\Doctrine;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Tools\Console\ConnectionProvider\SingleConnectionProvider;
 use Doctrine\ORM\EntityManager;
-use Doctrine\ORM\Mapping as ORM;
 use Doctrine\ORM\ORMSetup;
 use Doctrine\ORM\Tools\SchemaTool;
 use DoctrineORMModule\Command\ReservedWordsCommand;
 use Jield\ApiTools\Paginator\DoctrineORMAdapter;
 use Jield\ApiTools\Provider\ProviderInterface;
+use JieldTest\Doctrine\TestAsset\PaginationEntity;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Tester\CommandTester;
 
@@ -21,7 +21,7 @@ final class CompatibilityTest extends TestCase
     public function testPaginatorKeepsTotalCountAcrossWindows(): void
     {
         $connection = DriverManager::getConnection(['driver' => 'pdo_sqlite', 'memory' => true]);
-        $configuration = ORMSetup::createAttributeMetadataConfiguration([__DIR__], true);
+        $configuration = ORMSetup::createAttributeMetadataConfiguration([__DIR__ . '/TestAsset'], true);
         $configuration->enableNativeLazyObjects(true);
         $manager = new EntityManager($connection, $configuration);
         new SchemaTool($manager)->createSchema([$manager->getClassMetadata(PaginationEntity::class)]);
@@ -29,9 +29,14 @@ final class CompatibilityTest extends TestCase
             $manager->persist(new PaginationEntity($name));
         }
         $manager->flush();
-        $adapter = new DoctrineORMAdapter($manager->createQuery('SELECT e FROM ' . PaginationEntity::class . ' e ORDER BY e.name'));
+        $adapter = new DoctrineORMAdapter(
+            $manager->createQuery('SELECT e FROM ' . PaginationEntity::class . ' e ORDER BY e.name'),
+        );
         $adapter->setProvider(new class implements ProviderInterface {
-            public function generateArray($entity): array { return ['name' => $entity->name]; }
+            public function generateArray($entity): array
+            {
+                return ['name' => $entity->name];
+            }
         });
         self::assertSame(3, $adapter->count());
         self::assertSame([['name' => 'Bravo']], $adapter->getItems(1, 1));
@@ -51,13 +56,4 @@ final class CompatibilityTest extends TestCase
         $connection->executeStatement('CREATE TABLE users (id INTEGER)');
         self::assertSame(0, $tester->execute([]));
     }
-}
-
-#[ORM\Entity]
-final class PaginationEntity
-{
-    #[ORM\Id, ORM\GeneratedValue, ORM\Column]
-    public ?int $id = null;
-
-    public function __construct(#[ORM\Column] public string $name) {}
 }

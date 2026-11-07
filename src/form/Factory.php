@@ -12,11 +12,13 @@ use Laminas\InputFilter\Factory as InputFilterFactory;
 use Laminas\InputFilter\InputFilterInterface;
 use Laminas\ServiceManager\ServiceManager;
 use Laminas\Stdlib\ArrayUtils;
+use ReflectionClass;
 use Traversable;
 use Webmozart\Assert\Assert;
 
 use function assert;
 use function class_exists;
+use function is_a;
 use function is_array;
 use function is_iterable;
 use function is_string;
@@ -290,10 +292,12 @@ class Factory
         assert(assertion: $form instanceof FormInterface);
 
         if (isset($spec['input_filter'])) {
+            /** @mago-var mixed $inputFilter */
+            $inputFilter = $spec['input_filter'];
             $this->prepareAndInjectInputFilter(
-                spec: Assert::isIterable(is_string($spec['input_filter'])
-                    ? $spec['input_filter']
-                    : Assert::isIterable($spec['input_filter'])),
+                spec: is_string($inputFilter) || $inputFilter instanceof InputFilterInterface
+                    ? $inputFilter
+                    : Assert::isIterable($inputFilter),
                 form: $form,
                 method: __METHOD__,
             );
@@ -527,7 +531,7 @@ class Factory
      * @throws \ReflectionException
      */
     protected function prepareAndInjectInputFilter(
-        Traversable|array|string $spec,
+        InputFilterInterface|Traversable|array|string $spec,
         FormInterface $form,
         string $method,
     ): void {
@@ -544,22 +548,30 @@ class Factory
                     $spec,
                 ));
             }
-            $filter = Value::instantiate($spec);
-            if (!$filter instanceof InputFilterInterface) {
+            if (!is_a($spec, InputFilterInterface::class, true)) {
                 throw new Exception\DomainException(message: sprintf(
                     '%s expects a valid implementation of Laminas\InputFilter\InputFilterInterface; received "%s"',
                     $method,
                     $spec,
                 ));
             }
+            $reflection = new ReflectionClass($spec);
+            $constructor = $reflection->getConstructor();
+            // Laminas InputFilter 3 requires its factory; custom no-argument constructors remain supported.
+            $arguments = $constructor !== null && $constructor->getNumberOfRequiredParameters() > 0
+                ? [$this->getInputFilterFactory()]
+                : [];
+            $filter = Assert::notNull($reflection->newInstanceArgs($arguments));
             $form->setInputFilter(inputFilter: $filter);
             return;
         }
 
         $factory = $this->getInputFilterFactory();
-        $filter = $factory->createInputFilter(inputFilterSpecification: \Jield\Form\InputFilterFactory::normalizeSpecification(Assert::isArray(
-            $spec,
-        )));
+        $filter = $factory->createInputFilter(
+            inputFilterSpecification: \Jield\Form\InputFilterFactory::normalizeSpecification(
+                ArrayUtils::iteratorToArray($spec),
+            ),
+        );
         if (method_exists(object_or_class: $filter, method: 'setFactory')) {
             $filter->setFactory($factory);
         }

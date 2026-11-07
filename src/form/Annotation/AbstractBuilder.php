@@ -242,7 +242,13 @@ abstract class AbstractBuilder implements EventManagerAwareInterface, FormFactor
             }
         }
 
-        $type = Element::class;
+        // Annotation listeners can add or replace the element specification.
+        /** @var array<string, mixed> $spec */
+        $spec = $params['elementSpec']['spec'];
+        $type = \Webmozart\Assert\Assert::string($spec['type'] ?? Element::class);
+        if (!class_exists($type)) {
+            $type = $this->getFormFactory()->getFormElementManager()->get($type)::class;
+        }
 
         // Compose as a fieldset or an element, based on specification type.
         // If preserve defined order is true, all elements are composed as elements to keep their ordering
@@ -284,7 +290,7 @@ abstract class AbstractBuilder implements EventManagerAwareInterface, FormFactor
 
         // @codingStandardsIgnoreStart
         $results = $this->getEventManager()->triggerEventUntil(
-            static fn(?string $r): bool => $r !== null && $r !== '',
+            static fn(string|false|null $r): bool => $r !== null && $r !== false && $r !== '',
             $event,
         );
         // @codingStandardsIgnoreEnd

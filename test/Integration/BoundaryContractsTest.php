@@ -62,11 +62,13 @@ final class BoundaryContractsTest extends TestCase
     {
         $model = new ViewModel(['message' => 'custom']);
         $controller = new class ($model) extends AbstractActionController {
-            public function __construct(private readonly ViewModel $model) {}
+            public function __construct(private readonly ViewModel $model)
+            {
+            }
 
             public function plugin($name, ?array $options = null): mixed
             {
-                return fn(Response $response): ViewModel => $this->model;
+                return fn (Response $response): ViewModel => $this->model;
             }
         };
         $event = new MvcEvent();
@@ -86,7 +88,10 @@ final class BoundaryContractsTest extends TestCase
                 return 'data-count="' . count($attributes) . '"';
             }
         };
-        $helpers = new HelperPluginManager(new ServiceManager(), ['services' => [HtmlAttributes::class => $attributes]]);
+        $helpers = new HelperPluginManager(
+            new ServiceManager(),
+            ['services' => [HtmlAttributes::class => $attributes]],
+        );
         $renderer = new PhpRenderer(new NativeRenderer($helpers, new TemplateMapResolver()), $helpers);
         $navigation = new class extends Menu {
             public function renderAttributes(array $attributes): string
