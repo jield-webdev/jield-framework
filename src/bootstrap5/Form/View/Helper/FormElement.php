@@ -257,7 +257,7 @@ class FormElement extends Helper\FormElement
     {
         $label = $element->getAttribute(key: 'label') ?? $element->getLabel();
 
-        if (null !== ($translator = Value::present($this->formLabel)->getTranslator())) {
+        if ($label !== null && null !== ($translator = Value::present($this->formLabel)->getTranslator())) {
             $label = $translator->translate(message: Value::string($label));
         }
 

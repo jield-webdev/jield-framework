@@ -56,6 +56,48 @@ final class ValidationGroupsTest extends TestCase
         self::assertSame(['name' => ' Alice '], $form->getData(FormInterface::VALUES_RAW));
     }
 
+    public function testNestedCollectionResultsKeepSubmittedKeysInValuesAndMessages(): void
+    {
+        $collection = new CollectionInputFilter(InputFilterFactory::create());
+        $collection->setInputFilter($this->filter());
+        $filter = new \Laminas\InputFilter\InputFilter(InputFilterFactory::create());
+        $filter->add($collection, 'rows');
+        $data = ['rows' => [5 => ['name' => ' Alice ', 'email' => ' a@example.com '], 19 => ['name' => ' Bob ']]];
+        $result = InputFilterValidator::validate($filter, $data);
+
+        self::assertFalse($result->valid());
+        self::assertSame([5, 19], array_keys($result->value()['rows']));
+        self::assertSame('Alice', $result->value()['rows'][5]['name']);
+        self::assertSame(' Alice ', $result->rawValue()['rows'][5]['name']);
+        self::assertArrayHasKey(19, $result->getMessages()->toArray()['rows']);
+    }
+
+    public function testCollectionValidationGroupsKeepSparseRowNames(): void
+    {
+        $collection = new CollectionInputFilter(InputFilterFactory::create());
+        $collection->setInputFilter($this->filter());
+        $result = InputFilterValidator::validate(
+            $collection,
+            [5 => ['name' => ' Alice '], 19 => ['email' => ' a@example.com ']],
+            [['name'], ['email']],
+        );
+
+        self::assertTrue($result->valid());
+        self::assertSame([5 => ['name' => 'Alice'], 19 => ['email' => 'a@example.com']], $result->value());
+    }
+
+    public function testMissingCollectionRowsDoNotOverwriteSubmittedResults(): void
+    {
+        $collection = new CollectionInputFilter(InputFilterFactory::create());
+        $collection->setInputFilter($this->filter());
+        $collection->setCount(2);
+        $result = InputFilterValidator::validate($collection, [1 => ['name' => ' Alice ', 'email' => 'a@example.com']]);
+
+        self::assertFalse($result->valid());
+        self::assertSame([1, 2], array_keys($result->value()));
+        self::assertSame('Alice', $result->value()[1]['name']);
+    }
+
     private function filter(): InputFilterInterface
     {
         return InputFilterFactory::create()->createInputFilter(InputFilterFactory::normalizeSpecification([

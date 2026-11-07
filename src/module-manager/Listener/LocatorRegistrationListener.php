@@ -44,7 +44,7 @@ class LocatorRegistrationListener extends AbstractListener implements ListenerAg
     public function onLoadModules(ModuleEvent $e): void
     {
         $moduleManager = $e->getTarget();
-        $events = Value::call(
+        $events        = Value::call(
             Value::call(
                 Value::present(Value::object($moduleManager)),
                 'getEventManager',
@@ -61,10 +61,10 @@ class LocatorRegistrationListener extends AbstractListener implements ListenerAg
             Application::class,
             ModuleManager::EVENT_BOOTSTRAP,
             static function (MvcEvent $e) use ($moduleManager): void {
-                $moduleClassName = $moduleManager::class;
+                $moduleClassName      = $moduleManager::class;
                 $moduleClassNameArray = explode(separator: '\\', string: $moduleClassName);
                 $moduleClassNameAlias = end(array: $moduleClassNameArray);
-                $application = $e->getApplication();
+                $application          = $e->getApplication();
                 /** @var ServiceManager $services */
                 $services = Value::present($application)->getServiceManager();
                 if (!$services->has($moduleClassName)) {

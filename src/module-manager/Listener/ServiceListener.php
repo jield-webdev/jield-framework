@@ -7,7 +7,7 @@ namespace Jield\ModuleManager\Listener;
 use Jield\ModuleManager\ModuleEvent;
 use Jield\Stdlib\Value;
 use Laminas\EventManager\EventManagerInterface;
-use Laminas\ServiceManager\ServiceLocatorInterface;
+use Laminas\ServiceManager\AbstractPluginManager;
 use Laminas\ServiceManager\ServiceManager;
 use Laminas\Stdlib\ArrayUtils;
 use Override;
@@ -31,7 +31,7 @@ class ServiceListener implements ServiceListenerInterface
      *
      * @var array
      */
-    protected array $defaultServiceConfig;
+    protected array $defaultServiceConfig = [];
 
     /** @var array */
     protected array $serviceManagers = [];
@@ -62,7 +62,7 @@ class ServiceListener implements ServiceListenerInterface
     /** {@inheritDoc} */
     #[Override]
     public function addServiceManager(
-        ServiceManager|string $serviceManager,
+        ServiceManager|AbstractPluginManager|string $serviceManager,
         string $key,
         string $moduleInterface,
         string $method,
@@ -202,46 +202,34 @@ class ServiceListener implements ServiceListenerInterface
                 config: Value::array($config),
             );
 
-            if (!$sm['service_manager'] instanceof ServiceManager) {
-                if (!$this->defaultServiceManager->has(Value::string($sm['service_manager']))) {
+            $manager = $sm['service_manager'];
+            if (is_string($manager)) {
+                if (!$this->defaultServiceManager->has($manager)) {
                     // No plugin manager registered by that name; nothing to configure.
                     continue;
                 }
 
-                /** @var mixed $instance */
-                $instance = $this->defaultServiceManager->get(Value::string($sm['service_manager']));
-                if (!$instance instanceof ServiceLocatorInterface) {
-                    throw new Exception\RuntimeException(message: sprintf(
-                        'Could not find a valid ServiceManager for %s',
-                        Value::scalar($sm['service_manager']),
-                    ));
-                }
-
-                $sm['service_manager'] = $instance;
+                $manager = $this->defaultServiceManager->get($manager);
             }
 
-            // The service listener is meant to operate during bootstrap, and, as such,
-            // needs to be able to override existing configuration.
-            $allowOverride = Value::instance(
-                $sm['service_manager'],
-                \Laminas\ServiceManager\ServiceManager::class,
-            )->getAllowOverride();
-            Value::instance(
-                $sm['service_manager'],
-                \Laminas\ServiceManager\ServiceManager::class,
-            )->setAllowOverride(flag: true);
+            if (!$manager instanceof ServiceManager && !$manager instanceof AbstractPluginManager) {
+                throw new Exception\RuntimeException(message: sprintf(
+                    'Could not find a valid ServiceManager for %s',
+                    Value::scalar($sm['service_manager']),
+                ));
+            }
 
-            /** @var ServiceManagerConfiguration $managerConfiguration */
-            $managerConfiguration = $smConfig;
-            Value::instance(
-                $sm['service_manager'],
-                \Laminas\ServiceManager\ServiceManager::class,
-            )->configure(config: $managerConfiguration);
-
-            Value::instance(
-                $sm['service_manager'],
-                \Laminas\ServiceManager\ServiceManager::class,
-            )->setAllowOverride(flag: $allowOverride);
+            // ServiceManager 4 plugin managers wrap a ServiceManager instead of extending it.
+            // Both expose configuration and override controls needed during bootstrap.
+            $allowOverride = $manager->getAllowOverride();
+            $manager->setAllowOverride(flag: true);
+            try {
+                /** @var ServiceManagerConfiguration $managerConfiguration */
+                $managerConfiguration = $smConfig;
+                $manager->configure(config: $managerConfiguration);
+            } finally {
+                $manager->setAllowOverride(flag: $allowOverride);
+            }
         }
     }
 

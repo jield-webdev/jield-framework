@@ -309,8 +309,9 @@ class Navigation extends AbstractNavigationHelper
      */
     public function setPluginManager(Navigation\PluginManager $plugins)
     {
-        $renderer = $this->getView();
-        $plugins->setRenderer($renderer);
+        if ($this->view !== null) {
+            $plugins->setRenderer($this->view);
+        }
         $this->plugins = $plugins;
 
         return $this;

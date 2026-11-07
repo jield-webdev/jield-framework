@@ -231,7 +231,7 @@ class Collection extends Fieldset implements CollectionInterface
         }
 
         foreach ($toRemove as $name) {
-            $this->remove(elementOrFieldset: $name);
+            $this->remove(elementOrFieldset: (string) $name);
         }
 
         /** @var mixed $key

@@ -30,7 +30,7 @@ final class InputFilterValidator
         if ($group === null || $filter instanceof OptionalInputFilter && $data === []) {
             /** @var InputFilterValidationResult<array<array-key, mixed>> $result */
             $result = $filter->validate($data, $context);
-            return $result;
+            return self::preserveCollectionKeys($filter, $data, $result);
         }
 
         if ($filter instanceof CollectionInputFilter) {
@@ -39,7 +39,7 @@ final class InputFilterValidator
                 new CollectionValidationGroups($filter->getInputFilter(), array_values($group)),
             );
             $result = $collection->validate($data, $context);
-            return $result;
+            return self::preserveCollectionKeys($filter, $data, $result);
         }
 
         $context = $context === [] ? $data : $context;
@@ -72,6 +72,46 @@ final class InputFilterValidator
         }
 
         /** @var InputFilterValidationResult<array<array-key, mixed>> */
+        return new InputFilterValidationResult($results);
+    }
+
+    /**
+     * InputFilter 3 validates collection rows as a list. Form fieldsets use the submitted
+     * keys to identify existing objects, so keep those keys in values and messages.
+     *
+     * @template TFilteredValues
+     * @param array<array-key, mixed> $data
+     * @param InputFilterValidationResult<TFilteredValues> $result
+     * @return InputFilterValidationResult<array<array-key, mixed>>
+     */
+    private static function preserveCollectionKeys(
+        InputFilterInterface $filter,
+        array $data,
+        InputFilterValidationResult $result,
+    ): InputFilterValidationResult {
+        $results = [];
+        $keys = array_keys($data);
+        foreach ($result->results as $position => $child) {
+            $key = $position;
+            $input = $filter->has($key) ? $filter->get($key) : null;
+            if ($filter instanceof CollectionInputFilter) {
+                $key = $keys[$position] ?? $position;
+                // Keep missing rows from count validation without overwriting a submitted row.
+                while (array_key_exists($key, $results)) {
+                    $key = is_int($key) ? $key + 1 : count($results);
+                }
+                $input = $filter->getInputFilter();
+            }
+            if ($input instanceof InputFilterInterface && $child instanceof InputFilterValidationResult) {
+                $value = $data[$key] ?? [];
+                $child = self::preserveCollectionKeys(
+                    $input,
+                    is_iterable($value) ? (is_array($value) ? $value : iterator_to_array($value)) : [],
+                    $child,
+                );
+            }
+            $results[$key] = $child;
+        }
         return new InputFilterValidationResult($results);
     }
 

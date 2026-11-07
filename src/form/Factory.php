@@ -111,7 +111,7 @@ class Factory
         /** @var mixed $type */
         $type = $spec['type'] ?? Element::class;
 
-        $element = $this->getFormElementManager()->get(Value::classString($type));
+        $element = $this->getFormElementManager()->get(Value::string($type));
 
         if ($element instanceof FormInterface) {
             return $this->configureForm(form: $element, spec: $spec);

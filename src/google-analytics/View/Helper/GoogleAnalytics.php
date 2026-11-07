@@ -49,19 +49,16 @@ class GoogleAnalytics extends AbstractHelper
             return;
         }
 
-        $container = $this->getContainer();
-
-        $container->appendFile(
-            '//www.googletagmanager.com/gtag/js?id=' . $this->id,
-            ['type' => 'text/javascript'] + ['async' => true],
-        );
-
         $code = $this->script->getCode();
-
         if ($code === null || $code === '' || $code === '0') {
             return;
         }
 
+        $container = $this->getContainer();
+        $container->appendFile(
+            '//www.googletagmanager.com/gtag/js?id=' . $this->id,
+            ['type' => 'text/javascript'] + ['async' => true],
+        );
         $container->appendScript($code);
 
         // Mark this GA as rendered

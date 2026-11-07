@@ -768,8 +768,12 @@ class ExpressionBuilder
         array $fields = [],
         array $boostFields = [],
     ): ?ExpressionInterface {
+        if ($searchQuery === null || in_array(trim($searchQuery), ['', '*', '*:*'], true)) {
+            return $this->all();
+        }
+
         // First, get the base search query expression
-        $baseExpression = $this->searchQuery(searchQuery: $searchQuery ?? '*');
+        $baseExpression = $this->searchQuery(searchQuery: $searchQuery);
 
         if ($baseExpression === null) {
             return null;

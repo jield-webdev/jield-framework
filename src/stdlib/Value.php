@@ -508,7 +508,7 @@ final class Value
         if (!class_exists($class)) {
             throw new TypeError(sprintf('Configured class "%s" does not exist.', $class));
         }
-        return self::object(new ReflectionClass($class)->newInstanceArgs($arguments));
+        return new $class(...$arguments);
     }
 
     /**

@@ -24,10 +24,7 @@ class BoostExpression extends Expression implements Stringable
         private readonly float $boost,
         ExpressionInterface|string|null $expr,
     ) {
-        $expr = Util::escape(value: $expr);
-        //        $expr = trim($expr);
-
-        parent::__construct(expr: $expr);
+        parent::__construct(expr: $expr ?? '');
     }
 
     public function __toString(): string

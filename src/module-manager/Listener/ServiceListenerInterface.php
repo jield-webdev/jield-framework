@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Jield\ModuleManager\Listener;
 
 use Laminas\EventManager\ListenerAggregateInterface;
+use Laminas\ServiceManager\AbstractPluginManager;
 use Laminas\ServiceManager\ServiceManager;
 
 interface ServiceListenerInterface extends ListenerAggregateInterface
@@ -17,14 +18,14 @@ interface ServiceListenerInterface extends ListenerAggregateInterface
      * - $moduleInterface is the interface indicating a configuration provider for it.
      * - $method is used for duck-typing configuration providers.
      *
-     * @param ServiceManager|string $serviceManager Service name for service/plugin manager
+     * @param ServiceManager|AbstractPluginManager|string $serviceManager Service name for service/plugin manager
      * @param string $key Configuration key
      * @param string $moduleInterface FQCN as string
      * @param string $method Method name
      * @return ServiceListenerInterface
      */
     public function addServiceManager(
-        ServiceManager|string $serviceManager,
+        ServiceManager|AbstractPluginManager|string $serviceManager,
         string $key,
         string $moduleInterface,
         string $method,
