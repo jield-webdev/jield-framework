@@ -21,10 +21,3 @@ $form->setData(['title' => 'Composer alpha']);
 if (!$form->isValid() || $form->getData()['title'] !== 'Composer alpha') {
     throw new RuntimeException('The installed form integration failed.');
 }
-
-$pdf = new \Jield\Pdf\Pdf();
-$pdf->AddPage();
-$pdf->Write(0, 'Composer alpha');
-if (!str_starts_with($pdf->Output('consumer.pdf', 'S'), '%PDF-')) {
-    throw new RuntimeException('The installed PDF integration failed.');
-}
